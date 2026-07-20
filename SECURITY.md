@@ -12,7 +12,7 @@ Operational Security (OpSec) is our highest priority. If you find a hole in the 
 Do **NOT** open public issues for security vulnerabilities. Leaking a bypass or a protocol flaw before it's patched compromises the entire lab.
 
 Report vulnerabilities via the following channels:
-- **Encrypted Comms**: [Insert PGP Key / Matrix / ProtonMail here]
+- **Encrypted Comms**: K4N3CO.LABS@proton.me
 - **Target Response**: We aim to acknowledge reports within 48 hours and have a patch in the pipeline shortly after.
 
 ## 0x02: Scope
