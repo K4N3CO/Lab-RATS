@@ -99,17 +99,16 @@ Lab-RATS exploits the unique traits of **publicly routable IPv6 addresses** assi
 2.  Once the App is installed on **Target Device**, **ALL permissions must be granted to the App**, then tap the **"Initialize Server"** button.
 3.  The **Server** will go online and the **Active interface Web IP Link** should **pop up instantly** on your **Google Sheet**. *(Example Google Sheet Below)*
 4.  **Thats it**! Now you can use **ALL the remote features from anywhere in the world** as long as the **App Server is running on the Target device**.
-> ***To use "Ghost features", navigate to the Ghost Tab on the Web C2 Panel and click "Open Accessibility Settings".*
+> **Note** - *To use "Ghost features", navigate to the Ghost Tab on the Web C2 Panel and click "Open Accessibility Settings".*
 
 ![Accessibilities-Perm.png](https://i.postimg.cc/Z510fCkq/Accessibilities-Perm.png)
 
 > *This opens the accessibility menu on the Target device, tap "Installed Apps".*
 
-<p align="center">
 <a href="https://postimg.cc/PCzZSym1" target="_blank"><img src="https://i.postimg.cc/PCzZSym1/Accesibilty-menu.jpg" alt="Accesibilty-menu"></a>
 
 > *Toggle permission on, then tap "Allow"  to permit full control of device.*
-<p align="center">
+
 <a href="https://postimg.cc/3kCpt1gX" target="_blank"><img src="https://i.postimg.cc/3kCpt1gX/Accessibility-allow.jpg" alt="Accessibility-allow"></a>
 
 > ** *This ONLY applies to the "Ghost Remote Control", "Ghost Utilities", and "Ghost Keylogs". ALL other features can be used without this permission.*
