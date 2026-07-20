@@ -190,11 +190,9 @@ If you find **Lab-RATS** awesome and useful for your **security research**, **pl
 
 ---
 
-### Donations: (Optional)
-**BuyMeACoffee**:
+### Donations:
 
-https://buymeacoffee.com/k4n3co
-
+**BuyMeACoffee**: https://buymeacoffee.com/k4n3co
 
 **BTC**:
 
