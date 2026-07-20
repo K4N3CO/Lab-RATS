@@ -192,9 +192,9 @@ If you find **Lab-RATS** awesome and useful for your **security research**, **pl
 
 ### Donations:
 
-**BuyMeACoffee**: https://buymeacoffee.com/k4n3co
+- **BuyMeACoffee**: https://buymeacoffee.com/k4n3co
 
-**BTC**:
+- **BTC:** (Bitcoin)
 
 ```
 bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
