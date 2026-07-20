@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://postimg.cc/nC9DNBkn">
+    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
+  </a>
+</p>
+
 # Lab-RATS: Rules of Engagement
 
 This isn't a corporate HR manual. It's a protocol for people who build, break, and innovate. 
