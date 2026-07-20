@@ -1,9 +1,17 @@
+## Bug Report
+
 ---
-name: "Report a Glitch"
-about: "Notify the lab about a technical failure or logic error."
-title: "[BUG] "
-labels: "glitch"
-assignees: ""
+
+**Name**: "Report a Glitch"
+
+**About**: "Notify the lab about a technical failure or logic error."
+
+**Title**: "[BUG] "
+
+**Labels**: "glitch"
+
+**Assignees**: ""
+
 ---
 
 ### 0x01: The Symptom
