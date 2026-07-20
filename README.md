@@ -206,22 +206,26 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 
 ## 📸 Screenshots/Video Clips
 
-### **Example APK build in terminal (Mac OS) - Advanced v1.4**
+### Example APK build in terminal: (Mac OS) - Advanced v1.4
 > *This build excludes my Google Sheet Webhook URL for security. For normal private builds, you must add your own Google webhook URL to correctly receive the IPv6 address link from the app after installation.*
 
 https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
 
 ---
 
-### **Built APK (C2 Server) Installed on Android Device**
+### Built APK (C2 Server) Installed on Target Android Device:
 
 <p align="center">
 <a href="https://postimg.cc/zySrqv1Z" target="_blank"><img src="https://i.postimg.cc/zySrqv1Z/App-installed-Running.png" alt="App-installed-Running"></a>
 <a href="https://postimg.cc/PLXkJHdS" target="_blank"><img src="https://i.postimg.cc/PLXkJHdS/App-installed-Offline.png" alt="App-installed-Offline"></a>
 
+### App Bypassing ALL Android Security Measures While Operating:
+
+https://github.com/user-attachments/assets/2b87c9c8-918e-42ec-81a8-19cd1673a7fc
+
 ---
 
-### **Remotely Transform Lab-RATS into a Working Calculator, Weather App, System Update, or Settings Menu**.
+### Remotely Transform Lab-RATS into a Working Calculator, Weather App, System Update, or Settings Menu:
 
 <p align="center">
 <a href="https://postimg.cc/hhrzqMBt" target="_blank"><img src="https://i.postimg.cc/hhrzqMBt/Stealth-Icons.jpg" alt="Stealth-Icons"></a>    
@@ -233,25 +237,25 @@ https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
 
 ## Remote Web Control (C2) Panel - PC Interface
 
-### **C2 Panel Video:**
+### Remote C2 Panel Video:
 
 https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ---
 
-### **Terminal/Homepage Tab:**
+### Terminal/Homepage Tab:
 
 [![01-Terminal-Tab.png](https://i.postimg.cc/jjwCKz5t/01-Terminal-Tab.png)](https://postimg.cc/McwzmfVF)
 
 ---
 
-### **Ghost Operations Tab:** *(Top half)*
+### Ghost Operations Tab: *(Top half)*
 
 [![02-Ghost-Tab-Top-Half.png](https://i.postimg.cc/B6mmqm9X/02-Ghost-Tab-Top-Half.png)](https://postimg.cc/G8sFKJpC)
 
 ---
 
-### **Ghost Ops.Tab Remote/Stealth:** *(Bottom half)*
+### Ghost Ops.Tab Remote/Stealth: *(Bottom half)*
 
 <p align="center">
   <a href="https://postimg.cc/mzwH8XGJ">
@@ -261,67 +265,67 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ---
 
-### **Optics/Live Camera Stream Tab:**
+### Optics/Live Camera Stream Tab:
 
 [![04-Optics-Tab.png](https://i.postimg.cc/W3Z0ySpq/04-Optics-Tab.png)](https://postimg.cc/R6M367Hv)
 
 ---
 
-### **Live Camera Stream Example:**
+### Live Camera Stream Example:
 
 [![05-Live-Cam-Stream.png](https://i.postimg.cc/x8Dh4Skw/05-Live-Cam-Stream.png)](https://postimg.cc/phCsm4JC)
 
 ---
 
-### **Locate/GPS Tab:**
+### Locate/Live GPS Tab:
 
 [![06-Locate-Tab.png](https://i.postimg.cc/9MBQzqJM/06-Locate-Tab.png)](https://postimg.cc/tZYjM70Q)
 
 ---
 
-### **Data/Storage Tab:**
+### Data/Storage Tab:
 
 [![6-Data-Tab.png](https://i.postimg.cc/W3qvx3sD/6-Data-Tab.png)](https://postimg.cc/bDPWtqD8)
 
 ---
 
-### **Intel/App Notifications Tab:**
+### Intel/App Notifications Tab:
 
 [![8-Intel-Tab.png](https://i.postimg.cc/sxFrzr2j/8-Intel-Tab.png)](https://postimg.cc/PpMcb0Z9)
 
 ---
 
-### **SMS/Text Message Tab:**
+### SMS/Text Message Tab:
 
 [![9-SMS-Tab.png](https://i.postimg.cc/x8r2Q2dC/9-SMS-Tab.png)](https://postimg.cc/Q9qPgv1G)
 
 ---
 
-### **MMS/Multimedia Message Tab:**
+### MMS/Multimedia Message Tab:
 
 [![07-MMS-Tab.png](https://i.postimg.cc/YSKr3xP3/07-MMS-Tab.png)](https://postimg.cc/K1fhctxk)
 
 ---
 
-### **Acoustics/Audio Tab:**
+### Acoustics/Audio Tab:
 
 [![08-Acoustics-Tab.png](https://i.postimg.cc/kM17ZCH0/08-Acoustics-Tab.png)](https://postimg.cc/s1WFQksm)
 
 ---
 
-### **Call Logs Tab:**
+### Call Logs Tab:
 
 [![12-Call-Logs-Tab.png](https://i.postimg.cc/Sshdb1h6/12-Call-Logs-Tab.png)](https://postimg.cc/QBf1pbVC)
 
 ---
 
-### **Contacts Tab:**
+### Contacts Tab:
 
 [![13-Contacts-Tab.png](https://i.postimg.cc/4dgPR2gz/13-Contacts-Tab.png)](https://postimg.cc/DWxLqgmZ)
 
 ---
 
-### **Hardware/Device Info Tab:**
+### Hardware/Device Info Tab:
 
 [![14-Hardware-Tab.png](https://i.postimg.cc/Cx2jHhLm/14-Hardware-Tab.png)](https://postimg.cc/75gGqyz2)
 
