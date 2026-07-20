@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://postimg.cc/nC9DNBkn">
+    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
+  </a>
+</p>
+
 # Lab-RATS: Contribution Protocol
 
 We don't do corporate bureaucracy here. We do technical elegance and operational efficiency. If you've got a better way to bypass a sandbox, optimize a payload, or harden the stealth engine, we want it.
