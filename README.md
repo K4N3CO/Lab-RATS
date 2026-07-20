@@ -101,7 +101,7 @@ Lab-RATS exploits the unique traits of **publicly routable IPv6 addresses** assi
 4.  **Thats it**! Now you can use **ALL the remote features from anywhere in the world** as long as the **App Server is running on the Target device**.
 > ***To use "Ghost features", navigate to the Ghost Tab on the Web C2 Panel and click "Open Accessibility Settings".*
 
-![Accessibilities-Perm.png](https://i.postimg.cc/Z510fCkq/Accessibilities-Perm.png) 
+![Accessibilities-Perm.png](https://i.postimg.cc/Z510fCkq/Accessibilities-Perm.png)
 
 > *This opens the accessibility menu on the Target device, tap "Installed Apps".*
 
