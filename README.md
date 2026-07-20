@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# 🐀 Lab-RATS: Advanced Android Remote Administration Tool (v1.4.5)
+# Lab-RATS: Advanced Android Remote Administration Tool (v1.4.5)
 
 **Lab-RATS** is a **powerful** and **lightweight Android Remote Administration Tool (RAT)** developed by **K4N3CO.LABS**. This advanced tool allows for **remote monitoring and management** of Android devices through a **sleek, web-based interface** designed for speed and reliability. Built for the modern era, it **fully supports the latest 2026 Android software releases** *(OneUI 8.5, SDK 36)*.
 
@@ -24,16 +24,16 @@
 
 ## 🕵️ Covert & Stealth Operations
 
--   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the "Masquerade Library" of **convincing clones**. Instantly transform Lab-RATS into a **Calculator**, **Weather App**, **System Diagnostics**, or **Settings** menu.
--   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox and Google Play Protect**. This is achieved through **dynamic code obfuscation** during the APK build process, **randomized package identities**, and the use of **fully interactive decoy activities** that mimic legitimate system behaviors to bypass heuristic and signature-based scanning.
+-   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the "Masquerade Library" of **convincing clones**. Instantly transform Lab-RATS into a **Calculator**, **Weather App**, **System Diagnostics**, or **Settings Menu**.
+-   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox** and **Google Play Protect**. This is achieved through **dynamic code obfuscation** during the APK build process, **randomized package identities**, and the use of **fully interactive decoy activities** that mimic legitimate system behaviors to bypass heuristic and signature-based scanning.
 -   🛠️ **Functional Decoy Engine**: Unlike static images, these decoys are **fully interactive**. The Calculator performs real math, and the Weather app dynamically loads the target's actual city name and forecast.
--   🩹 **Self-Healing Protocol**: Automatically detects and repairs damaged service bindings or revoked permissions in the background.
+-   🩹 **Self-Healing Protocol**: Automatically detects and **repairs damaged service bindings** or **revoked permissions**;in the background.
 -   ☎️ **Dial-Pad Recovery**: If the launcher icon is hidden or replaced, **dial `*#1337#` on the phone's keypad** to instantly restore the Lab-RATS dashboard.
 -   🚪 **Hidden Backdoor**: Every decoy features a secret bypass. **Rapidly tapping the display or background icon 10 times** instantly unlocks the C2 server interface.
 -   👻 **Task-List Ghosting**: The app is hard-coded to be **invisible in the Android "Recent Apps" list**.
 -   📡 **Deep Rebranding**: When stealth is active, background notifications are automatically rebranded with matching icons and names to ensure zero branding leaks.
 -   🎲 **Dynamic OTA Camouflage**: Generates **random version names and codes** that mimic legitimate system OTA updates.
--   🌑 **NEW!** **Blackout Mode**: A high-stealth mode designed to **physically mask the users device display** while maintaining a non-masked live remote feed.
+-   🌑 **NEW!** **Blackout Mode**: A high-stealth mode designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
 
 ---
 
@@ -42,9 +42,9 @@
 -   👻 **Ghost Controller (Gold Standard)**:
     -   **Live Keylogging (v1.4 Update)**: Intercept **keystrokes and system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for browser logins.
     -   **📱 Ghost Screen Control/Mirror**: Cast the **live screen** and **control** the **device remotely** with **NO "Consent Prompt"** required. *(Essentially full remote takeover, pair with Blackout Mode for max stealth)*
--   💀  **Anti-Removal Shield (Optimized)**: High-speed, event-driven protection that **blocks attempts** to **Uninstall or Force Stop** the app. *(Kicks user to homescreen & will not allow entry to the app settings)*
+-   💀  **Anti-Removal Shield (Optimized)**: High-speed, event-driven protection that **blocks attempts** to **Uninstall or Force Stop** the app. *(Kicks user to homescreen & denies any entry to the app settings)*
 -   🛰️  **Precision GPS Tracking**: One-click uplink to open the **target's exact real-time location** in **Google Maps**.
--   ⚡   **Intel Stream (Notification Sniffer)**: Intercept **every notification** (*WhatsApp, Telegram, RCS, System*) in a live feed. **NEW**: Automatically highlights and badges **sensitive data like OTPs and Bank alerts**.
+-   ⚡   **Intel Stream (Notification Sniffer)**: Intercept **every notification** (*WhatsApp, Telegram, RCS, System*) in a live feed. **NEW!**: Automatically highlights and badges **sensitive data like OTPs and Bank alerts**.
 -   🖼️ **MMS Terminal (Game Changer!)**:
     -   **Browse & Extract**: Download and view **ANY Multimedia Message (MMS)**. **v1.4 Update**: Fixed large video playback and streaming support.
     -   **Remote Dispatch**: Send **MMS/Picture Messages** directly from the target phone.
@@ -57,7 +57,8 @@
 -   🎙️ **Acoustics & Interception**: Live **microphone recording** and automated **call recording** for both incoming and outgoing calls.
 -   📞 **Remote Dialer**: Initiate **phone calls directly from the C2 panel** using the target's SIM card.
 -   📂 **Advanced Data Uplink**:
-    -   **Integrated File Manager**: Navigate, download, and manage files. **NEW**: Instant **Search Bar** and **Category Filters** (Images/Video/Docs) for PC-optimized workflows.
+    -   **Integrated File Manager**: Navigate, download, and manage files. **NEW!**: Instant **Search Bar** and **Category Filters** (Images/Video/Docs) for PC-optimized workflows.
+    -   **Info Gathering**: Access to **Call Logs**, **Contacts** and **Device Hardware Info**.
     -   **📝 Direct File Editor**: Live-edit **text, JSON**, and **log files** directly on the device.
 -   📊 **Telemetry & Reporting**:
     -   **C2 Auto-Reporting**: Discrete reporting of **IP, Battery %, Network Type (WiFi/Cellular), and Stealth Status** to a centralized **Google Sheet**.
@@ -66,49 +67,59 @@
 
 ## 🧠 Remote Persistence & Commands
 
--  🌐 **Direct IPv6 Access (Direct P2P Backdoor)**: Lab-RATS exploits the unique, publicly routable IPv6 addresses assigned by modern 5G/LTE carriers. By binding the Lab-RATS server directly to the Global Unicast Address, it bypasses Carrier-Grade NAT *(CGNAT)* and firewalls entirely. This allows for **Zero Configuration** peer-to-peer *(P2P)* remote access from any browser in the world without the need for routers, port forwarding, or external tunneling software like Pinggy or Ngrok.
--  🔄 **NEW!** **Remote Server Restart**:
-    -    **Web UI**: One-click **"RESTART_SERVER"** button on the home terminal to refresh background services.
-    -    **SMS Backdoor**: Send an SMS containing **`!RESTART_C2`** to force the server back online even if it was manually closed or killed by the OS.
+### 🌐 **Direct IPv6 Access (Direct P2P Backdoor)**
+
+Lab-RATS exploits the unique traits of **publicly routable IPv6 addresses** assigned by modern WIFI/5G/LTE carriers. By binding the Lab-RATS server directly to the **Global Unicast Address**, it **bypasses Carrier-Grade NAT** *(CGNAT)* and **firewalls entirely**. This allows for **Zero Configuration** peer-to-peer *(P2P)* **remote access** from **any** browser in the world without the need for **routers, port forwarding,** or **external tunneling software**. *(Pinggy or Ngrok)*
+
+### 🔄 **NEW!** **Remote Server Restart**
+
+-   **Web UI**: One-click **"RESTART_SERVER"** button on the home terminal to refresh background services.
+-    **SMS Backdoor**: Send an SMS containing **`!RESTART_C2`** to force the server back online **even if it was manually closed or killed by the OS.**
 
 ---
 
 ## 🛠️ Getting Started
 
-### 1. Requirements
+### 1. Requirements:
 *   **Java 11 or 21** installed on your **workstation**.
-*   📱 A **target Android** device *(Rootless Samsung/Pixel/OnePlus supported)*.
+*   📱 A **target Android** device *(Samsung/Pixel/OnePlus supported)*.
 *   A **Google Sheet Webhook URL** for IP tracking.
 
-### 2. Build the APK (on PC)
+### 2. Build the APK: (on PC)
 1.  **Download & Extract** the repository.
 2.  Navigate to `cd /Lab-RATS-main/apk-builder/`
 3.  **Execute** the builder: chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
-4.  Enter your **App Name** (Default: *System Stability Service*) and **Google Sheet URL**. *(Google Sheet Setup Instructions Below)*
+4.  Enter your **App name** (Default: *System Stability Service*) and **Google Sheet URL**. *(Google Sheet setup instructions below)*
 4.  Retrieve your `signed.apk` from the `/apk-builder/output/` directory.
 
-### 3. Install APK on Target Device
+### 3. Install APK onto Target Device
 1.  **Install** the `signed.apk` onto the **Target Android device**.
+> ** *If you have access to the device, turn on USB debugging (developer settings), plug into a PC and run `adb install signed.apk`. If not get creative on how to install Android `.apk` files onto devices.(Social Engineering?....etc)*
 
-> Info - *If you have access to the device, turn on USB debugging (developer settings), plug it into a PC and run `adb install signed.apk`. Otherwise get creative on how to install Android `.apk` files onto devices.(Social Engineering?, Hosting App on Website/Server?)*
-
-2.  Once the app is installed onto the **Target Device**, **ALL permissions must be granted on device**, then tap the **"Initialize Server"** button.
+2.  Once the App is installed on **Target Device**, **ALL permissions must be granted to the App**, then tap the **"Initialize Server"** button.
 3.  The **Server** will go online and the **Active interface Web IP Link** should **pop up instantly** on your **Google Sheet**. *(Example Google Sheet Below)*
 4.  **Thats it**! Now you can use **ALL the remote features from anywhere in the world** as long as the **App Server is running on the Target device**.
+> ***To use "Ghost features", navigate to the Ghost Tab on the Web C2 Panel and click "Open Accessibility Settings".*
 
-> Info - *To use the Ghost features navigate to the "Ghost Tab" in the Web Control(C2) Panel and click the "Open Accessibility Settings" button. This opens a page on the device, tap "Installed Apps" and grant access to full control of device. - Images Below* ** *(This only applies to the "Ghost Remote Control", "Ghost Utilities", and "Ghost Keylogs". All other features can be used without this permission)*
+![Accessibilities-Perm.png](https://i.postimg.cc/Z510fCkq/Accessibilities-Perm.png) 
 
-[![Accessibilities-Perm.png](https://i.postimg.cc/Z510fCkq/Accessibilities-Perm.png)](https://postimg.cc/CRsF5Mxy)
+> *This opens the accessibility menu on the Target device, tap "Installed Apps".*
 
 <p align="center">
-<a href="https://postimg.cc/PCzZSym1" target="_blank"><img src="https://i.postimg.cc/PCzZSym1/Accesibilty-menu.jpg" alt="Accesibilty-menu"></a> <a href="https://postimg.cc/3kCpt1gX" target="_blank"><img src="https://i.postimg.cc/3kCpt1gX/Accessibility-allow.jpg" alt="Accessibility-allow"></a>
+<a href="https://postimg.cc/PCzZSym1" target="_blank"><img src="https://i.postimg.cc/PCzZSym1/Accesibilty-menu.jpg" alt="Accesibilty-menu"></a>
+
+> *Toggle permission on, then tap "Allow"  to permit full control of device.*
+<p align="center">
+<a href="https://postimg.cc/3kCpt1gX" target="_blank"><img src="https://i.postimg.cc/3kCpt1gX/Accessibility-allow.jpg" alt="Accessibility-allow"></a>
+
+> ** *This ONLY applies to the "Ghost Remote Control", "Ghost Utilities", and "Ghost Keylogs". ALL other features can be used without this permission.*
 
 ---
 
 ## 📊 Google Sheet C2 Setup Instructions (Advanced v1.4)
 
 1.  **Create** a new **Google Sheet**.
-2.  Go to **Extensions** → **Apps Script** and paste **this Hybrid Snippet** (supports both GET and POST):
+2.  Go to **Extensions** → **Apps Script** and **paste this Hybrid Snippet:** *(Supports both GET and POST)*
 
 ```javascript
 function doGet(e) {
@@ -164,7 +175,7 @@ function handleRequest(e) {
 }
 ```
 3.  **Deploy** → **New Deployment** → **Web App** → **Execute as Me** → **Who has access: Anyone**.
-4.  **Important**: Copy the **Web App URL** and paste it into the **apk-builder** when prompted.
+4.  **Important**: **Copy the Web App URL** and **paste it** into the **apk-builder** tool when prompted.
 
 ### 📊 Example Google Sheet Configured:
 
@@ -174,10 +185,11 @@ function handleRequest(e) {
 
 ## ⭐ Support the Development
 
-If you find **Lab-RATS** useful for your **security research**, **please Star ⭐ the project**—it drives **further development**!
+If you find **Lab-RATS** awesome and useful for your **security research**, **please Star ⭐ the project**—it drives **further development!!**
 
-### Contributions:
-**Bug reports, feature** and **pull requests** are **always welcome**.
+### Contributions
+
+**Bug reports, add new feature** and **pull requests** are **always welcome**.
 
 **Donations (Optional)**:
 
@@ -188,10 +200,10 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 
 ---
 
-## 📸 Screenshots/Videos
+## 📸 Screenshots/Video Clips
 
-### **The APK Builder Tool in Terminal** (Advanced v1.4)
-> This build excludes my Google Sheet Webhook URL for security. For private builds, you must add your own Google webhook URL to correctly receive the IPv6 address from the app after installation.
+### **Example APK build in terminal (Mac OS) - Advanced v1.4**
+> *This build excludes my Google Sheet Webhook URL for security. For normal private builds, you must add your own Google webhook URL to correctly receive the IPv6 address link from the app after installation.*
 
 https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
 
