@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://postimg.cc/nC9DNBkn">
+    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
+  </a>
+</p>
+
 # Lab-RATS: Security & Vulnerability Policy
 
 Operational Security (OpSec) is our highest priority. If you find a hole in the Lab-RATS engine or a way to compromise the C2 protocol, we expect you to handle it like a professional.
