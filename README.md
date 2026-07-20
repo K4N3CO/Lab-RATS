@@ -186,14 +186,19 @@ function handleRequest(e) {
 ## ⭐ Support the Development
 
 If you find **Lab-RATS** awesome and useful for your **security research**, **please Star ⭐ the project**—it drives **further development!!**
-
-### Contributions
-
+### Contributions:
 **Bug reports, add new feature** and **pull requests** are **always welcome**.
 
-**Donations (Optional)**:
+---
+
+### Donations: (Optional)
+**BuyMeACoffee**:
+
+https://buymeacoffee.com/k4n3co
+
 
 **BTC**:
+
 ```
 bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 ```
