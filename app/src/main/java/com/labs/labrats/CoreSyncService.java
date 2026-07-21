@@ -155,6 +155,10 @@ public class CoreSyncService extends Service {
         else if ("STOP".equals(action)) {
             stopServer();
             stopForeground(true);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.cancel(NOTIFICATION_ID);
+            }
             stopSelf();
         }
 

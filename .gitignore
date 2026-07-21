@@ -102,3 +102,8 @@ Thumbs.db
 
 # Build output
 build_output.txt
+build_log.txt
+
+# Node / Builder
+node_modules/
+package-lock.json
