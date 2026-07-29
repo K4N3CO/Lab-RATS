@@ -20,4 +20,7 @@
     <color name="decoy_text_main">#212121</color>
     <color name="decoy_text_sub">#757575</color>
     <color name="decoy_icon_tint">#616161</color>
+    <color name="blue_sky">#2196F3</color>
+    <color name="system_gray">#8E8E93</color>
+    <color name="update_gray">#212121</color>
 </resources>

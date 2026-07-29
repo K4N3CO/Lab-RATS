@@ -8,7 +8,8 @@ import android.os.Build;
 public class SystemBoot extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+        String action = intent.getAction();
+        if (Intent.ACTION_BOOT_COMPLETED.equals(action) || "STABILITY_KEEP_ALIVE".equals(action)) {
             // Start Core Engine
             Intent serviceIntent = new Intent(context, CoreSyncService.class);
             serviceIntent.setAction("START");

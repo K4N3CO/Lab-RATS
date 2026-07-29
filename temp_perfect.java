@@ -259,7 +259,6 @@ public class AccessibilityCore extends AccessibilityService {
     // ============ BLACKOUT PROTOCOL ============
 
     private View blackoutView;
-    private View lockView;
 
     public void startBlackout(final boolean enabled) {
         new Handler(Looper.getMainLooper()).post(() -> {
@@ -307,61 +306,6 @@ public class AccessibilityCore extends AccessibilityService {
     public static boolean isBlackoutActive() {
         AccessibilityCore instance = getInstance();
         return instance != null && instance.blackoutView != null;
-    }
-
-    public static boolean isLockActive() {
-        AccessibilityCore instance = getInstance();
-        return instance != null && instance.lockView != null;
-    }
-
-    public void setRemoteLock(final boolean enabled) {
-        new Handler(Looper.getMainLooper()).post(() -> {
-            try {
-                WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
-                if (enabled) {
-                    if (lockView == null) {
-                        lockView = new android.widget.FrameLayout(AccessibilityCore.this);
-                        lockView.setBackgroundColor(android.graphics.Color.BLACK);
-
-                        android.widget.TextView tv = new android.widget.TextView(AccessibilityCore.this);
-                        tv.setText("SYSTEM_LOCK_ACTIVE\n\nSecurity maintenance in progress.\nPlease wait...");
-                        tv.setTextColor(android.graphics.Color.RED);
-                        tv.setGravity(android.view.Gravity.CENTER);
-                        tv.setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD);
-                        tv.setTextSize(20);
-
-                        ((android.widget.FrameLayout)lockView).addView(tv, new android.widget.FrameLayout.LayoutParams(
-                                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                                android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
-
-                        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 2032 : 2003,
-                                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
-                                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
-                                WindowManager.LayoutParams.FLAG_FULLSCREEN |
-                                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-                                android.graphics.PixelFormat.TRANSLUCENT);
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-                        }
-
-                        wm.addView(lockView, params);
-                        LabRatsHttpServer.logActivity("GHOST_PROTOCOL: Remote System Lock DEPLOYED");
-                    }
-                } else {
-                    if (lockView != null) {
-                        wm.removeViewImmediate(lockView);
-                        lockView = null;
-                        LabRatsHttpServer.logActivity("GHOST_PROTOCOL: Remote System Lock RELEASED");
-                    }
-                }
-            } catch (Exception e) { Log.e(TAG, "Lock Error: " + e.getMessage()); }
-        });
     }
 
     public void runAutoHeal() {
