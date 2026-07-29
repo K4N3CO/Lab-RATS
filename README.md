@@ -76,6 +76,21 @@ Lab-RATS exploits the unique traits of **publicly routable IPv6 addresses** assi
 -   **Web UI**: One-click **"RESTART_SERVER"** button on the home terminal to refresh background services.
 -    **SMS Backdoor**: Send an SMS containing **`!RESTART_C2`** to force the server back online **even if it was manually closed or killed by the OS.**
 
+### 🛠️ **NEW!** **Termux Bridge Integration**
+
+Lab-RATS now features a **high-performance bridge to the Termux environment**. If Termux is installed on the target device, the remote terminal can instantly elevate its capabilities:
+-   **Auto-Routing**: Common commands like `pkg`, `apt`, `pip`, and `python` are automatically routed through the bridge.
+-   **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the C2 web terminal.
+-   **Persistent Environment**: Full support for Termux's internal storage and standard Linux binaries.
+
+### 🖥️ **NEW!** **Enhanced Remote Shell**
+
+The built-in shell has been overhauled for professional workflows:
+-   **Command History**: Navigate previous commands instantly using **Up/Down arrows**.
+-   **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
+-   **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
+-   **Hardened I/O**: Multi-stage retry logic and unique execution tracking for zero-latency command output.
+
 ---
 
 ## 🛠️ Getting Started
@@ -337,6 +352,10 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ## ⚠️ Disclaimer
 This tool is for **educational and authorized testing purposes.** The **developers** assume **NO responsibility** for **ANY** **misuse or damage to relationships** caused by this software. **Please use it responsibly**. **Thank you!**
+
+---
+
+© 2026 **K4N3CO.LABS**
 
 ---
 
