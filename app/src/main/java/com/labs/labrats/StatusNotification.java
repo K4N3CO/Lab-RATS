@@ -49,7 +49,7 @@ public class StatusNotification extends NotificationListenerService {
     private void loadHistory() {
         if (historyLoaded) return;
         try {
-            SharedPreferences prefs = getSharedPreferences("LabRATSSettings", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("StabilityConfig", MODE_PRIVATE);
             String json = prefs.getString("intel_history", "[]");
             org.json.JSONArray array = new org.json.JSONArray(json);
             synchronized (history) {
@@ -72,7 +72,7 @@ public class StatusNotification extends NotificationListenerService {
 
     private void saveHistory() {
         try {
-            SharedPreferences prefs = getSharedPreferences("LabRATSSettings", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("StabilityConfig", MODE_PRIVATE);
             org.json.JSONArray array = new org.json.JSONArray();
             synchronized (history) {
                 for (NotificationData n : history) {

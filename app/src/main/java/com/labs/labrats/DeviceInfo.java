@@ -30,7 +30,7 @@ public class DeviceInfo {
 
         // Device Information Section
         html.append("<div class=\"info-section\">");
-        html.append("<h3 style=\"color: #3498db; margin-bottom: 15px;\">&#128241; Device Information</h3>");
+        html.append("<h3 style=\"color: #3498db; margin-bottom: 15px; text-align: left;\">&#128241; Device Information</h3>");
         html.append("<div class=\"info-grid\">");
 
         html.append(createInfoItem("Device Name", getDeviceName(c)));
@@ -46,7 +46,7 @@ public class DeviceInfo {
 
         // System Information Section
         html.append("<div class=\"info-section\">");
-        html.append("<h3 style=\"color: #9b59b6; margin-bottom: 15px;\">&#9881; System Information</h3>");
+        html.append("<h3 style=\"color: #9b59b6; margin-bottom: 15px; text-align: left;\">&#9881; System Information</h3>");
         html.append("<div class=\"info-grid\">");
 
         html.append(createInfoItem("Android Version", Build.VERSION.RELEASE));
@@ -61,7 +61,7 @@ public class DeviceInfo {
 
         // SIM / Network Section
         html.append("<div class=\"info-section\">");
-        html.append("<h3 style=\"color: #e67e22; margin-bottom: 15px;\">&#128225; SIM &amp; Network</h3>");
+        html.append("<h3 style=\"color: #e67e22; margin-bottom: 15px; text-align: left;\">&#128225; SIM &amp; Network</h3>");
         html.append("<div class=\"info-grid\">");
 
         try {
@@ -87,7 +87,7 @@ public class DeviceInfo {
 
         // WiFi Section
         html.append("<div class=\"info-section\">");
-        html.append("<h3 style=\"color: #1abc9c; margin-bottom: 15px;\">&#128246; WiFi Information</h3>");
+        html.append("<h3 style=\"color: #1abc9c; margin-bottom: 15px; text-align: left;\">&#128246; WiFi Information</h3>");
         html.append("<div class=\"info-grid\">");
 
         try {
@@ -121,7 +121,7 @@ public class DeviceInfo {
 
         // Battery Section
         html.append("<div class=\"info-section\">");
-        html.append("<h3 style=\"color: #2ecc71; margin-bottom: 15px;\">&#128267; Battery Status</h3>");
+        html.append("<h3 style=\"color: #2ecc71; margin-bottom: 15px; text-align: left;\">&#128267; Battery Status</h3>");
         html.append("<div class=\"info-grid\">");
 
         try {
@@ -178,7 +178,7 @@ public class DeviceInfo {
 
         // Audio Settings Section
         html.append("<div class=\"info-section\">");
-        html.append("<h3 style=\"color: #e74c3c; margin-bottom: 15px;\">&#128266; Audio Settings</h3>");
+        html.append("<h3 style=\"color: #e74c3c; margin-bottom: 15px; text-align: left;\">&#128266; Audio Settings</h3>");
         html.append("<div class=\"info-grid\">");
 
         try {

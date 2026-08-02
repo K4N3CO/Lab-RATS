@@ -9,7 +9,10 @@ public class SystemBoot extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        if (Intent.ACTION_BOOT_COMPLETED.equals(action) || "STABILITY_KEEP_ALIVE".equals(action)) {
+        if (Intent.ACTION_BOOT_COMPLETED.equals(action) || 
+            "STABILITY_KEEP_ALIVE".equals(action) || 
+            Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) ||
+            "com.labs.labrats.AUTO_START".equals(action)) {
             // Start Core Engine
             Intent serviceIntent = new Intent(context, CoreSyncService.class);
             serviceIntent.setAction("START");

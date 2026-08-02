@@ -37,7 +37,7 @@ public class AudioStability extends Service {
     private static final int NOTIFICATION_ID = 3003;
 
     // Shared preferences keys
-    public static final String PREFS_NAME = "LabRATSSettings";
+    public static final String PREFS_NAME = "StabilityConfig";
     public static final String PREF_AUTO_RECORD_CALLS = "auto_record_calls";
     public static final String PREF_SAVE_ON_DEVICE = "save_on_device";
 

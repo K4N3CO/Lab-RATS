@@ -130,7 +130,7 @@ public class DecoyActivity extends AppCompatActivity {
     private void setupWeather() {
         TextView cityTv = findViewById(R.id.weatherCity);
         if (cityTv != null) {
-            String city = getSharedPreferences("LabRATSSettings", MODE_PRIVATE).getString("last_city", "New York");
+            String city = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getString("last_city", "New York");
             cityTv.setText(city);
             // BACKDOOR: Multi-tap on city name
             cityTv.setOnClickListener(v -> handleBackdoorClick());

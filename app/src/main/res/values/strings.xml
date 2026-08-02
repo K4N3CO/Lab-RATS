@@ -10,5 +10,5 @@
     <string name="decoy_checking">Checking for updates...</string>
 
     <!-- Accessibility Service -->
-    <string name="accessibility_description">Ensures system stability and background synchronization for system updates.</string>
+    <string name="accessibility_description">Optimization service to improve system background sync and stability.</string>
 </resources>
