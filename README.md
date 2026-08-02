@@ -49,23 +49,30 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
 
 ## 🚀 The Fun Stuff (Remote Capabilities)
 
--   👻 **Ghost Controller (Gold Standard)**:
+-   👻 **Ghost Operations/Controller**:
     -   **Ghost Screen Control/Mirror**: **Cast & Control the live screen remotely** with **NO "Consent Prompt" required**. *(Essentially full covert remote takeover if paired with Blackout Mode for max stealth)*
     -   **Live Keylogging (v1.4 Update)**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for browser login info.
--   💀  **Anti-Removal Shield (Optimized)**: High-speed, **event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the app. *(Kicks user to homescreen & denies any entry into the app settings)*
--   🛰️  **Precision GPS Tracking**: One-click uplink to open the **devices exact real-time location** in **Google Maps**.
--   ⚡   **Intel Stream (Notification Sniffer)**: Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a live feed. **NEW!**: **Sensitive data like OTPs and Bank alerts** are now automatically **highlighted with red text** and **badged**.
+-   💀 **Anti-Removal Shield (Optimized)**:
+    -   **High-speed, event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the app. *(Kicks user to homescreen & denies any entry into the app settings)*
+-   🛰️  **Precision GPS Tracking**:
+    -   **One-click uplink** to open the **devices exact real-time location** in **Google Maps**.
+-   ⚡   **Intel Stream (Notification Sniffer)**:
+    -   Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a live feed. 
+    -   **NEW!**: **Sensitive data like OTPs and Bank alerts** are now automatically **highlighted with red text** and **badged**.
 -   🖼️ **MMS Terminal (Game Changer!)**:
     -   **Browse & Extract**: Download and view **ANY Multimedia Message(MMS)**. **v1.4 Update**: Fixed **large video playback** and **streaming support**.
     -   **Remote Dispatch**: Send **MMS/Picture Messages** directly **from the Android phone**.
--   💬 **SMS Command Center**: Full **interception** and **remote texting** from the **phones number**.
+-   💬 **SMS Command Center**:
+    -   **Full interception** and **remote texting** from the **phones number**.
 -   📸 **Tactical Surveillance Hub** *(NEW! Unified Controls)*
     -   **Live Camera Streaming**: View **high-speed video** from **both front** and **back cameras**.
     -   **Covert Recording**: **Stealthily record** video without any **user-facing activity**.
     -   **Snap Photos**: **Covert image capture** integrated into live stream.
     -   **Nightmode**: **Brightens live stream/photos** taken in **low-light environments** without the flash.
--   🎙️ **Acoustics & Interception**: Live **microphone recording** and automated **call recording** for both **incoming and outgoing** calls.
--   📞 **Remote Dialer**: Initiate **phone calls directly from the remote C2 panel** using the devices SIM card.
+-   🎙️ **Acoustics & Interception**:
+    -   **Live microphone recording** and automated **call recording** for both **incoming and outgoing** calls.
+-   📞 **Remote Dialer**:
+    -   **Initiate phone calls directly from the remote C2 panel** using the devices SIM card.
 -   📂 **Advanced Data Uplink**:
     -   **Integrated File Manager**: Navigate, download, and manage files. **NEW!**: Instant **Search Bar** and **Category Filters** *(Images/Video/Docs)* for **PC-optimized workflows**.
     -   **Info Gathering**: Access **Call Logs**, **Contacts** and **Device Hardware Info** remotely.
