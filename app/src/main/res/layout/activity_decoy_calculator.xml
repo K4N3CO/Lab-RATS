@@ -2,8 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#0D0D0D"
     android:orientation="vertical"
-    android:background="#000000"
     android:padding="20dp">
 
     <View
@@ -15,18 +15,18 @@
         android:id="@+id/calcDisplay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="120dp"
+        android:layout_marginBottom="20dp"
+        android:fontFamily="sans-serif-light"
         android:gravity="bottom|end"
+        android:minHeight="120dp"
+        android:padding="10dp"
         android:text="0"
         android:textColor="#FFFFFF"
-        android:textSize="80sp"
-        android:padding="10dp"
-        android:layout_marginBottom="20dp"
-        android:fontFamily="sans-serif-light" />
+        android:textSize="80sp" />
 
     <GridLayout
         android:layout_width="match_parent"
-        android:layout_height="415dp"
+        android:layout_height="425dp"
         android:layout_marginBottom="40dp"
         android:columnCount="4"
         android:rowCount="5"
@@ -35,9 +35,9 @@
         <!-- Row 1 -->
         <Button
             style="@style/CalcBtn"
-            android:backgroundTint="@color/system_gray"
+            android:backgroundTint="#9D1A1A"
             android:text="C"
-            android:textColor="@color/neon_red" />
+            android:textColor="#F0EBEB" />
 
         <Button
             style="@style/CalcBtn"
@@ -53,7 +53,7 @@
 
         <Button
             style="@style/CalcBtn"
-            android:backgroundTint="@color/blue_sky"
+            android:backgroundTint="#0B5A99"
             android:text="/" />
 
         <!-- Row 2 -->
@@ -74,7 +74,7 @@
 
         <Button
             style="@style/CalcBtn"
-            android:backgroundTint="@color/blue_sky"
+            android:backgroundTint="#0D5690"
             android:text="x" />
 
         <!-- Row 3 -->
@@ -95,7 +95,7 @@
 
         <Button
             style="@style/CalcBtn"
-            android:backgroundTint="@color/blue_sky"
+            android:backgroundTint="#0C5895"
             android:text="–" />
 
         <!-- Row 4 -->
@@ -116,7 +116,7 @@
 
         <Button
             style="@style/CalcBtn"
-            android:backgroundTint="@color/blue_sky"
+            android:backgroundTint="#11568C"
             android:text="+" />
 
         <!-- Row 5 -->
@@ -134,7 +134,7 @@
 
         <Button
             style="@style/CalcBtn"
-            android:backgroundTint="@color/neon_red"
+            android:backgroundTint="#1E750F"
             android:text="=" />
 
     </GridLayout>

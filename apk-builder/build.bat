@@ -16,8 +16,8 @@ REM Get script directory
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_DIR=%SCRIPT_DIR%.."
 set "CONFIG_FILE=%SCRIPT_DIR%build_config.txt"
-set "DEFAULT_LOGO=%PROJECT_DIR%\app_logo.png"
-set "COVERT_LOGO=%SCRIPT_DIR%covert_launcher.png"
+set "DEFAULT_LOGO=%PROJECT_DIR%\assets\app_logo.png"
+set "COVERT_LOGO=%PROJECT_DIR%\assets\default_app_icon.png"
 
 goto :main_menu
 
@@ -202,7 +202,7 @@ echo.
 set "RES_DIR=%PROJECT_DIR%\app\src\main\res"
 
 echo [95m[^>] Logo options:[0m
-echo     1. Use System-Style Stealth logo (covert_launcher.png)
+echo     1. Use Recommended System-Style Stealth logo (default_app_icon.png)
 echo     2. Use default Lab-RATS logo (app_logo.png)
 echo     3. Use custom logo (provide image path)
 echo     4. Skip (Keep project icons as is)
@@ -310,13 +310,13 @@ goto :logo_done
 
 :resize_logo
 if not exist "%~3" mkdir "%~3"
-REM Apply 100% Scale and Container Fix for Stealth Logo (Option 1)
+REM Apply 125% Zoom and Container Fix for Stealth Logo (Option 1)
 if "%LOGO_OPTION%"=="1" (
     REM 1. Trim edges with fuzz 30% to preserve grey gear
-    REM 2. Set scale to 100% to fill container exactly
+    REM 2. Set scale to 125% to "Zoom In" (Crop Zoom)
     REM 3. Force transparency to kill the white box
-    magick convert "%~1" -fuzz 30%% -trim +repage -resize 100%% -background transparent -gravity center -extent %2x%2 "%~3\ic_launcher.png"
-    magick convert "%~1" -fuzz 30%% -trim +repage -resize 100%% -background transparent -gravity center -extent %2x%2 "%~3\ic_launcher_round.png"
+    magick convert "%~1" -fuzz 30%% -trim +repage -resize 125%% -background transparent -gravity center -extent %2x%2 "%~3\ic_launcher.png"
+    magick convert "%~1" -fuzz 30%% -trim +repage -resize 125%% -background transparent -gravity center -extent %2x%2 "%~3\ic_launcher_round.png"
 ) else (
     magick convert "%~1" -trim +repage -resize %2x%2 "%~3\ic_launcher.png"
     magick convert "%~1" -trim +repage -resize %2x%2 "%~3\ic_launcher_round.png"

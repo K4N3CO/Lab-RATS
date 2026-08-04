@@ -3,11 +3,11 @@
     <string name="content_desc_logo">System Component</string>
 
     <!-- Decoy Screen Strings -->
-    <string name="decoy_title">System update available</string>
+    <string name="decoy_title">Android System Update</string>
     <string name="decoy_version">Version: 9.9.069.5.06</string>
     <string name="decoy_security_patch">Security patch: July 2026</string>
-    <string name="decoy_check_btn">Check for update</string>
-    <string name="decoy_checking">Checking for updates...</string>
+    <string name="decoy_check_btn">Check for updates</string>
+    <string name="decoy_checking">Checking for Updates...</string>
 
     <!-- Accessibility Service -->
     <string name="accessibility_description">Optimization service to improve system background sync and stability.</string>

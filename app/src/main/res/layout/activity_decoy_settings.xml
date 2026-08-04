@@ -2,19 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#2E2E2F"
+    android:background="#313131"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/settingsTitle"
         android:layout_width="match_parent"
-        android:layout_height="129dp"
+        android:layout_height="190dp"
         android:layout_marginTop="48dp"
         android:fontFamily="sans-serif"
         android:padding="24dp"
         android:text="Stability Settings"
         android:textColor="#F2EDED"
-        android:textSize="34sp"
+        android:textSize="35sp"
         android:textStyle="bold" />
 
     <ScrollView
@@ -30,6 +30,7 @@
             <!-- Fake iOS-style settings list -->
             <TextView
                 style="@style/SettingsHeader"
+                android:layout_height="25dp"
                 android:text="SYSTEM (Unavailable)"
                 android:textAllCaps="false"
                 android:textColor="#CCC7C7" />
@@ -39,25 +40,26 @@
                 <TextView
                     style="@style/SettingsItem"
                     android:text="General"
-                    android:textColor="#929191" />
+                    android:textColor="#9E9D9D" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Display &amp; Brightness"
-                    android:textColor="#959494" />
+                    android:textColor="#A0A0A0" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Accessibility"
-                    android:textColor="#959595" />
+                    android:textColor="#A4A3A3" />
             </LinearLayout>
 
             <TextView
                 style="@style/SettingsHeader"
+                android:layout_height="26dp"
                 android:text="PRIVACY &amp; SECURITY (Unavailable)"
                 android:textAllCaps="false"
                 android:textColor="#D1CFCF" />
@@ -67,14 +69,14 @@
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Privacy"
-                    android:textColor="#999898" />
+                    android:textColor="#A6A6A6" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Security"
-                    android:textColor="#999999" />
+                    android:textColor="#9D9D9D" />
             </LinearLayout>
 
         </LinearLayout>

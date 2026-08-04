@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/decoy_background">
+    android:background="#626161">
+
+    <!-- Custom Pseudo-Toast for stealth -->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,74 +15,80 @@
         android:orientation="vertical"
         android:padding="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.435"
+        tools:layout_editor_absoluteX="0dp">
 
         <ImageView
             android:id="@+id/ivUpdateIcon"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="159dp"
+            android:layout_height="155dp"
             android:layout_marginBottom="24dp"
+            android:contentDescription="System Update Icon"
             android:src="@drawable/ic_sprocket_gear"
-            app:tint="@color/decoy_icon_tint"
-            android:contentDescription="System Update Icon" />
+            app:tint="#F6F6F6" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/aldrich"
             android:text="@string/decoy_title"
-            android:textColor="@color/decoy_text_main"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginBottom="8dp" />
+            android:textColor="#E6E6E6"
+            android:textSize="26sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:fontFamily="@font/aldrich"
             android:text="@string/decoy_version"
-            android:textColor="@color/decoy_text_sub"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp" />
+            android:textColor="#A2A2A2"
+            android:textSize="14sp" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginBottom="32dp"
+            android:fontFamily="@font/aldrich"
             android:text="@string/decoy_security_patch"
-            android:textColor="@color/decoy_text_sub"
-            android:textSize="14sp"
-            android:layout_marginBottom="32dp" />
+            android:textColor="#9E9D9D"
+            android:textSize="14sp" />
 
         <ProgressBar
             android:id="@+id/decoyProgress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
             android:indeterminate="true"
-            android:visibility="gone"
-            android:layout_marginBottom="16dp"/>
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnCheckUpdate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="222dp"
+            android:layout_height="62dp"
+            android:backgroundTint="#0D4397"
+            android:fontFamily="@font/aldrich"
             android:text="@string/decoy_check_btn"
-            android:textAllCaps="false"
+            android:textAllCaps="true"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#1A73E8"
+            android:textColorLink="#242FCC"
             app:cornerRadius="24dp" />
 
     </LinearLayout>
 
-    <!-- Custom Pseudo-Toast for stealth -->
     <LinearLayout
         android:id="@+id/pseudoToast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="64dp"
         android:background="@drawable/toast_background"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
-        android:gravity="center_vertical"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -88,10 +97,10 @@
         <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:src="@drawable/ic_sprocket_gear"
-            app:tint="@color/decoy_icon_tint"
             android:layout_marginEnd="10dp"
-            android:contentDescription="Toast Icon" />
+            android:contentDescription="Toast Icon"
+            android:src="@drawable/ic_sprocket_gear"
+            app:tint="@color/decoy_icon_tint" />
 
         <TextView
             android:id="@+id/pseudoToastText"

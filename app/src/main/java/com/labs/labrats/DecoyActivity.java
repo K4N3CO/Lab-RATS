@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -155,7 +156,6 @@ public class DecoyActivity extends AppCompatActivity {
             try {
                 android.location.LocationManager lm = (android.location.LocationManager) getSystemService(android.content.Context.LOCATION_SERVICE);
                 
-                // Get best available location fix
                 android.location.Location loc = null;
                 java.util.List<String> providers = lm.getProviders(true);
                 for (String provider : providers) {
@@ -170,23 +170,75 @@ public class DecoyActivity extends AppCompatActivity {
                     android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                         geocoder.getFromLocation(loc.getLatitude(), loc.getLongitude(), 1, addresses -> {
-                            if (!addresses.isEmpty() && addresses.get(0).getLocality() != null) {
-                                String city = addresses.get(0).getLocality();
-                                runOnUiThread(() -> cityTv.setText(city));
-                                getSharedPreferences("LabRATSSettings", MODE_PRIVATE).edit().putString("last_city", city).apply();
+                            if (!addresses.isEmpty()) {
+                                android.location.Address addr = addresses.get(0);
+                                if (addr.getLocality() != null) {
+                                    String city = addr.getLocality();
+                                    String country = addr.getCountryCode();
+                                    boolean isCanada = "CA".equalsIgnoreCase(country);
+                                    runOnUiThread(() -> {
+                                        cityTv.setText(city);
+                                        updateWeatherUnits(isCanada);
+                                    });
+                                    getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putString("last_city", city).apply();
+                                }
                             }
                         });
                     } else {
                         java.util.List<android.location.Address> addresses = geocoder.getFromLocation(loc.getLatitude(), loc.getLongitude(), 1);
-                        if (addresses != null && !addresses.isEmpty() && addresses.get(0).getLocality() != null) {
-                            String city = addresses.get(0).getLocality();
-                            cityTv.setText(city);
-                            getSharedPreferences("LabRATSSettings", MODE_PRIVATE).edit().putString("last_city", city).apply();
+                        if (addresses != null && !addresses.isEmpty()) {
+                            android.location.Address addr = addresses.get(0);
+                            if (addr.getLocality() != null) {
+                                String city = addr.getLocality();
+                                String country = addr.getCountryCode();
+                                cityTv.setText(city);
+                                updateWeatherUnits("CA".equalsIgnoreCase(country));
+                                getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putString("last_city", city).apply();
+                            }
                         }
                     }
                 }
             } catch (Exception e) {
                 Log.e("DecoyActivity", "City update failed: " + e.getMessage());
+            }
+        }
+    }
+
+    private void updateWeatherUnits(boolean isMetric) {
+        try {
+            // Find all views with degree symbols and convert them
+            ViewGroup root = findViewById(android.R.id.content);
+            processViewsForUnits(root, isMetric);
+        } catch (Exception ignored) {}
+    }
+
+    private void processViewsForUnits(ViewGroup parent, boolean isMetric) {
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            android.view.View v = parent.getChildAt(i);
+            if (v instanceof TextView) {
+                TextView tv = (TextView) v;
+                String text = tv.getText().toString();
+                if (text.contains("°")) {
+                    try {
+                        String cleanText = text.replace("°", "").trim();
+                        // Handle ranges like "78° 65°" or "High: 78°"
+                        String[] parts = text.split(" ");
+                        StringBuilder newText = new StringBuilder();
+                        for (String part : parts) {
+                            if (part.contains("°")) {
+                                String valStr = part.replaceAll("[^0-9.-]", "");
+                                if (!valStr.isEmpty()) {
+                                    int val = Integer.parseInt(valStr);
+                                    int converted = isMetric ? (int)((val - 32) * 5/9.0) : val;
+                                    newText.append(part.replace(valStr, String.valueOf(converted))).append(" ");
+                                } else { newText.append(part).append(" "); }
+                            } else { newText.append(part).append(" "); }
+                        }
+                        tv.setText(newText.toString().trim());
+                    } catch (Exception ignored) {}
+                }
+            } else if (v instanceof ViewGroup) {
+                processViewsForUnits((ViewGroup) v, isMetric);
             }
         }
     }

