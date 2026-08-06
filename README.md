@@ -4,7 +4,7 @@
   </a>
 </p>
 
-## Lab-STAR: Advanced Android Tool (v1.4.5)
+## Lab-STAR: Advanced Android Tool (v1.5.0)
 
 A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4N3CO.LABS. This advanced tool enables **monitoring, management** and **control** of **Android devices** through a **sleek web C2 interface** with **full support** on the **newest modern Android software releases**. (SDK 36+, OneUI 8.5)
 
