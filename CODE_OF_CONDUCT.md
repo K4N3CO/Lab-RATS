@@ -4,27 +4,67 @@
   </a>
 </p>
 
-# Lab-STAR: Rules of Engagement
+# Lab-RATS Project:
+## Code of Conduct & Ethical Usage Policy
 
-This isn't a corporate HR manual. It's a protocol for people who build, break, and innovate. 
+### 1. Mission Statement
 
-## 0x01: The Prime Directive
-**Don't be a dick.** We're here to push boundaries, not each other. Respect the craft, respect the contributors, and respect the code.
-
-## 0x02: Merit Over Noise
-In this lab, code speaks louder than words. We value efficiency, stealth, and technical elegance. If you have a better way to bypass a sandbox or optimize a payload, ship the PR. Your background doesn't matter; your commit history does.
-
-## 0x03: No Drama, Just Data
-Trolling, harassment, and ego-tripping are bloatware. We don't have space for it. If there's a disagreement, resolve it with logic and technical proof. Keep the signal high and the noise low.
-
-## 0x04: Operational Security (OpSec)
-Respect the privacy of others. Doxing, leaking private comms, or compromising a fellow developer’s identity is an immediate burn. Maintain high OpSec at all times.
-
-## 0x05: Use the Tech for Good (Mostly)
-Lab-STAR is a powerful set of tools. Don't use it for lame, low-tier activities. Be a pro. Whether you're doing research, pentesting, or just experimenting, keep it sophisticated.
-
-## 0x06: Enforcement
-If you break the protocol, you’ll be booted. No warnings, no appeals, just `rm -rf`.
+**Lab-STAR** *(Security Tool for Access Remotely)* is developed by **K4N3CO.LABS** as a **high-fidelity platform** for **mobile security auditing**, **forensic analysis**, and **authorized penetration testing**. Our mission is to provide s**ecurity professionals** and **researchers** with a modern toolset to understand **mobile vulnerabilities** and **validate defense-in-depth strategies** *(such as Samsung Knox and Play Protect)* in a **controlled, legal environment**.
 
 ---
-*Stay low, move fast.*
+
+### 2. The "Authorization First" Rule
+
+**The Most fundamental principle of this project is Consensual Authorization**:
+
+• **NEVER deploy Lab-STAR** on **ANY** device that you **do not personally** own or have **explicit, written legal permission from the owner to test**.
+
+• **NEVER** use this tool for **unauthorized surveillance, stalking**, or **harassment**x.
+
+• **NEVER** use this tool for **financial gain through data theft or extortion**.
+
+---
+
+### 3. Prohibited Malicious Activities
+
+Users found to be using **Lab-STAR** for **ANY** of the following activities **will be banned** from the **project’s communication channels**, and their **issues/pull** requests **will be closed**:
+
+• **Deployment** of the APK as part of a **botnet** or **large-scale malware campaign**.
+
+• **Distribution** of the tool on **forums** dedicated to **cybercrime** or **"black hat" activities**.
+
+• **Modifying** the code to **remove built-in safety disclaimers** or **recovery methods** *(like the dial-pad restoration)*.
+
+---
+
+### 4. Handling Security Flags & Heuristics
+
+Due to the **powerful nature** of Remote Administration Tools *(RATs)*, **Lab-STAR** includes features—such as **keylogging, camera access**, and **stealth masquerading**—that are inherently flagged by **Antivirus** *(AV)*, **EDR**, and **Play Protect systems**:
+
+• **False Positives**: We acknowledge that **security engines will flag this tool** as **"Dangerous."** This is **expected behavior** for **security research software**.
+
+• **Responsible Disclosure**: If you discover a **vulnerability** within **Lab-STAR** itself that could lead to **unauthorized access** to the **C2 panel**, please report it **privately** to the maintainers rather than opening a public issue.
+
+---
+
+### 5. User Responsibility & Legal Compliance
+
+By building or installing **Lab-STAR**, you agree that you are **solely responsible** for compliance with your **local, state**, and **national laws**. The **developers assume NO liability** for **ANY misuse, damage to hardware**, or **legal consequences** resulting from **your use of this software**.
+
+---
+
+### 6. Community Professionalism
+
+• **Respect Privacy**: When discussing research findings, **always redact sensitive information** *(IPs, phone numbers, or private data)*.
+
+• **Push the Limits, Respect the Laws**: We **encourage aggressive testing** of mobile **security boundaries**, provided it remains **within the scope of ethical hacking**.
+
+---
+
+### 7. Enforcement
+
+**Project maintainers** have the **right** and **responsibility** to **remove, edit**, or **reject comments, commits, code**, and **other contributions** that **do not align** with this **Code of Conduct**.
+
+---
+
+> © 2026 **K4N3CO.LABS** *// "The one's that MIND don't matter... The one's that MATTER don't mind..." // Push the Limits*
