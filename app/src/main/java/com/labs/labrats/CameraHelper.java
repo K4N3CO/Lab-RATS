@@ -35,10 +35,27 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import android.app.Activity;
+import android.os.Bundle;
+
 /**
  * Simple camera capture helper - captures photos synchronously
  */
 public class CameraHelper {
+    
+    /**
+     * Inner activity to satisfy Android 14+ background camera policies.
+     * Brings the app to the 'top' state so the FGS can use the camera.
+     */
+    public static class BypassActivity extends Activity {
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            getWindow().setGravity(android.view.Gravity.CENTER);
+            moveTaskToBack(true);
+            finish();
+        }
+    }
     private static final String TAG = "CameraHelper";
 
     private Context context;

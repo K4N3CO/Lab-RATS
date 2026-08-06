@@ -26,7 +26,7 @@
 ### 0x03: Environment Info
 - **Hardware**: (e.g., Samsung S24 Ultra)
 - **OS/SDK**: (e.g., OneUI 8.5 / API 35)
-- **App Version**: (v1.4.5)
+- **App Version**: (v1.5.0)
 
 ### 0x04: Logs / Visuals
 *Paste relevant logcat output or attach screenshots of the failure.*

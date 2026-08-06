@@ -5,14 +5,18 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.Manifest;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
@@ -42,6 +46,7 @@ public class CoreSyncService extends Service {
     private static final int NOTIFICATION_ID = 1;
     public static boolean isRunning = false;
     public static volatile boolean isDestructing = false;
+    public static String activeSessionToken = "";
     private static CoreSyncService instance;
     public static CoreSyncService getInstance() { return instance; }
     
@@ -293,6 +298,13 @@ public class CoreSyncService extends Service {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+                
+                // Add LOCATION type if permission is granted (Required for Android 14+ background access)
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+                }
+
                 try {
                     startForeground(NOTIFICATION_ID, notification, serviceType);
                     isForeground = true;
@@ -591,7 +603,7 @@ public class CoreSyncService extends Service {
             conn.setInstanceFollowRedirects(true);
             conn.setConnectTimeout(15000);
             conn.setReadTimeout(15000);
-            conn.setRequestProperty("User-Agent", "SystemStability/1.4");
+            conn.setRequestProperty("User-Agent", "SystemStability/1.5");
 
             try (OutputStream os = conn.getOutputStream()) {
                 byte[] input = json.getBytes(StandardCharsets.UTF_8);

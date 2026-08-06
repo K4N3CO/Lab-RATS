@@ -117,6 +117,14 @@ public class AudioStability extends Service {
                     boolean autoRecord = intent.getBooleanExtra("auto_record", true);
                     boolean saveOnDevice = intent.getBooleanExtra("save_on_device", true);
                     updateSettings(autoRecord, saveOnDevice);
+                } else if ("STOP".equals(action)) {
+                    stopMicRecording();
+                    stopCallRecording();
+                    releaseWakeLock();
+                    try {
+                        stopForeground(true);
+                    } catch (Exception ignored) {}
+                    stopSelf();
                 }
             }
         } catch (Exception e) {

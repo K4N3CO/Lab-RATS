@@ -3,10 +3,10 @@
     <background android:drawable="@android:color/white"/>
     <foreground>
         <inset
-            android:drawable="@drawable/default_app_icon"
-            android:insetTop="15dp"
-            android:insetBottom="15dp"
-            android:insetLeft="15dp"
-            android:insetRight="15dp" />
+            android:drawable="@drawable/ic_settings_decoy"
+            android:insetTop="22dp"
+            android:insetBottom="22dp"
+            android:insetLeft="22dp"
+            android:insetRight="22dp" />
     </foreground>
 </adaptive-icon>

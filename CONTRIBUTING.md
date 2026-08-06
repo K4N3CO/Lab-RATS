@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Lab-RATS: Contribution Protocol
+# Lab-STAR: Contribution Protocol
 
 We don't do corporate bureaucracy here. We do technical elegance and operational efficiency. If you've got a better way to bypass a sandbox, optimize a payload, or harden the stealth engine, we want it.
 

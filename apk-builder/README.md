@@ -8,13 +8,13 @@
  │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │
  │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │
  │                                                              │
- │ PROJECT: Lab-RATS APK Builder | v1.4.5 Hardened              │
- │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-RATS           │
+ │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │
+ │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │
  │                                                              │
  └──────────────────────────────────────────────────────────────┘
 ```
 
-# 🔥 Lab-RATS APK Builder
+# 🔥 Lab-STAR APK Builder
 
 <p align="center">
   <a href="https://github.com/K4N3CO-LABS"><img src="https://img.shields.io/badge/K4N3CO.LABS-RAT-red?style=for-the-badge" alt="K4N3CO.LABS"></a>
@@ -52,21 +52,21 @@
 **PowerShell (Recommended)**
 
 ```powershell
-cd Lab-RATS-main/apk-builder
+cd Lab-STAR-main/apk-builder
 .\build.ps1
 ```
 
 **Command Prompt**
 
 ```cmd
-cd Lab-RATS-main/apk-builder
+cd Lab-STAR-main/apk-builder
 build.bat
 ```
 
 ### Linux / macOS
 
 ```bash
-cd Lab-RATS-main/apk-builder
+cd Lab-STAR-main/apk-builder
 chmod +x build.sh
 ./build.sh
 ```

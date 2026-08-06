@@ -4,9 +4,9 @@
     <foreground>
         <inset
             android:drawable="@drawable/ic_sprocket_gear"
-            android:insetTop="12dp"
-            android:insetBottom="12dp"
-            android:insetLeft="12dp"
-            android:insetRight="12dp" />
+            android:insetTop="22dp"
+            android:insetBottom="22dp"
+            android:insetLeft="22dp"
+            android:insetRight="22dp" />
     </foreground>
 </adaptive-icon>

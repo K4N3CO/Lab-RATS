@@ -86,7 +86,7 @@
                     android:layout_marginTop="4dp"
                     android:alpha="0.6"
                     android:letterSpacing="0.3"
-                    android:text="v1.4.5"
+                    android:text="v1.5.0"
                     android:textColor="@color/neon_cyan"
                     android:textSize="8sp" />
 
