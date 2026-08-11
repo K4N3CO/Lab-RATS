@@ -12,12 +12,10 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
 
 ## 🛡️ Core Features & Security
 
--   📦 **Automated APK Generation**: Instantly build both `signed.apk` *(for production)* and `unsigned.apk`.
+-   📦 **Automated APK Generation**: Instantly build `signed.apk` *(for production)*.
 -   🆔 **Advanced Identity Control**: Fully customize App Name**, **Package ID**, and **Minimum SDK**.
 -   🔐 **C2 Security Layer**: The **web dashboard** is **protected by a secure login** wall (**Default Password: admin1337**). The password can be **updated directly from the Terminal** home page for **enhanced security**.
--   🎨 **Smart Branding Engine**:
-    -   **Auto-Density Scaling**: Resizes logos automatically for all Android screen densities.
-    -   **Transparency Fixer**: Removes white backgrounds from logo assets automatically.
+-    **Auto-Density Scaling**: Resizes logos automatically for all Android screen densities.
 -   📱 **PC/Mobile-Responsive**: The remote web interface is fully optimized for both PC and smartphone browsers, featuring a **touch-friendly layout, adaptive navigation tabs, and scalable UI elements** for monitoring from any device.
 
 ---
@@ -35,7 +33,10 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
     -   🔳 **QR Shadow Vector**: Generates a high-density QR code pointing to the hardened delivery URL, optimized for physical placement or digital distribution.
     -   🌐 **PWA Shadow Bundle**: Generates a Progressive Web App manifest that mimics a "System Service" website, triggering an automated background download of the APK upon site interaction.
     -   📄 **Office Word/Excel**: Embeds delivery macros or external references inside `.docx` or `.xlsx` files for enterprise-targeted delivery.
--   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox** and **Google Play Protect**. This is achieved through **dynamic code obfuscation** during the APK build process, **randomized package identities**, and the use of **fully interactive decoy activities** that mimic legitimate system behaviors to bypass heuristic and signature-based scanning.
+-   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox** and **Google Play Protect**. 
+    -   **Dynamic Code Obfuscation**: build-time randomization of logic flow and class names.
+    -   **Encrypted Local Telemetry**: Internal system logs are encrypted at build-time, rendering them unreadable to standard mobile forensic tools.
+    -   **Interactive Decoy Activities**: fully functional behavior patterns that mimic legitimate system components to bypass advanced heuristic and AI-based scanners.
 -   🌑 **NEW!** **Blackout Mode**: A high-stealth mode designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
 -   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the "Masquerade Library" of **convincing clones**. Instantly transform Lab-RATS into a **Calculator**, **Weather App**, **System Diagnostics**, or **Settings Menu**.
 -   🛠️ **Functional Decoy Engine**: Unlike static images, these decoys are **fully interactive**. The Calculator performs real math, and the Weather app dynamically loads the target's actual city name and forecast.
@@ -53,29 +54,35 @@ A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4
 -   👻 **Ghost Operations/Controller**:
     -   **Ghost Screen Control/Mirror**: **Cast & Control the live screen remotely** with **NO "Consent Prompt" required**. *(Essentially full covert remote takeover if paired with Blackout Mode for max stealth)*
     -   **Live Keylogging (v1.4 Update)**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for browser login info.
+-   🧪 **Exploit Factory (NEW!)**:
+    -   **NFC Proximity Vector**: Generate binary NDEF payloads for physical tags. Triggers automatic browser-based APK downloads on contact.
+    -   **QR Visual Vector**: Dedicated high-density QR generator with independent URL configuration for camera-based delivery.
+    -   **Smishing Library**: Pre-configured tactical phishing templates (Stability Alert, Delivery Tracking, Government Tax Refund, etc.) with automated C2 link injection.
+    -   **Shadow Overlay (Phishing)**: Remotely inject functional, pixel-perfect credential-harvesting overlays over the device. Supports **Instagram, Google/Gmail, Facebook, Binance, PayPal, and Microsoft Outlook**.
 -   💀 **Anti-Removal Shield (Optimized)**:
-    -   **High-speed, event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the app. *(Kicks user to homescreen & denies any entry into the app settings)*
+    -   **High-speed, event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the app.
+    -   **Suicide Protocol (Self-Destruct)**: Remote-triggered persistent loop that wipes all local configuration and initiates a hard uninstallation of the C2 core.
 -   🛰️  **Precision GPS Tracking**:
     -   **One-click uplink** to open the **devices exact real-time location** in **Google Maps**.
 -   ⚡   **Intel Stream (Notification Sniffer)**:
     -   Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a live feed.
-    -   **NEW!**: **Sensitive data like OTPs and Bank alerts** are now automatically **highlighted with red text** and **badged**.
 -   🖼️ **MMS Terminal (Game Changer!)**:
     -   **Browse & Extract**: Download and view **ANY Multimedia Message(MMS)**. **v1.4 Update**: Fixed **large video playback** and **streaming support**.
     -   **Remote Dispatch**: Send **MMS/Picture Messages** directly **from the Android phone**.
 -   💬 **SMS Command Center**:
     -   **Full interception** and **remote texting** from the **phones number**.
--   📸 **Tactical Surveillance Hub** *(NEW! Unified Controls)*
-    -   **Live Camera Streaming**: View **high-speed video** from **both front** and **back cameras**.
-    -   **Covert Recording**: **Stealthily record** video without any **user-facing activity**.
-    -   **Snap Photos**: **Covert image capture** integrated into live stream.
-    -   **Nightmode**: **Brightens live stream/photos** taken in **low-light environments** without the flash.
+-   📸 **Tactical Surveillance Hub (v1.5.0 Master Calibration)**
+    -   **Zero-Distortion Aspect Lock**: Strictly locks to the sensor's native hardware aspect ratio. Switching from "Ultra Low" to "Very High" **never shifts the zoom level** or field-of-view.
+    -   **Hardened Android 14 Bypass**: Implements a 3.5-second private task isolation sequence to satisfy modern background hardware requirements.
+    -   **Covert Recording**: Stealthily record video without any user-facing activity.
+    -   **Snap Photos**: Covert image capture integrated into live stream.
+    -   **Nightmode**: Electronically brightens live streams and photos in low-light environments without using the device flash.
 -   🎙️ **Acoustics & Interception**:
     -   **Live microphone recording** and automated **call recording** for both **incoming and outgoing** calls.
 -   📞 **Remote Dialer**:
     -   **Initiate phone calls directly from the remote C2 panel** using the devices SIM card.
 -   📂 **Advanced Data Uplink**:
-    -   **Integrated File Manager**: Navigate, download, and manage files. **NEW!**: Instant **Search Bar** and **Category Filters** *(Images/Video/Docs)* for **PC-optimized workflows**.
+    -   **Integrated File Manager**: Navigate, download, and manage files. Features an instant **Search Bar** and **Category Filters** *(Images/Video/Docs)*.
     -   **Info Gathering**: Access **Call Logs**, **Contacts** and **Device Hardware Info** remotely.
     -   **📝 Direct File Editor**: Live-edit **text, JSON**, and **log files** directly on the device.
 -   📊 **Telemetry & Reporting**:
