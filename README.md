@@ -287,95 +287,79 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ### Terminal/Homepage Tab:
 
-[![01-Terminal-Tab.png](https://i.postimg.cc/jjwCKz5t/01-Terminal-Tab.png)](https://postimg.cc/McwzmfVF)
+[![01-Terminal-Tab.png](https://i.postimg.cc/gkqgDDH7/01-Terminal-Tab.png)](https://postimg.cc/3dNjr26j)
 
 ---
 
-### Ghost Operations Tab: *(Top half)*
+### Ghost Operations Tab:
 
-[![02-Ghost-Tab-Top-Half.png](https://i.postimg.cc/B6mmqm9X/02-Ghost-Tab-Top-Half.png)](https://postimg.cc/G8sFKJpC)
-
----
-
-### Ghost Ops.Tab Remote/Stealth: *(Bottom half)*
-
-<p align="center">
-  <a href="https://postimg.cc/mzwH8XGJ">
-    <img src="https://i.postimg.cc/4yCQ4q2f/03-Ghost-Tab-Bottom.png" alt="03-Ghost-Tab-Bottom.png" />
-  </a>
-</p>
+[![02-Ghost-Tab.png](https://i.postimg.cc/3JCtBBFf/02-Ghost-Tab.png)](https://postimg.cc/PPJbf1c1)
 
 ---
 
 ### Optics/Live Camera Stream Tab:
 
-[![04-Optics-Tab.png](https://i.postimg.cc/W3Z0ySpq/04-Optics-Tab.png)](https://postimg.cc/R6M367Hv)
-
----
-
-### NEW! Unified Live Camera Control Hub:
-
-[![Unified-cam-hub.png](https://i.postimg.cc/SKhS4dj6/Unified-cam-hub.png)](https://postimg.cc/VJKQBjqv)
-
----
-
-### Live Camera Stream Example:
-
-[![05-Live-Cam-Stream.png](https://i.postimg.cc/x8Dh4Skw/05-Live-Cam-Stream.png)](https://postimg.cc/phCsm4JC)
+[![03-Optics-Tab.png](https://i.postimg.cc/QxkfbbJw/03-Optics-Tab.png)](https://postimg.cc/kBGNMWZv)
 
 ---
 
 ### Locate/Live GPS Tab:
 
-[![06-Locate-Tab.png](https://i.postimg.cc/9MBQzqJM/06-Locate-Tab.png)](https://postimg.cc/tZYjM70Q)
+[![04-Locate-Tab.png](https://i.postimg.cc/nhF0wD31/04-Locate-Tab.png)](https://postimg.cc/vcKr4cF1)
+
+---
+
+### Exploit Factory Tab: (NEW)
+
+[![05-Exploits-Tab.png](https://i.postimg.cc/4xfBF9WB/05-Exploits-Tab.png)](https://postimg.cc/rKH1DKXr)
 
 ---
 
 ### Data/Storage Tab:
 
-[![6-Data-Tab.png](https://i.postimg.cc/W3qvx3sD/6-Data-Tab.png)](https://postimg.cc/bDPWtqD8)
+[![06-Data-Tab.png](https://i.postimg.cc/nhF0wD33/06-Data-Tab.png)](https://postimg.cc/ZCQ8WCtN)
 
 ---
 
 ### Intel/App Notifications Tab:
 
-[![8-Intel-Tab.png](https://i.postimg.cc/sxFrzr2j/8-Intel-Tab.png)](https://postimg.cc/PpMcb0Z9)
+[![07-Intel-Tab.png](https://i.postimg.cc/HkYBPy6Z/07-Intel-Tab.png)](https://postimg.cc/56rBX6dL)
 
 ---
 
 ### SMS/Text Message Tab:
 
-[![9-SMS-Tab.png](https://i.postimg.cc/x8r2Q2dC/9-SMS-Tab.png)](https://postimg.cc/Q9qPgv1G)
+[![08-SMS-Tab.png](https://i.postimg.cc/DwvBYXxN/08-SMS-Tab.png)](https://postimg.cc/1fdG8fh0)
 
 ---
 
 ### MMS/Multimedia Message Tab:
 
-[![07-MMS-Tab.png](https://i.postimg.cc/YSKr3xP3/07-MMS-Tab.png)](https://postimg.cc/K1fhctxk)
+[![09-MMS-Tab.png](https://i.postimg.cc/BnSMwKmk/09-MMS-Tab.png)](https://postimg.cc/WhyGdhLw)
 
 ---
 
 ### Acoustics/Audio Tab:
 
-[![08-Acoustics-Tab.png](https://i.postimg.cc/kM17ZCH0/08-Acoustics-Tab.png)](https://postimg.cc/s1WFQksm)
+[![10-Acoustics-Tab.png](https://i.postimg.cc/zGz0Pgx9/10-Acoustics-Tab.png)](https://postimg.cc/VdhqJdQR)
 
 ---
 
-### Call Logs Tab:
+### Comms/Call Logs Tab:
 
-[![12-Call-Logs-Tab.png](https://i.postimg.cc/Sshdb1h6/12-Call-Logs-Tab.png)](https://postimg.cc/QBf1pbVC)
+[![11-Comms-Tab.png](https://i.postimg.cc/SxSDtMZ0/11-Comms-Tab.png)](https://postimg.cc/6yPr8yJz)
 
 ---
 
 ### Contacts Tab:
 
-[![13-Contacts-Tab.png](https://i.postimg.cc/4dgPR2gz/13-Contacts-Tab.png)](https://postimg.cc/DWxLqgmZ)
+[![12-Contacts-Tab.png](https://i.postimg.cc/zGz0Pgdr/12-Contacts-Tab.png)](https://postimg.cc/tYc3sYQS)
 
 ---
 
 ### Hardware/Device Info Tab:
 
-[![14-Hardware-Tab.png](https://i.postimg.cc/Cx2jHhLm/14-Hardware-Tab.png)](https://postimg.cc/75gGqyz2)
+[![13-Hardware-Tab.png](https://i.postimg.cc/VkfDHC7m/13-Hardware-Tab.png)](https://postimg.cc/ykGmDk4b)
 
 ---
 
