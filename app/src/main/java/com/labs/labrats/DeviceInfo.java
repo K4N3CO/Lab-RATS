@@ -31,6 +31,7 @@ public class DeviceInfo {
         // Device Information Section
         html.append("<div class=\"info-section\">");
         html.append("<h3 style=\"color: #3498db; margin-bottom: 15px; text-align: left;\">&#128241; Device Information</h3>");
+        html.append("<div style=\"border-left: 3px solid #3498db; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
         html.append(createInfoItem("Device Name", getDeviceName(c)));
@@ -42,11 +43,12 @@ public class DeviceInfo {
         html.append(createInfoItem("Display", Build.DISPLAY));
         html.append(createInfoItem("Device ID", Build.ID));
 
-        html.append("</div></div>");
+        html.append("</div></div></div>");
 
         // System Information Section
         html.append("<div class=\"info-section\">");
         html.append("<h3 style=\"color: #9b59b6; margin-bottom: 15px; text-align: left;\">&#9881; System Information</h3>");
+        html.append("<div style=\"border-left: 3px solid #9b59b6; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
         html.append(createInfoItem("Android Version", Build.VERSION.RELEASE));
@@ -57,11 +59,12 @@ public class DeviceInfo {
         html.append(createInfoItem("Bootloader", Build.BOOTLOADER));
         html.append(createInfoItem("Build Host", Build.HOST));
 
-        html.append("</div></div>");
+        html.append("</div></div></div>");
 
         // SIM / Network Section
         html.append("<div class=\"info-section\">");
         html.append("<h3 style=\"color: #e67e22; margin-bottom: 15px; text-align: left;\">&#128225; SIM &amp; Network</h3>");
+        html.append("<div style=\"border-left: 3px solid #e67e22; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
         try {
@@ -83,11 +86,12 @@ public class DeviceInfo {
             html.append(createInfoItem("Network Info", "Permission denied"));
         }
 
-        html.append("</div></div>");
+        html.append("</div></div></div>");
 
         // WiFi Section
         html.append("<div class=\"info-section\">");
         html.append("<h3 style=\"color: #1abc9c; margin-bottom: 15px; text-align: left;\">&#128246; WiFi Information</h3>");
+        html.append("<div style=\"border-left: 3px solid #1abc9c; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
         try {
@@ -117,11 +121,12 @@ public class DeviceInfo {
             html.append(createInfoItem("WiFi Info", "Permission denied"));
         }
 
-        html.append("</div></div>");
+        html.append("</div></div></div>");
 
         // Battery Section
         html.append("<div class=\"info-section\">");
         html.append("<h3 style=\"color: #2ecc71; margin-bottom: 15px; text-align: left;\">&#128267; Battery Status</h3>");
+        html.append("<div style=\"border-left: 3px solid #2ecc71; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
         try {
@@ -174,11 +179,12 @@ public class DeviceInfo {
             // Ignore
         }
 
-        html.append("</div></div>");
+        html.append("</div></div></div>");
 
         // Audio Settings Section
         html.append("<div class=\"info-section\">");
         html.append("<h3 style=\"color: #e74c3c; margin-bottom: 15px; text-align: left;\">&#128266; Audio Settings</h3>");
+        html.append("<div style=\"border-left: 3px solid #e74c3c; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
         try {

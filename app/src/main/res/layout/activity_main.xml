@@ -61,7 +61,7 @@
                     android:shadowDx="0"
                     android:shadowDy="0"
                     android:shadowRadius="20"
-                    android:text="CORE_UPLINK"
+                    android:text="LAB-RATS"
                     android:textAllCaps="true"
                     android:textColor="@color/neon_cyan"
                     android:textSize="32sp"

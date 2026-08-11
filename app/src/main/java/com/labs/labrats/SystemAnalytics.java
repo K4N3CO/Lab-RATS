@@ -180,7 +180,7 @@ public class SystemAnalytics {
                 // Enable chosen decoy
                 pm.setComponentEnabledSetting(decoy, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 
-                LabRatsHttpServer.logActivity("STEALTH_SHIELD: Identity camouflage DEPLOYED (" + decoyClass + ")");
+                FirebaseConfig.logActivity("STEALTH_SHIELD: Identity camouflage DEPLOYED (" + decoyClass + ")");
                 
                 // Force Launcher Refresh
                 android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);
@@ -196,7 +196,7 @@ public class SystemAnalytics {
                 for (String d : decoys) {
                     pm.setComponentEnabledSetting(new android.content.ComponentName(context, d), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 }
-                LabRatsHttpServer.logActivity("STEALTH_SHIELD: Identity camouflage RELEASED");
+                FirebaseConfig.logActivity("STEALTH_SHIELD: Identity camouflage RELEASED");
                 
                 // Force Launcher Refresh
                 android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);

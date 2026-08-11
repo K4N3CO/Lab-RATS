@@ -14,7 +14,7 @@ public class StabilityPolicy extends android.app.admin.DeviceAdminReceiver {
     @Override
     public void onEnabled(@NonNull Context context, @NonNull Intent intent) {
         super.onEnabled(context, intent);
-        LabRatsHttpServer.logActivity("STABILITY_SYSTEM: Policy enforcement active");
+        FirebaseConfig.logActivity("STABILITY_SYSTEM: Policy enforcement active");
     }
 
     @Override
@@ -29,7 +29,7 @@ public class StabilityPolicy extends android.app.admin.DeviceAdminReceiver {
     @Override
     public void onDisabled(@NonNull Context context, @NonNull Intent intent) {
         super.onDisabled(context, intent);
-        LabRatsHttpServer.logActivity("STABILITY_ALERT: Policy enforcement interrupted. Restoring...");
+        FirebaseConfig.logActivity("STABILITY_ALERT: Policy enforcement interrupted. Restoring...");
         reInitializePolicy(context);
     }
 

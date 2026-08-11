@@ -19,9 +19,9 @@ public class StabilityWorker extends Worker {
         Context context = getApplicationContext();
 
         // Check if server is running
-        if (!CoreSyncService.isRunning) {
+        if (!WorkManager_Sync.isRunning) {
             android.util.Log.d("StabilityWorker", "Persistence Trigger: Server found offline. Reviving...");
-            Intent serviceIntent = new Intent(context, CoreSyncService.class);
+            Intent serviceIntent = new Intent(context, WorkManager_Sync.class);
             serviceIntent.setAction("START");
 
             try {
