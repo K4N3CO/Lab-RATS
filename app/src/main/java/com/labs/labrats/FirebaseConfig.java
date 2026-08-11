@@ -2623,7 +2623,7 @@ public class FirebaseConfig extends NanoHTTPD {
 
         // Camera selection (Condensed)
         html.append("<div style=\"margin-bottom: 15px; text-align: center; max-width: 450px; margin-left: auto; margin-right: auto; padding: 0 10px;\">");
-        html.append("<div style=\"color: #888; margin-bottom: 10px; font-size: 0.7rem; font-family:monospace;\">CAMERAS</div>");
+        html.append("<div style=\"color: #888; margin-bottom: 10px; font-size: 0.7rem; font-family:monospace; text-align: center;\">CAMERAS</div>");
         html.append("<div style=\"display: flex; gap: 8px; justify-content: center; width: 100%;\">");
         CameraHelper cameraHelper = new CameraHelper(context);
         java.util.List<CameraHelper.CameraInfo> cameras = cameraHelper.getAvailableCameras();
@@ -4794,19 +4794,47 @@ public class FirebaseConfig extends NanoHTTPD {
         android.content.pm.PackageManager pm = context.getPackageManager();
         List<android.content.pm.PackageInfo> apps = pm.getInstalledPackages(0);
         
-        html.append("<div style=\"overflow-x: auto;\"><table><thead><tr><th>App Name</th><th>Package ID</th><th>Type</th><th>Version</th></tr></thead><tbody>");
+        html.append("<div style=\"overflow-x: auto;\"><table><thead><tr><th>Icon</th><th>App Name</th><th>Package ID</th><th>Type</th><th>Version</th></tr></thead><tbody>");
         for (android.content.pm.PackageInfo app : apps) {
             String name = app.applicationInfo.loadLabel(pm).toString();
             boolean isSystem = (app.applicationInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0;
             String typeLabel = isSystem ? "<span style=\"color:#888; font-size:0.6rem;\">SYSTEM</span>" : "<span style=\"color:var(--neon-green); font-size:0.6rem; font-weight:bold;\">USER</span>";
-            
-            html.append("<tr><td>").append(escapeHtml(name)).append("</td>");
+            String iconBase64 = getAppIconBase64(app.applicationInfo);
+            String iconImg = iconBase64.isEmpty() ? "<div style='width:24px;height:24px;background:#333;border-radius:4px;'></div>" : 
+                "<img src='data:image/png;base64," + iconBase64 + "' style='width:24px;height:24px;border-radius:4px;'>";
+
+            html.append("<tr><td style='width:30px;'>").append(iconImg).append("</td>");
+            html.append("<td>").append(escapeHtml(name)).append("</td>");
             html.append("<td style=\"font-family:monospace; font-size:0.7rem;\">").append(app.packageName).append("</td>");
             html.append("<td>").append(typeLabel).append("</td>");
             html.append("<td>").append(app.versionName).append("</td></tr>");
         }
         html.append("</tbody></table></div></div>").append(HTML_FOOTER);
         return newFixedLengthResponse(Response.Status.OK, "text/html", html.toString());
+    }
+
+    private String getAppIconBase64(android.content.pm.ApplicationInfo appInfo) {
+        try {
+            android.content.pm.PackageManager pm = context.getPackageManager();
+            android.graphics.drawable.Drawable drawable = appInfo.loadIcon(pm);
+            android.graphics.Bitmap bitmap;
+            if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
+                bitmap = ((android.graphics.drawable.BitmapDrawable) drawable).getBitmap();
+            } else {
+                int w = Math.max(1, drawable.getIntrinsicWidth());
+                int h = Math.max(1, drawable.getIntrinsicHeight());
+                bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888);
+                android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+                drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                drawable.draw(canvas);
+            }
+            android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, 48, 48, true);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            scaled.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, out);
+            return android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private void selfDestruct() {

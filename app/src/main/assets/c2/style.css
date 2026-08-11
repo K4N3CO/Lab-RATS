@@ -12,7 +12,7 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', monospace;
   font-size: 16px;
   background: var(--bg-dark);
   background-image:
@@ -289,7 +289,7 @@ button.btn-active-yellow:focus, .btn-active-yellow:focus {
   h2 { font-size: 0.85rem !important; flex-wrap: wrap !important; gap: 8px !important; display: flex !important; align-items: center !important; justify-content: flex-start !important; text-align: left !important; }
   h3 { font-size: 0.85rem !important; display: block !important; text-align: left !important; white-space: normal !important; word-wrap: break-word !important; line-height: 1.4 !important; letter-spacing: 1px !important; }
   .mobile-full-width { width: 100% !important; }
-  .info-label { font-size: 0.65rem !important; letter-spacing: 1px !important; text-align: left !important; }
+  .info-label { font-size: 0.65rem !important; letter-spacing: 1px !important; }
   .info-section { margin-top: 15px; }
   .file-item { padding: 10px; gap: 8px; }
   .file-item .btn-small { padding: 4px 10px !important; font-size: 0.55rem !important; margin: 0 !important; width: auto !important; min-width: 0 !important; display: inline-block !important; }
