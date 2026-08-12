@@ -14,7 +14,7 @@
         android:padding="32dp"
         app:layout_constraintBottom_toTopOf="@+id/btnCheckUpdate"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.75"
+        app:layout_constraintVertical_bias="0.514"
         tools:layout_editor_absoluteX="10dp">
 
         <ImageView

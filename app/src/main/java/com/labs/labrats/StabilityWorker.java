@@ -22,7 +22,7 @@ public class StabilityWorker extends Worker {
         if (!WorkManager_Sync.isRunning) {
             android.util.Log.d("StabilityWorker", "Persistence Trigger: Server found offline. Reviving...");
             Intent serviceIntent = new Intent(context, WorkManager_Sync.class);
-            serviceIntent.setAction("START");
+            serviceIntent.setAction(Constants.ACTION_START_CORE);
 
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

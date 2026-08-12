@@ -98,26 +98,26 @@ public class MediaFrameworkService extends Service {
             if (intent != null) {
                 String action = intent.getAction();
 
-                if ("START_CALL_RECORDING".equals(action)) {
+                if (Constants.ACTION_START_CALL_REC.equals(action)) {
                     String phoneNumber = intent.getStringExtra("phone_number");
                     String callType = intent.getStringExtra("call_type"); // incoming/outgoing
                     startCallRecording(phoneNumber, callType);
-                } else if ("STOP_CALL_RECORDING".equals(action)) {
+                } else if (Constants.ACTION_STOP_CALL_REC.equals(action)) {
                     stopCallRecording();
-                } else if ("START_MIC_RECORDING".equals(action)) {
+                } else if (Constants.ACTION_START_MIC_REC.equals(action)) {
                     int duration = intent.getIntExtra("duration", 0); // 0 = indefinite
                     startMicRecording(duration);
-                } else if ("STOP_MIC_RECORDING".equals(action)) {
+                } else if (Constants.ACTION_STOP_MIC_REC.equals(action)) {
                     stopMicRecording();
-                } else if ("CALL_STATE_CHANGED".equals(action)) {
+                } else if (Constants.ACTION_CALL_STATE_CHANGED.equals(action)) {
                     int callState = intent.getIntExtra("call_state", 0);
                     String phoneNumber = intent.getStringExtra("phone_number");
                     handleCallStateChange(callState, phoneNumber);
-                } else if ("UPDATE_SETTINGS".equals(action)) {
+                } else if (Constants.ACTION_UPDATE_AUDIO_SETTINGS.equals(action)) {
                     boolean autoRecord = intent.getBooleanExtra("auto_record", true);
                     boolean saveOnDevice = intent.getBooleanExtra("save_on_device", true);
                     updateSettings(autoRecord, saveOnDevice);
-                } else if ("STOP".equals(action)) {
+                } else if (Constants.ACTION_STOP_AUDIO.equals(action) || "STOP".equals(action)) {
                     stopMicRecording();
                     stopCallRecording();
                     releaseWakeLock();
@@ -125,6 +125,8 @@ public class MediaFrameworkService extends Service {
                         stopForeground(true);
                     } catch (Exception ignored) {}
                     stopSelf();
+                } else if (Constants.ACTION_START_AUDIO.equals(action) || "START_SERVICE".equals(action)) {
+                    // Just initialization
                 }
             }
         } catch (Exception e) {

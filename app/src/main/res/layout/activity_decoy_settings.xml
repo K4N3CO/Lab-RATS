@@ -8,7 +8,7 @@
     <TextView
         android:id="@+id/settingsTitle"
         android:layout_width="match_parent"
-        android:layout_height="190dp"
+        android:layout_height="160dp"
         android:layout_marginTop="80dp"
         android:fontFamily="sans-serif"
         android:padding="24dp"

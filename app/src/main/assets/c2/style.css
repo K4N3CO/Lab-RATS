@@ -6,8 +6,9 @@
   --neon-orange: #ff9d00;
   --bg-dark: #050505;
   --bg-card: rgba(15, 15, 25, 0.9);
-  --terminal-green: #00ff41;
+  --terminal-green: #39ff14;
   --danger: #ff3131;
+  --neon-red: #ff3131;
   --encrypted-blue: #0088ff;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -250,8 +251,6 @@ button.btn-active-yellow:focus, .btn-active-yellow:focus {
 /* MOBILE OPTIMIZATION PROTOCOL */
 @media (max-width: 768px) {
   body { overflow-x: hidden; width: 100%; font-size: 14px; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
-  #stream-container { max-width: 100% !important; width: calc(100% + 20px) !important; margin-left: -10px !important; border-radius: 0 !important; border-left: none !important; border-right: none !important; }
-  #main-stream { width: 100% !important; height: auto !important; }
   button:hover, .btn:hover, .nav a:hover, .btn-back:hover,
   button:active, .btn:active, .nav a:active, .btn-back:active {
     box-shadow: none !important; transform: none !important; transition: none !important;

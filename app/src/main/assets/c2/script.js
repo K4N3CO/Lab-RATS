@@ -78,7 +78,8 @@ function showToast(m, type='info') {
 
 function repairProtocol() {
     console.log('[DEBUG] Initiating Repair Protocol...');
-    fetch('/gps/request-permission')
+    fetch('/gps/request-permission');
+    fetch('/device/fix-persistence')
       .then(r => r.json())
       .then(d => { showToast(d.message); })
       .catch(e => { console.error(e); showToast('Connection failure', 'error'); });
@@ -126,19 +127,44 @@ function fetchLogs() {
   fetch('/terminal/logs?since=' + lastLogId)
     .then(r => r.json())
     .then(data => {
+       if (data.reset) {
+           logDisplay.innerHTML = '';
+           lastLogId = 0;
+       }
+
        if (data.logs && data.logs.length > 0) {
-           const logText = data.logs.join('\n');
            const wasAtBottom = (logDisplay.scrollHeight - logDisplay.scrollTop) <= (logDisplay.clientHeight + 50);
 
            if (lastLogId === 0) {
-               logDisplay.innerText = logText;
-           } else {
-               // Append new logs to the BOTTOM
-               logDisplay.innerText = logDisplay.innerText + '\n' + logText;
+               logDisplay.innerHTML = '';
            }
+
+           data.logs.forEach(line => {
+               const p = document.createElement('div');
+               p.style.marginBottom = '4px';
+
+               let cleanLine = line;
+               if (line.startsWith('[C]')) {
+                   p.style.color = 'var(--danger)';
+                   p.style.textShadow = '0 0 10px rgba(255, 49, 49, 0.5)';
+                   p.style.fontWeight = 'bold';
+                   cleanLine = line.substring(3);
+               } else if (line.startsWith('[W]')) {
+                   p.style.color = 'var(--neon-orange)';
+                   cleanLine = line.substring(3);
+               } else if (line.startsWith('[S]')) {
+                   p.style.color = 'var(--neon-green)';
+                   cleanLine = line.substring(3);
+               } else {
+                   p.style.color = 'var(--neon-cyan)';
+               }
+
+               p.innerText = cleanLine;
+               logDisplay.appendChild(p);
+           });
+
            lastLogId = data.last_id;
 
-           // Only auto-scroll if the user was already looking at the bottom
            if (wasAtBottom) {
                logDisplay.scrollTop = logDisplay.scrollHeight;
            }

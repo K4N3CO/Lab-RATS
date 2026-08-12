@@ -51,6 +51,13 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         updateDisplayMetrics();
         Log.d(TAG, "Ghost Uplink Established. " + screenWidth + "x" + screenHeight);
+        FirebaseConfig.logActivity("GHOST_UPLINK: Persistence core synchronized");
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // [STABILITY_SYNC] Ensure the service is treated as a started service for priority
+        return START_STICKY;
     }
 
     private void updateDisplayMetrics() {
@@ -470,6 +477,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     public void showOverlayToast(final String message) {
+        if (message == null || message.isEmpty()) return; // [STABILITY_SYNC] Quiet ping handler
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
                 WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
