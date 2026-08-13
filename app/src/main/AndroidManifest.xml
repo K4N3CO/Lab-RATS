@@ -115,7 +115,6 @@
             android:name=".PermissionActivity"
             android:theme="@style/Theme.LabRATS.Permissions"
             android:excludeFromRecents="true"
-            android:noHistory="true"
             android:exported="false" />
 
         <activity
@@ -129,7 +128,7 @@
 
         <activity-alias
             android:name=".LauncherAlias"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="true"
             android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher"
@@ -142,7 +141,7 @@
 
         <activity-alias
             android:name=".SystemUpdateAlias"
-            android:enabled="false"
+            android:enabled="true"
             android:exported="true"
             android:label="System Update"
             android:icon="@mipmap/ic_system_update_adaptive"

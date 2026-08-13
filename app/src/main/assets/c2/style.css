@@ -12,8 +12,10 @@
   --encrypted-blue: #0088ff;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+body, h1, h2, h3, h4, .terminal-text, .info-label, .file-icon {
+  font-family: 'JetBrains Mono', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', monospace;
+}
 body {
-  font-family: 'JetBrains Mono', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', monospace;
   font-size: 16px;
   background: var(--bg-dark);
   background-image:

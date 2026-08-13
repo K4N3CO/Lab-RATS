@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -577,19 +579,28 @@ public class MainActivity extends AppCompatActivity {
     private void updateIpDisplay(String publicIp) {
         String localIp = getLocalIpAddress();
         runOnUiThread(() -> {
-            StringBuilder ipText = new StringBuilder();
-            if (localIp != null) ipText.append("LOCAL: ").append(localIp);
-            if (publicIp != null && !publicIp.equals(localIp)) {
-                if (ipText.length() > 0) ipText.append("\n");
-                ipText.append("GLOBAL: ").append(publicIp);
-            }
+            String networkType = "Unknown Network";
+            try {
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+                android.net.Network activeNetwork = cm.getActiveNetwork();
+                NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+                if (caps != null) {
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) networkType = "Local Wifi";
+                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) networkType = "Cellular Data";
+                    else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) networkType = "Ethernet";
+                }
+            } catch (Exception ignored) {}
+
+            String displayIp = (localIp != null) ? localIp : publicIp;
             
-            if (ipText.length() == 0) {
+            if (displayIp == null) {
                 tvIpAddress.setText("ADDR: NO_CONNECTION");
                 tvServerUrl.setText("RETRYING_HANDSHAKE...");
             } else {
-                tvIpAddress.setText(ipText.toString());
-                String displayIp = (localIp != null) ? localIp : publicIp;
+                String ipVersion = isIPv6(displayIp) ? "IPv6" : "IPv4";
+                String connectionDesc = "Connection: " + networkType + " (" + ipVersion + ")";
+                tvIpAddress.setText(connectionDesc);
+
                 String formattedUrl = isIPv6(displayIp) ? "http://[" + displayIp + "]:" + FirebaseConfig.DEFAULT_PORT : "http://" + displayIp + ":" + FirebaseConfig.DEFAULT_PORT;
                 tvServerUrl.setText(formattedUrl);
             }

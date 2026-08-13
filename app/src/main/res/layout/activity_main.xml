@@ -1,105 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout 
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="@color/black"
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="20dp">
 
             <!-- Header -->
+
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="229dp"
-                android:layout_marginBottom="32dp"
-                android:gravity="center"
+                android:layout_height="245dp"
+                android:layout_gravity="bottom"
+                android:layout_marginBottom="18dp"
+                android:gravity="bottom|center"
                 android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="122dp"
-                    android:layout_marginTop="40dp"
-                    android:layout_marginBottom="16dp">
-
-                    <!-- Tight Hugging Glow Effect -->
-
-                    <View
-                        android:layout_width="570dp"
-                        android:layout_height="436dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/logo_glow" />
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/content_desc_logo"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/labrats_internal_logo" />
-
-                </FrameLayout>
+                <ImageView
+                    android:id="@+id/imageView4"
+                    android:layout_width="246dp"
+                    android:layout_height="137dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/app_logo" />
 
                 <TextView
                     android:id="@+id/tvAppTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="45dp"
+                    android:layout_width="267dp"
+                    android:layout_height="48dp"
                     android:fontFamily="@font/orbitron"
-                    android:letterSpacing="0.1"
-                    android:shadowColor="@color/neon_cyan"
-                    android:shadowDx="0"
-                    android:shadowDy="0"
-                    android:shadowRadius="20"
-                    android:text="LAB-RATS"
-                    android:textAllCaps="true"
+                    android:gravity="center"
+                    android:letterSpacing="0.25"
+                    android:text="Lab-RATS"
+                    android:textAlignment="center"
+                    android:textAllCaps="false"
                     android:textColor="@color/neon_cyan"
-                    android:textSize="32sp"
+                    android:textSize="34sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvDevelopedBy"
                     android:layout_width="wrap_content"
-                    android:layout_height="16dp"
+                    android:layout_height="18dp"
                     android:layout_marginTop="4dp"
-                    android:alpha="0.9"
+                    android:alpha="0.7"
+                    android:fontFamily="@font/aldrich"
                     android:letterSpacing="0.2"
                     android:text="DEVELOPED BY K4N3CO.LABS"
                     android:textAllCaps="true"
                     android:textColor="@color/neon_cyan"
-                    android:textSize="11sp"
-                    android:textStyle="normal" />
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="38dp"
+                    android:layout_height="30dp"
                     android:layout_marginTop="4dp"
-                    android:alpha="0.6"
+                    android:alpha="0.7"
                     android:fontFamily="@font/aldrich"
-                    android:letterSpacing="0.3"
-                    android:text="v1.5.0"
+                    android:letterSpacing="0.2"
+                    android:text="v1.5.1"
                     android:textColor="@color/neon_cyan"
-                    android:textSize="10sp" />
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="@color/surface_dark"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                android:layout_marginBottom="16dp">
+                app:cardElevation="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -108,14 +97,14 @@
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="4dp"
+                        android:layout_height="5dp"
                         android:background="@color/neon_cyan" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="222dp"
+                        android:layout_height="211dp"
                         android:orientation="vertical"
-                        android:padding="20dp">
+                        android:padding="11dp">
 
                         <TextView
                             android:id="@+id/tvStatus"
@@ -124,9 +113,10 @@
                             android:layout_gravity="center"
                             android:layout_marginBottom="16dp"
                             android:fontFamily="@font/orbitron"
+                            android:letterSpacing="0.15"
                             android:text="🔴 SERVER_OFFLINE"
                             android:textColor="@color/neon_red"
-                            android:textSize="18sp"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
 
                         <View
@@ -137,33 +127,36 @@
 
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.7"
-                            android:letterSpacing="0.1"
+                            android:layout_height="14dp"
+                            android:alpha="0.9"
+                            android:fontFamily="@font/aldrich"
+                            android:letterSpacing="0.2"
                             android:text="VIRTUAL_UPLINK_INFO"
                             android:textAllCaps="true"
-                            android:textColor="@color/neon_cyan"
+                            android:textColor="@color/white"
                             android:textSize="10sp" />
 
                         <TextView
                             android:id="@+id/tvIpAddress"
                             android:layout_width="match_parent"
-                            android:layout_height="34dp"
+                            android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:fontFamily="monospace"
-                            android:text="ADDR: [LOADING_DATA...]"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp" />
+                            android:fontFamily="@font/aldrich"
+                            android:minHeight="34dp"
+                            android:text="[LOADING_DATA...]"
+                            android:textColor="@color/neon_cyan"
+                            android:textSize="14sp" />
 
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="17dp"
+                            android:layout_height="12dp"
                             android:layout_marginTop="16dp"
-                            android:alpha="0.7"
-                            android:letterSpacing="0.1"
+                            android:alpha="0.9"
+                            android:fontFamily="@font/aldrich"
+                            android:letterSpacing="0.2"
                             android:text="REMOTE_C2_LINK"
                             android:textAllCaps="true"
-                            android:textColor="@color/neon_cyan"
+                            android:textColor="@color/white"
                             android:textSize="10sp" />
 
                         <TextView
@@ -172,11 +165,11 @@
                             android:layout_height="45dp"
                             android:layout_marginTop="8dp"
                             android:background="#0D00f2ff"
-                            android:fontFamily="monospace"
+                            android:fontFamily="sans-serif"
                             android:padding="12dp"
                             android:text="UPLINK_INACTIVE"
                             android:textColor="@color/neon_cyan"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                     </LinearLayout>
                 </LinearLayout>
@@ -192,9 +185,10 @@
                 android:fontFamily="@font/orbitron"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="INITIALIZE SERVER"
+                android:letterSpacing="0.15"
+                android:text="INITIALIZE_SERVER"
                 android:textColor="@color/bg_dark"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 app:cornerRadius="12dp" />
 
@@ -202,14 +196,16 @@
                 android:id="@+id/btnCopyUrl"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="41dp"
                 android:layout_marginBottom="12dp"
                 android:fontFamily="@font/orbitron"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="COPY LINK"
+                android:letterSpacing="0.15"
+                android:text="COPY_LINK"
                 android:textColor="@color/neon_cyan"
                 android:textSize="12sp"
+                android:textStyle="bold"
                 app:cornerRadius="12dp"
                 app:strokeColor="@color/neon_cyan"
                 app:strokeWidth="1dp" />
@@ -218,29 +214,32 @@
                 android:id="@+id/btnBatteryOptimization"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="match_parent"
-                android:layout_height="55dp"
+                android:layout_height="49dp"
                 android:layout_marginBottom="24dp"
                 android:fontFamily="@font/orbitron"
+                android:gravity="bottom|center"
+                android:letterSpacing="0.15"
                 android:text="BYPASS_POWER_LIMITS"
                 android:textColor="@color/neon_cyan"
                 android:textSize="12sp"
+                android:textStyle="bold"
                 app:cornerRadius="24dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="60dp"
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="40dp"
-                android:background="#0D00f2ff"
-                android:gravity="center"
+                android:background="@color/black"
+                android:gravity="bottom|center"
                 android:orientation="vertical"
                 android:padding="12dp">
 
                 <TextView
                     android:id="@+id/tvTerminalFeedback"
-                    android:layout_width="wrap_content"
+                    android:layout_width="239dp"
                     android:layout_height="41dp"
-                    android:fontFamily="monospace"
+                    android:fontFamily="@font/aldrich"
                     android:gravity="center"
                     android:text="[ SECURE CONNECTION ESTABLISHED ]"
                     android:textColor="@color/neon_cyan"
