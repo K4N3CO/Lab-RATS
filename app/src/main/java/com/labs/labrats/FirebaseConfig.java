@@ -261,10 +261,10 @@ public class FirebaseConfig extends NanoHTTPD {
             "button { background: #00f2ff; border: none; color: #050505; padding: 18px 30px; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; transition: 0.3s; border-radius: 50px; width: 100%; max-width: 280px; font-weight: 900; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 20px rgba(0,242,255,0.4); }" +
             "button:hover { background: #fff; box-shadow: 0 0 40px rgba(0,242,255,0.6); transform: scale(1.05); }" +
             ".login-card img { transition: all 0.5s; margin-bottom: 30px; }" +
-            ".login-card img:hover { transform: scale(1.1) translateY(-5px); filter: drop-shadow(0 0 30px rgba(0, 242, 255, 1.0)); }" +
+                        ".login-card img:hover { transform: scale(1.1) translateY(-5px); filter: none; }" +
             "</style></head><body>" +
             "<div class=\"login-card\">" +
-            "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.8)); background: transparent !important;\">" +
+                        "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; filter: none; background: transparent !important;\">" +
             "<div id=\"status-header\" class=\"title-font\">RESTRICTED_ACCESS</div>" +
             "<div style=\"font-size:0.6rem; opacity:0.4; margin-top:-20px; margin-bottom:30px; letter-spacing:2px;\">UPLINK_PROTOCOL_V1.5.0</div>" +
             "<form id=\"login-form\" method=\"POST\" action=\"/login\">" +
@@ -287,7 +287,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 1.3rem; } p { font-size: 0.8rem; } }" +
             "p { color: #888; font-family: 'Orbitron', sans-serif; margin-top: 20px; }" +
             ".login-card img { transition: all 0.5s; }" +
-            ".login-card img:hover { transform: scale(1.1) translateY(-5px); filter: drop-shadow(0 0 30px rgba(0, 242, 255, 1.0)); }" +
+                        ".login-card img:hover { transform: scale(1.1) translateY(-5px); filter: none; }" +
             "</style></head><body>" +
             "<div class=\"logout-card\">" +
             "<h1>SESSION_TERMINATED</h1>" +
