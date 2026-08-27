@@ -11,10 +11,12 @@
 
     <!-- High-Fidelity Pill Button Container - EXACT same as activity_new_update -->
 
+    <!-- GHOST_BACKDOOR: Positioned in the middle as requested -->
+
     <ImageView
         android:id="@+id/ivSuccessBase"
-        android:layout_width="335dp"
-        android:layout_height="352dp"
+        android:layout_width="346dp"
+        android:layout_height="371dp"
         android:layout_marginBottom="24dp"
         android:adjustViewBounds="true"
         android:paddingTop="50dp"
@@ -22,73 +24,81 @@
         android:src="@drawable/update2"
         app:layout_constraintBottom_toTopOf="@+id/buttonContainer"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.702" />
+        app:layout_constraintVertical_bias="0.639" />
 
     <FrameLayout
         android:id="@+id/buttonContainer"
-        android:layout_width="224dp"
-        android:layout_height="100dp"
+        android:layout_width="255dp"
+        android:layout_height="72dp"
         android:layout_marginHorizontal="24dp"
-        android:layout_marginBottom="16dp"
-        android:paddingTop="30dp"
+        android:layout_marginBottom="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent">
 
         <!-- High-Fidelity Spinning Four-Dot Loading Effect -->
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCheckForUpdate"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_width="222dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
             android:layout_marginTop="16dp"
+            android:layout_marginBottom="5dp"
             android:backgroundTint="#F62D7DF4"
             android:fontFamily="@font/assistant"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:letterSpacing="0.034"
+            android:singleLine="true"
             android:text="Check for updates"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:textStyle="bold"
             app:cornerRadius="100dp"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/loadingLayoutSuccess"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_gravity="center"
             android:visibility="gone">
 
             <ImageView
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:id="@+id/dot1_success"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
                 android:src="@drawable/loading_dot"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:id="@+id/dot2_success"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
                 android:src="@drawable/loading_dot"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:id="@+id/dot3_success"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
                 android:src="@drawable/loading_dot"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <ImageView
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:id="@+id/dot4_success"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
                 android:src="@drawable/loading_dot"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -97,14 +107,12 @@
 
     </FrameLayout>
 
-    <!-- GHOST_BACKDOOR: Positioned in the middle as requested -->
-
     <View
         android:id="@+id/ivSuccessBackdoor"
-        android:layout_width="103dp"
-        android:layout_height="58dp"
-        android:layout_marginStart="152dp"
-        android:layout_marginTop="312dp"
+        android:layout_width="137dp"
+        android:layout_height="88dp"
+        android:layout_marginStart="140dp"
+        android:layout_marginTop="296dp"
         android:background="@android:color/transparent"
         android:clickable="true"
         android:focusable="true"

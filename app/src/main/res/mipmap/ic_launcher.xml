@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@android:color/white"/>
-    <foreground>
-        <inset
-            android:drawable="@drawable/default_app_icon"
-            android:insetTop="13dp"
-            android:insetBottom="13dp"
-            android:insetLeft="13dp"
-            android:insetRight="13dp" />
-    </foreground>
-</adaptive-icon>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white"/>
+    <item android:drawable="@drawable/default_app_icon"/>
+</layer-list>

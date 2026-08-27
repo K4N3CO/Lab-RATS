@@ -142,11 +142,7 @@ public class TelephonyState extends BroadcastReceiver {
             serviceIntent.putExtra("call_state", callState);
             serviceIntent.putExtra("phone_number", phoneNumber);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent);
-            } else {
-                context.startService(serviceIntent);
-            }
+            androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent);
         } catch (Exception e) {
             Log.e(TAG, "Error sending call state to service", e);
         }
@@ -156,10 +152,6 @@ public class TelephonyState extends BroadcastReceiver {
         Log.d(TAG, "RESURRECTOR: Verifying server health after call...");
         Intent serviceIntent = new Intent(context, WorkManager_Sync.class);
         serviceIntent.setAction("START");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent);
-        } else {
-            context.startService(serviceIntent);
-        }
+        androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent);
     }
 }

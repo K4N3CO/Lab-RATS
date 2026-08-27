@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -52,7 +53,7 @@ public class MmsSender {
                 smsManager = SmsManager.getDefault();
             }
 
-            PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, new Intent("MMS_SENT"), PendingIntent.FLAG_IMMUTABLE);
+            PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, new Intent("MMS_SENT"), (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
             smsManager.sendMultimediaMessage(context, contentUri, null, null, sentIntent);
             
             return true;

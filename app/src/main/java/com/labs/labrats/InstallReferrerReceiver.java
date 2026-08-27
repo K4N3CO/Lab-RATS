@@ -17,11 +17,7 @@ public class InstallReferrerReceiver extends BroadcastReceiver {
         serviceIntent.setAction("START");
         
         try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent);
-            } else {
-                context.startService(serviceIntent);
-            }
+            androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent);
         } catch (Exception e) {
             Log.e("InstallTrigger", "Auto-start failed: " + e.getMessage());
         }

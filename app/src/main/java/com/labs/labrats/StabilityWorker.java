@@ -25,11 +25,7 @@ public class StabilityWorker extends Worker {
             serviceIntent.setAction(Constants.ACTION_START_CORE);
 
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(serviceIntent);
-                } else {
-                    context.startService(serviceIntent);
-                }
+                androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent);
             } catch (Exception ignored) {}
         }
 
