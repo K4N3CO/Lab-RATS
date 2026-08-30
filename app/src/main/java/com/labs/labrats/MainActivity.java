@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
                 startActivity(intent);
-                Toast.makeText(this, "Please enable Notification Access for Lab-STAR", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Please enable Notification Access for Lab-RATS", Toast.LENGTH_LONG).show();
             } catch (Exception e) {
                 Log.e("MainActivity", "Error opening notification settings: " + e.getMessage());
             }

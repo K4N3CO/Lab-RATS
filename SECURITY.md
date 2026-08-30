@@ -4,9 +4,9 @@
   </a>
 </p>
 
-# Lab-STAR: Security & Vulnerability Policy
+# Lab-RATS: Security & Vulnerability Policy
 
-Operational Security (OpSec) is our highest priority. If you find a hole in the Lab-STAR engine or a way to compromise the C2 protocol, we expect you to handle it like a professional.
+Operational Security (OpSec) is our highest priority. If you find a hole in the Lab-RATS engine or a way to compromise the C2 protocol, we expect you to handle it like a professional.
 
 ## 0x01: Responsible Disclosure
 Do **NOT** open public issues for security vulnerabilities. Leaking a bypass or a protocol flaw before it's patched compromises the entire lab.

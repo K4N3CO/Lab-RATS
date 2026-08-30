@@ -1,9 +1,10 @@
 #################################################
-#          Lab-STAR APK BUILDER - PowerShell      #
-#                   v1.5.1 Hardened              #
+#                   Lab-RATS                    #
 #                                               #
-#  Developed by: Lab-STAR.LABS         #
-#  GitHub: https://github.com/K4N3CO/Lab-STAR
+#        Android APK BUILDER - PowerShell       #
+#                v1.5.1 Hardened                #
+#                                               #
+#             Developed by: K4N3CO              #
 #################################################
 
 $ErrorActionPreference = "Continue"
@@ -26,19 +27,40 @@ $DefaultSettings = @{
 
 function Write-Banner {
     Clear-Host
-    Write-Host " ┌──────────────────────────────────────────────────────────────┐" -ForegroundColor Cyan
-    Write-Host " │                                                              │" -ForegroundColor Cyan
-    Write-Host " │  ██╗  ██╗██╗  ██╗███╗   ██╗██████╗  ██████╗  ██████╗         │" -ForegroundColor Cyan
-    Write-Host " │  ██║ ██╔╝██║  ██║████╗  ██║╚════██╗██╔════╝ ██╔═══██╗        │" -ForegroundColor Cyan
-    Write-Host " │  █████╔╝ ███████║██╔██╗ ██║ █████╔╝██║      ██║   ██║        │" -ForegroundColor Cyan
-    Write-Host " │  ██╔═██╗ ╚════██║██║╚██╗██║ ╚═══██╗██║      ██║   ██║        │" -ForegroundColor Cyan
-    Write-Host " │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │" -ForegroundColor Cyan
-    Write-Host " │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │" -ForegroundColor Cyan
-    Write-Host " │                                                              │" -ForegroundColor Cyan
-    Write-Host " │ PROJECT: Lab-STAR APK Builder | v1.5.1 Hardened              │" -ForegroundColor Cyan
-    Write-Host " │ GIT_UPLINK: https://github.com/K4N3CO/Lab-STAR           │" -ForegroundColor Cyan
-    Write-Host " │                                                              │" -ForegroundColor Cyan
-    Write-Host " └──────────────────────────────────────────────────────────────┘" -ForegroundColor Cyan
+    Write-Host " ┌───────────────────────────────────────────────────────────────────────┐" -ForegroundColor Cyan
+    Write-Host " │                                  .-         .                         │" -ForegroundColor Cyan
+    Write-Host " │                               ....-        :                          │" -ForegroundColor Cyan
+    Write-Host " │                            -==--+:.+. ..  -..+:-+                     │" -ForegroundColor Cyan
+    Write-Host " │                            ++---:+.-==+==#:.+---+#                    │" -ForegroundColor Cyan
+    Write-Host " │                             :=---:+++++=++=**-:-:                     │" -ForegroundColor Cyan
+    Write-Host " │                               --+++:-=+++++++-=                       │" -ForegroundColor Cyan
+    Write-Host " │                  .-.         :--+==:++-:-**+-+-                       │" -ForegroundColor Cyan
+    Write-Host " │                    -.     .==:--+:+++=++++++++#.                      │" -ForegroundColor Cyan
+    Write-Host " │                    :-    =---=::-++.=:.=.-==+....                     │" -ForegroundColor Cyan
+    Write-Host " │                   -+   .=-=++===-:.---=::-.-:==...-.==.               │" -ForegroundColor Cyan
+    Write-Host " │                 .==    =--=:=-=++:+:--::-==--...=+-+=+-:              │" -ForegroundColor Cyan
+    Write-Host " │               ..==.   ---++=:-++++++++===+++=+..:=-*-+:.              │" -ForegroundColor Cyan
+    Write-Host " │                :==    -:-.+:-=++-+++++##++=---=++::=+.                │" -ForegroundColor Cyan
+    Write-Host " │                .-=:  .---=++++-++++#####*++..::--. .                  │" -ForegroundColor Cyan
+    Write-Host " │                 .--++.--:----=+---=-++#++==.       .                  │" -ForegroundColor Cyan
+    Write-Host " │                   --------=--:=:-:-====+++-                           │" -ForegroundColor Cyan
+    Write-Host " │                       .--++++--++:+++==:=+.                           │" -ForegroundColor Cyan
+    Write-Host " │                        .:+++::::--:..:-+=                             │" -ForegroundColor Cyan
+    Write-Host " │                       .--=+=-+-+    -:---*---                         │" -ForegroundColor Cyan
+    Write-Host " │                                                                       │" -ForegroundColor Cyan
+    Write-Host " │     ██╗      █████╗ ██████╗       ██████╗  █████╗ ████████╗██████╗    │" -ForegroundColor Cyan
+    Write-Host " │     ██║     ██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝    │" -ForegroundColor Cyan
+    Write-Host " │     ██║     ███████║██████╔╝█████╗██████╔╝███████║   ██║   ██████╗    │" -ForegroundColor Cyan
+    Write-Host " │     ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║   ██║   ╚════█║    │" -ForegroundColor Cyan
+    Write-Host " │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │" -ForegroundColor Cyan
+    Write-Host " │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │" -ForegroundColor Cyan
+    Write-Host " │                                                                       │" -ForegroundColor Cyan
+    Write-Host " │     ----------> Android APK Builder | v1.5.1 Hardened <----------     │" -ForegroundColor Cyan
+    Write-Host " │                                                                       │" -ForegroundColor Cyan
+    Write-Host " │   The one's who MIND don't matter. The one's who MATTER don't mind.   │" -ForegroundColor Cyan
+    Write-Host " │                         DEVELOPED BY K4N3CO                           │" -ForegroundColor Cyan
+    Write-Host " │                               © 2026                                  │" -ForegroundColor Cyan
+    Write-Host " └───────────────────────────────────────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -99,24 +121,8 @@ function Test-Requirements {
     }
     else {
         try {
-            $javaFullVersion = & java -version 2>&1 | Select-String "version" | ForEach-Object { $_.ToString() }
-            if ($javaFullVersion -match '"(\d+)') {
-                $javaVerNum = [int]$matches[1]
-                if ($javaVerNum -eq 1) {
-                    if ($javaFullVersion -match '1\.(\d+)') { $javaVerNum = [int]$matches[1] }
-                }
-
-                Write-Host "[OK] Java $javaVerNum detected ($($javaFullVersion.Trim()))" -ForegroundColor Green
-
-                if ($javaVerNum -gt 21) {
-                    Write-Host "[!] WARNING: Java $javaVerNum is very new. Recommended: 17 or 21." -ForegroundColor Yellow
-                    Write-Host "    Build may fail with 'Unsupported class file major version'." -ForegroundColor Yellow
-                } elseif ($javaVerNum -lt 17) {
-                    Write-Host "[!] WARNING: Java $javaVerNum is old. Recommended: 17 or 21." -ForegroundColor Yellow
-                }
-            } else {
-                Write-Host "[OK] Java found: $javaFullVersion" -ForegroundColor Green
-            }
+            $javaVersion = & java -version 2>&1 | Select-String "version" | ForEach-Object { $_.ToString() }
+            Write-Host "[OK] Java found: $javaVersion" -ForegroundColor Green
         }
         catch {
             Write-Host "[OK] Java found" -ForegroundColor Green
@@ -144,7 +150,7 @@ function Install-Java {
     if ($wingetExists) {
         Write-Host "[>] Installing via winget..." -ForegroundColor Yellow
         try {
-            & winget install EclipseAdoptium.Temurin.17.JDK --accept-source-agreements --accept-package-agreements
+            & winget install EclipseAdoptium.Temurin.11.JDK --accept-source-agreements --accept-package-agreements
             Write-Host "[OK] Java installed! Please restart PowerShell." -ForegroundColor Green
             return
         }
@@ -158,7 +164,7 @@ function Install-Java {
     if ($chocoExists) {
         Write-Host "[>] Installing via Chocolatey..." -ForegroundColor Yellow
         try {
-            & choco install temurin17 -y
+            & choco install temurin11 -y
             Write-Host "[OK] Java installed! Please restart PowerShell." -ForegroundColor Green
             return
         }
@@ -181,15 +187,19 @@ function Show-ManualJavaInstall {
     Write-Host ""
     Write-Host "Option 1: Download from Adoptium (Recommended)" -ForegroundColor White
     Write-Host "    1. Go to: https://adoptium.net/temurin/releases/"
-    Write-Host "    2. Download JDK 17 or JDK 21 for Windows x64"
+    Write-Host "    2. Download JDK 11 or JDK 17 for Windows x64"
     Write-Host "    3. Run the installer (choose Add to PATH)"
     Write-Host "    4. Restart PowerShell and run this script again"
     Write-Host ""
     Write-Host "Option 2: Using winget (Windows 11)" -ForegroundColor White
-    Write-Host "    winget install EclipseAdoptium.Temurin.17.JDK"
+    Write-Host "    winget install EclipseAdoptium.Temurin.11.JDK"
     Write-Host ""
     Write-Host "Option 3: Using Chocolatey" -ForegroundColor White
-    Write-Host "    choco install temurin17"
+    Write-Host "    choco install temurin11"
+    Write-Host ""
+    Write-Host "Option 4: Using Scoop" -ForegroundColor White
+    Write-Host "    scoop bucket add java"
+    Write-Host "    scoop install temurin11-jdk"
     Write-Host ""
 }
 
@@ -202,8 +212,8 @@ function New-Keystore {
     # Default values
     $keyAlias = $DefaultSettings.KeyAlias
     $keystorePass = $DefaultSettings.KeystorePass
-    $cnName = "Lab-STAR Developer"
-    $orgName = "Lab-STAR.LABS"
+    $cnName = "Lab-RATS Developer"
+    $orgName = "Lab-RATS.LABS"
     $country = "US"
     $validityDays = 25 * 365
     
@@ -254,7 +264,7 @@ function New-Keystore {
     try {
         & keytool -genkeypair -alias $keyAlias -keyalg RSA -keysize 2048 `
             -validity $validityDays -keystore $keystorePath `
-            -storepass $keyAlias -keypass $keyAlias -dname $dname 2>$null
+            -storepass $keystorePass -keypass $keystorePass -dname $dname 2>$null
         
         Write-Host "[OK] Keystore generated successfully!" -ForegroundColor Green
         Write-Host ""
@@ -291,7 +301,7 @@ function Set-Logo {
     
     Write-Host "[>] Logo options:" -ForegroundColor Magenta
     Write-Host "    1. Use Recommended System-Style Stealth logo (default_app_icon.png)"
-    Write-Host "    2. Use default Lab-STAR logo (app_logo.png)"
+    Write-Host "    2. Use default Lab-RATS logo (app_logo.png)"
     Write-Host "    3. Use custom logo (provide image path)"
     Write-Host "    4. Skip (Keep project icons as is)"
     Write-Host ""
@@ -315,7 +325,7 @@ function Set-Logo {
         "2" {
             if (Test-Path $DefaultLogo) {
                 $logoPath = $DefaultLogo
-                Write-Host "[OK] Using default Lab-STAR logo" -ForegroundColor Green
+                Write-Host "[OK] Using default Lab-RATS logo" -ForegroundColor Green
             }
             else {
                 Write-Host "[!] Default logo not found at: $DefaultLogo" -ForegroundColor Red
@@ -734,7 +744,7 @@ function Build-Apk {
     # 1. Build Signed APK
     # ---------------------------------------------------------
     Write-Host "[1/2] Generating Signed Production APK" -ForegroundColor Blue
-    $exitCode = Execute-BuildWithProgress -Task "clean assembleRelease" -Label "Compiling Resources & Signing" -Seconds 25
+    $exitCode = Execute-BuildWithProgress -Task "clean assembleRelease" -Label "Compiling Resources & Signing" -Seconds 15
 
     $releaseDir = Join-Path $ProjectDir "app\build\outputs\apk\release"
     $releaseApk = Join-Path $releaseDir "app-release.apk"
@@ -754,7 +764,7 @@ function Build-Apk {
     # 2. Build Unsigned APK
     # ---------------------------------------------------------
     Write-Host "[2/2] Generating Unsigned Debug APK" -ForegroundColor Blue
-    $exitCode = Execute-BuildWithProgress -Task "assembleRelease -PdisableSigning" -Label "Packaging Assets" -Seconds 25
+    $exitCode = Execute-BuildWithProgress -Task "assembleRelease -PdisableSigning" -Label "Packaging Assets" -Seconds 10
 
     $unsignedApk = Join-Path $ProjectDir "app\build\outputs\apk\release\app-release-unsigned.apk"
     if (-not (Test-Path $unsignedApk)) {
@@ -977,7 +987,7 @@ function Show-MainMenu {
         "7" {
             # Documentation
             Write-Banner
-            Write-Host "COMMAND_DOCUMENTATION_V1.5.1" -ForegroundColor White
+            Write-Host "COMMAND_DOCUMENTATION_V1.5.0" -ForegroundColor White
             Write-Host "------------------------------------------------------------"
             Write-Host "1. Start Build: Standard production flow."
             Write-Host "2. Keystore Only: Unique signing certificate."
@@ -990,7 +1000,7 @@ function Show-MainMenu {
         }
         "8" {
             Write-Host "[*] Goodbye!" -ForegroundColor Cyan
-            Write-Host "    Follow: https://github.com/K4N3CO/Lab-STAR" -ForegroundColor Magenta
+            Write-Host "    Follow: https://github.com/K4N3CO/Lab-RATS" -ForegroundColor Magenta
             return
         }
         default {

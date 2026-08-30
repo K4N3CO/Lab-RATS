@@ -33,7 +33,7 @@ A **powerful, lightweight** and **covert-oriented remote Android tool** develope
     -   🔳 **QR Shadow Vector**: Generates a **high-density QR code** pointing to the hardened delivery URL, optimized for **physical placement** or **digital distribution**.
     -   🌐 **PWA Shadow Bundle**: Generates a **Progressive Web App manifest** that mimics a "System Service" website, triggering an automated background download of the APK upon site interaction.
     -   📄 **Office Word/Excel**: Embeds **delivery macros or external references** inside `.docx` or `.xlsx` files for enterprise-targeted delivery.
--   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox** and **Google Play Protect**. 
+-   🛡️ **NEW!** **Evasion Engine**: Now **undetectable by Samsung Knox** and **Google Play Protect**.
     -   **Dynamic Code Obfuscation**: build-time randomization of logic flow and class names.
     -   **Encrypted Local Telemetry**: Internal **system logs are encrypted at build-time**, rendering them **unreadable to standard mobile forensic tools**.
     -   **Interactive Decoy Activities**: fully functional **behavior patterns that mimic legitimate system components** to bypass advanced **heuristic and AI-based scanners**.
@@ -198,7 +198,7 @@ function handleRequest(e) {
 
 ### 3. Deploying & Installing onto Android Device
 
-Deployment is a multi-stage process involving **Weaponization**, **Hosting**, and **Execution**. 
+Deployment is a multi-stage process involving **Weaponization**, **Hosting**, and **Execution**.
 
 #### **A. Strategic Weaponization (The Wrapper)**
 Standard APK files are often blocked by email filters and browser security. Use the **Wizard (Option 6)** in the `apk-builder` to wrap your link inside a high-compatibility carrier file:
@@ -215,7 +215,7 @@ Standard APK files are often blocked by email filters and browser security. Use 
 #### **C. Installation & Initialization**
 Once the Target device downloads the APK:
 1.  **Manual Sideload**: If you have physical access to the device, use `adb install signed_payload.apk`.
-2.  **Permissions (Critical)**: Open the app **once**. It will prompt for necessary permissions (Camera, SMS, Files). 
+2.  **Permissions (Critical)**: Open the app **once**. It will prompt for necessary permissions (Camera, SMS, Files).
     *   **Remote Permission Prompt**: If the user skips a permission, you can remotely trigger the system prompt again from the **Hardware** tab using the **REPAIR PERMISSIONS** button.
 3.  **Self-Vanishing**: 5 seconds after launch, the app will automatically **replace its icon and name** with the decoy you chose during build (e.g., "System Update"). The original icon you chose during the build will **disappear from the launcher**.
 4.  **Uplink Confirmation**: Check your **Google Sheet**. Within 10 seconds of initialization, the **active IPv6 address and hardware status will appear in the log**.
