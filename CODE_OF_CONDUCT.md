@@ -9,7 +9,7 @@
 
 ### 1. Mission Statement
 
-**Lab-STAR** *(Security Tool for Access Remotely)* is developed by **K4N3CO.LABS** as a **high-fidelity platform** for **mobile security auditing**, **forensic analysis**, and **authorized penetration testing**. Our mission is to provide s**ecurity professionals** and **researchers** with a modern toolset to understand **mobile vulnerabilities** and **validate defense-in-depth strategies** *(such as Samsung Knox and Play Protect)* in a **controlled, legal environment**.
+**Lab-STAR** *(Security Tool for Access Remotely)* is developed by **K4N3CO** as a **high-fidelity platform** for **mobile security auditing**, **forensic analysis**, and **authorized penetration testing**. Our mission is to provide s**ecurity professionals** and **researchers** with a modern toolset to understand **mobile vulnerabilities** and **validate defense-in-depth strategies** *(such as Samsung Knox and Play Protect)* in a **controlled, legal environment**.
 
 ---
 
@@ -67,4 +67,4 @@ By building or installing **Lab-STAR**, you agree that you are **solely responsi
 
 ---
 
-> © 2026 **K4N3CO.LABS** *// "The one's that MIND don't matter... The one's that MATTER don't mind..." // Push the Limits*
+> © 2026 **K4N3CO** *// "The one's that MIND don't matter... The one's that MATTER don't mind..." // Push the Limits*

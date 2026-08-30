@@ -23,7 +23,7 @@
                 android:layout_height="241dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="50dp"
-                android:layout_marginBottom="40dp"
+                android:layout_marginBottom="30dp"
                 app:srcCompat="@drawable/ic_android_robot" />
 
             <TextView

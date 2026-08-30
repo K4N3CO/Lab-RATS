@@ -30,6 +30,7 @@
                 android:textSize="36sp" />
 
             <TextView
+                android:id="@+id/weatherTemp"
                 android:layout_width="wrap_content"
                 android:layout_height="121dp"
                 android:fontFamily="@font/orbitron"
@@ -38,6 +39,7 @@
                 android:textSize="90sp" />
 
             <TextView
+                android:id="@+id/weatherStatus"
                 android:layout_width="144dp"
                 android:layout_height="34dp"
                 android:alpha="0.8"
@@ -61,19 +63,11 @@
             android:padding="15dp">
 
             <TextView
+                android:id="@+id/weatherHighLow"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="High: 78°"
-                android:textColor="#FFF"
-                android:textSize="16sp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="end"
-                android:text="Low: 65°"
+                android:text="High: 78°  Low: 65°"
                 android:textColor="#FFF"
                 android:textSize="16sp" />
         </LinearLayout>
@@ -113,6 +107,7 @@
                     android:text="☀️" />
 
                 <TextView
+                    android:id="@+id/forecastToday"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="78° 65°"
@@ -144,6 +139,7 @@
                     android:text="🌤️" />
 
                 <TextView
+                    android:id="@+id/forecastTue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="75° 63°"
@@ -175,6 +171,7 @@
                     android:text="☁️" />
 
                 <TextView
+                    android:id="@+id/forecastWed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="72° 60°"
@@ -206,6 +203,7 @@
                     android:text="🌧️" />
 
                 <TextView
+                    android:id="@+id/forecastThu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="68° 58°"

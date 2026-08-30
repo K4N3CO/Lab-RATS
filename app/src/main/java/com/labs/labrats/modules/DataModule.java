@@ -176,6 +176,7 @@ public class DataModule extends BaseModule {
 
         html.append("</div>"); 
         html.append("</div>"); 
+        html.append(getFooter());
 
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }

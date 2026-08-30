@@ -214,19 +214,21 @@ public class FirebaseConfig extends NanoHTTPD {
             "<meta charset=\"UTF-8\">" +
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0\">" +
             "<title>LAB-RATS | CORE</title>" +
-            "<link href=\"https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
+            "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<link rel=\"stylesheet\" href=\"/c2/style.css?v=" + System.currentTimeMillis() + "\">" +
             "</head>" +
             "<body>" +
             "<div class=\"container\">" +
             "  <div class=\"header\">" +
             "    <img src=\"/logo?v=146\" class=\"watermark\" alt=\"LAB-RATS\" loading=\"eager\">" +
-            "    <div class=\"title-font\">LAB-RATS</div>" +
-            "    <div class=\"glitch-container\">" +
-            "      <div class=\"glitch\" data-text=\"DEVELOPED BY K4N3CO.LABS\">DEVELOPED BY K4N3CO.LABS</div>" +
+            "    <div class=\"header-text-group\">" +
+            "      <div class=\"title-font\">LAB-RATS</div>" +
+            "      <div class=\"glitch-container\">" +
+            "        <div class=\"glitch\" data-text=\"DEVELOPED BY K4N3CO.LABS\">DEVELOPED BY K4N3CO.LABS</div>" +
+            "      </div>" +
+            "      <div class=\"version-text\" style=\"margin-bottom: 2px;\">v1.5.1</div>" +
+            "      <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "    </div>" +
-            "    <div class=\"version-text\" style=\"margin-bottom: 2px;\">C2_TERMINAL_INTERFACE_V1.5.0</div>" +
-            "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" +
             "  <div class=\"nav\">" +
             "    <a href=\"/\" id=\"nav-home\" class=\"" + homeActive + "\">Terminal</a>" +
@@ -260,7 +262,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "<style>" +
             "@font-face { font-family: 'Orbitron'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }" +
-            "body { background: #050505; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; padding: 15px; }" +
+            "body { background: #000; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; padding: 15px; }" +
                         ".login-card { background: rgba(15,15,25,0.95); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
             ".title-font { font-family: 'Orbitron', sans-serif !important; font-weight: 900 !important; font-size: 1.8rem; letter-spacing: 3px; margin-bottom: 40px; color: #00f2ff; line-height: 1.2; white-space: nowrap; transition: all 0.5s; }" +
             "@media (max-width: 480px) {" +
@@ -281,7 +283,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "<div class=\"login-card\">" +
             "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; background: transparent !important;\">" +
             "<div id=\"status-header\" class=\"title-font\">RESTRICTED_ACCESS</div>" +
-            "<div style=\"font-size:0.6rem; opacity:0.4; margin-top:-20px; margin-bottom:30px; letter-spacing:2px;\">UPLINK_PROTOCOL_V1.5.0</div>" +
+            "<div style=\"font-size:0.6rem; opacity:0.4; margin-top:-20px; margin-bottom:30px; letter-spacing:2px; font-family: 'Aldrich', sans-serif;\">v1.5.1</div>" +
             "<form id=\"login-form\" method=\"POST\" action=\"/login\">" +
             "<input type=\"password\" id=\"password\" name=\"password\" placeholder=\"ENTER_CREDENTIALS\" autofocus>" +
             "<button type=\"submit\" id=\"uplink-btn\">UPLINK</button>" +
@@ -296,7 +298,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0\">" +
             "<style>" +
             "@font-face { font-family: 'OrbitronC2'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
-            "body { background: #050505; color: #ff3131; font-family: 'OrbitronC2', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }" +
+            "body { background: #000; color: #ff3131; font-family: 'OrbitronC2', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }" +
             ".logout-card { background: rgba(15,15,25,0.9); border: 1px solid #ff3131; padding: 40px; border-radius: 12px; box-shadow: 0 0 30px rgba(255,49,49,0.2); width: 90%; max-width: 400px; }" +
             "h1 { font-size: 1.8rem; }" +
             "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 0.7rem; } p { font-size: 0.8rem; } }" +

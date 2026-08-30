@@ -260,6 +260,7 @@ public class CommsModule extends BaseModule {
 
         html.append("</div>"); 
         html.append("</div>"); 
+        html.append(getFooter());
 
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
@@ -407,6 +408,7 @@ public class CommsModule extends BaseModule {
 
         html.append("</div>"); 
         html.append("</div>"); 
+        html.append(getFooter());
 
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }

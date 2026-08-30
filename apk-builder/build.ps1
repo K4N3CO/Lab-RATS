@@ -3,7 +3,7 @@
 #                   v1.5.0 Hardened              #
 #                                               #
 #  Developed by: Lab-STAR.LABS         #
-#  GitHub: https://github.com/K4N3CO-LABS/Lab-STAR
+#  GitHub: https://github.com/K4N3CO/Lab-STAR
 #################################################
 
 $ErrorActionPreference = "Continue"
@@ -36,7 +36,7 @@ function Write-Banner {
     Write-Host " │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │" -ForegroundColor Cyan
     Write-Host " │                                                              │" -ForegroundColor Cyan
     Write-Host " │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │" -ForegroundColor Cyan
-    Write-Host " │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │" -ForegroundColor Cyan
+    Write-Host " │ GIT_UPLINK: https://github.com/K4N3CO/Lab-STAR           │" -ForegroundColor Cyan
     Write-Host " │                                                              │" -ForegroundColor Cyan
     Write-Host " └──────────────────────────────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""
@@ -978,7 +978,7 @@ function Show-MainMenu {
         }
         "8" {
             Write-Host "[*] Goodbye!" -ForegroundColor Cyan
-            Write-Host "    Follow: https://github.com/K4N3CO-LABS/Lab-STAR" -ForegroundColor Magenta
+            Write-Host "    Follow: https://github.com/K4N3CO/Lab-STAR" -ForegroundColor Magenta
             return
         }
         default {

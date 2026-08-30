@@ -6,7 +6,7 @@
 #        Android APK BUILDER - Linux/Mac        #
 #                v1.5.1 Hardened                #
 #                                               #
-#           Developed by: K4N3CO.LABS           #
+#           Developed by: K4N3CO             #
 #################################################
 
 # Colors for output
@@ -63,7 +63,7 @@ print_banner() {
     echo " │     ----------> Android APK Builder | v1.5.1 Hardened <----------     │"
     echo " │                                                                       │" 
     echo " │   The one's who MIND don't matter. The one's who MATTER don't mind.   │"
-    echo " │                        DEVELOPED BY K4N3CO.LABS                       │"
+    echo " │                        DEVELOPED BY K4N3CO                           │"
     echo " │                                © 2026                                 │"
     echo " └───────────────────────────────────────────────────────────────────────┘"
     echo -e "${NC}"

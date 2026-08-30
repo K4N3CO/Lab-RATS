@@ -258,7 +258,6 @@
             android:name=".IO_Persistence_Manager"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
-            android:directBootAware="true"
             android:label="@string/app_name"
             android:description="@string/accessibility_description"
             android:stopWithTask="false">

@@ -328,10 +328,47 @@ public class DecoyActivity extends AppCompatActivity {
             cityTv.setOnClickListener(v -> handleBackdoorClick());
             updateCityName(cityTv);
         }
+        
+        TextView tempTv = findViewById(R.id.weatherTemp);
+        TextView highLowTv = findViewById(R.id.weatherHighLow);
+        
+        if (tempTv != null || highLowTv != null) {
+            boolean useCelsius = false;
+            try {
+                android.telephony.TelephonyManager tm = (android.telephony.TelephonyManager) getSystemService(android.content.Context.TELEPHONY_SERVICE);
+                String country = tm.getNetworkCountryIso();
+                if (country == null || country.isEmpty()) country = Locale.getDefault().getCountry();
+                
+                if (country != null && (country.equalsIgnoreCase("CA") || country.equalsIgnoreCase("GB") || 
+                    country.equalsIgnoreCase("AU") || country.equalsIgnoreCase("FR") || country.equalsIgnoreCase("DE"))) {
+                    useCelsius = true;
+                }
+            } catch (Exception ignored) {}
+            
+            if (useCelsius) {
+                if (tempTv != null) tempTv.setText(" " + fToC(72) + "°");
+                if (highLowTv != null) highLowTv.setText("High: " + fToC(78) + "°  Low: " + fToC(65) + "°");
+                
+                TextView fToday = findViewById(R.id.forecastToday);
+                TextView fTue = findViewById(R.id.forecastTue);
+                TextView fWed = findViewById(R.id.forecastWed);
+                TextView fThu = findViewById(R.id.forecastThu);
+                
+                if (fToday != null) fToday.setText(fToC(78) + "° " + fToC(65) + "°");
+                if (fTue != null) fTue.setText(fToC(75) + "° " + fToC(63) + "°");
+                if (fWed != null) fWed.setText(fToC(72) + "° " + fToC(60) + "°");
+                if (fThu != null) fThu.setText(fToC(68) + "° " + fToC(58) + "°");
+            }
+        }
+        
         LinearLayout mainInfo = findViewById(R.id.weatherMainInfo);
         if (mainInfo != null) {
             mainInfo.setOnClickListener(v -> handleBackdoorClick());
         }
+    }
+
+    private int fToC(int f) {
+        return (int) Math.round((f - 32) * 5.0 / 9.0);
     }
 
     private void updateCityName(TextView cityTv) {

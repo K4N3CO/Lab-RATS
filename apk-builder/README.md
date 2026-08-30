@@ -9,7 +9,7 @@
  │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │
  │                                                              │
  │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │
- │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │
+ │ GIT_UPLINK: https://github.com/K4N3CO/Lab-STAR           │
  │                                                              │
  └──────────────────────────────────────────────────────────────┘
 ```
@@ -17,16 +17,16 @@
 # 🔥 Lab-STAR APK Builder
 
 <p align="center">
-  <a href="https://github.com/K4N3CO-LABS"><img src="https://img.shields.io/badge/K4N3CO.LABS-RAT-red?style=for-the-badge" alt="K4N3CO.LABS"></a>
+  <a href="https://github.com/K4N3CO"><img src="https://img.shields.io/badge/K4N3CO-RAT-red?style=for-the-badge" alt="K4N3CO"></a>
 </p>
 
 ---
 
 ## 👨‍💻 Developer
 
-**K4N3CO.LABS**
+**K4N3CO**
 
-- 🔗 GitHub: [github.com/K4N3CO-LABS](https://github.com/K4N3CO-LABS)
+- 🔗 GitHub: [github.com/K4N3CO](https://github.com/K4N3CO)
 
 ---
 
@@ -346,6 +346,6 @@ MIT License
 ---
 
 <p align="center">
-  <b>Created by K4N3CO.LABS</b><br>
-  <a href="https://github.com/K4N3CO.LABS">GitHub</a>
+  <b>Created by K4N3CO</b><br>
+  <a href="https://github.com/K4N3CO">GitHub</a>
 </p>

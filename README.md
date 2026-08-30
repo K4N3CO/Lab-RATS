@@ -6,7 +6,7 @@
 
 ## Lab-STAR: Advanced Android Tool (v1.5.0)
 
-A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4N3CO.LABS. This advanced tool enables **monitoring, management** and **control** of **Android devices** through a **sleek web C2 interface** with **full support** on the **newest modern Android software releases**. (SDK 36+, OneUI 8.5)
+A **powerful, lightweight** and **covert-oriented Android Tool** developed by K4N3CO. This advanced tool enables **monitoring, management** and **control** of **Android devices** through a **sleek web C2 interface** with **full support** on the **newest modern Android software releases**. (SDK 36+, OneUI 8.5)
 
 ---
 
@@ -225,7 +225,7 @@ Once the Target device downloads the APK:
 ---
 
 ### 🛡️ Post-Install Recovery & Management
-*   **Hidden Backdoor**: If the icon is hidden, **rapidly tap the decoy display 10 times** to unlock the dashboard.
+*   **Hidden Backdoor**: If the icon is in stealth mode, **rapidly tap the decoy display in middle 10 times** to unlock the dashboard.
 *   **Dialer Unlock**: Type `*#1337#` on the phone's keypad to force the main interface back into view.
 *   **Anti-Removal**: Enable this in the **Ghost Tab** to prevent the user from uninstalling or force-stopping the app via Settings.
 
@@ -236,7 +236,7 @@ Once the Target device downloads the APK:
 If you find **Lab-STAR** awesome and useful for your **security research**, **please Star ⭐ the project**—it drives **further development!!**
 
 ### Contributions:
-**Bug reports, add new feature** and **pull requests** are **always welcome**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO-LABS/Lab-STAR/CONTRIBUTING.md) for more info)*
+**Bug reports, add new feature** and **pull requests** are **always welcome**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-STAR/CONTRIBUTING.md) for more info)*
 
 ---
 
@@ -383,4 +383,4 @@ This tool is for **educational and authorized security testing purposes ONLY**. 
 
 ---
 
-© 2026 **K4N3CO.LABS**
+© 2026 **K4N3CO**

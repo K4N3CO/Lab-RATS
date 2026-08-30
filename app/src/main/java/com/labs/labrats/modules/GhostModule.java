@@ -204,7 +204,7 @@ public class GhostModule extends BaseModule {
         final byte[][] result = new byte[1][];
         final String[] error = new String[1];
 
-        ghost.takeCovertScreenshot(new IO_Persistence_Manager.ScreenshotCallback() {
+        ghost.takeCovertScreenshot(new com.labs.labrats.ScreenshotCallback() {
             @Override
             public void onSuccess(byte[] jpegData) {
                 result[0] = jpegData;

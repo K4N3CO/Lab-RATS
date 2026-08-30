@@ -7,7 +7,7 @@ REM          Lab-STAR APK BUILDER - Windows
 REM                   v1.5.0 Hardened
 REM
 REM  Developed by: Lab-STAR.LABS
-REM  GitHub: https://github.com/K4N3CO-LABS/Lab-STAR
+REM  GitHub: https://github.com/K4N3CO/Lab-STAR
 #################################################
 
 title Lab-STAR APK Builder v1.5.0 - by Lab-STAR.LABS
@@ -33,7 +33,7 @@ echo [96m │  ██║  ██╗     ██║██║ ╚████║█
 echo [96m │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │[0m
 echo [96m │                                                              │[0m
 echo [96m │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │[0m
-echo [96m │ GIT_UPLINK: https://github.com/K4N3CO-LABS/Lab-STAR           │[0m
+echo [96m │ GIT_UPLINK: https://github.com/K4N3CO/Lab-STAR           │[0m
 echo [96m │                                                              │[0m
 echo [96m └──────────────────────────────────────────────────────────────┘[0m
 echo.
@@ -685,7 +685,7 @@ if "!MENU_OPTION!"=="1" (
     call :show_help
 ) else if "!MENU_OPTION!"=="8" (
     echo [96m[*] Goodbye![0m
-    echo [95m    Follow: https://github.com/K4N3CO-LABS/Lab-STAR[0m
+    echo [95m    Follow: https://github.com/K4N3CO/Lab-STAR[0m
     exit /b 0
 ) else (
     echo [91m[!] Invalid option[0m
