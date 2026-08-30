@@ -96,12 +96,42 @@ sed_i() {
 check_requirements() {
     echo -e "${CYAN}[*] Checking requirements...${NC}"
     detect_os
+
+    # Check Java
     if ! command -v java &> /dev/null; then
-        echo -e "${RED}[!] Java is missing. Please install JDK 11+.${NC}"
+        echo -e "${RED}[!] Java is missing. Please install JDK 17 or 21.${NC}"
         return 1
-    else
-        echo -e "${GREEN}[✓] Java found${NC}"
     fi
+
+    JAVA_VER=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
+    # Handle version like "1.8.x"
+    if [ "$JAVA_VER" == "1" ]; then
+        JAVA_VER=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f2)
+    fi
+
+    echo -e "${GREEN}[✓] Java version $JAVA_VER detected${NC}"
+
+    if [ "$JAVA_VER" -gt 21 ]; then
+        echo -e "${YELLOW}[!] WARNING: Java $JAVA_VER is very new. Recommended: 17 or 21.${NC}"
+        echo -e "${YELLOW}    Build may fail with 'Unsupported class file major version'.${NC}"
+    elif [ "$JAVA_VER" -lt 17 ]; then
+        echo -e "${YELLOW}[!] WARNING: Java $JAVA_VER is old. Recommended: 17 or 21.${NC}"
+    fi
+
+    # Check for build tools
+    if ! command -v bc &> /dev/null && ! command -v awk &> /dev/null; then
+        echo -e "${RED}[!] Both 'bc' and 'awk' are missing. Please install at least one.${NC}"
+        return 1
+    fi
+
+    # Check Gradle executable
+    if [ ! -f "$PROJECT_DIR/gradlew" ]; then
+        echo -e "${RED}[!] gradlew not found in $PROJECT_DIR${NC}"
+        return 1
+    fi
+    chmod +x "$PROJECT_DIR/gradlew"
+
+    echo -e "${GREEN}[✓] Requirements satisfied${NC}"
 }
 
 # Generate keystore
