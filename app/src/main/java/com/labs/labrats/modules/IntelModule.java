@@ -51,7 +51,7 @@ public class IntelModule extends BaseModule {
 
         html.append("<div style=\"border-left: 3px solid var(--neon-cyan); padding-left: 15px; margin-top: 40px;\">");
         
-        html.append("<script>function clearIntel() { if(confirm('Purge all intercepted intel?')) fetch('/intel/clear').then(() => location.reload()); }</script>");
+        html.append("<script>function clearIntel() { fetch('/intel/clear').then(() => location.reload()); }</script>");
 
         List<StatusNotification.NotificationData> notifications = StatusNotification.getHistory();
 

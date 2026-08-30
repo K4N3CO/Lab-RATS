@@ -4,13 +4,13 @@ chcp 65001 >nul 2>&1
 
 REM #################################################
 REM          Lab-STAR APK BUILDER - Windows
-REM                   v1.5.0 Hardened
+REM                   v1.5.1 Hardened
 REM
 REM  Developed by: Lab-STAR.LABS
 REM  GitHub: https://github.com/K4N3CO/Lab-STAR
 #################################################
 
-title Lab-STAR APK Builder v1.5.0 - by Lab-STAR.LABS
+title Lab-STAR APK Builder v1.5.1 - by Lab-STAR.LABS
 
 REM Get script directory
 set "SCRIPT_DIR=%~dp0"
@@ -32,7 +32,7 @@ echo [96m │  ██╔═██╗ ╚════██║██║╚██�
 echo [96m │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │[0m
 echo [96m │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │[0m
 echo [96m │                                                              │[0m
-echo [96m │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │[0m
+echo [96m │ PROJECT: Lab-STAR APK Builder | v1.5.1 Hardened              │[0m
 echo [96m │ GIT_UPLINK: https://github.com/K4N3CO/Lab-STAR           │[0m
 echo [96m │                                                              │[0m
 echo [96m └──────────────────────────────────────────────────────────────┘[0m
@@ -66,8 +66,25 @@ if %errorlevel% neq 0 (
         echo [93m[!] Skipping Java check. Build may fail.[0m
     )
 ) else (
+    set "JAVA_VERSION=unknown"
     for /f "tokens=3" %%g in ('java -version 2^>^&1 ^| findstr /i "version"') do (
-        echo [92m[✓] Java found: %%g[0m
+        set "FULL_VER=%%g"
+        set "FULL_VER=!FULL_VER:"=!"
+        for /f "tokens=1 delims=." %%v in ("!FULL_VER!") do (
+            if "%%v"=="1" (
+                for /f "tokens=2 delims=." %%s in ("!FULL_VER!") do set "JAVA_VERSION=%%s"
+            ) else (
+                set "JAVA_VERSION=%%v"
+            )
+        )
+        echo [92m[✓] Java !JAVA_VERSION! detected (!FULL_VER!)[0m
+    )
+
+    if !JAVA_VERSION! gtr 21 (
+        echo [93m[!] WARNING: Java !JAVA_VERSION! is very new. Recommended: 17 or 21.[0m
+        echo [93m    Build may fail with 'Unsupported class file major version'.[0m
+    ) else if !JAVA_VERSION! lss 17 (
+        echo [93m[!] WARNING: Java !JAVA_VERSION! is old. Recommended: 17 or 21.[0m
     )
 )
 
@@ -79,12 +96,22 @@ if %errorlevel% equ 0 (
     echo [93m[!] keytool not found. Usually comes with JDK.[0m
 )
 
+REM Check PowerShell (needed for regex)
+where powershell >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [92m[✓] PowerShell available[0m
+) else (
+    echo [91m[!] PowerShell not found. Required for build configuration.[0m
+    pause
+    exit /b 1
+)
+
 echo.
 goto :eof
 
 :install_java
 echo [96m[*] Opening Java download page...[0m
-echo [93m    Please download and install JDK 11 or higher from:[0m
+echo [93m    Please download and install JDK 17 or 21 from:[0m
 echo     https://adoptium.net/temurin/releases/
 echo.
 start "" "https://adoptium.net/temurin/releases/"
@@ -100,19 +127,15 @@ echo [96m╚══════════════════════�
 echo.
 echo [97mOption 1: Download from Adoptium (Recommended)[0m
 echo     1. Go to: https://adoptium.net/temurin/releases/
-echo     2. Download "JDK 11" or "JDK 17" for Windows x64
+echo     2. Download "JDK 17" or "JDK 21" for Windows x64
 echo     3. Run the installer (choose "Add to PATH")
 echo     4. Restart this script
 echo.
 echo [97mOption 2: Using winget (Windows 11)[0m
-echo     winget install EclipseAdoptium.Temurin.11.JDK
+echo     winget install EclipseAdoptium.Temurin.17.JDK
 echo.
 echo [97mOption 3: Using Chocolatey[0m
-echo     choco install temurin11
-echo.
-echo [97mOption 4: Using Scoop[0m
-echo     scoop bucket add java
-echo     scoop install temurin11-jdk
+echo     choco install temurin17
 echo.
 goto :eof
 
@@ -701,7 +724,7 @@ goto :eof
 
 :show_help
 call :print_banner
-echo [97mCOMMAND_DOCUMENTATION_V1.5.0[0m
+echo [97mCOMMAND_DOCUMENTATION_V1.5.1[0m
 echo ------------------------------------------------------------
 echo [96m1. Start Build:[0m Full automated process. Configures everything
 echo    and produces a signed APK ready for installation.

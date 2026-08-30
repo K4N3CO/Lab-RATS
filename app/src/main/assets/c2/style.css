@@ -60,7 +60,7 @@ h3 { font-size: 1.1rem; text-align: center; }
   letter-spacing: 2px;
   margin-right: -2px;
   text-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
-  margin-bottom: -4px;
+  margin-bottom: 10px;
   margin-top: 0;
   display: block;
   line-height: 1.0;
@@ -78,7 +78,7 @@ h3 { font-size: 1.1rem; text-align: center; }
 .desktop-only { display: inline; }
 .mobile-only { display: none; }
 @keyframes scanline { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
-.glitch-container { position: relative; margin-bottom: 0px; }
+.glitch-container { position: relative; margin-bottom: 10px; }
 .glitch { font-family: 'Aldrich', sans-serif; color: var(--neon-cyan); font-size: 1.15rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; position: relative; display: inline-block; opacity: 1.0; }
 .glitch::before, .glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 .glitch::before { left: 1px; text-shadow: -1px 0 var(--neon-cyan); clip: rect(44px, 450px, 56px, 0); animation: glitch-anim 5s infinite linear alternate-reverse; }
@@ -265,9 +265,9 @@ button.btn-active-yellow:focus, .btn-active-yellow:focus {
   .action-row-limited { flex-direction: column !important; align-items: center !important; width: 100% !important; }
   .action-row-limited form { width: 100% !important; }
   .header { padding: 5px 0 10px 0; display: flex; flex-direction: column; align-items: center; gap: 0; text-align: center; margin-bottom: 18px !important; }
-  .watermark { position: relative !important; top: 0 !important; left: 0 !important; transform: none !important; margin: 0 auto 5px auto !important; height: 180px !important; width: auto !important; opacity: 1.0 !important; z-index: 10; pointer-events: none; display: block !important; }
-  .title-font { font-family: 'Orbitron', sans-serif !important; font-size: 2.8rem !important; letter-spacing: 1.5px !important; margin-right: -1.5px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; display: block !important; margin: 0 0 -8px 0 !important; white-space: nowrap !important; overflow: visible !important; position: relative; z-index: 10; line-height: 1.0; }
-  .glitch-container { margin: 0 0 0px 0 !important; height: auto !important; }
+  .watermark { position: relative !important; top: 0 !important; left: 0 !important; transform: none !important; margin: 10px auto 5px auto !important; height: 180px !important; width: auto !important; opacity: 1.0 !important; z-index: 10; pointer-events: none; display: block !important; }
+  .title-font { font-family: 'Orbitron', sans-serif !important; font-size: 2.8rem !important; letter-spacing: 1.5px !important; margin-right: -1.5px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; display: block !important; margin: 0 0 10px 0 !important; white-space: nowrap !important; overflow: visible !important; position: relative; z-index: 10; line-height: 1.0; }
+  .glitch-container { margin: 0 0 10px 0 !important; height: auto !important; }
   .version-text { font-size: 0.85rem !important; letter-spacing: 1.5px !important; margin: 0 0 2px 0 !important; }
   .glitch { font-size: 0.9rem; letter-spacing: 1px; }
   .nav { gap: 4px; justify-content: center; width: 100%; padding: 0 4px; box-sizing: border-box; margin-bottom: 10px !important; }

@@ -441,7 +441,7 @@ public class CommsModule extends BaseModule {
         html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");
         html.append("<textarea name=\"message\" placeholder=\"Broadcast Content\" rows=\"2\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-orange); color: white; padding: 10px; border-radius: 12px; font-family: 'JetBrains Mono', monospace;\"></textarea>");
         html.append("<div style=\"text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center;\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); width: 250px !important; margin: 0 auto !important;\">EXECUTE_BROADCAST</button>");
+        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); width: 100% !important; max-width: 280px !important; margin: 0 auto !important; font-size: 0.8rem; height: 50px; white-space: normal; line-height: 1.2;\">EXECUTE_BROADCAST</button>");
         html.append("</div>");
         html.append("</div></form></div></div>");
 
