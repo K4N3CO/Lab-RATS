@@ -849,7 +849,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 // Use reflection to call API 24+ helper and avoid ClassNotFoundException on older devices
-                Class<?> helper = Class.forName("com.labs.labrats.Api24Helper");
+                Class<?> helper = Class.forName(Api24Helper.class.getName());
                 java.lang.reflect.Method method = helper.getMethod("dispatchClick", AccessibilityService.class, int.class, int.class);
                 return (boolean) method.invoke(null, this, x, y);
             } catch (Exception e) {
@@ -1016,7 +1016,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 // Use reflection to call API 24+ helper
-                Class<?> helper = Class.forName("com.labs.labrats.Api24Helper");
+                Class<?> helper = Class.forName(Api24Helper.class.getName());
                 java.lang.reflect.Method method = helper.getMethod("dispatchSwipe", AccessibilityService.class, int.class, int.class, int.class, int.class, int.class);
                 return (boolean) method.invoke(null, this, x1, y1, x2, y2, duration);
             } catch (Exception e) {
@@ -1063,7 +1063,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
             isScreenshotting = true;
             try {
                 // Use reflection to call API 30+ helper to prevent class verification errors on legacy devices
-                Class<?> helper = Class.forName("com.labs.labrats.Api30Helper");
+                Class<?> helper = Class.forName(Api30Helper.class.getName());
                 java.lang.reflect.Method method = helper.getMethod("takeScreenshot", AccessibilityService.class, ScreenshotCallback.class);
                 method.invoke(null, this, callback);
                 

@@ -156,7 +156,7 @@ public class LocateModule extends BaseModule {
                     String provider = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) 
                                     ? LocationManager.NETWORK_PROVIDER : LocationManager.GPS_PROVIDER;
                     
-                    Class<?> helper = Class.forName("com.labs.labrats.Api30Helper");
+                    Class<?> helper = Class.forName(com.labs.labrats.Api30Helper.class.getName());
                     java.lang.reflect.Method method = helper.getMethod("getCurrentLocation", Context.class, LocationManager.class, String.class);
                     Location freshLoc = (Location) method.invoke(null, context, locationManager, provider);
                     if (freshLoc != null) location = freshLoc;

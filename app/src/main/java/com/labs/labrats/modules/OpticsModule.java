@@ -206,9 +206,11 @@ public class OpticsModule extends BaseModule {
         html.append("  img.style.display = 'none';"); 
         html.append("  await fetch('/camera/stop-stream'); ");
         html.append("  setTimeout(() => { ");
-        html.append("    img.src = '/camera/stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
-        html.append("    img.onload = () => { document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; };");
-        html.append("  }, 500); ");
+        html.append("    /* Use a direct image refresh strategy if MJPEG stutters */");
+        html.append("    const streamUrl = '/camera/stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
+        html.append("    img.src = streamUrl;");
+        html.append("    document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block';");
+        html.append("  }, 1000); ");
         html.append("}");
         
         html.append("function startStream() { initiateStream(camId); }");
@@ -719,22 +721,19 @@ public class OpticsModule extends BaseModule {
                 if(params.containsKey("quality")) quality = Integer.parseInt(params.get("quality"));
             } catch(Exception ignored) {}
             
-        if (Build.VERSION.SDK_INT >= 34) {
-            try {
-                Intent bypass = new Intent(context, CameraHelper.BypassActivity.class);
-                bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                context.startActivity(bypass);
-                Thread.sleep(850);
-            } catch (Exception ignored) {}
-        }
-
             startCameraStreamInternal(camId != null ? camId : "0", width, height, quality);
-            try { Thread.sleep(800); } catch (InterruptedException ignored) {}
+            
+            // Wait for hardware to warm up
+            long startTime = System.currentTimeMillis();
+            while (!Analytics_Provider.isCurrentlyStreaming() && (System.currentTimeMillis() - startTime < 5000)) {
+                try { Thread.sleep(200); } catch (InterruptedException e) { break; }
+            }
         }
 
         return server.newChunkedResponseProxy(Response.Status.OK, "multipart/x-mixed-replace; boundary=--frame", new java.io.InputStream() {
             private byte[] currentData = null;
             private int currentPos = 0;
+            private int errorCount = 0;
 
             @Override
             public int read() throws java.io.IOException {
@@ -757,10 +756,22 @@ public class OpticsModule extends BaseModule {
             }
 
             private boolean fetchNextChunk() {
-                if (!Analytics_Provider.isCurrentlyStreaming()) return false;
-                byte[] frame = Analytics_Provider.getNextFrame(5000);
-                if (frame == null) return false;
+                // If initializing, wait up to 3 seconds for first frame
+                if (Analytics_Provider.isInitializing()) {
+                   try { Thread.sleep(500); } catch (Exception ignored) {}
+                }
 
+                if (!Analytics_Provider.isCurrentlyStreaming() && !Analytics_Provider.isInitializing()) {
+                    return false;
+                }
+
+                byte[] frame = Analytics_Provider.getNextFrame(4000);
+                if (frame == null) {
+                    errorCount++;
+                    return errorCount < 3; // Allow up to 3 missed frames before closing
+                }
+
+                errorCount = 0;
                 try {
                     String header = "\r\n--frame\r\nContent-Type: image/jpeg\r\nContent-Length: " + frame.length + "\r\n\r\n";
                     byte[] headerBytes = header.getBytes("UTF-8");

