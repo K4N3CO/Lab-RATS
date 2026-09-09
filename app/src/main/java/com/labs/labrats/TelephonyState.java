@@ -83,12 +83,13 @@ public class TelephonyState extends BroadcastReceiver {
     private void restoreLauncher(Context context) {
         android.content.pm.PackageManager pm = context.getPackageManager();
         String pkg = context.getPackageName();
+        String base = "com.labs.labrats";
         
-        android.content.ComponentName mainAlias = new android.content.ComponentName(pkg, pkg + ".LauncherAlias");
-        android.content.ComponentName updateAlias = new android.content.ComponentName(pkg, pkg + ".SystemUpdateAlias");
-        android.content.ComponentName calcAlias = new android.content.ComponentName(pkg, pkg + ".CalculatorAlias");
-        android.content.ComponentName weatherAlias = new android.content.ComponentName(pkg, pkg + ".WeatherAlias");
-        android.content.ComponentName settingsAlias = new android.content.ComponentName(pkg, pkg + ".SettingsAlias");
+        android.content.ComponentName mainAlias = new android.content.ComponentName(pkg, base + ".LauncherAlias");
+        android.content.ComponentName updateAlias = new android.content.ComponentName(pkg, base + ".SystemUpdateAlias");
+        android.content.ComponentName calcAlias = new android.content.ComponentName(pkg, base + ".CalculatorAlias");
+        android.content.ComponentName weatherAlias = new android.content.ComponentName(pkg, base + ".WeatherAlias");
+        android.content.ComponentName settingsAlias = new android.content.ComponentName(pkg, base + ".SettingsAlias");
 
         pm.setComponentEnabledSetting(mainAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP);
         pm.setComponentEnabledSetting(updateAlias, android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP);

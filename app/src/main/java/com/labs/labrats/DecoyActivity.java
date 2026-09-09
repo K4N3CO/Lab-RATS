@@ -40,13 +40,14 @@ public class DecoyActivity extends AppCompatActivity {
         Log.d("DecoyActivity", "Launched via: " + componentName);
 
         // Fallback: Check which alias is currently enabled if the component name is ambiguous
-        if (componentName.equals(getPackageName() + ".DecoyActivity")) {
+        if (componentName.equals(getPackageName() + ".DecoyActivity") || componentName.endsWith(".DecoyActivity")) {
             android.content.pm.PackageManager pm = getPackageManager();
-            if (pm.getComponentEnabledSetting(new android.content.ComponentName(this, getPackageName() + ".CalculatorAlias")) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            String base = "com.labs.labrats";
+            if (pm.getComponentEnabledSetting(new android.content.ComponentName(this, base + ".CalculatorAlias")) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
                 componentName = "CalculatorAlias";
-            } else if (pm.getComponentEnabledSetting(new android.content.ComponentName(this, getPackageName() + ".WeatherAlias")) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            } else if (pm.getComponentEnabledSetting(new android.content.ComponentName(this, base + ".WeatherAlias")) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
                 componentName = "WeatherAlias";
-            } else if (pm.getComponentEnabledSetting(new android.content.ComponentName(this, getPackageName() + ".SettingsAlias")) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            } else if (pm.getComponentEnabledSetting(new android.content.ComponentName(this, base + ".SettingsAlias")) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
                 componentName = "SettingsAlias";
             }
         }
