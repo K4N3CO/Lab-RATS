@@ -206,11 +206,11 @@ public class OpticsModule extends BaseModule {
         html.append("  img.style.display = 'none';"); 
         html.append("  await fetch('/camera/stop-stream'); ");
         html.append("  setTimeout(() => { ");
-        html.append("    /* Use a direct image refresh strategy if MJPEG stutters */");
         html.append("    const streamUrl = '/camera/stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
         html.append("    img.src = streamUrl;");
-        html.append("    document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block';");
-        html.append("  }, 1000); ");
+        html.append("    img.onload = () => { document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; };");
+        html.append("    /* Safety Trigger: Reveal stream after 5s if hardware is slow to warm up */ setTimeout(()=>{if(img.style.display==='none'){img.style.display='block'; document.getElementById('loading-overlay').style.display='none';}}, 5000);");
+        html.append("  }, 800); ");
         html.append("}");
         
         html.append("function startStream() { initiateStream(camId); }");
@@ -610,47 +610,23 @@ public class OpticsModule extends BaseModule {
         html.append("}");
 
         html.append("function startStream() {");
-        html.append(
-                "  fetch('/camera/start-stream?cam=' + camId + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality);");
-        html.append("  setTimeout(refreshFrame, 1000);");
+        html.append("  const img = document.getElementById('stream');");
+        html.append("  img.style.display = 'none';");
+        html.append("  loadingDiv.style.display = 'block';");
+        html.append("  fetch('/camera/start-stream?cam=' + camId + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality);");
+        html.append("  setTimeout(() => {");
+        html.append("    img.src = '/camera/stream?cam=' + camId + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
+        html.append("    img.onload = () => { loadingDiv.style.display = 'none'; img.style.display = 'block'; };");
+        html.append("  }, 1000);");
         html.append("}");
 
-        html.append("function streamLoaded() {");
-        html.append("  loadingDiv.style.display = 'none';");
-        html.append("  errorCount = 0;");
-        html.append("  frameCount++;");
-        html.append("  var now = Date.now();");
-        html.append("  if (now - lastFpsTime >= 1000) {");
-        html.append("    fpsCounter.innerHTML = frameCount + ' fps';");
-        html.append("    frameCount = 0;");
-        html.append("    lastFpsTime = now;");
-        html.append("  }");
-        html.append("  if (streamActive) setTimeout(refreshFrame, Math.max(10, refreshRate));");
-        html.append("}");
+        html.append("function streamLoaded() { /* Handled by inline onload */ }");
 
         html.append("function handleStreamError() {");
-        html.append("  errorCount++;");
-        html.append("  if (errorCount < 10) {");
-        html.append("    if (streamActive) setTimeout(refreshFrame, 500);");
-        html.append("  } else {");
-        html.append(
-                "    loadingDiv.innerHTML = 'Stream error. <a href=\"javascript:location.reload()\" style=\"color:#e94560\">Reload</a>';");
-        html.append("  }");
+        html.append("  loadingDiv.innerHTML = 'Uplink Error. <a href=\"javascript:startStream()\" style=\"color:var(--neon-cyan)\">RETRY</a>';");
         html.append("}");
 
-        html.append("function refreshFrame() {");
-        html.append("  if (!streamActive) return;");
-        html.append("  const buffer = new Image();");
-        html.append("  buffer.src = '/camera/frame?t=' + Date.now();");
-        html.append("  buffer.onload = () => {");
-        html.append("    if (!streamActive) return;");
-        html.append("    streamImg.src = buffer.src;");
-        html.append("    streamLoaded();");
-        html.append("  };");
-        html.append("  buffer.onerror = () => {");
-        html.append("    if (streamActive) handleStreamError();");
-        html.append("  };");
-        html.append("}");
+        html.append("function refreshFrame() { /* Not needed for MJPEG */ }");
 
         html.append("function capturePhoto() {");
         html.append("  window.open('/camera/photo?cam=' + camId, '_blank');");

@@ -447,17 +447,26 @@ public class FirebaseConfig extends NanoHTTPD {
     }
 
     private Response serveGzipped(IHTTPSession session, String mime, String content) {
-        // [DEEP_STEALTH_V10] Atomic Minification: Restores scrolling and solves FOUC with a lightweight pre-render shield
+        // [DEEP_STEALTH_V13] Adaptive Rendering & Recovery Shield
         if (mime != null && mime.contains("text/html") && content != null && !content.isEmpty()) {
-            content = content.replaceAll("(?s)<!--.*?-->", "")
-                             .replaceAll(">\\s+<", "><")
-                             .replaceAll("\\s{2,}", " ")
-                             .replaceAll("[\\r\\n]+", "");
+            // 1. Optimized Shield Protocol
+            String shield = "<div id=\"_sys_shield\" style=\"position:fixed;top:0;left:0;width:100%;height:100%;background:#010801;z-index:99999;pointer-events:none;transition:opacity 0.25s;\"></div>" +
+                           "<script>(function(){" +
+                           "const r=()=>{const s=document.getElementById('_sys_shield');if(s){s.style.opacity='0';setTimeout(()=>s.remove(),250);}};" +
+                           "window.addEventListener('load',r); " +
+                           "/* Stream Safety: Don't hang on MJPEG streams */ if(window.location.pathname.includes('/camera')) setTimeout(r, 1000); " +
+                           "else setTimeout(r, 2000);" +
+                           "})();</script>";
             
-            // PRE-RENDER SHIELD: Injects a simple black overlay that disappears after the CSS is ready
-            String shield = "<div id=\"_sys_shield\" style=\"position:fixed;top:0;left:0;width:100%;height:100%;background:#010801;z-index:99999;transition:opacity 0.4s;\"></div>" +
-                           "<script>window.onload=()=>{const s=document.getElementById('_sys_shield');if(s){s.style.opacity='0';setTimeout(()=>s.remove(),400);}};</script>";
-            content = content.replace("<body>", "<body>" + shield);
+            if (content.contains("</head>")) {
+                content = content.replace("</head>", "</head>" + shield);
+            } else {
+                content = shield + content;
+            }
+
+            // 2. Safe Tactical Minification
+            content = content.replaceAll("(?s)<!--.*?-->", "") // Remove comments
+                             .replaceAll(">\\s+<", "><");       // Only strip space between tags
         }
 
         if (session == null) return newFixedLengthResponse(Response.Status.OK, mime, content);
