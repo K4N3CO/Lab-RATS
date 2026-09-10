@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/update_gray"/>
     <foreground>
         <inset
-            android:drawable="@drawable/ic_sprocket_gear"
-            android:insetTop="22dp"
-            android:insetBottom="22dp"
-            android:insetLeft="22dp"
-            android:insetRight="22dp" />
+            android:drawable="@drawable/ic_system_update_decoy"
+            android:insetTop="24dp"
+            android:insetBottom="24dp"
+            android:insetLeft="24dp"
+            android:insetRight="24dp" />
     </foreground>
 </adaptive-icon>

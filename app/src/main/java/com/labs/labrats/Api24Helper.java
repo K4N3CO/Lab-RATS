@@ -18,14 +18,13 @@ public class Api24Helper {
         try {
             Path path = new Path();
             path.moveTo(x, y);
-            GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 150);
+            GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 50);
             GestureDescription.Builder builder = new GestureDescription.Builder();
             builder.addStroke(stroke);
             boolean result = service.dispatchGesture(builder.build(), null, null);
-            Log.d("Api24Helper", "dispatchGesture result: " + result);
             return result;
         } catch (Exception e) {
-            Log.e("Api24Helper", "Error in dispatchClick: " + e.getMessage());
+            Log.e("Api24Helper", "Gesture Dispatch Error: " + e.getMessage());
             return false;
         }
     }

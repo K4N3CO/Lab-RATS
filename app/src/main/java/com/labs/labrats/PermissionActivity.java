@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -54,7 +53,7 @@ public class PermissionActivity extends AppCompatActivity {
     private void setupScanningUI() {
         if (isAnimationRunning) return;
         setTheme(R.style.Theme_LabRATS_Permissions);
-        setContentView(R.layout.activity_permission_decoy);
+        setContentView(R.layout.activity_guide_permission);
         currentLayoutType = "scanning";
 
         ProgressBar pb = findViewById(R.id.pbPlayProtect);

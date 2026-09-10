@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#4C084008"
+    android:background="#4C073507"
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
@@ -27,57 +27,58 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="259dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_marginBottom="14dp"
                 android:background="#040404"
-                android:gravity="bottom|center"
-                android:orientation="vertical">
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingVertical="20dp">
 
                 <ImageView
                     android:id="@+id/imageView4"
-                    android:layout_width="184dp"
-                    android:layout_height="154dp"
+                    android:layout_width="160dp"
+                    android:layout_height="140dp"
                     android:layout_gravity="center"
                     android:tint="#01E5EBE5"
                     app:srcCompat="@drawable/app_logo" />
 
                 <TextView
                     android:id="@+id/tvAppTitle"
-                    android:layout_width="276dp"
-                    android:layout_height="45dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:fontFamily="@font/orbitron"
                     android:letterSpacing="0.05"
                     android:text="LAB-RATS"
                     android:textAlignment="center"
                     android:textAllCaps="false"
                     android:textColor="#FC3DEDF6"
-                    android:textSize="42sp"
+                    android:textSize="36sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvDevelopedBy"
                     android:layout_width="wrap_content"
-                    android:layout_height="16dp"
+                    android:layout_height="wrap_content"
                     android:alpha="0.9"
                     android:fontFamily="@font/aldrich"
                     android:letterSpacing="0.12"
                     android:text="DEVELOPED BY K4N3CO.LABS"
                     android:textAllCaps="true"
                     android:textColor="#FC00F2FF"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     tools:ignore="TextSizeCheck" />
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="27dp"
+                    android:layout_height="wrap_content"
                     android:alpha="0.9"
                     android:fontFamily="@font/aldrich"
                     android:letterSpacing="0.2"
                     android:text="v1.5.1"
                     android:textColor="@color/neon_cyan"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -103,7 +104,7 @@
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="213dp"
+                        android:layout_height="wrap_content"
                         android:background="#040404"
                         android:gravity="bottom"
                         android:orientation="vertical"
@@ -112,25 +113,25 @@
                         <TextView
                             android:id="@+id/tvStatus"
                             android:layout_width="wrap_content"
-                            android:layout_height="26dp"
+                            android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:layout_marginBottom="13dp"
                             android:fontFamily="@font/orbitron"
                             android:letterSpacing="0.15"
                             android:text="🔴 SERVER_OFFLINE"
                             android:textColor="@color/neon_red"
-                            android:textSize="19sp"
+                            android:textSize="18sp"
                             android:textStyle="bold" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:background="#AF474D49" />
 
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="14dp"
+                            android:layout_height="wrap_content"
                             android:alpha="0.7"
                             android:fontFamily="@font/aldrich"
                             android:letterSpacing="0.2"
@@ -142,21 +143,22 @@
                         <TextView
                             android:id="@+id/tvIpAddress"
                             android:layout_width="match_parent"
-                            android:layout_height="36dp"
+                            android:layout_height="wrap_content"
                             android:alpha="0.9"
                             android:background="#4E084008"
                             android:fontFamily="@font/aldrich"
                             android:gravity="center_vertical"
                             android:letterSpacing="0.05"
                             android:minHeight="34dp"
-                            android:text="  [LOADING_DATA...]"
+                            android:paddingStart="8dp"
+                            android:text="[LOADING_DATA...]"
                             android:textColor="@color/neon_cyan"
                             android:textSize="14sp" />
 
                         <TextView
-                            android:layout_width="116dp"
-                            android:layout_height="12dp"
-                            android:layout_marginTop="14dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
                             android:alpha="0.7"
                             android:fontFamily="@font/aldrich"
                             android:letterSpacing="0.2"
@@ -168,15 +170,16 @@
                         <TextView
                             android:id="@+id/tvServerUrl"
                             android:layout_width="match_parent"
-                            android:layout_height="41dp"
+                            android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:background="#4E084008"
                             android:fontFamily="@font/assistant"
                             android:gravity="center_vertical"
+                            android:minHeight="38dp"
                             android:padding="6dp"
                             android:text="UPLINK_INACTIVE"
                             android:textColor="@color/neon_cyan"
-                            android:textSize="15sp" />
+                            android:textSize="14sp" />
 
                     </LinearLayout>
                 </LinearLayout>

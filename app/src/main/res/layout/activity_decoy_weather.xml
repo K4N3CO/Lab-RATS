@@ -14,50 +14,50 @@
 
         <LinearLayout
             android:id="@+id/weatherMainInfo"
-            android:layout_width="368dp"
-            android:layout_height="254dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/weatherCity"
                 android:layout_width="wrap_content"
-                android:layout_height="43dp"
-                android:layout_marginTop="60dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
                 android:fontFamily="@font/orbitron"
                 android:text="New York"
                 android:textColor="#FFFFFF"
-                android:textSize="36sp" />
+                android:textSize="32sp" />
 
             <TextView
                 android:id="@+id/weatherTemp"
                 android:layout_width="wrap_content"
-                android:layout_height="121dp"
+                android:layout_height="wrap_content"
                 android:fontFamily="@font/orbitron"
                 android:text=" 72°"
                 android:textColor="#FFFFFF"
-                android:textSize="90sp" />
+                android:textSize="80sp" />
 
             <TextView
                 android:id="@+id/weatherStatus"
-                android:layout_width="144dp"
-                android:layout_height="34dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:alpha="0.8"
                 android:text=" Mostly Sunny"
                 android:textColor="#FFFFFF"
-                android:textSize="23sp" />
+                android:textSize="20sp" />
         </LinearLayout>
 
         <ImageView
-            android:layout_width="160dp"
-            android:layout_height="154dp"
+            android:layout_width="140dp"
+            android:layout_height="134dp"
             android:layout_marginTop="10dp"
             android:src="@drawable/ic_weather" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="30dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:background="?android:attr/selectableItemBackground"
             android:orientation="horizontal"
             android:padding="15dp">
@@ -81,9 +81,9 @@
         <!-- 10-Day Forecast List Style -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="179dp"
-            android:layout_marginTop="20dp"
-            android:background="#626262"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:background="#1AFFFFFF"
             android:orientation="vertical"
             android:padding="16dp">
 

@@ -11,9 +11,10 @@
 
     <!-- Convincing DayNight theme for the System Update decoy -->
     <style name="Theme.LabRATS.Decoy" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">@color/decoy_background</item>
-        <item name="android:statusBarColor">@color/decoy_background</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="CalcBtn" parent="Widget.MaterialComponents.Button.UnelevatedButton">

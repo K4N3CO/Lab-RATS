@@ -19,14 +19,14 @@
 
         <ImageView
             android:id="@+id/ivPlayProtectRobot"
-            android:layout_width="219dp"
-            android:layout_height="191dp"
+            android:layout_width="209dp"
+            android:layout_height="182dp"
             android:layout_gravity="center_horizontal|top"
             android:layout_marginTop="20dp"
             android:fitsSystemWindows="true"
             android:focusedByDefault="true"
             android:forceHasOverlappingRendering="true"
-            android:src="@drawable/ic_android_robot" />
+            android:src="@drawable/ic_android_play" />
 
         <TextView
             android:id="@+id/tvPlayProtectSub"

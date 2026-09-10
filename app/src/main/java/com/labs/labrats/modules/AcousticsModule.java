@@ -157,11 +157,19 @@ public class AcousticsModule extends BaseModule {
             .append("</div></div>");
 
         // View recordings link
+        File recordDir = MediaFrameworkService.getRecordingsDirectory(context);
+        String browseUrl = "/audio/recordings";
+        if (recordDir.getAbsolutePath().contains(Environment.getExternalStorageDirectory().getAbsolutePath())) {
+            String relPath = recordDir.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), "");
+            if (relPath.startsWith("/")) relPath = relPath.substring(1);
+            browseUrl = "/files/" + relPath;
+        }
+
         html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">")
             .append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">RECORDING_ARCHIVE <span class=\"info-trigger\" onclick=\"showInfo(event, 'RECORDING_ARCHIVE', 'Access captured audio files from ambient surveillance or call intercepts.')\">INFO</span></h2>")
             .append("<div style=\"display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;\">")
             .append("<a href=\"/audio/recordings\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\">OPEN_ARCHIVE</a>")
-            .append("<a href=\"/files/Music/LabRATSRecordings\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green);\">BROWSE_FILES</a>")
+            .append("<a href=\"").append(browseUrl).append("\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green);\">BROWSE_FILES</a>")
             .append("</div></div>");
 
         // Auto-refresh script for status
@@ -326,8 +334,7 @@ public class AcousticsModule extends BaseModule {
         html.append("<h2 style=\"margin-bottom: 20px; font-size: 1.6rem;\">&#128190; Audio Recordings</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
 
-        File recordDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_MUSIC), "LabRATSRecordings");
+        File recordDir = MediaFrameworkService.getRecordingsDirectory(context);
 
         if (!recordDir.exists() || !recordDir.isDirectory()) {
             html.append("<div class=\"empty-state\"><div class=\"icon\">&#127897;</div><p>No recordings yet</p></div>");
@@ -375,7 +382,14 @@ public class AcousticsModule extends BaseModule {
                     html.append(new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
                             .format(new Date(file.lastModified())));
                     html.append("</div></div>");
-                    html.append("<a href=\"/download/Music/LabRATSRecordings/").append(fileName)
+                    String downloadPath;
+                    if (file.getAbsolutePath().contains(context.getFilesDir().getAbsolutePath())) {
+                        downloadPath = "INTERNAL/" + file.getAbsolutePath().replace(context.getFilesDir().getAbsolutePath() + "/", "");
+                    } else {
+                        downloadPath = file.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath() + "/", "");
+                    }
+
+                    html.append("<a href=\"/download/").append(downloadPath)
                             .append("\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\">GET_FILE</a>");
                     html.append("</li>");
 

@@ -196,10 +196,16 @@ public class DataModule extends BaseModule {
     }
 
     private Response serveDownload(String uri) {
-        String path = uri.substring(10);
+        String path = uri.substring(10); // skips "/download/"
         path = path.replace("%20", " ");
-        File baseDir = Environment.getExternalStorageDirectory();
-        File file = new File(baseDir, path);
+        
+        File file;
+        if (path.startsWith("INTERNAL/")) {
+            file = new File(context.getFilesDir(), path.substring(9));
+        } else {
+            File baseDir = Environment.getExternalStorageDirectory();
+            file = new File(baseDir, path);
+        }
 
         if (!file.exists() || !file.isFile()) {
             return server.serve404Proxy();

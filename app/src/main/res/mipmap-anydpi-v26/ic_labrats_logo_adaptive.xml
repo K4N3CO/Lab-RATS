@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/black"/>
+    <background android:drawable="@android:color/black"/>
     <foreground>
         <inset
-            android:drawable="@drawable/default_app_icon_robot"
+            android:drawable="@drawable/app_logo"
             android:insetTop="18dp"
             android:insetBottom="18dp"
             android:insetLeft="18dp"

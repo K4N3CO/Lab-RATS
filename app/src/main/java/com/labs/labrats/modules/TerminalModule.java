@@ -186,6 +186,7 @@ public class TerminalModule extends BaseModule {
         html.append("<option value=\"calc\">Calculator (Apple Style)</option>");
         html.append("<option value=\"weather\">Weather (Blue Sky Forecast)</option>");
         html.append("<option value=\"settings\">Settings (System Config)</option>");
+        html.append("<option value=\"logo\">Lab-RATS Logo (Unmasked)</option>");
         html.append("</select>");
         html.append("</div>");
 

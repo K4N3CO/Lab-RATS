@@ -5,64 +5,78 @@
     android:id="@+id/successRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#141716">
+    android:background="#1C1C1C">
 
-    <!-- High-Fidelity One UI Success Base -->
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <!-- High-Fidelity Pill Button Container - EXACT same as activity_new_update -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#161819">
 
-    <!-- GHOST_BACKDOOR: Positioned in the middle as requested -->
 
-    <ImageView
-        android:id="@+id/ivSuccessBase"
-        android:layout_width="346dp"
-        android:layout_height="371dp"
-        android:layout_marginBottom="24dp"
-        android:adjustViewBounds="true"
-        android:paddingTop="50dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/update2"
-        app:layout_constraintBottom_toTopOf="@+id/buttonContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.492"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.639" />
+            <!-- GHOST_BACKDOOR: Positioned centrally over the update icon area -->
 
+            <ImageView
+                android:id="@+id/imageView3"
+                android:layout_width="384dp"
+                android:layout_height="457dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="188dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitStart"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/update3" />
+
+            <View
+                android:id="@+id/ivSuccessBackdoor"
+                android:layout_width="210dp"
+                android:layout_height="92dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                app:layout_constraintBottom_toBottomOf="@id/imageView3"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.498"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/imageView3"
+                app:layout_constraintVertical_bias="0.512" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <!-- Fixed Action Button at Bottom -->
     <FrameLayout
         android:id="@+id/buttonContainer"
-        android:layout_width="255dp"
-        android:layout_height="72dp"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginBottom="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <!-- High-Fidelity Spinning Four-Dot Loading Effect -->
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#161819"
+        android:elevation="15dp"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCheckForUpdate"
             android:layout_width="222dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="5dp"
-            android:backgroundTint="#F62D7DF4"
+            android:layout_height="59dp"
+            android:layout_gravity="center"
+            android:backgroundTint="#3274F0"
             android:fontFamily="@font/assistant"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:letterSpacing="0.034"
-            android:singleLine="true"
+            android:letterSpacing="0.02"
             android:text="Check for updates"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textColor="#F2F2F2"
+            android:textSize="17sp"
             android:textStyle="bold"
-            app:cornerRadius="100dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:cornerRadius="100dp" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/loadingLayoutSuccess"
@@ -107,23 +121,11 @@
 
     </FrameLayout>
 
-    <View
-        android:id="@+id/ivSuccessBackdoor"
-        android:layout_width="137dp"
-        android:layout_height="88dp"
-        android:layout_marginStart="140dp"
-        android:layout_marginTop="296dp"
-        android:background="@android:color/transparent"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <LinearLayout
         android:id="@+id/pseudoToast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="200dp"
+        android:layout_marginBottom="160dp"
         android:background="@drawable/toast_background"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -141,6 +143,7 @@
             android:text="Phone has been updated"
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

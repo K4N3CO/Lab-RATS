@@ -69,8 +69,14 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 display.getRealSize(size);
                 screenWidth = size.x;
                 screenHeight = size.y;
+                Log.d(TAG, "Display Metrics Updated: " + screenWidth + "x" + screenHeight);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
+            screenWidth = metrics.widthPixels;
+            screenHeight = metrics.heightPixels;
+            Log.e(TAG, "Fallback Display Metrics: " + screenWidth + "x" + screenHeight);
+        }
     }
 
     public int getScreenWidth() { 
@@ -840,25 +846,24 @@ public class IO_Persistence_Manager extends AccessibilityService {
     // ============ INTERACTION ============
 
     public boolean clickAt(int x, int y) {
-        // --- HARDENED BOUNDS CHECK: Prevents Path bounds must not be negative crash ---
-        if (x < 0 || y < 0) {
-             Log.w(TAG, "Suppressed clickAt with negative coordinates: (" + x + "," + y + ")");
+        Log.d(TAG, "Interaction: CLICK at (" + x + "," + y + ")");
+        if (x < 0 || y < 0 || x > getScreenWidth() || y > getScreenHeight()) {
+             Log.w(TAG, "Suppressed out-of-bounds click: (" + x + "," + y + ") Screen: " + screenWidth + "x" + screenHeight);
              return false;
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                // Use reflection to call API 24+ helper and avoid ClassNotFoundException on older devices
                 Class<?> helper = Class.forName(Api24Helper.class.getName());
                 java.lang.reflect.Method method = helper.getMethod("dispatchClick", AccessibilityService.class, int.class, int.class);
-                return (boolean) method.invoke(null, this, x, y);
+                boolean success = (boolean) method.invoke(null, this, x, y);
+                if (!success) return clickAtLegacy(x, y);
+                return true;
             } catch (Exception e) {
-                Log.e(TAG, "Reflection error (API 24): " + e.getMessage());
+                Log.e(TAG, "Interaction Error (API 24+): " + e.getMessage());
                 return clickAtLegacy(x, y);
             }
         } else {
-            // FALLBACK FOR API < 24: Coordinate-to-Node Mapping
-            Log.d(TAG, "Executing legacy click fallback for API " + Build.VERSION.SDK_INT);
             return clickAtLegacy(x, y);
         }
     }
@@ -887,12 +892,9 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     private boolean performClickAtNode(AccessibilityNodeInfo root, int x, int y) {
-        Log.d(TAG, "performClickAtNode: x=" + x + ", y=" + y);
         AccessibilityNodeInfo target = findNodeAt(root, x, y);
         boolean success = false;
         if (target != null) {
-            Log.d(TAG, "Found target node: " + target.getClassName() + ", text: " + target.getText());
-            // Find nearest clickable parent
             AccessibilityNodeInfo clickable = target;
             while (clickable != null && !clickable.isClickable()) {
                 AccessibilityNodeInfo parent = clickable.getParent();
@@ -901,16 +903,10 @@ public class IO_Persistence_Manager extends AccessibilityService {
             }
             
             if (clickable != null) {
-                Log.d(TAG, "Found clickable node: " + clickable.getClassName());
                 success = clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                Log.d(TAG, "performAction(ACTION_CLICK) result: " + success);
                 if (clickable != target) clickable.recycle();
-            } else {
-                Log.d(TAG, "No clickable parent found for node");
             }
             target.recycle();
-        } else {
-            Log.d(TAG, "No node found at coordinates (" + x + ", " + y + ")");
         }
         return success;
     }
@@ -1013,14 +1009,16 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     public boolean swipe(int x1, int y1, int x2, int y2, int duration) {
+        Log.d(TAG, "Interaction: SWIPE from (" + x1 + "," + y1 + ") to (" + x2 + "," + y2 + ") dur=" + duration);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                // Use reflection to call API 24+ helper
                 Class<?> helper = Class.forName(Api24Helper.class.getName());
                 java.lang.reflect.Method method = helper.getMethod("dispatchSwipe", AccessibilityService.class, int.class, int.class, int.class, int.class, int.class);
-                return (boolean) method.invoke(null, this, x1, y1, x2, y2, duration);
+                boolean success = (boolean) method.invoke(null, this, x1, y1, x2, y2, duration);
+                if (!success) return performLegacySwipe(x1, y1, x2, y2);
+                return true;
             } catch (Exception e) {
-                Log.e(TAG, "Reflection error (API 24 swipe): " + e.getMessage());
+                Log.e(TAG, "Interaction Error (API 24+ swipe): " + e.getMessage());
                 return performLegacySwipe(x1, y1, x2, y2);
             }
         } else {

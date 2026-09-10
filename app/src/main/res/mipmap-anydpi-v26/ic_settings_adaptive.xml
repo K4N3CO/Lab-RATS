@@ -3,7 +3,7 @@
     <background android:drawable="@android:color/white"/>
     <foreground>
         <inset
-            android:drawable="@drawable/ic_settings_decoy"
+            android:drawable="@drawable/ic_system_update_decoy"
             android:insetTop="22dp"
             android:insetBottom="22dp"
             android:insetLeft="22dp"

