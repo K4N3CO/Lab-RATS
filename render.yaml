@@ -3,9 +3,8 @@ services:
     name: labrats-c2-hub
     env: node
     plan: free
-    rootDir: c2-server
-    buildCommand: npm install
-    startCommand: node server.js
+    buildCommand: cd c2-server && npm install
+    startCommand: cd c2-server && node server.js
     envVars:
       - key: NODE_VERSION
         value: 20
