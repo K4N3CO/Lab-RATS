@@ -37,10 +37,10 @@ The **remote web interface** is **fully optimized** for **both PC** and **smartp
 
 ---
 
-## 🕵️ Covert & Stealth Operations
+## 🕵️ Covert & Stealth
 
 ### 💉 **NEW!** **Payload Delivery Vectors** *(for installing APK onto Target Device)*:
-The **weaponization engine** has been overhauled to support **multiple high-success delivery methods** *(Stealth PDF, Zero-Click MP4, Meeting Invite and many more)*, ensuring **reliable access** across **all modern mobile environments**.
+- The **weaponization engine** has been overhauled to support **multiple high-success delivery methods** *(Stealth PDF, Zero-Click MP4, Meeting Invite and many more)*, ensuring **reliable access** across **all modern mobile environments**.
 
 ### 🛡️  **Evasion Engine**:
 -  **Undetectable by Samsung Knox**, **McAfee** and **Google Play Protect**.
@@ -68,7 +68,7 @@ Remotely **swap the entire app identity and icon** with the **"Masquerade Librar
 
 ## 🚀 The Fun Stuff (Remote Capabilities)
 
-### 👻 **Ghost Operations/Controller**:
+### 👻 **Ghost Operations**:
 - **Ghost Screen Control/Mirror**: **Cast & control the live screen remotely** with **NO "Consent Prompt" required**.
 - **Blackout Mode**: A **high-stealth mode** designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
 - **NEW! GhostToast Protocol**: Dispatch **tactical, persistent overlays**. Supports **Custom Colors, Animations (Pop, Static, Scroll)**, and **Chaotic "Burnt Toast" mode** *(multiple random spawns to overwhelm the target)*.
@@ -85,10 +85,9 @@ Remotely **swap the entire app identity and icon** with the **"Masquerade Librar
 - **High-speed, event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the app.
 - **Suicide Protocol (Self-Destruct)**: Remote-triggered persistent loop that **wipes all local configuration** and initiates a **hard uninstallation of the C2 core**.
 
-### 🛰️  **Precision GPS Tracking**:
+### 🛰️  **Precision GPS Tracking** & **Intel Stream (Notification Sniffer)**:
 - **One-click uplink** to open the **devices exact real-time location** in **Google Maps**.
-
-### ⚡ **Intel Stream (Notification Sniffer)**: Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a live feed.
+- Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a **live feed**.
 
 ### 📸 **Tactical Surveillance Hub (v1.5.1 Ultra-Stability)**
 - **Covert Recording**: Stealthily **record video without any user-facing** activity.
