@@ -19,20 +19,6 @@
 
 ---
 
-## 📡 C2 Backend Infrastructure (One-Click)
-
-**Deploy your own private Command & Control hub instantly** to **manage your fleet and preserve exfiltrated data**. The backend features a **Glass-Morphism UI**, **Orbitron typography**, and a **Tactical Exfiltration Vault**.
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/K4N3CO/Lab-RATS)
-
-### Tactical Advantages:
-- **Centralized Fleet**: **Monitor battery, network**, and **live status** of every **"Lab-Rat"** in **one professional dashboard**.
-- **Evidence Vault**: Automatically **exfiltrate** and **store audio/video recordings** directly on your server.
-- **Dynamic IP Sync**: Automatic **heartbeat reporting** ensures your P2P links **are always up-to-date**, bypassing the hassle of mobile IP changes.
-
----
-
-
 ## 🛡️ Core Features & Security
 
 -   🔐 **Remote C2 Security**: The **web dashboard** is **protected by a secure login wall** (Default Password: **admin1337**). The password can be **updated directly from the Terminal home page** for **enhanced security**.
