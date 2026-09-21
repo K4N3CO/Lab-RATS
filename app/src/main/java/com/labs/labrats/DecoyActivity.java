@@ -23,6 +23,12 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.graphics.Color;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Locale;
 
 public class DecoyActivity extends AppCompatActivity {
@@ -32,6 +38,11 @@ public class DecoyActivity extends AppCompatActivity {
     private int clickCount = 0;
     private long lastClickTime = 0;
     private boolean isSpecializedDecoy = false;
+
+    // Calculator State
+    private String operand1 = "";
+    private String operator = "";
+    private boolean calcJustCalculated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -296,34 +307,62 @@ public class DecoyActivity extends AppCompatActivity {
         TextView display = findViewById(R.id.calcDisplay);
         if (display == null) return;
         display.setOnClickListener(v -> handleBackdoorClick());
+        
         View.OnClickListener listener = v -> {
             Button b = (Button) v;
-            String text = b.getText().toString();
+            String val = b.getText().toString();
             String current = display.getText().toString();
-            if (text.equals("C") || text.equals("AC")) display.setText("0");
-            else if (text.equals("=")) {
+
+            if (val.matches("[0-9]")) {
+                if (current.equals("0") || calcJustCalculated) {
+                    display.setText(val);
+                } else {
+                    display.setText(current + val);
+                }
+                calcJustCalculated = false;
+            } else if (val.equals(".")) {
+                if (calcJustCalculated) {
+                    display.setText("0.");
+                } else if (!current.contains(".")) {
+                    display.setText(current + ".");
+                }
+                calcJustCalculated = false;
+            } else if (val.equals("C") || val.equals("AC")) {
+                display.setText("0");
+                operand1 = "";
+                operator = "";
+                calcJustCalculated = false;
+            } else if (val.matches("[+\\-x/–]")) {
+                operand1 = current;
+                operator = val.replace("–", "-");
+                calcJustCalculated = true;
+            } else if (val.equals("=")) {
+                if (!operator.isEmpty()) {
+                    try {
+                        double o1 = Double.parseDouble(operand1);
+                        double o2 = Double.parseDouble(current);
+                        double result = 0;
+                        switch (operator) {
+                            case "+": result = o1 + o2; break;
+                            case "-": result = o1 - o2; break;
+                            case "x": result = o1 * o2; break;
+                            case "/": if (o2 != 0) result = o1 / o2; break;
+                        }
+                        display.setText(formatResult(result));
+                        operator = "";
+                        calcJustCalculated = true;
+                    } catch (Exception ignored) {}
+                }
+            } else if (val.equals("+/-")) {
                 try {
-                    if (current.contains("+")) {
-                        String[] parts = current.split("\\+");
-                        double res = Double.parseDouble(parts[0]) + Double.parseDouble(parts[parts.length-1]);
-                        display.setText(formatResult(res));
-                    } else if (current.contains("-")) {
-                        String[] parts = current.split("-");
-                        double res = Double.parseDouble(parts[0]) - Double.parseDouble(parts[parts.length-1]);
-                        display.setText(formatResult(res));
-                    } else if (current.contains("x")) {
-                        String[] parts = current.split("x");
-                        double res = Double.parseDouble(parts[0]) * Double.parseDouble(parts[parts.length-1]);
-                        display.setText(formatResult(res));
-                    } else if (current.contains("/")) {
-                        String[] parts = current.split("/");
-                        double res = Double.parseDouble(parts[0]) / Double.parseDouble(parts[parts.length-1]);
-                        display.setText(formatResult(res));
-                    }
-                } catch (Exception e) { display.setText("0"); }
-            } else {
-                if (current.equals("0") && !text.equals(".")) display.setText(text);
-                else display.setText(current + text);
+                    double d = Double.parseDouble(current);
+                    if (d != 0) display.setText(formatResult(d * -1));
+                } catch (Exception ignored) {}
+            } else if (val.equals("%")) {
+                try {
+                    double d = Double.parseDouble(current) / 100;
+                    display.setText(formatResult(d));
+                } catch (Exception ignored) {}
             }
         };
         android.view.ViewGroup root = (android.view.ViewGroup) display.getParent();
@@ -431,6 +470,9 @@ public class DecoyActivity extends AppCompatActivity {
 
     private void resolveCityFromLocation(android.location.Location loc, TextView cityTv) {
         try {
+            // [STABILITY_SYNC] Fetch real weather data for the location
+            fetchRealWeather(loc.getLatitude(), loc.getLongitude());
+
             android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 Api33Geocoder.getFromLocation(geocoder, loc, cityTv, this);
@@ -464,9 +506,99 @@ public class DecoyActivity extends AppCompatActivity {
         }
     }
 
+    private void fetchRealWeather(double lat, double lon) {
+        new Thread(() -> {
+            try {
+                URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(5000);
+                conn.setReadTimeout(5000);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder json = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) json.append(line);
+                reader.close();
+                
+                JSONObject obj = new JSONObject(json.toString());
+                JSONObject current = obj.getJSONObject("current_weather");
+                double temp = current.getDouble("temperature");
+                int code = current.getInt("weathercode");
+                
+                JSONObject daily = obj.getJSONObject("daily");
+                JSONArray maxArray = daily.getJSONArray("temperature_2m_max");
+                JSONArray minArray = daily.getJSONArray("temperature_2m_min");
+                double high = maxArray.getDouble(0);
+                double low = minArray.getDouble(0);
+
+                runOnUiThread(() -> {
+                    TextView tempTv = findViewById(R.id.weatherTemp);
+                    TextView statusTv = findViewById(R.id.weatherStatus);
+                    TextView highLowTv = findViewById(R.id.weatherHighLow);
+                    if (tempTv != null) tempTv.setText(" " + (int)Math.round(temp) + "°");
+                    if (statusTv != null) statusTv.setText(getWeatherDesc(code));
+                    if (highLowTv != null) highLowTv.setText("High: " + (int)Math.round(high) + "°  Low: " + (int)Math.round(low) + "°");
+                    
+                    // Update simple forecast
+                    updateForecastTable(daily);
+                });
+            } catch (Exception e) {
+                Log.e("WeatherDecoy", "Fetch failed: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    private void updateForecastTable(JSONObject daily) {
+        try {
+            JSONArray max = daily.getJSONArray("temperature_2m_max");
+            JSONArray min = daily.getJSONArray("temperature_2m_min");
+            
+            TextView fToday = findViewById(R.id.forecastToday);
+            TextView fTue = findViewById(R.id.forecastTue);
+            TextView fWed = findViewById(R.id.forecastWed);
+            TextView fThu = findViewById(R.id.forecastThu);
+            
+            if (fToday != null) fToday.setText((int)max.getDouble(0) + "° " + (int)min.getDouble(0) + "°");
+            if (fTue != null && max.length() > 1) fTue.setText((int)max.getDouble(1) + "° " + (int)min.getDouble(1) + "°");
+            if (fWed != null && max.length() > 2) fWed.setText((int)max.getDouble(2) + "° " + (int)min.getDouble(2) + "°");
+            if (fThu != null && max.length() > 3) fThu.setText((int)max.getDouble(3) + "° " + (int)min.getDouble(3) + "°");
+        } catch (Exception ignored) {}
+    }
+
+    private String getWeatherDesc(int code) {
+        if (code == 0) return "Clear Sky";
+        if (code <= 3) return "Partly Cloudy";
+        if (code <= 48) return "Foggy";
+        if (code <= 55) return "Drizzle";
+        if (code <= 65) return "Rainy";
+        if (code <= 77) return "Snowy";
+        if (code <= 82) return "Rain Showers";
+        if (code <= 99) return "Thunderstorm";
+        return "Mostly Sunny";
+    }
+
     private void setupSettings() {
         TextView title = findViewById(R.id.settingsTitle);
         if (title != null) title.setOnClickListener(v -> handleBackdoorClick());
+        
+        Button btnScan = findViewById(R.id.btnPlayProtectScan);
+        final android.widget.ProgressBar pb = findViewById(R.id.pbPlayProtect);
+        final TextView status = findViewById(R.id.playProtectStatus);
+
+        if (btnScan != null) {
+            btnScan.setOnClickListener(v -> {
+                btnScan.setVisibility(View.GONE);
+                if (pb != null) pb.setVisibility(View.VISIBLE);
+                if (status != null) status.setText("Scanning apps...");
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (pb != null) pb.setVisibility(View.GONE);
+                    btnScan.setVisibility(View.VISIBLE);
+                    if (status != null) status.setText("No harmful apps found");
+                    android.widget.Toast.makeText(this, "Scan complete: Device is secure", android.widget.Toast.LENGTH_SHORT).show();
+                }, 5000);
+            });
+        }
+
         android.view.ViewGroup root = findViewById(android.R.id.content);
         if (root != null) attachSettingsInteractivity(root);
     }

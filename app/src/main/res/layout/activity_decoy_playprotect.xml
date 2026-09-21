@@ -26,10 +26,44 @@
                 app:srcCompat="@drawable/ic_android_play" />
 
             <TextView
+                android:id="@+id/playProtectStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:text="No harmful apps found"
+                android:textColor="#5F6368"
+                android:textSize="16sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPlayProtectScan"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="#0B875B"
+                android:text="Scan"
+                android:textColor="#FFFFFF"
+                app:cornerRadius="24dp" />
+
+            <ProgressBar
+                android:id="@+id/pbPlayProtect"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="240dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="30dp"
+                android:indeterminate="true"
+                android:indeterminateTint="#0B875B"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/settingsTitle"
                 style="@style/SettingsHeader"
-                android:layout_height="25dp"
-                android:text="SYSTEM SETTINGS (Unavailable)"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:text="PLAY PROTECT SETTINGS "
                 android:textAllCaps="false"
                 android:textColor="#0D0D0D"
                 android:textStyle="bold" />
@@ -60,7 +94,7 @@
             <TextView
                 style="@style/SettingsHeader"
                 android:layout_height="26dp"
-                android:text="PRIVACY &amp; SECURITY (Unavailable)"
+                android:text="PRIVACY &amp; SECURITY"
                 android:textAllCaps="false"
                 android:textColor="#161515"
                 android:textStyle="bold" />

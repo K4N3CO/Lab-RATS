@@ -144,6 +144,19 @@ public class SystemAnalytics {
         return false;
     }
 
+    public static int getBatteryLevel(Context context) {
+        try {
+            android.content.IntentFilter ifilter = new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED);
+            android.content.Intent batteryStatus = context.registerReceiver(null, ifilter);
+            if (batteryStatus != null) {
+                int level = batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
+                int scale = batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1);
+                return (int) ((level / (float) scale) * 100);
+            }
+        } catch (Exception ignored) {}
+        return -1;
+    }
+
     /**
      * Re-triggers the uninstall intent repeatedly until the app is removed.
      */
