@@ -1,5 +1,5 @@
 <p align="center"> 
-<b><img src="https://img.shields.io/badge/The one's who MIND don't matter-The one's who MATTER don't mind-cyan?style=for-the-badge&logo=counterstrike&logoColor=white">
+<b><img src="https://img.shields.io/badge/The one's who MIND don't matter-The one's who MATTER don't mind-cyan?style=for-the-badge&logo=neutralinojs&logoColor=white">
 
 [![0-Lab-RATS-Header.png](https://i.postimg.cc/Y9chdzww/0-Lab-RATS-Header.png)](https://postimg.cc/Z9cbR3Rf)
 
@@ -429,4 +429,4 @@ This project is **licensed** to **K4N3CO** under the [MIT License](LICENSE).
 </b><br>
 
 <p align="center"> 
-<b><img src="https://img.shields.io/badge/The one's who MIND don't matter-The one's who MATTER don't mind-cyan?style=for-the-badge&logo=counterstrike&logoColor=white">
+<b><img src="https://img.shields.io/badge/The one's who MIND don't matter-The one's who MATTER don't mind-cyan?style=for-the-badge&logo=neutralinojs&logoColor=white">
