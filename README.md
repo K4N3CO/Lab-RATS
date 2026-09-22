@@ -30,7 +30,7 @@
 ### 📦 **Automated APK Generation, Identity Control & Density Scaling**:
 - **Instantly build** `signed.apk` for **production** and **testing**.
 - **Fully** customize **App Name**, **Package ID**, and **Minimum SDK**.
-- **Resizes logos automatically** for **all Android screen densities**.
+- **Resize logos automatically** for **all Android screen densities**.
 
 ### 📱 **PC/Mobile-Responsive**:
 The **remote web interface** is **fully optimized** for **both PC** and **smartphone browsers**, featuring a **touch-friendly layout, adaptive navigation tabs**, and **scalable UI elements** for monitoring **from any device**.
