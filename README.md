@@ -11,18 +11,18 @@
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 </p>
 
-# Lab-RATS
+# LAB-RATS
 
-## Advanced Android Remote Administration Tool:
+## Android Remote Administration Tool:
 
-**Lab-RATS** is a **powerful** and **lightweight Remote Administration Tool for Android**. It **builds custom signed `.apk` files** for **deployment onto any Android device** and **enables remote monitoring, interaction and management** through a sleek **web interface(C2)** and **supports the newest modern Android updates/releases**.
+**Lab-RATS** is a **powerful** and **lightweight Remote Administration Tool for Android**. It **builds custom signed `.apk` files** for **deployment onto any Android device** and **enables remote monitoring, interaction and management** through a **sleek web interface(C2)** and **supports the newest modern Android updates/releases**.
 
 ---
 
 ## 🛡️ Core Features & Security
 
 ### 🔐 **Remote C2 Security**:
-- The **web dashboard** is **protected by a secure login wall** (Default Password: **admin1337**). The password can be **updated directly from the Terminal home page** for **enhanced security**.
+- The **web dashboard** is **protected by a secure login wall** (**Default Password: admin1337**). The password can be **changed directly from the Terminal home page** for **enhanced security**.
 
 ### 📡 **Secure Handshake Protocol**:
 - Implemented a **masked credential handshake**. Passwords are **reversed and Base64 encoded** (`0x_` prefixed) on the client-side before transmission, rendering them **invisible to browser Network/Payload inspectors**.
@@ -50,15 +50,15 @@ The **remote web interface** is **fully optimized** for **both PC** and **smartp
 - **Encrypted Local Telemetry**: Internal **system logs are encrypted at build-time**, rendering them **unreadable to standard mobile forensic tools**.
 
 ### 🎭 **Stealth Mode**:
-Remotely **swap the entire app identity and icon** with the **"Masquerade Library"** of **Fully Functional Clones**:
-- 🧮 **Calculator**: Performs actual math with a tactical logic engine.
-- 🌦️ **Weather App**: Displays real-time localized forecasts via Open-Meteo API.
-- 🛡️ **Play Protect**: Simulates a legitimate security scan to build target trust.
-- 🩹 **Self-Healing Protocol**: Automatically detects and **repairs damaged service bindings** or **revoked permissions** in the background.
+**Remotely swap the entire app identity and icon** with **the "Masquerade Library"** of **Fully Functional Clones**:
+- 🧮 **Calculator**: Performs **actual math** with a tactical logic engine.
+- 🌦️ **Weather App**: Displays **real-time localized forecasts** via Open-Meteo API.
+- 🛡️ **Play Protect**: Simulates **a legitimate security scan** to build target trust.
+- 🩹 **Self-Healing Protocol**: **Automatically detects** and **repairs damaged service bindings** or **revoked permissions** in **the background**.
 
 ### ☎️ **Emergency Recovery Hub**:
 - **Icon Restore**: If the **launcher icon is in Stealth Mode**, **dial `*#1337#` on the devices dialpad** to **instantly** restore the **Lab-RATS dashboard**.
-- **Hidden Backdoor**: Every decoy features a **secret bypass**. **Rapidly tapping the middle of the decoy screen display 10 times instantly unlocks** the **C2 server interface**.
+- **Hidden Backdoor**: **Every decoy** features a **secret bypass**. **Rapidly tapping the middle of the decoy screen display 10 times instantly unlocks** the **C2 server interface**.
 
 ### 👻 **Task-List Ghosting** & **Dynamic OTA Camouflage**:
 - The app is **hard-coded** to be **invisible in the Android "Recent Apps" list**.
@@ -69,9 +69,9 @@ Remotely **swap the entire app identity and icon** with the **"Masquerade Librar
 ## 🚀 The Fun Stuff (Remote Capabilities)
 
 ### 👻 **Ghost Operations**:
-- **Ghost Screen Control/Mirror**: **Cast & control the live screen remotely** with **NO "Consent Prompt" required**.
-- **Blackout Mode**: A **high-stealth mode** designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
-- **NEW! GhostToast Protocol**: Dispatch **tactical, persistent overlays**. Supports **Custom Colors, Animations (Pop, Static, Scroll)**, and **Chaotic "Burnt Toast" mode** *(multiple random spawns to overwhelm the target)*.
+- **Ghost Remote Control/Mirror**: **Cast & control the live screen remotely** with **NO "Consent Prompt" required**.
+- **Blackout Mode**: A **high-stealth mode** designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**. *(pair with the Ghost Remote Control for maximum stealth)*
+- **NEW! GhostToast Protocol**: Dispatch **tactical, persistent overlays**. Supports **Custom Colors, Animations (Pop, Static, Scroll)**, and **Chaotic "Burnt Toast" mode** *(multiple random spawns to overwhelm the device)*.
 - **NEW! Remote System Denial Lock**: Deploy a **persistent, full-screen security overlay** to **lock physical interaction** and **render the device inoperable until hard-reset/restarted** or **unlocked remotely from the C2 dashboard**.
 - **Live Keylogging**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for **browser login info**.
 
@@ -85,7 +85,7 @@ Remotely **swap the entire app identity and icon** with the **"Masquerade Librar
 - **High-speed, event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the app.
 - **Suicide Protocol (Self-Destruct)**: Remote-triggered persistent loop that **wipes all local configuration** and initiates a **hard uninstallation of the C2 core**.
 
-### 🛰️  **Precision GPS Tracking** & **Intel Stream (Notification Sniffer)**:
+### 🛰️ **Precision GPS Tracking** & **Intel Stream (Notification Sniffer)**:
 - **One-click uplink** to open the **devices exact real-time location** in **Google Maps**.
 - Intercept **every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a **live feed**.
 
@@ -103,7 +103,7 @@ Remotely **swap the entire app identity and icon** with the **"Masquerade Librar
 - **📝 Direct File Editor**: Live-edit **text, JSON**, and **log files** directly on the device.
 
 ### 📊 **Telemetry & Reporting**:
-- **C2 Auto-Reporting**: Discrete reporting of **IP, Battery %, Network Type (WiFi/Cellular), and Stealth Status** to a centralized **Google Sheet**.
+- **C2 Auto-Reporting**: Discrete reporting of **IP, Battery %, Network Type *(WiFi/Cellular)*, and Stealth Status** to a centralized **Google Sheet**.
 
 ---
 
@@ -115,29 +115,29 @@ Remotely **swap the entire app identity and icon** with the **"Masquerade Librar
 
 ### 🔄 **Remote Server Restart**
 
--   **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh **background services**.
--   **SMS Backdoor**: Send an SMS/Text containing `!RESTART_C2` to the **devices number** to **force the server back online** even if it was **manually closed or killed by the OS**.
+- **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh **background services**.
+- **SMS Backdoor**: Send an SMS/Text containing `!RESTART_C2` to the **devices number** to **force the server back online** even if it was **manually closed or killed by the OS**.
 
 ### 🛠️ **NEW!** **Termux Bridge Integration**
 
 **Lab-RATS** now features a **high-performance bridge to the Termux environment**. If **Termux is installed on the target device**, the remote terminal can **instantly elevate its capabilities**:
--   **Auto-Routing**: Common commands like `pkg`, `apt`, `pip`, and `python` are automatically routed through the bridge.
--   **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the **C2 web terminal**.
--   **Persistent Environment**: Full support for **Termux's internal storage** and **standard Linux binaries**.
+- **Auto-Routing**: Common commands like `pkg`, `apt`, `pip`, and `python` are automatically routed through the bridge.
+- **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the **C2 web terminal**.
+- **Persistent Environment**: Full support for **Termux's internal storage** and **standard Linux binaries**.
 
 ### 🖥️ **Enhanced Remote Shell**
 
 The **Terminal Tabs Built-in Shell has been overhauled** for **professional workflows**:
--   **Command History**: Navigate previous commands instantly using **Up/Down arrows**.
--   **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
--   **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
--   **Hardened I/O**: **Multi-stage retry logic** and unique **execution tracking** for **zero-latency command output**.
+- **Command History**: Navigate previous commands instantly using **Up/Down arrows**.
+- **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
+- **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
+- **Hardened I/O**: **Multi-stage retry logic** and unique **execution tracking** for **zero-latency command output**.
 
 ---
 
 ## 📡 Command & Control (C2) Options
 
-**Lab-RATS** supports **two primary methods** for **tracking your fleet** and **receiving remote data**.
+**Lab-RATS** supports **two primary methods** for **tracking your device fleet** and **receiving remote data**.
 
 ### Option 1: Google Sheet (Standard)
 Best for **basic IP tracking** and logging. **No server maintenance required**.
@@ -182,7 +182,6 @@ function handleRequest(e) {
 }
 ```
 3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(E-Mail)* → **Who has Access: Anyone**.
-
 > [!IMPORTANT]
 > 4.  Copy the **Webhook URL** it **provides you with and paste it into the APK builder** when prompted. *(Get Started Section Below)*
 
@@ -204,12 +203,12 @@ function handleRequest(e) {
 
 ## 🛠️ Get Started
 
-### 1. Requirements
+### 1. Requirements:
 *   **Java 17 or 21 installed** on your **workstation**.
 *   A **Test Android** device. 📱 *(Samsung/Pixel/OnePlus/HTC supported)*
 *   Your **Google Sheet Webhook URL or Render URL**. *(Previous Sections)*
 
-### 2. Building the APK (on PC)
+### 2. Building the APK: (on PC)
 1.  **Download & Extract** the repository.
 2.  **Navigate** to `cd /Lab-RATS-main/apk-builder/`
 3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
@@ -219,7 +218,7 @@ function handleRequest(e) {
 5.  Enter your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device reporting**.
 6.  Retrieve your `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `/apk-builder/output/` directory.
 
-### 3. Deploying & Installing onto Android Device
+### 3. Deploying & Installing onto Android Device:
 **Deployment is a multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 #### **A. **NEW!** Strategic Weaponization** (The Wrapper)
