@@ -21,10 +21,8 @@
 
 ## 🛡️ Core Features & Security
 
-### 🔐 **Remote C2 Security**:
+### 🔐 **Remote C2 Security** & **Secure Handshake**:
 - The **web dashboard** is **protected by a secure login wall** (**Default Password: admin1337**). The password can be **changed directly from the Terminal home page** for **enhanced security**.
-
-### 📡 **Secure Handshake Protocol**:
 - Implemented a **masked credential handshake**. Passwords are **reversed and Base64 encoded** (`0x_` prefixed) on the client-side before transmission, rendering them **invisible to browser Network/Payload inspectors**.
 
 ### 📦 **Automated APK Generation, Identity Control & Density Scaling**:
@@ -33,7 +31,7 @@
 - **Resize logos automatically** for **all Android screen densities**.
 
 ### 📱 **PC/Mobile-Responsive**:
-The **remote web interface** is **fully optimized** for **both PC** and **smartphone browsers**, featuring a **touch-friendly layout, adaptive navigation tabs**, and **scalable UI elements** for monitoring **from any device**.
+- The **remote web interface** is **fully optimized** for **both PC** and **smartphone browsers**, featuring a **touch-friendly layout, adaptive navigation tabs**, and **scalable UI elements** for monitoring **from any device**.
 
 ---
 
@@ -54,11 +52,12 @@ The **remote web interface** is **fully optimized** for **both PC** and **smartp
 - 🧮 **Calculator**: Performs **actual math** with a tactical logic engine.
 - 🌦️ **Weather App**: Displays **real-time localized forecasts** via Open-Meteo API.
 - 🛡️ **Play Protect**: Simulates **a legitimate security scan** to build target trust.
-- 🩹 **Self-Healing Protocol**: **Automatically detects** and **repairs damaged service bindings** or **revoked permissions** in **the background**.
+- 👀 **System Update**: **Best for initial install** it **simulates a system update** and **asks for permissions during the process**, achieving **highly successful installs**.
 
-### ☎️ **Emergency Recovery Hub**:
+### ☎️ **Emergency Recovery** & **Self-Healing**:
 - **Icon Restore**: If the **launcher icon is in Stealth Mode**, **dial `*#1337#` on the devices dialpad** to **instantly** restore the **Lab-RATS dashboard**.
 - **Hidden Backdoor**: **Every decoy** features a **secret bypass**. **Rapidly tapping the middle of the decoy screen display 10 times instantly unlocks** the **C2 server interface**.
+- **Automatically detects** and **repairs damaged service bindings** or **revoked permissions** in **the background**.
 
 ### 👻 **Task-List Ghosting** & **Dynamic OTA Camouflage**:
 - The app is **hard-coded** to be **invisible in the Android "Recent Apps" list**.
