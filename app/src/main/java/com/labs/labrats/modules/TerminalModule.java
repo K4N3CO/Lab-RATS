@@ -120,14 +120,14 @@ public class TerminalModule extends BaseModule {
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
         html.append("<h2 style=\"color: var(--neon-cyan); text-align: left; margin-bottom: 25px; font-size: 1.05rem; letter-spacing: 1.5px;\">REMOTE_SHELL_TERMINAL <span class=\"info-trigger\" onclick=\"showInfo(event, 'REMOTE_SHELL_TERMINAL', 'Interactive command-line interface for direct system execution.')\">INFO</span></h2>");
         html.append("<div style=\"background: #000; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.2); overflow: hidden;\">");
+        html.append("<div id=\"termux-uplink\" style=\"color: var(--neon-yellow); padding: 10px 20px 0 20px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; display: ").append(termuxInstalled ? "block" : "none").append(";\">[UPLINK] Termux bridge available.</div>");
         html.append("<div id=\"shell-output\" style=\"padding: 20px; font-size: 0.75rem; color: var(--terminal-green); line-height: 1.6; font-family: 'JetBrains Mono', monospace; height: 250px; overflow-y: auto;\">");
         html.append("<div>[STABILITY_OS] Initializing remote session...</div>");
-        html.append("<div>[UPLINK] Connected to /dev/pts/0</div>");
-        html.append("<div id=\"termux-uplink\" style=\"color: var(--neon-yellow); display: ").append(termuxInstalled ? "block" : "none").append(";\">[UPLINK] Termux bridge available.</div>");
+        html.append("<div>[UPLINK] Active path: ").append(escapeHtml(currentShellPath)).append("</div>");
         html.append("<div style=\"opacity: 0.5; margin-top: 5px;\">Type 'help' for command list</div>");
         html.append("</div>");
         html.append("<div style=\"border-top: 1px solid rgba(0, 242, 255, 0.1); padding: 10px; display: flex; align-items: center; background: rgba(0,0,0,0.5);\">");
-        html.append("<span id=\"terminal-prompt\" style=\"color: var(--terminal-green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 10px; white-space: nowrap;\">root@Android:~").append(promptSymbol).append("</span>");
+        html.append("<span id=\"terminal-prompt\" style=\"color: var(--terminal-green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 10px; white-space: nowrap;\">root@Android:").append(escapeHtml(currentShellPath)).append(promptSymbol).append("</span>");
         html.append("<input id=\"shell-cmd\" type=\"text\" autocapitalize=\"none\" autocorrect=\"off\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"enter command...\" style=\"background: transparent; border: none; color: #fff; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex-grow: 1; padding: 5px 0;\">");
         html.append("</div>");
         html.append("</div>");
@@ -253,9 +253,10 @@ public class TerminalModule extends BaseModule {
             org.json.JSONObject resultObj = new org.json.JSONObject();
             resultObj.put("output", shellResult);
             resultObj.put("termux_available", termuxAvailable);
+            resultObj.put("current_path", currentShellPath);
             return newResponse(Response.Status.OK, "application/json", resultObj.toString());
         } catch (Exception e) {
-            return newResponse(Response.Status.OK, "application/json", "{\"output\": \"JSON Error\", \"termux_available\": false}");
+            return newResponse(Response.Status.OK, "application/json", "{\"output\": \"JSON Error\", \"termux_available\": false, \"current_path\": \"/sdcard\"}");
         }
     }
 
@@ -269,55 +270,96 @@ public class TerminalModule extends BaseModule {
     }
 
     private String executeShell(String command) {
-        if (command == null || command.isEmpty()) return "";
+        if (command == null || command.trim().isEmpty()) return "";
+        String trimmedCmd = command.trim();
+
         try {
-            if (command.equalsIgnoreCase("help") || command.equalsIgnoreCase("-h")) {
+            if (trimmedCmd.equalsIgnoreCase("clear") || trimmedCmd.equalsIgnoreCase("cls")) {
+                return "__CLEAR_SCREEN__";
+            }
+
+            if (trimmedCmd.equalsIgnoreCase("help") || trimmedCmd.equalsIgnoreCase("-h")) {
                 return "AVAILABLE_COMMANDS:\n\n" +
-                       "  cd <path>        - Change working directory\n" +
-                       "  ls [-la]         - List files in current directory\n" +
-                       "  pwd              - Print current directory\n" +
-                       "  cat <file>       - View file contents\n" +
-                       "  rm <file>        - Remove file\n" +
-                       "  mkdir <dir>      - Create directory\n" +
-                       "  pm list packages - List installed app packages\n" +
-                       "  getprop          - View system properties\n" +
-                       "  df -h            - Disk usage summary\n" +
-                       "  top -n 1         - Process list\n" +
-                       "  netstat          - Network status\n" +
-                       "  ip addr          - IP configuration\n" +
-                       "  uptime           - System uptime\n" +
-                       "  whoami           - Current user identity\n" +
-                       "  id               - UID/GID info\n" +
-                       "  uname -a         - Kernel version/info\n" +
-                       "  logcat -d        - Dump system logs\n" +
-                       "  sysinfo          - Aggregate system overview\n" +
-                       "  termux <cmd>     - Route command through Termux bridge\n" +
-                       "  termux-fix-mirrors - Fix 'No mirror selected' errors\n" +
-                       "  help / -h        - Show this help menu\n\n" +
+                       "  File Operations:\n" +
+                       "    cd [path]             - Change directory (e.g. cd /sdcard, cd ..)\n" +
+                       "    ls [-la]              - List files in current directory\n" +
+                       "    pwd                   - Print current directory path\n" +
+                       "    cat [file]            - View file contents\n" +
+                       "    cp [src] [dest]       - Copy file or directory\n" +
+                       "    mv [src] [dest]       - Move or rename file/directory\n" +
+                       "    rm [file]             - Remove file or directory\n" +
+                       "    mkdir [dir]           - Create directory\n" +
+                       "    touch [file]          - Create empty file\n" +
+                       "    find [dir] -name [p]  - Search files by name pattern\n\n" +
+                       "  Process & Memory:\n" +
+                       "    ps [-A]               - List running processes\n" +
+                       "    top -n 1              - Real-time process resource usage\n" +
+                       "    free -h               - View RAM / memory usage summary\n" +
+                       "    uptime                - System uptime and load average\n\n" +
+                       "  System Diagnostics:\n" +
+                       "    sysinfo               - Aggregate hardware & software overview\n" +
+                       "    getprop [prop]        - View system properties\n" +
+                       "    df -h                 - Disk space / partition usage\n" +
+                       "    dumpsys battery       - View detailed battery status\n" +
+                       "    whoami / id           - Current user identity & UID/GID info\n" +
+                       "    uname -a              - Linux kernel version & architecture\n" +
+                       "    logcat -d             - Dump recent system logs\n\n" +
+                       "  Network & Package Tools:\n" +
+                       "    ip addr               - IP & network interface configuration\n" +
+                       "    netstat               - Network connections & sockets\n" +
+                       "    pm list packages      - List installed application packages\n" +
+                       "    pm path [pkg]         - Get APK installation path for package\n" +
+                       "    am start -n [comp]    - Launch activity / component\n\n" +
+                       "  Termux Bridge:\n" +
+                       "    termux [cmd]          - Route command through Termux bridge\n" +
+                       "    termux-fix-mirrors    - Fix Termux repository & mirror setup\n\n" +
+                       "  Terminal Controls:\n" +
+                       "    clear / cls           - Clear terminal screen\n" +
+                       "    help / -h             - Show this help menu\n\n" +
                        "CURRENT_PATH: " + currentShellPath;
             }
 
-            if (command.equalsIgnoreCase("sysinfo")) {
+            if (trimmedCmd.equalsIgnoreCase("ps")) {
+                String res = executeShellProcess("ps -A");
+                if (res.contains("invalid") || res.contains("not found") || res.trim().isEmpty() || res.contains("[Command executed with no output]")) {
+                    res = executeShellProcess("ps");
+                }
+                return res;
+            }
+
+            if (trimmedCmd.equals("free") || trimmedCmd.startsWith("free ")) {
+                String res = executeShellProcess(trimmedCmd);
+                if (res.contains("not found") || res.contains("Permission denied") || res.trim().isEmpty() || res.contains("[Command executed with no output]")) {
+                    return executeShellProcess("cat /proc/meminfo | head -n 12");
+                }
+                return res;
+            }
+
+            if (trimmedCmd.equalsIgnoreCase("sysinfo")) {
                 return "SYSTEM_OVERVIEW:\n" +
                        "  Manufacturer: " + android.os.Build.MANUFACTURER + "\n" +
                        "  Model: " + android.os.Build.MODEL + "\n" +
                        "  Android Ver: " + android.os.Build.VERSION.RELEASE + " (API " + android.os.Build.VERSION.SDK_INT + ")\n" +
-                       "  C2 Uplink: " + currentShellPath + "\n" +
-                       "  Session User: " + System.getProperty("user.name") + "\n" +
+                       "  Current Path: " + currentShellPath + "\n" +
+                       "  Session User: u0_a" + (android.os.Process.myUid() - 10000) + " (UID: " + android.os.Process.myUid() + ")\n" +
                        "  Architecture: " + System.getProperty("os.arch");
             }
 
-            if (command.trim().equalsIgnoreCase("termux-fix-mirrors")) {
-                return executeShell("termux echo \"deb https://packages-cf.termux.dev/apt/termux-main stable main\" > /data/data/com.termux/files/usr/etc/apt/sources.list && apt update");
+            if (trimmedCmd.equalsIgnoreCase("pwd")) {
+                return currentShellPath;
             }
 
-            if (command.startsWith("termux ") || 
-               (isAppInstalled("com.termux") && (command.startsWith("pkg ") || command.startsWith("apt ") || command.startsWith("pip ") || command.startsWith("python ") || command.startsWith("nmap ") || command.startsWith("echo ")))) {
+            if (trimmedCmd.equalsIgnoreCase("termux-fix-mirrors")) {
+                return executeShell("termux mkdir -p /data/data/com.termux/files/usr/etc/apt && echo \"deb https://packages.termux.dev/apt/termux-main stable main\" > /data/data/com.termux/files/usr/etc/apt/sources.list && apt update");
+            }
+
+            if (trimmedCmd.startsWith("termux ") || 
+               (isAppInstalled("com.termux") && (trimmedCmd.startsWith("pkg ") || trimmedCmd.startsWith("apt ") || trimmedCmd.startsWith("pip ") || trimmedCmd.startsWith("python ") || trimmedCmd.startsWith("nmap ") || trimmedCmd.startsWith("dpkg ")))) {
                 
                 if (!isAppInstalled("com.termux")) return "Error: Termux is not installed on this device.";
                 
-                String termuxCmd = command;
-                if (command.startsWith("termux ")) termuxCmd = command.substring(7).trim();
+                String termuxCmd = trimmedCmd;
+                if (trimmedCmd.startsWith("termux ")) termuxCmd = trimmedCmd.substring(7).trim();
 
                 String cmdId = String.valueOf(System.currentTimeMillis() % 1000000);
                 File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
@@ -349,7 +391,7 @@ public class TerminalModule extends BaseModule {
                 
                 LabRatsWorker.execute(() -> {
                     int retries = 0;
-                    int maxRetries = (command.contains("pkg") || command.contains("apt") || command.contains("pip")) ? 300 : 60; 
+                    int maxRetries = (trimmedCmd.contains("pkg") || trimmedCmd.contains("apt") || trimmedCmd.contains("pip")) ? 300 : 60; 
                     while (retries < maxRetries) {
                         try { Thread.sleep(1000); } catch (Exception ignored) {}
                         if (outputFile.exists() && outputFile.length() > 0) {
@@ -407,39 +449,226 @@ public class TerminalModule extends BaseModule {
                 }
             }
 
-            if (command.startsWith("cd ")) {
-                String targetPath = command.substring(3).trim();
-                File nextDir;
-                if (targetPath.startsWith("/")) nextDir = new File(targetPath);
-                else nextDir = new File(currentShellPath, targetPath);
+            if (trimmedCmd.startsWith("cd") && (trimmedCmd.length() == 2 || Character.isWhitespace(trimmedCmd.charAt(2)))) {
+                String targetPath = trimmedCmd.length() > 2 ? trimmedCmd.substring(2).trim() : "";
+                if ((targetPath.startsWith("\"") && targetPath.endsWith("\"")) || (targetPath.startsWith("'") && targetPath.endsWith("'"))) {
+                    if (targetPath.length() >= 2) {
+                        targetPath = targetPath.substring(1, targetPath.length() - 1).trim();
+                    }
+                }
                 
+                File sdcard = Environment.getExternalStorageDirectory();
+                String defaultHome = (sdcard != null && sdcard.exists()) ? sdcard.getAbsolutePath() : context.getFilesDir().getAbsolutePath();
+
+                if (targetPath.isEmpty() || targetPath.equals("~")) {
+                    targetPath = defaultHome;
+                } else if (targetPath.startsWith("~/")) {
+                    targetPath = defaultHome + targetPath.substring(1);
+                }
+                
+                File nextDir;
+                if (targetPath.startsWith("/")) {
+                    nextDir = new File(targetPath);
+                } else {
+                    nextDir = new File(currentShellPath, targetPath);
+                }
+
                 if (nextDir.exists() && nextDir.isDirectory()) {
-                    currentShellPath = nextDir.getCanonicalPath();
+                    try {
+                        currentShellPath = nextDir.getCanonicalPath();
+                    } catch (Exception e) {
+                        currentShellPath = nextDir.getAbsolutePath();
+                    }
                     return "Directory changed to: " + currentShellPath;
                 } else {
-                    return "Error: Directory does not exist";
+                    return "Error: Directory does not exist: " + targetPath;
                 }
             }
 
-            ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
-            pb.directory(new File(currentShellPath));
-            pb.redirectErrorStream(true);
-            
-            Process process = pb.start();
-            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-            String line;
-            int count = 0;
-            while ((line = reader.readLine()) != null && count < 100) {
-                output.append(line).append("\n");
-                count++;
+            if (trimmedCmd.equalsIgnoreCase("whoami")) {
+                String res = executeShellProcess("whoami");
+                if (res.contains("not found") || res.contains("permission denied") || res.contains("Shell Error") || res.trim().isEmpty() || res.contains("[Command executed with no output]")) {
+                    return "u0_a" + (android.os.Process.myUid() - 10000) + " (UID: " + android.os.Process.myUid() + ")";
+                }
+                return res;
             }
-            if (output.length() == 0) output.append("[Command executed with no output]");
 
-            FirebaseConfig.logActivity("DEVICE_CONTROL: Shell command executed - " + command);
-            return output.toString();
+            if (trimmedCmd.startsWith("netstat")) {
+                String res = executeShellProcess(trimmedCmd);
+                if (res.contains("Permission denied") || res.contains("No such file") || res.trim().isEmpty() || res.contains("[Command executed with no output]")) {
+                    return getNetworkInterfaceConfig() + "\n\n[Note: Direct socket table (/proc/net/tcp) is restricted by Android 10+ SELinux rules. Interface IP configuration displayed above.]";
+                }
+                return res;
+            }
+
+            if (trimmedCmd.startsWith("ip") || trimmedCmd.startsWith("ifconfig")) {
+                String res = executeShellProcess(trimmedCmd);
+                if (res.contains("Permission denied") || res.contains("not found") || res.contains("No such file") || res.trim().isEmpty() || res.contains("[Command executed with no output]")) {
+                    return getNetworkInterfaceConfig();
+                }
+                return res;
+            }
+
+            String execCmd = trimmedCmd;
+            if (trimmedCmd.equals("logcat") || trimmedCmd.startsWith("logcat ")) {
+                if (!trimmedCmd.contains("-d")) {
+                    execCmd = execCmd + " -d";
+                }
+                if (!trimmedCmd.contains("-t")) {
+                    execCmd = execCmd + " -t 200";
+                }
+            } else if (trimmedCmd.equals("top") || trimmedCmd.startsWith("top ")) {
+                if (!trimmedCmd.contains("-n")) {
+                    execCmd = execCmd + " -n 1 -b";
+                }
+            } else if (trimmedCmd.startsWith("ping ")) {
+                if (!trimmedCmd.contains("-c")) {
+                    execCmd = execCmd + " -c 4";
+                }
+            }
+
+            return executeShellProcess(execCmd);
         } catch (Exception e) {
             return "Shell Error: " + e.getMessage();
+        }
+    }
+
+    private String executeShellProcess(String command) {
+        try {
+            File workingDir = new File(currentShellPath);
+            if (!workingDir.exists() || !workingDir.isDirectory()) {
+                File sdcard = Environment.getExternalStorageDirectory();
+                if (sdcard != null && sdcard.exists()) {
+                    currentShellPath = sdcard.getCanonicalPath();
+                } else {
+                    currentShellPath = context.getFilesDir().getCanonicalPath();
+                }
+                workingDir = new File(currentShellPath);
+            }
+
+            ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
+            pb.directory(workingDir);
+            pb.redirectErrorStream(true);
+
+            Process process = pb.start();
+
+            final StringBuilder output = new StringBuilder();
+            final boolean[] truncated = new boolean[]{false};
+
+            Thread readerThread = new Thread(() -> {
+                try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    int count = 0;
+                    while ((line = reader.readLine()) != null) {
+                        if (count < 500) {
+                            output.append(line).append("\n");
+                            count++;
+                        } else {
+                            truncated[0] = true;
+                            break;
+                        }
+                    }
+                } catch (Exception ignored) {}
+            });
+            readerThread.start();
+
+            final boolean[] finished = new boolean[]{false};
+            Thread processWaitThread = new Thread(() -> {
+                try {
+                    process.waitFor();
+                    finished[0] = true;
+                } catch (InterruptedException ignored) {}
+            });
+            processWaitThread.start();
+
+            try {
+                processWaitThread.join(10000);
+            } catch (InterruptedException ignored) {}
+
+            if (!finished[0]) {
+                try {
+                    process.destroy();
+                } catch (Exception ignored) {}
+                processWaitThread.interrupt();
+                readerThread.interrupt();
+                if (output.length() == 0) {
+                    output.append("[Command execution timed out after 10 seconds]");
+                } else {
+                    output.append("\n[Command execution timed out - output truncated]");
+                }
+            } else {
+                try {
+                    readerThread.join(1000);
+                } catch (InterruptedException ignored) {}
+            }
+
+            if (truncated[0]) {
+                output.append("\n[Output truncated at 500 lines]");
+            }
+
+            String result = output.toString().trim();
+            if (result.isEmpty()) {
+                return "[Command executed with no output]";
+            }
+
+            FirebaseConfig.logActivity("DEVICE_CONTROL: Shell command executed - " + command);
+            return result;
+        } catch (Exception e) {
+            return "Shell Error: " + e.getMessage();
+        }
+    }
+
+    private String getNetworkInterfaceConfig() {
+        StringBuilder sb = new StringBuilder("IP_CONFIGURATION:\n\n");
+        try {
+            java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
+            if (interfaces == null || !interfaces.hasMoreElements()) {
+                return "Error: No network interfaces found.";
+            }
+            while (interfaces.hasMoreElements()) {
+                java.net.NetworkInterface netIf = interfaces.nextElement();
+                sb.append("  ").append(netIf.getName()).append(": ");
+                
+                List<String> flags = new ArrayList<>();
+                try { if (netIf.isUp()) flags.add("UP"); } catch (Exception ignored) {}
+                try { if (netIf.isLoopback()) flags.add("LOOPBACK"); } catch (Exception ignored) {}
+                try { if (netIf.isPointToPoint()) flags.add("POINTTOPOINT"); } catch (Exception ignored) {}
+                try { if (netIf.supportsMulticast()) flags.add("MULTICAST"); } catch (Exception ignored) {}
+                if (!flags.isEmpty()) {
+                    sb.append("[").append(android.text.TextUtils.join(", ", flags)).append("]");
+                }
+                sb.append("\n");
+
+                try {
+                    byte[] mac = netIf.getHardwareAddress();
+                    if (mac != null && mac.length > 0) {
+                        StringBuilder macStr = new StringBuilder();
+                        for (int i = 0; i < mac.length; i++) {
+                            macStr.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? ":" : ""));
+                        }
+                        sb.append("    MAC: ").append(macStr).append("\n");
+                    }
+                } catch (Exception ignored) {}
+
+                java.util.Enumeration<java.net.InetAddress> addrs = netIf.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    java.net.InetAddress addr = addrs.nextElement();
+                    if (addr instanceof java.net.Inet4Address) {
+                        sb.append("    IPv4: ").append(addr.getHostAddress()).append("\n");
+                    } else if (addr instanceof java.net.Inet6Address) {
+                        String host = addr.getHostAddress();
+                        if (host != null) {
+                            int ip6Idx = host.indexOf('%');
+                            if (ip6Idx > 0) host = host.substring(0, ip6Idx);
+                            sb.append("    IPv6: ").append(host).append("\n");
+                        }
+                    }
+                }
+                sb.append("\n");
+            }
+            return sb.toString().trim();
+        } catch (Exception e) {
+            return "Error retrieving network configuration: " + e.getMessage();
         }
     }
 }

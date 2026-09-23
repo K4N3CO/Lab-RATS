@@ -80,12 +80,16 @@ android {
         abortOnError false
     }
 
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
+    }
+
     sourceSets {
         test {
-            java.srcDirs = []
-        }
-        androidTest {
-            java.srcDirs = []
+            java.srcDirs = ['src/test/java']
         }
     }
 }
@@ -105,6 +109,15 @@ dependencies {
     implementation "androidx.camera:camera-video:${camerax_version}"
     implementation "androidx.camera:camera-view:${camerax_version}"
     implementation "androidx.camera:camera-extensions:${camerax_version}"
+
+    // [STABILITY_SYNC] WebSocket Tunnel Engine
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    // Testing Infrastructure
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+    testImplementation 'androidx.test:core:1.5.0'
 }
 
 // Fix for "The processing instruction target matching '[xX][mM][lL]' is not allowed"

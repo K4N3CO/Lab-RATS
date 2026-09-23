@@ -528,25 +528,39 @@ function executeShell() {
     fetch("/device/shell?cmd=" + encodeURIComponent(t))
       .then(res => res.json())
       .then(data => {
+        const tu = document.getElementById("termux-uplink");
+        const symbol = data.termux_available ? "$" : "#";
+        const currentPath = data.current_path || "/sdcard";
+
         if (data.termux_available) {
-          document.getElementById("termux-uplink").style.display = "block";
-          const p = document.getElementById("terminal-prompt");
-          if (p) p.innerText = "root@Android:~$";
+          if (tu) tu.style.display = "block";
         } else {
-          const p = document.getElementById("terminal-prompt");
-          if (p) p.innerText = "root@Android:~#";
+          if (tu) tu.style.display = "none";
         }
-        const outDiv = document.createElement("div");
-        outDiv.style.whiteSpace = "pre-wrap";
-        outDiv.innerHTML = data.output || "No output";
-        o.appendChild(outDiv);
-        o.scrollTop = o.scrollHeight;
+
+        const p = document.getElementById("terminal-prompt");
+        if (p) p.innerText = "root@Android:" + currentPath + symbol;
+
+        if (data.output === "__CLEAR_SCREEN__") {
+          if (o) o.innerHTML = "";
+          return;
+        }
+        if (o) {
+          const outDiv = document.createElement("div");
+          outDiv.style.whiteSpace = "pre-wrap";
+          const rawText = data.output || "No output";
+          outDiv.innerHTML = rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          o.appendChild(outDiv);
+          o.scrollTop = o.scrollHeight;
+        }
       })
       .catch(() => {
-        const errDiv = document.createElement("div");
-        errDiv.style.color = "var(--danger)";
-        errDiv.textContent = "[ERROR] Connection lost";
-        o.appendChild(errDiv);
+        if (o) {
+          const errDiv = document.createElement("div");
+          errDiv.style.color = "var(--danger)";
+          errDiv.textContent = "[ERROR] Connection lost";
+          o.appendChild(errDiv);
+        }
       });
   }
 }

