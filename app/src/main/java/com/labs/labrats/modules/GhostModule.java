@@ -331,7 +331,7 @@ public class GhostModule extends BaseModule {
     private Response serveGhostPage(IHTTPSession session) {
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
         html.append("</div>");
         
         html.append("<div class=\"card\">");
@@ -621,7 +621,7 @@ public class GhostModule extends BaseModule {
                     float py1 = Float.parseFloat(params.get("py1"));
                     float px2 = Float.parseFloat(params.get("px2"));
                     float py2 = Float.parseFloat(params.get("py2"));
-                    int d = Integer.parseInt(params.get("d"));
+                    int d = params.containsKey("d") ? Integer.parseInt(params.get("d")) : 300;
                     int x1 = (int) (px1 * ghost.getScreenWidth() / 100);
                     int y1 = (int) (py1 * ghost.getScreenHeight() / 100);
                     int x2 = (int) (px2 * ghost.getScreenWidth() / 100);

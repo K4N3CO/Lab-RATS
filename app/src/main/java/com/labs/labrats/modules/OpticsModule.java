@@ -20,9 +20,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import androidx.annotation.OptIn;
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
+import androidx.core.content.ContextCompat;
+
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Response;
 
+@OptIn(markerClass = ExperimentalCamera2Interop.class)
 public class OpticsModule extends BaseModule {
 
     public OpticsModule(Context context, FirebaseConfig server) {
@@ -411,7 +416,7 @@ public class OpticsModule extends BaseModule {
             cameraId = "0";
         }
 
-        if (context.checkSelfPermission(android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Camera permission not granted");
         }
 
@@ -649,13 +654,59 @@ public class OpticsModule extends BaseModule {
 
         html.append("function startStream() {");
         html.append("  const img = document.getElementById('stream');");
-        html.append("  img.style.display = 'none';");
-        html.append("  loadingDiv.style.display = 'block';");
+        html.append("  if (img) img.style.display = 'none';");
+        html.append("  if (loadingDiv) { loadingDiv.style.display = 'block'; loadingDiv.innerText = 'INITIALIZING_CAMERA...'; }");
         html.append("  fetch('/camera/start-stream?cam=' + camId + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality);");
-        html.append("  setTimeout(() => {");
-        html.append("    img.src = '/camera/stream?cam=' + camId + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
-        html.append("    img.onload = () => { loadingDiv.style.display = 'none'; img.style.display = 'block'; };");
-        html.append("  }, 1000);");
+        html.append("  let isTunnel = window.location.hostname.includes('onrender.com');");
+        html.append("  if (isTunnel) {");
+        html.append("    let pollCount = 0;");
+        html.append("    if (window.pollFrame) clearInterval(window.pollFrame);");
+        html.append("    window.pollFrame = setInterval(() => {");
+        html.append("      pollCount++;");
+        html.append("      fetch('/camera/frame?t=' + Date.now())");
+        html.append("        .then(r => r.blob())");
+        html.append("        .then(blob => {");
+        html.append("          if (blob && blob.size > 100) {");
+        html.append("            clearInterval(window.pollFrame);");
+        html.append("            const initialUrl = URL.createObjectURL(blob);");
+        html.append("            if (img) { img.src = initialUrl; img.style.display = 'block'; img.dataset.oldUrl = initialUrl; }");
+        html.append("            if (loadingDiv) loadingDiv.style.display = 'none';");
+        html.append("            startFrameLoop();");
+        html.append("          }");
+        html.append("        })");
+        html.append("        .catch(() => {});");
+        html.append("      if (pollCount > 30) {");
+        html.append("        clearInterval(window.pollFrame);");
+        html.append("        handleStreamError();");
+        html.append("      }");
+        html.append("    }, 600);");
+        html.append("  } else {");
+        html.append("    setTimeout(() => {");
+        html.append("      if (img) {");
+        html.append("        img.src = '/camera/stream?cam=' + camId + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
+        html.append("        img.onload = () => { if (loadingDiv) loadingDiv.style.display = 'none'; img.style.display = 'block'; };");
+        html.append("      }");
+        html.append("    }, 1000);");
+        html.append("  }");
+        html.append("}");
+
+        html.append("function startFrameLoop() {");
+        html.append("  if (window.frameInterval) clearInterval(window.frameInterval);");
+        html.append("  window.frameInterval = setInterval(() => {");
+        html.append("    const img = document.getElementById('stream');");
+        html.append("    if (!img) { clearInterval(window.frameInterval); return; }");
+        html.append("    fetch('/camera/frame?t=' + Date.now())");
+        html.append("      .then(r => r.blob())");
+        html.append("      .then(blob => {");
+        html.append("        if (blob && blob.size > 100) {");
+        html.append("          if (img.dataset.oldUrl) URL.revokeObjectURL(img.dataset.oldUrl);");
+        html.append("          const newUrl = URL.createObjectURL(blob);");
+        html.append("          img.src = newUrl;");
+        html.append("          img.dataset.oldUrl = newUrl;");
+        html.append("        }");
+        html.append("      })");
+        html.append("      .catch(() => {});");
+        html.append("  }, refreshRate);");
         html.append("}");
 
         html.append("function streamLoaded() { /* Handled by inline onload */ }");

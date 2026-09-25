@@ -123,7 +123,11 @@ public class MediaFrameworkService extends Service {
                     stopCallRecording();
                     releaseWakeLock();
                     try {
-                        stopForeground(true);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE);
+                        } else {
+                            stopForeground(true);
+                        }
                     } catch (Exception ignored) {}
                     stopSelf();
                 } else if (Constants.ACTION_START_AUDIO.equals(action) || "START_SERVICE".equals(action)) {

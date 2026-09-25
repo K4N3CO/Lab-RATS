@@ -376,7 +376,7 @@ public class AcousticsModule extends BaseModule {
         FirebaseConfig.logActivity("ACOUSTICS_EXTRACT: Remote audio archive accessed");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
         html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin-bottom: 20px; font-size: 1.6rem;\">&#128190; Audio Recordings</h2>");

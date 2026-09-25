@@ -179,7 +179,7 @@ public class WorkManager_Sync extends Service {
                 }
             }
         };
-        registerReceiver(tickReceiver, new android.content.IntentFilter(Intent.ACTION_TIME_TICK));
+        ContextCompat.registerReceiver(this, tickReceiver, new android.content.IntentFilter(Intent.ACTION_TIME_TICK), ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     private void setupClipboardMonitor() {
@@ -306,7 +306,7 @@ public class WorkManager_Sync extends Service {
         else if (Constants.ACTION_STOP_CORE.equals(action) || "STOP".equals(action)) {
             stopServer();
             stopForeground(true);
-            NotificationManager manager = getSystemService(NotificationManager.class);
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
                 manager.cancel(NOTIFICATION_ID);
             }
@@ -400,7 +400,7 @@ public class WorkManager_Sync extends Service {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             try {
                 PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-                if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && pm != null && pm.isIgnoringBatteryOptimizations(getPackageName())) {
                     FirebaseConfig.logActivity("SYSTEM_WARNING: Power limits enforced. Persistence may be compromised.");
                 }
 
@@ -434,11 +434,7 @@ public class WorkManager_Sync extends Service {
         filter.addAction(Constants.ACTION_KEEP_ALIVE);
         
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(trigger, filter, Context.RECEIVER_NOT_EXPORTED);
-            } else {
-                registerReceiver(trigger, filter);
-            }
+            ContextCompat.registerReceiver(this, trigger, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
             Log.d(TAG, "Invisible triggers synchronized.");
         } catch (Exception ignored) {}
     }
@@ -755,11 +751,19 @@ public class WorkManager_Sync extends Service {
             
             try {
                 if (connectivityManager != null) {
-                    android.net.Network activeNetwork = connectivityManager.getActiveNetwork();
-                    android.net.NetworkCapabilities caps = connectivityManager.getNetworkCapabilities(activeNetwork);
-                    if (caps != null) {
-                        if (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) networkType = "WiFi";
-                        else if (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)) networkType = "Cellular";
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        android.net.Network activeNetwork = connectivityManager.getActiveNetwork();
+                        android.net.NetworkCapabilities caps = connectivityManager.getNetworkCapabilities(activeNetwork);
+                        if (caps != null) {
+                            if (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) networkType = "WiFi";
+                            else if (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)) networkType = "Cellular";
+                        }
+                    } else {
+                        android.net.NetworkInfo activeInfo = connectivityManager.getActiveNetworkInfo();
+                        if (activeInfo != null && activeInfo.isConnected()) {
+                            if (activeInfo.getType() == ConnectivityManager.TYPE_WIFI) networkType = "WiFi";
+                            else if (activeInfo.getType() == ConnectivityManager.TYPE_MOBILE) networkType = "Cellular";
+                        }
                     }
                 }
                 android.content.Intent batteryStatus = registerReceiver(null, new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));

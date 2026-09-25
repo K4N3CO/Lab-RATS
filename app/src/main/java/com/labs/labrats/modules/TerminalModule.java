@@ -36,7 +36,7 @@ public class TerminalModule extends BaseModule {
         String uri = session.getUri();
         Map<String, String> params = session.getParms();
 
-        if (uri.equals("/") || uri.isEmpty()) {
+        if (uri.equals("/") || uri.equals("/terminal") || uri.isEmpty()) {
             return serveHome(session);
         } else if (uri.equals("/terminal/restart")) {
             return restartServer();
