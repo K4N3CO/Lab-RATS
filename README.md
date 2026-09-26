@@ -1,4 +1,5 @@
-[![Screenshot-2026-09-26-at-3-38-09-AM.png](https://i.postimg.cc/HsZ9P1mx/Screenshot-2026-09-26-at-3-38-09-AM.png)](https://postimg.cc/SJ99J5JF)
+<img width="1154" height="392" alt="Screenshot 2026-09-26 at 4 48 46 AM" src="https://github.com/user-attachments/assets/cc036591-91db-467e-982a-c58137e976b2" />
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -317,79 +318,131 @@ https://github.com/user-attachments/assets/ae0ede50-b58f-4a6d-962d-9cffd429c1af
 
 ### 01. Terminal/Homepage Tab:
 
-[![01-Terminal-Tab.png](https://i.postimg.cc/MHRtwrfH/01-Terminal-Tab.png)](https://postimg.cc/Zvb6FHcz)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/9dccd069-ea4e-4f7a-bbd4-c86d730bd861" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 02. Ghost Operations Tab:
 
-[![02-Ghost-Tab.png](https://i.postimg.cc/kgjQ0dYb/02-Ghost-Tab.png)](https://postimg.cc/ZWdvNXSb)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/b03728bd-173f-4026-86cb-959c2ac04d6b" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 03. Optics/Live Camera Feed Tab:
 
-[![03-Optics-Tab.png](https://i.postimg.cc/BQfRJLJH/03-Optics-Tab.png)](https://postimg.cc/4nwW537x)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/23f42472-20ed-4c4c-ab30-ae0c9216f629" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 04. Locate/Live GPS Tab:
 
-[![04-Locate-Tab.png](https://i.postimg.cc/QxgwC8MS/04-Locate-Tab.png)](https://postimg.cc/gnJNBP86)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/822b33c8-1633-433c-8af4-981aa2e53c7b" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 05. (NEW!) Exploit Factory Tab:
 
-[![05-Exploits-Tab.png](https://i.postimg.cc/dQyzMmct/05-Exploits-Tab.png)](https://postimg.cc/c6dDw3JV)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/95c200dd-c762-4c7b-b2bf-f0759e54f75d" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 06. Data/Storage Tab:
 
-[![06-Data-Tab.png](https://i.postimg.cc/L6FGmYmZ/06-Data-Tab.png)](https://postimg.cc/F1GTZKd9)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/6813bd25-1127-4ecb-baa9-bd4c26974144" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 07. Intel/App Notifications Tab:
 
-[![07-Intel-Tab.png](https://i.postimg.cc/SNL3RSKY/07-Intel-Tab.png)](https://postimg.cc/w7v0bdL9)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/20bfb268-8e46-4b4d-bf89-1d1b46dfff3d" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 08. SMS/Text Message Tab:
 
-[![08-SMS-Tab.png](https://i.postimg.cc/DwvBYXxN/08-SMS-Tab.png)](https://postimg.cc/1fdG8fh0)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/637dec10-b78b-49cf-ab0f-34262cc5714e" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 09. MMS/Multimedia Message Tab:
 
-[![09-MMS-Tab.png](https://i.postimg.cc/bN0Wryvx/09-MMS-Tab.png)](https://postimg.cc/F7RDnQ3z)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/e5bf1be2-2a06-401f-a433-84641dd262a1" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 10. Acoustics/Audio Tab:
 
-[![10-Acoustics-Tab.png](https://i.postimg.cc/yYhtx1Nj/10-Acoustics-Tab.png)](https://postimg.cc/TpwCHXg5)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/28645adc-792e-422a-b4b8-e9ac77166f4a" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 11. Comms/Call Logs Tab:
 
-[![11-Comms-Tab.png](https://i.postimg.cc/SxSDtMZ0/11-Comms-Tab.png)](https://postimg.cc/6yPr8yJz)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/eae3746d-8dfa-4eca-b8ff-676a824505a5" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 12. Contacts Tab:
 
-[![12-Contacts-Tab.png](https://i.postimg.cc/zGz0Pgdr/12-Contacts-Tab.png)](https://postimg.cc/tYc3sYQS)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/efe5c3cf-acff-40bc-a76e-fa24b18550ce" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
 ### 13. Hardware/Device Info Tab:
 
-[![13-Hardware-Tab.png](https://i.postimg.cc/Hs0RnYLf/13-Hardware-Tab.png)](https://postimg.cc/ykdvrzcP)
+<details>
+  <summary>📸 Click to view full web page screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/4b539947-1290-48a8-bc12-09704297bc7c" alt="Full Web Page Screenshot" width="100%">
+</details>
 
 ---
 
