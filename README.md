@@ -288,9 +288,7 @@ https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
 ### Built APK (C2 Server) Installed on Android Device:
 
-<p align="center">
-<a href="https://postimg.cc/zySrqv1Z" target="_blank"><img src="https://i.postimg.cc/zySrqv1Z/App-installed-Running.png" alt="App-installed-Running"></a>
-<a href="https://postimg.cc/PLXkJHdS" target="_blank"><img src="https://i.postimg.cc/PLXkJHdS/App-installed-Offline.png" alt="App-installed-Offline"></a>
+<img width="251" height="538" alt="Screenshot 2026-09-26 at 5 04 11 AM" src="https://github.com/user-attachments/assets/8156821c-2e8f-47cb-a6eb-2c4cab9b1862" />
 
 ---
 
