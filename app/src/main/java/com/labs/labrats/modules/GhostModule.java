@@ -532,7 +532,7 @@ public class GhostModule extends BaseModule {
 
         html.append("<div>");
         html.append("<div class=\"info-label\" style=\"font-size: 0.7rem; color: #888;\">ANIMATION_STYLE</div>");
-        html.append("<select id=\"toast-anim\" style=\"width: 100%; background: #000; border: 1px solid rgba(255,255,0,0.3); color: #fff; padding: 8px; border-radius: 6px; outline: none; font-family: monospace;\">");
+        html.append("<select id=\"toast-anim\" style=\"width: 100%; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,0,0.3); color: #fff; padding: 8px; border-radius: 6px; outline: none; font-family: monospace;\">");
         html.append("<option value=\"scroll\">SCROLL_HORIZONTAL</option>");
         html.append("<option value=\"pop\">POP_IN_OUT</option>");
         html.append("<option value=\"static\">STATIC_FADE</option>");

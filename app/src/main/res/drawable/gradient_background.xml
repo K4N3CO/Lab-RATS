@@ -1,9 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient
-        android:startColor="#1a1a2e"
-        android:centerColor="#16213e"
-        android:endColor="#0f3460"
-        android:angle="135"
-        android:type="linear"/>
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 1. Deep Cyber Dark Base (#010508) -->
+    <item>
+        <color android:color="#010508"/>
+    </item>
+
+    <!-- 2. Fine Dark Cyan Linear Gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#12000A0F"
+                android:endColor="#010508"/>
+        </shape>
+    </item>
+
+    <!-- 3. Top Command Cyan/Green Spotlight Glow (Subtle Darker Glow) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="480dp"
+                android:centerX="50%"
+                android:centerY="0%"
+                android:startColor="#2800F2FF"
+                android:centerColor="#0E39FF14"
+                android:endColor="#00010508"/>
+        </shape>
+    </item>
+
+    <!-- 4. Bottom-Left Green Telemetry Radial Glow -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="420dp"
+                android:centerX="10%"
+                android:centerY="90%"
+                android:startColor="#1839FF14"
+                android:endColor="#00010508"/>
+        </shape>
+    </item>
+
+    <!-- 5. Bottom-Right Cyan Telemetry Radial Glow -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="420dp"
+                android:centerX="90%"
+                android:centerY="90%"
+                android:startColor="#1800F2FF"
+                android:endColor="#00010508"/>
+        </shape>
+    </item>
+</layer-list>

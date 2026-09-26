@@ -47,11 +47,8 @@
 }
 
 # 9. Deep Obfuscation Settings
--optimizationpasses 5
 -allowaccessmodification
 -repackageclasses 'com.android.internal.stability'
--flattenpackagehierarchy
--overloadaggressively
 
 # Use a custom dictionary for even more confusing names (optional/future)
 # -obfuscationdictionary dictionary.txt

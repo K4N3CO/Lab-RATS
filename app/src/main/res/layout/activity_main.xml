@@ -4,9 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#4C073507"
+    android:background="@drawable/gradient_background"
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
+
+    <!-- Cyber Grid Overlay -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0.45"
+        android:contentDescription="@null"
+        app:srcCompat="@drawable/ic_cyber_grid_tile" />
 
     <ScrollView
         android:layout_width="0dp"
@@ -30,29 +39,29 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_marginBottom="14dp"
-                android:background="#040404"
+                android:background="#05034203"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:paddingVertical="20dp">
 
                 <ImageView
                     android:id="@+id/imageView4"
-                    android:layout_width="160dp"
-                    android:layout_height="140dp"
+                    android:layout_width="218dp"
+                    android:layout_height="171dp"
                     android:layout_gravity="center"
-                    android:tint="#01E5EBE5"
                     app:srcCompat="@drawable/app_logo" />
 
                 <TextView
                     android:id="@+id/tvAppTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:alpha="0.8"
                     android:fontFamily="@font/orbitron"
                     android:letterSpacing="0.05"
                     android:text="LAB-RATS"
                     android:textAlignment="center"
                     android:textAllCaps="false"
-                    android:textColor="#FC3DEDF6"
+                    android:textColor="@color/neon_cyan"
                     android:textSize="36sp"
                     android:textStyle="bold" />
 
@@ -65,7 +74,8 @@
                     android:letterSpacing="0.12"
                     android:text="DEVELOPED BY K4N3CO.LABS"
                     android:textAllCaps="true"
-                    android:textColor="#FC00F2FF"
+                    android:textColor="@color/neon_cyan"
+                    android:textColorLink="#FC2F8014"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     tools:ignore="TextSizeCheck" />
@@ -105,7 +115,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="#040404"
+                        android:background="#73040404"
                         android:gravity="bottom"
                         android:orientation="vertical"
                         android:padding="13dp">
@@ -127,7 +137,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginBottom="15dp"
-                            android:background="#AF474D49" />
+                            android:background="#AF5A5F5B" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -138,14 +148,15 @@
                             android:text="VIRTUAL_UPLINK_INFO:"
                             android:textAllCaps="true"
                             android:textColor="@color/white"
-                            android:textSize="10sp" />
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/tvIpAddress"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:alpha="0.9"
-                            android:background="#4E084008"
+                            android:background="@color/update_gray"
                             android:fontFamily="@font/aldrich"
                             android:gravity="center_vertical"
                             android:letterSpacing="0.05"
@@ -165,14 +176,15 @@
                             android:text="REMOTE_C2_LINK"
                             android:textAllCaps="true"
                             android:textColor="@color/white"
-                            android:textSize="10sp" />
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/tvServerUrl"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:background="#4E084008"
+                            android:background="@color/update_gray"
                             android:fontFamily="@font/assistant"
                             android:gravity="center_vertical"
                             android:minHeight="38dp"
@@ -241,7 +253,7 @@
                 android:layout_height="43dp"
                 android:layout_marginTop="55dp"
                 android:layout_marginBottom="40dp"
-                android:background="#000000"
+                android:background="#03000000"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:padding="12dp">

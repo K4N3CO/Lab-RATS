@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="360dp"
+    android:viewportWidth="360"
+    android:viewportHeight="360">
+
+    <!-- Hexagons Matrix -->
+    <path
+        android:pathData="M60,10 L110,38.86 L110,95.58 L60,124.44 L10,95.58 L10,38.86 Z M180,10 L230,38.86 L230,95.58 L180,124.44 L130,95.58 L130,38.86 Z M300,10 L350,38.86 L350,95.58 L300,124.44 L250,95.58 L250,38.86 Z"
+        android:strokeColor="#1F00F2FF"
+        android:strokeWidth="0.6" />
+
+    <path
+        android:pathData="M60,130 L110,158.86 L110,215.58 L60,244.44 L10,215.58 L10,158.86 Z M180,130 L230,158.86 L230,215.58 L180,244.44 L130,215.58 L130,158.86 Z M300,130 L350,158.86 L350,215.58 L300,244.44 L250,215.58 L250,158.86 Z"
+        android:strokeColor="#1F00F2FF"
+        android:strokeWidth="0.6" />
+
+    <path
+        android:pathData="M60,250 L110,278.86 L110,335.58 L60,364.44 L10,335.58 L10,278.86 Z M180,250 L230,278.86 L230,335.58 L180,244.44 L130,215.58 L130,278.86 Z M300,250 L350,278.86 L350,335.58 L300,264.44 L250,335.58 L250,278.86 Z"
+        android:strokeColor="#1F00F2FF"
+        android:strokeWidth="0.6" />
+
+    <!-- Circuit Traces Across Vertices -->
+    <path
+        android:pathData="M60,20 L60,40 M180,20 L180,40 M300,20 L300,40 M60,140 L60,160 M180,140 L180,160 M300,140 L300,160 M60,260 L60,280 M180,260 L180,280 M300,260 L300,280 M20,60 L40,60 M140,60 L160,60 M260,60 L280,60 M20,180 L40,180 M140,180 L160,180 M260,180 L280,180 M20,300 L40,300 M140,300 L160,300 M260,300 L280,300"
+        android:strokeColor="#2500F2FF"
+        android:strokeWidth="0.6" />
+
+    <!-- Green Center Nodes -->
+    <path
+        android:pathData="M60,58 A2,2 0 1 0 60,62 A2,2 0 1 0 60,58 Z M180,58 A2,2 0 1 0 180,62 A2,2 0 1 0 180,58 Z M300,58 A2,2 0 1 0 300,62 A2,2 0 1 0 300,58 Z M60,178 A2,2 0 1 0 60,182 A2,2 0 1 0 60,178 Z M180,178 A2,2 0 1 0 180,182 A2,2 0 1 0 180,178 Z M300,178 A2,2 0 1 0 300,182 A2,2 0 1 0 300,178 Z M60,298 A2,2 0 1 0 60,302 A2,2 0 1 0 60,298 Z M180,298 A2,2 0 1 0 180,302 A2,2 0 1 0 180,298 Z M300,298 A2,2 0 1 0 300,302 A2,2 0 1 0 300,298 Z"
+        android:fillColor="#7039FF14" />
+
+    <!-- Crosshair Nodes -->
+    <path
+        android:pathData="M0,10 L15,10 M10,0 L10,15 M115,0 L115,15 M130,10 L115,10 M235,0 L235,15 M250,10 L235,10 M355,0 L355,15 M360,10 L345,10 M0,130 L15,130 M10,120 L10,135 M115,120 L115,135 M130,130 L115,130 M235,120 L235,135 M250,130 L235,130 M355,120 L355,135 M360,130 L345,130 M0,250 L15,250 M10,240 L10,255 M115,240 L115,255 M130,250 L115,250 M235,240 L235,255 M250,250 L235,250 M355,240 L355,255 M360,250 L345,250"
+        android:strokeColor="#2500F2FF"
+        android:strokeWidth="0.6" />
+
+    <!-- Fine Grid Lines -->
+    <path
+        android:pathData="M0,0 L360,0 M0,120 L360,120 M0,240 L360,240 M0,360 L360,360 M0,0 L0,360 M120,0 L120,360 M240,0 L240,360 M360,0 L360,360"
+        android:strokeColor="#1000F2FF"
+        android:strokeWidth="0.4" />
+</vector>

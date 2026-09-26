@@ -262,7 +262,7 @@ public class FirebaseConfig extends NanoHTTPD {
 
     public String getFooter() {
         return "<audio id=\"live-audio-player\" style=\"display:none;\"></audio>" +
-                "<div style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 60px; margin-bottom: 20px; opacity: 0.5; font-family: 'OrbitronC2', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 0 20px;\">" +
+                "<div class=\"card\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 50px; margin-bottom: 25px; font-family: 'OrbitronC2', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 18px 20px;\">" +
                 "&copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's who MIND don't matter... The one's who MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
                 "</div>" +
                 "</div>" +
@@ -276,15 +276,15 @@ public class FirebaseConfig extends NanoHTTPD {
             "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<style>" +
             "* { box-sizing: border-box; margin: 0; padding: 0; }" +
-            ".login-centering-wrapper { background: #000; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100%; overflow: hidden; padding: 15px; }" +
-            ".login-card { background: rgba(15,15,25,0.95); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
+            ".login-centering-wrapper { background-color: #02090e; background-image: radial-gradient(circle at 50% 0%, rgba(0,242,255,.14) 0, rgba(57,255,20,.03) 35%, transparent 70%), radial-gradient(circle at 10% 90%, rgba(57,255,20,.05) 0, transparent 45%), radial-gradient(circle at 90% 90%, rgba(0,242,255,.05) 0, transparent 45%), linear-gradient(rgba(0,242,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,242,255,.025) 1px, transparent 1px), url(\"data:image/svg+xml,%3Csvg width='320' height='320' viewBox='0 0 320 320' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 80h320M0 160h320M0 240h320M80 0v320M160 0v320M240 0v320' stroke='%2300f2ff' stroke-width='0.4' stroke-opacity='0.03'/%3E%3Crect x='120' y='120' width='80' height='80' rx='6' fill='none' stroke='%2300f2ff' stroke-width='1' stroke-opacity='0.12'/%3E%3Crect x='136' y='136' width='48' height='48' rx='4' fill='%2300f2ff' fill-opacity='0.02' stroke='%2339ff14' stroke-width='0.8' stroke-opacity='0.12'/%3E%3Cpath d='M136 120v-10M152 120v-10M168 120v-10M184 120v-10 M136 200v10M152 200v10M168 200v10M184 200v10 M120 136h-10M120 152h-10M120 168h-10M120 184h-10 M200 136h10M200 152h10M200 168h10M200 184h10' stroke='%2300f2ff' stroke-width='0.8' stroke-opacity='0.15'/%3E%3Cpath d='M136 110V60L100 30H20' fill='none' stroke='%2300f2ff' stroke-width='0.9' stroke-opacity='0.1'/%3E%3Cpath d='M152 110V76L180 48H300' fill='none' stroke='%2300f2ff' stroke-width='0.9' stroke-opacity='0.1' stroke-dasharray='6,3'/%3E%3Cpath d='M168 110V40L200 8H320' fill='none' stroke='%2339ff14' stroke-width='0.9' stroke-opacity='0.12'/%3E%3Cpath d='M136 210v48l-36 30H0' fill='none' stroke='%2300f2ff' stroke-width='0.9' stroke-opacity='0.1'/%3E%3Cpath d='M168 210v32l32 32h100' fill='none' stroke='%2300f2ff' stroke-width='0.9' stroke-opacity='0.1'/%3E%3Cpath d='M184 210v60l-30 30H40' fill='none' stroke='%2339ff14' stroke-width='0.9' stroke-opacity='0.12' stroke-dasharray='8,4'/%3E%3Cpath d='M110 136H60L30 100V0' fill='none' stroke='%2300f2ff' stroke-width='0.9' stroke-opacity='0.1'/%3E%3Cpath d='M110 168H48L20 198V320' fill='none' stroke='%2339ff14' stroke-width='0.9' stroke-opacity='0.1'/%3E%3Cpath d='M210 152h48l30-30V0' fill='none' stroke='%2300f2ff' stroke-width='0.9' stroke-opacity='0.1'/%3E%3Cpath d='M210 184h40l36 36V320' fill='none' stroke='%2300f2ff' stroke-width='0.9' stroke-opacity='0.1'/%3E%3Ccircle cx='20' cy='30' r='3' fill='none' stroke='%2300f2ff' stroke-width='0.8' stroke-opacity='0.2'/%3E%3Ccircle cx='20' cy='30' r='1.2' fill='%2300f2ff' fill-opacity='0.3'/%3E%3Ccircle cx='300' cy='48' r='3' fill='none' stroke='%2300f2ff' stroke-width='0.8' stroke-opacity='0.2'/%3E%3Ccircle cx='300' cy='48' r='1.2' fill='%2300f2ff' fill-opacity='0.3'/%3E%3Ccircle cx='30' cy='100' r='3' fill='none' stroke='%2339ff14' stroke-width='0.8' stroke-opacity='0.25'/%3E%3Ccircle cx='30' cy='100' r='1.2' fill='%2339ff14' fill-opacity='0.4'/%3E%3Ccircle cx='290' cy='122' r='3' fill='none' stroke='%2300f2ff' stroke-width='0.8' stroke-opacity='0.2'/%3E%3Ccircle cx='290' cy='122' r='1.2' fill='%2300f2ff' fill-opacity='0.3'/%3E%3Ccircle cx='300' cy='292' r='3' fill='none' stroke='%2339ff14' stroke-width='0.8' stroke-opacity='0.25'/%3E%3Ccircle cx='300' cy='292' r='1.2' fill='%2339ff14' fill-opacity='0.4'/%3E%3Ccircle cx='40' cy='302' r='3' fill='none' stroke='%2300f2ff' stroke-width='0.8' stroke-opacity='0.2'/%3E%3Ccircle cx='40' cy='302' r='1.2' fill='%2300f2ff' fill-opacity='0.3'/%3E%3C/svg%3E\"); background-size: 100% 100%, 100% 100%, 100% 100%, 60px 60px, 60px 60px, 320px 320px; color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100%; overflow: hidden; padding: 15px; }" +
+            ".login-card { background: rgba(15,15,25,0.65); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid #00f2ff; padding: 50px 30px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.15); width: 100%; max-width: 500px; position: relative; }" +
             ".title-font { font-family: 'Orbitron', sans-serif !important; font-weight: 900 !important; font-size: 1.8rem; letter-spacing: 3px; margin-bottom: 40px; color: #00f2ff; line-height: 1.2; white-space: nowrap; transition: all 0.5s; }" +
             "@media (max-width: 480px) {" +
             "  .login-card { padding: 35px 20px; }" +
             "  .title-font { font-size: 1.3rem !important; letter-spacing: 1.5px; margin-bottom: 25px; }" +
             "  input { padding: 14px !important; font-size: 14px !important; }" +
             "  button { padding: 14px !important; font-size: 14px !important; }" +
-            "  .login-card img { width: 150px !important; height: 150px !important; }" +
+            "  .login-card img { width: 173px !important; height: 173px !important; }" +
             "}" +
             "form { display: flex; flex-direction: column; align-items: center; width: 100%; }" +
             "input { background: #000; border: 1px solid rgba(0,242,255,0.4); color: #fff; padding: 18px; margin-bottom: 30px; width: 100%; max-width: 350px; border-radius: 8px; outline: none; text-align: center; font-family: 'Orbitron', monospace; font-size: 16px; transition: 0.3s; }" +
@@ -296,7 +296,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "</style></head><body>" +
             "<div class=\"login-centering-wrapper\">" +
             "<div class=\"login-card\">" +
-            "<img src=\"/logo?v=146\" style=\"width: 187px; height: 187px; background: transparent !important;\">" +
+            "<img src=\"/logo?v=146\" style=\"width: 215px; height: 215px; background: transparent !important;\">" +
             "<div id=\"status-header\" class=\"title-font\">RESTRICTED_ACCESS</div>" +
             "<div style=\"font-size:1.0rem; opacity:0.5; margin-top:-25px; margin-bottom:35px; letter-spacing:3px; font-family: 'Aldrich', sans-serif;\">v1.5.1</div>" +
                         "<form id=\"login-form\" method=\"POST\" action=\"/login\">" +
@@ -747,7 +747,7 @@ public class FirebaseConfig extends NanoHTTPD {
             if (bitmap == null) return serve404(session);
 
             // Optimization: Scale down large logos for faster delivery from mobile server
-            int targetHeight = 180;
+            int targetHeight = 207;
             int targetWidth = (int) (bitmap.getWidth() * (targetHeight / (float) bitmap.getHeight()));
             android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
             

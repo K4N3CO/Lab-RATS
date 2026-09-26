@@ -75,6 +75,7 @@ detect_os() {
     else
         OS="linux" # Fallback
     fi
+    unset ANDROID_PREFS_ROOT 2>/dev/null
 }
 
 detect_os
