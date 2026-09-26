@@ -1,10 +1,7 @@
-<p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
-  </a>
-</p>
-
 # Lab-RATS: Code of Conduct & Ethical Usage Policy
+
+<img width="3880" height="3472" alt="app_logo" src="https://github.com/user-attachments/assets/bbcfac1d-523e-464f-8f82-da06090fa6bb" />
+
 
 ## 1. Mission Statement
 
