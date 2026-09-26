@@ -315,7 +315,7 @@ https://github.com/user-attachments/assets/ae0ede50-b58f-4a6d-962d-9cffd429c1af
 <details>
   <summary>📸 Click to view full web page screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/92050c58-12c1-4e17-b7db-91e283627b0e" alt="Full Web Page Screenshot" width="100%">
+  <img src="https://github.com/user-attachments/assets/3ae696d7-38da-4a91-8fc4-9e386d4a57c9" alt="Full Web Page Screenshot" width="100%">
 </details>
 
 ---
