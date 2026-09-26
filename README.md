@@ -319,7 +319,7 @@ https://github.com/user-attachments/assets/ae0ede50-b58f-4a6d-962d-9cffd429c1af
 <details>
   <summary>📸 Click to view full web page screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/9dccd069-ea4e-4f7a-bbd4-c86d730bd861" alt="Full Web Page Screenshot" width="100%">
+  <img src="https://github.com/user-attachments/assets/026d2a54-53d1-4a4b-9d9f-c83e435b1333" alt="Full Web Page Screenshot" width="100%">
 </details>
 
 ---
@@ -329,7 +329,7 @@ https://github.com/user-attachments/assets/ae0ede50-b58f-4a6d-962d-9cffd429c1af
 <details>
   <summary>📸 Click to view full web page screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/b03728bd-173f-4026-86cb-959c2ac04d6b" alt="Full Web Page Screenshot" width="100%">
+  <img src="https://github.com/user-attachments/assets/f9d23741-e900-4e52-a75d-cd261540e32c" alt="Full Web Page Screenshot" width="100%">
 </details>
 
 ---
@@ -339,7 +339,7 @@ https://github.com/user-attachments/assets/ae0ede50-b58f-4a6d-962d-9cffd429c1af
 <details>
   <summary>📸 Click to view full web page screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/23f42472-20ed-4c4c-ab30-ae0c9216f629" alt="Full Web Page Screenshot" width="100%">
+  <img src="https://github.com/user-attachments/assets/b772284a-db83-4a19-aeba-bd40c30a9e56" alt="Full Web Page Screenshot" width="100%">
 </details>
 
 ---
