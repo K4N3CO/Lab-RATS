@@ -1,10 +1,6 @@
-<p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
-  </a>
-</p>
-
 # Bug Report
+
+<img width="3880" height="3472" alt="app_logo" src="https://github.com/user-attachments/assets/2336dee4-f91d-4109-b89c-21e6c08a63ce" />
 
 ---
 
