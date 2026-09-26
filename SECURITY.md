@@ -1,12 +1,11 @@
-<p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
-  </a>
-</p>
-
 # Lab-RATS: Security & Vulnerability Policy
 
-Operational Security (OpSec) is our highest priority. If you find a hole in the Lab-RATS engine or a way to compromise the C2 protocol, we expect you to handle it like a professional.
+<img width="3880" height="3472" alt="app_logo" src="https://github.com/user-attachments/assets/82f4ed8f-7eef-4ea2-8f2a-c183084980b2" />
+
+### Operational Security (OpSec) is our highest priority.
+If you find a hole in the **Lab-RATS engine** or a way to **compromise the C2 protocol**, **we expect you to handle it like a professional**.
+
+---
 
 ## 0x01: Responsible Disclosure
 Do **NOT** open public issues for security vulnerabilities. Leaking a bypass or a protocol flaw before it's patched compromises the entire lab.
