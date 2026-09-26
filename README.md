@@ -292,13 +292,9 @@ https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
 ---
 
-### Remotely Transform Lab-RATS into a Working Calculator, Weather App, System Update and More!
+### Lab-RATS Initial Install Sequence & Icon Stealth Preview
 
-<p align="center">
-<a href="https://postimg.cc/hhrzqMBt" target="_blank"><img src="https://i.postimg.cc/hhrzqMBt/Stealth-Icons.jpg" alt="Stealth-Icons"></a>    
-
-<p align="center">
-<a href="https://postimg.cc/jnqpNR2N" target="_blank"><img src="https://i.postimg.cc/jnqpNR2N/Stealth-Overlays.jpg" alt="Stealth-Overlays"></a>
+https://github.com/user-attachments/assets/d1b27cb9-24bf-4f7b-8241-f839a9d5c145
 
 ---
 
