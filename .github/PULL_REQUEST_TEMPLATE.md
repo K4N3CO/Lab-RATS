@@ -1,10 +1,6 @@
-<p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
-  </a>
-</p>
-
 # Pull Request
+
+<img width="3880" height="3472" alt="app_logo" src="https://github.com/user-attachments/assets/6aa052cc-c36c-4c2c-a09f-54f648ae2104" />
 
 ---
 
