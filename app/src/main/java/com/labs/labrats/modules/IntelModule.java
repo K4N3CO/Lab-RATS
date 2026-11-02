@@ -56,7 +56,7 @@ public class IntelModule extends BaseModule {
         List<StatusNotification.NotificationData> notifications = StatusNotification.getHistory();
 
         if (notifications.isEmpty()) {
-            html.append("<div class=\"empty-state\"><div class=\"icon\">&#128225;</div><p>No active intel stream. Waiting for device notifications...</p></div></div>");
+            html.append("<div class=\"empty-state\"><div class=\"icon\">&#128225;</div><p>No active intel stream. Waiting for device notifications...</p></div>");
         } else {
             int page = 1;
             int limit = 20;
@@ -141,6 +141,7 @@ public class IntelModule extends BaseModule {
                 html.append("</div>");
             }
         }
+        html.append("</div>");
         html.append("</div>");
         html.append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());

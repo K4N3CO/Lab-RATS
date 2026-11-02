@@ -514,7 +514,7 @@ public class CommsModule extends BaseModule {
             } else { html.append("<div class=\"empty-state\"><div class=\"icon\">&#128233;</div><p>No messages found</p></div>"); }
         } catch (Exception e) { html.append("<div class=\"empty-state\"><div class=\"icon\">&#9888;</div><p>Error: ").append(escapeHtml(e.getMessage())).append("</p></div>"); }
         finally { if (cursor != null) cursor.close(); }
-        html.append("</div>").append(getFooter());
+        html.append("</div></div>").append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
 
@@ -628,7 +628,7 @@ public class CommsModule extends BaseModule {
             } else { html.append("<div class=\"empty-state\"><div class=\"icon\">&#128247;</div><p>No MMS found</p></div>"); }
         } catch (Exception e) { html.append("<div class=\"empty-state\"><div class=\"icon\">&#9888;</div><p>Error: ").append(escapeHtml(e.getMessage())).append("</p></div>"); }
         finally { if (cursor != null) cursor.close(); }
-        html.append("</div>").append(getFooter());
+        html.append("</div></div>").append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
 
