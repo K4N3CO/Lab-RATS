@@ -582,8 +582,19 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
+        <!-- SMALL BOTTOM NAV TABS -->
+        <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; margin-top: 35px; margin-bottom: 10px; flex-wrap: nowrap; overflow-x: auto; width: 100%; padding: 5px 0;">
+            <a href="/terminal" class="bottom-nav-link" style="font-family: 'Orbitron', sans-serif; font-size: 0.58rem; color: var(--neon-cyan); text-decoration: none; padding: 3px 8px; border: 1px solid rgba(0, 242, 255, 0.25); border-radius: 4px; background: rgba(0, 242, 255, 0.04); letter-spacing: 0.5px; white-space: nowrap;">TERMINAL</a>
+            <a href="/ghost" class="bottom-nav-link" style="font-family: 'Orbitron', sans-serif; font-size: 0.58rem; color: var(--neon-cyan); text-decoration: none; padding: 3px 8px; border: 1px solid rgba(0, 242, 255, 0.25); border-radius: 4px; background: rgba(0, 242, 255, 0.04); letter-spacing: 0.5px; white-space: nowrap;">GHOST</a>
+            <a href="/camera" class="bottom-nav-link" style="font-family: 'Orbitron', sans-serif; font-size: 0.58rem; color: var(--neon-cyan); text-decoration: none; padding: 3px 8px; border: 1px solid rgba(0, 242, 255, 0.25); border-radius: 4px; background: rgba(0, 242, 255, 0.04); letter-spacing: 0.5px; white-space: nowrap;">OPTICS</a>
+            <a href="/gps" class="bottom-nav-link" style="font-family: 'Orbitron', sans-serif; font-size: 0.58rem; color: var(--neon-cyan); text-decoration: none; padding: 3px 8px; border: 1px solid rgba(0, 242, 255, 0.25); border-radius: 4px; background: rgba(0, 242, 255, 0.04); letter-spacing: 0.5px; white-space: nowrap;">LOCATE</a>
+            <a href="/files" class="bottom-nav-link" style="font-family: 'Orbitron', sans-serif; font-size: 0.58rem; color: var(--neon-cyan); text-decoration: none; padding: 3px 8px; border: 1px solid rgba(0, 242, 255, 0.25); border-radius: 4px; background: rgba(0, 242, 255, 0.04); letter-spacing: 0.5px; white-space: nowrap;">FILES</a>
+            <a href="/device" class="bottom-nav-link" style="font-family: 'Orbitron', sans-serif; font-size: 0.58rem; color: var(--neon-cyan); text-decoration: none; padding: 3px 8px; border: 1px solid rgba(0, 242, 255, 0.25); border-radius: 4px; background: rgba(0, 242, 255, 0.04); letter-spacing: 0.5px; white-space: nowrap;">DEVICE</a>
+            <a href="/exploits" class="bottom-nav-link" style="font-family: 'Orbitron', sans-serif; font-size: 0.58rem; color: var(--neon-cyan); text-decoration: none; padding: 3px 8px; border: 1px solid rgba(0, 242, 255, 0.25); border-radius: 4px; background: rgba(0, 242, 255, 0.04); letter-spacing: 0.5px; white-space: nowrap;">EXPLOITS</a>
+        </div>
+
         <!-- FOOTER CARD -->
-        <div class="card" style="text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 50px; margin-bottom: 25px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 18px 20px;">
+        <div class="card" style="text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 10px; margin-bottom: 25px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 18px 20px;">
             &copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; "The one's who MIND don't matter... The one's who MATTER don't mind..." &nbsp;//&nbsp; Push the Limits
         </div>
     </div>

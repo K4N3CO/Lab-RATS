@@ -257,7 +257,16 @@ public class FirebaseConfig extends NanoHTTPD {
 
     public String getFooter() {
         return "<audio id=\"live-audio-player\" style=\"display:none;\"></audio>" +
-                "<div class=\"card\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 50px; margin-bottom: 25px; font-family: 'OrbitronC2', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 18px 20px;\">" +
+                "<div style=\"display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; margin-top: 35px; margin-bottom: 10px; flex-wrap: nowrap; overflow-x: auto; width: 100%; padding: 5px 0;\">" +
+                "  <a href=\"/terminal\" class=\"bottom-nav-link\">TERMINAL</a>" +
+                "  <a href=\"/ghost\" class=\"bottom-nav-link\">GHOST</a>" +
+                "  <a href=\"/camera\" class=\"bottom-nav-link\">OPTICS</a>" +
+                "  <a href=\"/gps\" class=\"bottom-nav-link\">LOCATE</a>" +
+                "  <a href=\"/files\" class=\"bottom-nav-link\">FILES</a>" +
+                "  <a href=\"/device\" class=\"bottom-nav-link\">DEVICE</a>" +
+                "  <a href=\"/exploits\" class=\"bottom-nav-link\">EXPLOITS</a>" +
+                "</div>" +
+                "<div class=\"card\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 10px; margin-bottom: 25px; font-family: 'OrbitronC2', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 18px 20px;\">" +
                 "&copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's who MIND don't matter... The one's who MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
                 "</div>" +
                 "</div>" +

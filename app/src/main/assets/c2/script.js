@@ -158,7 +158,7 @@ function updateNav() {
   let n = rawPath.replace(/^\/proxy/, "") || "/";
   if (!n.startsWith("/")) n = "/" + n;
 
-  const e = document.querySelectorAll(".nav a");
+  const e = document.querySelectorAll(".nav a, .bottom-nav-link");
   e.forEach(item => {
     const t = item.getAttribute("href");
     let o = false;
