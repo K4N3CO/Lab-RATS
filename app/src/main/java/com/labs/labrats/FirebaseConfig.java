@@ -245,7 +245,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "<title>LAB-RATS | CORE</title>" +
             "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<link rel=\"stylesheet\" href=\"/c2/style.css?v=" + System.currentTimeMillis() + "\">" +
-            "<style>.nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
+            "<style>.nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 5px; flex-wrap: nowrap; overflow-x: auto; width: 100%; margin-top: 30px; margin-bottom: 10px; padding: 5px 0; } .bottom-nav a { padding: 4px 8px; border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 6px; color: #00f2ff; text-decoration: none; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.58rem; background: rgba(0, 242, 255, 0.05); transition: all 0.3s; letter-spacing: 0.5px; white-space: nowrap; } .bottom-nav a:hover { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
             "</head>" +
             "<body>" +
             "<div class=\"container\">" +
@@ -257,14 +257,20 @@ public class FirebaseConfig extends NanoHTTPD {
 
     public String getFooter() {
         return "<audio id=\"live-audio-player\" style=\"display:none;\"></audio>" +
-                "<div style=\"display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; margin-top: 35px; margin-bottom: 10px; flex-wrap: nowrap; overflow-x: auto; width: 100%; padding: 5px 0;\">" +
-                "  <a href=\"/terminal\" class=\"bottom-nav-link\">TERMINAL</a>" +
-                "  <a href=\"/ghost\" class=\"bottom-nav-link\">GHOST</a>" +
-                "  <a href=\"/camera\" class=\"bottom-nav-link\">OPTICS</a>" +
-                "  <a href=\"/gps\" class=\"bottom-nav-link\">LOCATE</a>" +
-                "  <a href=\"/files\" class=\"bottom-nav-link\">FILES</a>" +
-                "  <a href=\"/device\" class=\"bottom-nav-link\">DEVICE</a>" +
-                "  <a href=\"/exploits\" class=\"bottom-nav-link\">EXPLOITS</a>" +
+                "<div class=\"bottom-nav\">" +
+                "  <a href=\"/terminal\" class=\"bottom-nav-link\">Terminal</a>" +
+                "  <a href=\"/ghost\" class=\"bottom-nav-link\">Ghost</a>" +
+                "  <a href=\"/camera\" class=\"bottom-nav-link\">Optics</a>" +
+                "  <a href=\"/gps\" class=\"bottom-nav-link\">Locate</a>" +
+                "  <a href=\"/exploits\" class=\"bottom-nav-link\">Exploits</a>" +
+                "  <a href=\"/files\" class=\"bottom-nav-link\">Data</a>" +
+                "  <a href=\"/intel\" class=\"bottom-nav-link\">Intel</a>" +
+                "  <a href=\"/sms\" class=\"bottom-nav-link\">SMS</a>" +
+                "  <a href=\"/mms\" class=\"bottom-nav-link\">MMS</a>" +
+                "  <a href=\"/audio\" class=\"bottom-nav-link\">Acoustics</a>" +
+                "  <a href=\"/calls\" class=\"bottom-nav-link\">Comms</a>" +
+                "  <a href=\"/contacts\" class=\"bottom-nav-link\">Contacts</a>" +
+                "  <a href=\"/device\" class=\"bottom-nav-link\">Hardware</a>" +
                 "</div>" +
                 "<div class=\"card\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 10px; margin-bottom: 25px; font-family: 'OrbitronC2', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 18px 20px;\">" +
                 "&copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's who MIND don't matter... The one's who MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
