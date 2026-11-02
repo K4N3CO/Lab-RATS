@@ -167,7 +167,7 @@ public class OpticsModule extends BaseModule {
 
         // --- SNAP & REC VAULT SECTION ---
         html.append("<div style=\"margin-top: 40px;\">");
-        html.append("<h3 style=\"color: var(--neon-cyan); font-size: 1.25rem; text-align: left; margin-bottom: 15px; font-family: monospace; letter-spacing: 1px; font-weight: bold;\">SNAP & REC VAULT</h3>");
+        html.append("<h3 style=\"color: var(--neon-cyan); font-size: 1.25rem; text-align: left; margin-bottom: 15px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; font-weight: bold;\">SNAP & REC VAULT</h3>");
         html.append("<div id=\"recordings-list\" style=\"background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 8px; padding: 15px; min-height: 50px;\">");
         
         File videoDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "System-Security");

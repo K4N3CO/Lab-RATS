@@ -236,6 +236,12 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 > [!IMPORTANT]
 > 4.  **Copy the Webhook URL provided** and **prepare to paste it into the APK-builder tool** when **prompted**. *(Get Started Section Below)*
 
+<details>
+  <summary>📸 Click to View Google Sheet Reporting Example</summary>
+  <br><p align="center">
+  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="90%">
+</details>
+
 ---
 
 ### ✌🏻 NEW! Option 2: Tactical Node.js Backend *(Upgraded)*
@@ -247,10 +253,11 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 <br>**4. Set the Build Command** to `npm install`.
 <br>**5. Set the Start Command** to `npm start`.
 <br>**6. Deploy!** Once live, **copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
+
 <details>
   <summary>📸 Click to View Render C2 Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="90%">
 </details>
 
 **Advantages of Option 2**:
@@ -338,13 +345,7 @@ Once the **Target device** downloads the **APK**:
 2.  **NEW! 'One-Click' Permission Granting (CRITICAL)**: **Open the app ONCE**. **Only the initial pop-up *(Accessibility Services)* must be manually toggled on**, **ALL other permissions are now auto-granted by the system** using a **convincing security sequence**.
 -  -  **Remote Permission Prompt**: If the **user skips some permissions**, you can **remotely trigger the system prompt again** from the **Ghost Tab** using the **REPAIR PERMISSIONS** button.
 3.  **Self-Vanishing**: A **few seconds after launch**, the app will **automatically replace its icon and name** with the **decoy you chose during build** *("System Update", "Calculator"...etc)*.
-4.  **Uplink Confirmation**: Check your **Google Sheet or Render C2. Within 5 seconds of initialization**, the **Device ID, Connection Type, IP Address & Port, C2 Dashboard Link, Battery %, Stealth & Charging Status and Device Storage will appear in the log**.
-
-<details>
-  <summary>📸 Click to View Google Sheet Reporting Example</summary>
-  <br><p align="center">
-  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="80%">
-</details>
+4.  **Uplink Confirmation**: Check your **Google Sheet or Render  C2. Within 5 seconds of initialization**, the **Device ID, Connection Type, IP, Port, C2 Dashboard Link, Battery % and more will appear in the log**.
 
 ---
 
@@ -384,9 +385,9 @@ bc1q8d66m0qthnh6nw9hc5wl09m7pfydk46q5w8rxx
  />
 </p>
 
-### APK-Builder Example *(Mac OS)*:
+### Git clone & APK-Builder Example *(Mac OS)*:
 
-https://github.com/user-attachments/assets/9cb336c8-748d-48ce-9c8f-f0065654be24
+https://github.com/user-attachments/assets/35099153-8d03-4586-beb1-3caee850687d
 
 ---
 
@@ -444,7 +445,7 @@ https://github.com/user-attachments/assets/50296f14-6875-403a-8484-299a9628746d
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/25021056-538d-4392-bbf1-e66a2c5873af" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/d549b1ad-8390-47bf-be1c-2fa6b185bcbe" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
