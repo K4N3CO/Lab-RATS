@@ -112,6 +112,7 @@ public class CommsModule extends BaseModule {
                 html.append("<p style=\"margin-top: 10px; font-size: 0.9rem;\">Please grant the permission in the app settings.</p>");
                 html.append("</div>");
                 html.append("</div>");
+                html.append("</div>");
                 html.append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
@@ -289,6 +290,7 @@ public class CommsModule extends BaseModule {
                 html.append("<p style=\"margin-top: 10px; font-size: 0.9rem;\">Please grant the permission in the app settings.</p>");
                 html.append("</div>");
                 html.append("</div>");
+                html.append("</div>");
                 html.append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
@@ -448,12 +450,12 @@ public class CommsModule extends BaseModule {
         html.append("<div style=\"text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center;\">");
         html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); width: 100% !important; max-width: 280px !important; margin: 0 auto !important; font-size: 0.8rem; height: 50px; white-space: normal; line-height: 1.2;\">EXECUTE_BROADCAST</button>");
         html.append("</div>");
-        html.append("</div></form></div></div>");
+        html.append("</div></form></div>");
 
         html.append("<div style=\"margin-top: 40px;\">");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>SMS permission not granted.</p></div></div>").append(getFooter());
+                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>SMS permission not granted.</p></div></div></div>").append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
         }
@@ -545,7 +547,7 @@ public class CommsModule extends BaseModule {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div>").append(getFooter());
+                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div></div>").append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
         }

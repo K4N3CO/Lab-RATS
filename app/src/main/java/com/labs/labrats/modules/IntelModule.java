@@ -56,7 +56,7 @@ public class IntelModule extends BaseModule {
         List<StatusNotification.NotificationData> notifications = StatusNotification.getHistory();
 
         if (notifications.isEmpty()) {
-            html.append("<div class=\"empty-state\"><div class=\"icon\">&#128225;</div><p>No active intel stream. Waiting for device notifications...</p></div>");
+            html.append("<div class=\"empty-state\"><div class=\"icon\">&#128225;</div><p>No active intel stream. Waiting for device notifications...</p></div></div>");
         } else {
             int page = 1;
             int limit = 20;
