@@ -1,5 +1,5 @@
 <p align="center">
-<img width="1517" height="420" alt="Screenshot 2026-10-25 at 2 06 52 AM" src="https://github.com/user-attachments/assets/56976a4e-cc9a-423b-93f6-7f053a711b5a" />
+<img width="1517" height="440" alt="Screenshot 2026-10-25 at 2 06 52 AM" src="https://github.com/user-attachments/assets/56976a4e-cc9a-423b-93f6-7f053a711b5a" />
 
 <p align="center">
   <img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -13,7 +13,7 @@
 </p>
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=40&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=42&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
  />
 </p>
 
@@ -31,7 +31,7 @@ alt="Typing Banner"
 
 **Lab-RATS leverages the unique characteristics of publicly routable IPv6 addresses assigned by modern Wi-Fi and cellular *(5G/LTE)* carriers**. By **binding the control server directly to a device's Global Unicast Address** *(GUA)*, the tool **completely bypasses Carrier-Grade NAT** *(CGNAT)* and **inbound firewall restrictions**. This architecture **enables seamless, Zero-Configuration peer-to-peer** *(P2P)* **remote access from any modern web browser worldwide**—completely **eliminating the need for router manipulation, port forwarding**, or **third-party tunneling services** like **Ngrok** or **Pinggy**.
 <details>
-  <summary>📸 Click to View IPv6 Exploit Vector</summary>
+  <summary><b>📸 Click to View IPv6 Exploit Vector</summary>
   <br><p align="center">
   <img src="https://github.com/user-attachments/assets/7097e0e0-1190-4774-b758-ca58b5e8760f" alt="Full Web Page Screenshot" width="80%">
 </details>
