@@ -31,13 +31,13 @@ alt="Typing Banner"
 
 **Lab-RATS leverages the unique characteristics of publicly routable IPv6 addresses assigned by modern Wi-Fi and cellular *(5G/LTE)* carriers**. By **binding the control server directly to a device's Global Unicast Address** *(GUA)*, the tool **completely bypasses Carrier-Grade NAT** *(CGNAT)* and **inbound firewall restrictions**. This architecture **enables seamless, Zero-Configuration peer-to-peer** *(P2P)* **remote access from any modern web browser worldwide**—completely **eliminating the need for router manipulation, port forwarding**, or **third-party tunneling services** like **Ngrok** or **Pinggy**.
 <details>
-  <summary><b>📸 Click to View IPv6 Exploit Vector</summary>
+  <summary><b>📸 Click to View IPv6 Exploit Vector</summary></b>
   <br><p align="center">
   <img src="https://github.com/user-attachments/assets/7097e0e0-1190-4774-b758-ca58b5e8760f" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 > [!NOTE]
-> **Lab-RATS now supports IPv4 connections** by **hosting on Render.com** *(Free Tier Supported)*. See the **"Command & Control" Option 2** section below for **setup guide**.
+> **Lab-RATS now supports IPv4 connections** by **hosting on Render.com** *(Free Tier Supported)*. See **"Command & Control Option 2"** below for the **setup guide**.
 
 ---
 
@@ -46,9 +46,11 @@ alt="Typing Banner"
  />
 </p>
 
-### 🔐 Remote C2 Security & Secure Handshake:
-- The **web dashboard** is **protected by a secure login wall** *(Default Password: admin1337)*. The **password can be changed directly from the Terminal home page** for **enhanced security**.
-- Implemented a **masked credential handshake**. Passwords are **reversed and Base64 encoded** *(`0x_` prefixed)* on the **client-side before transmission**, rendering them **invisible to browser Network/Payload inspectors**.
+### 🔐 Remote C2 Security & Secure Handshake: 
+> [!IMPORTANT]
+> **DEFAULT PASSWORD = admin1337**
+- The **C2 Dashboard** is **protected with a secure login**, which can be **changed directly from the Terminal/Home page**. The **Default Password should be reset immediately** for **enhanced security**.
+- Uses a **masked credential handshake**. Passwords are **reversed and Base64 encoded** *(`0x_` prefixed)* on the **client-side before transmission**, rendering them **invisible to browser Network/Payload inspectors**.
 
 ### 📦 Automated APK Generation, Identity Control & Density Scaling:
 - **Instantly build** `signed.apk` for **production** and **testing**.
