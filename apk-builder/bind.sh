@@ -309,14 +309,17 @@ EOF
     echo -e "${GREEN}[✓] Smali hook injected into new onCreate() method.${NC}"
 fi
 
-# Detect native Android SDK aapt / aapt2 binary to prevent SIGBUS (exit code 138)
+# Detect native Android SDK aapt / aapt2 binary (prefer stable 30-34 to prevent 37.0.0 SIGBUS exit code 138)
 NATIVE_AAPT_FLAG=""
 if [ -d "$HOME/Library/Android/sdk/build-tools" ]; then
-    LATEST_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/* 2>/dev/null | tail -n1)
-    if [ -f "$LATEST_BT/aapt2" ]; then
-        NATIVE_AAPT_FLAG="--aapt $LATEST_BT/aapt2"
-    elif [ -f "$LATEST_BT/aapt" ]; then
-        NATIVE_AAPT_FLAG="--aapt $LATEST_BT/aapt"
+    STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/3[0-4]* 2>/dev/null | tail -n1)
+    if [ -z "$STABLE_BT" ]; then
+        STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/* 2>/dev/null | grep -v "37" | tail -n1)
+    fi
+    if [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/aapt2" ]; then
+        NATIVE_AAPT_FLAG="--aapt $STABLE_BT/aapt2"
+    elif [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/aapt" ]; then
+        NATIVE_AAPT_FLAG="--aapt $STABLE_BT/aapt"
     fi
 elif command -v aapt2 &> /dev/null; then
     NATIVE_AAPT_FLAG="--aapt $(command -v aapt2)"
@@ -330,19 +333,27 @@ UNSIGNED_APK="$WORK_DIR/unsigned_bound.apk"
 ALIGNED_APK="$WORK_DIR/aligned_bound.apk"
 FINAL_BOUND_APK="$OUTPUT_DIR/bound_target.apk"
 
-# Attempt 1: Standard build with native AAPT
-$APKTOOL_CMD b $NATIVE_AAPT_FLAG --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
-
-# Attempt 2: Build with -c (--copy-orig) and native AAPT
-if [ ! -f "$UNSIGNED_APK" ]; then
-    echo -e "${YELLOW}[!] Retrying build with original binary resources (-c)...${NC}"
-    $APKTOOL_CMD b $NATIVE_AAPT_FLAG -c --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+# Attempt 1: Build with stable native AAPT if available
+if [ -n "$NATIVE_AAPT_FLAG" ]; then
+    $APKTOOL_CMD b $NATIVE_AAPT_FLAG --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
 fi
 
-# Attempt 3: Fallback build with diagnostic log output
+# Attempt 2: Fallback to apktool's internal bundled AAPT2
+if [ ! -f "$UNSIGNED_APK" ]; then
+    echo -e "${YELLOW}[!] Retrying build with apktool's internal bundled AAPT2...${NC}"
+    $APKTOOL_CMD b --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+fi
+
+# Attempt 3: Build with -c (--copy-orig)
+if [ ! -f "$UNSIGNED_APK" ]; then
+    echo -e "${YELLOW}[!] Retrying build with original binary resources (-c)...${NC}"
+    $APKTOOL_CMD b -c --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
+fi
+
+# Attempt 4: Fallback build with diagnostic log output
 if [ ! -f "$UNSIGNED_APK" ]; then
     echo -e "${YELLOW}[!] Retrying build with full diagnostic output...${NC}"
-    $APKTOOL_CMD b $NATIVE_AAPT_FLAG "$TARGET_DIR" -o "$UNSIGNED_APK"
+    $APKTOOL_CMD b "$TARGET_DIR" -o "$UNSIGNED_APK"
 fi
 
 if [ ! -f "$UNSIGNED_APK" ]; then
