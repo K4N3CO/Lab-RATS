@@ -49,7 +49,7 @@ alt="Typing Banner"
 ### 🔐 Remote C2 Security & Secure Handshake: 
 > [!IMPORTANT]
 > **DEFAULT PASSWORD = admin1337**
-- The **C2 Dashboard** is **protected with a secure login**, which can be **changed directly from the Terminal/Home page**. The **Default Password should be reset immediately** for **enhanced security**.
+- The **C2 Dashboard** is **protected with a secure login** which can be **changed directly from the Terminal/Home page**. The **Default Password should be reset immediately** for **enhanced security**.
 - Uses a **masked credential handshake**. Passwords are **reversed and Base64 encoded** *(`0x_` prefixed)* on the **client-side before transmission**, rendering them **invisible to browser Network/Payload inspectors**.
 
 ### 📦 Automated APK Generation, Identity Control & Density Scaling:
@@ -239,7 +239,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 > 4.  **Copy the Webhook URL provided** and **prepare to paste it into the APK-builder tool** when **prompted**. *(Get Started Section Below)*
 
 <details>
-  <summary>📸 Click to View Google Sheet Reporting Example</summary>
+  <summary><b>📸 Click to View Google Sheet Reporting Example</summary></b>
   <br><p align="center">
   <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="90%">
 </details>
@@ -250,14 +250,14 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 **Best for newer devices running Android 17, professional fleet management** and **Automatic File Exfiltration**.
 
 **1. Fork the Lab-RATS-v1.6 repository**.
-<br>**2. Create a new Web Service on <a href="https://render.com" target="_blank">Render.com</a>** and **connect your Lab-RATS repo**.
+<br>**2. Create a new Web Service on <a href="https://render.com" target="_blank">Render.com</a>** and **connect your forked Lab-RATS repo**.
 <br>**3. Set the Root Directory** to /c2-server.
 <br>**4. Set the Build Command** to `npm install`.
 <br>**5. Set the Start Command** to `npm start`.
 <br>**6. Deploy!** Once live, **copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
 
 <details>
-  <summary>📸 Click to View Render C2 Screenshot</summary>
+  <summary><b>📸 Click to View Render C2 Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="90%">
 </details>
@@ -321,7 +321,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `Lab-RATS-v1.6/apk-builder/output/` **directory**.
 
 <details>
-  <summary>📸 Click to View APK-Builder screenshot</summary>
+  <summary><b>📸 Click to View APK-Builder screenshot</summary></b>
   <br><p align="center">
   <img src="https://github.com/user-attachments/assets/8cb583e6-6c59-46cf-8f94-668f0a34b74e" alt="Full Web Page Screenshot" width="60%">
 </details>
