@@ -45,7 +45,7 @@ alt="Typing Banner"
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Core+Features+and+Security" alt="Typing Banner"/>
 </p>
 
-### 🔐 Remote C2 Security & Secure Handshake: 
+### 🔐 Remote C2 Security & Secure Handshake:
 > [!IMPORTANT]
 > **DEFAULT PASSWORD = admin1337**
 - The **C2 Dashboard** is **protected with a secure login** which can be **changed directly from the Terminal/Home page**. The **Default Password should be reset immediately** for **enhanced security**.

@@ -14,7 +14,7 @@
         <item name="android:windowBackground">#000000</item>
         <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">#000000</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
     </style>
 
     <style name="CalcBtn" parent="Widget.MaterialComponents.Button.UnelevatedButton">
@@ -68,9 +68,12 @@
     </style>
 
     <style name="Theme.LabRATS.Permissions" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">#F6F3F3</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 </resources>

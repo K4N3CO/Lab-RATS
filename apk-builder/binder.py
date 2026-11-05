@@ -32,7 +32,7 @@ BANNER = """
  │                                                                       │
  │     ██╗      █████╗ ██████╗       ██████╗  █████╗ ████████╗██████╗    │
  │     ██║     ██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝    │
- │     ██║     ███████║██████╔╝█████╗██████╔╝███████║   ██║   ██████╗    │
+ │     ██║     ███████║██████╔╝█████╗██████╔╝███████║  ██████╗    │
  │     ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║   ██║   ╚════█║    │
  │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │
  │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │
@@ -294,13 +294,30 @@ def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore
     unsigned_apk = os.path.join(script_dir, "temp_binder", "unsigned_bound.apk")
     aligned_apk = os.path.join(script_dir, "temp_binder", "aligned_bound.apk")
 
-    cmd = apktool_cmd + ["b", target_dir, "-o", unsigned_apk]
-    run_cmd(cmd)
+    # Detect native stable AAPT1 (v1) to prevent AAPT2 exit code 138 SIGBUS crashes
+    aapt_flag = []
+    sdk_bt = os.path.expanduser("~/Library/Android/sdk/build-tools")
+    if os.path.exists(sdk_bt):
+        stable = [d for d in os.listdir(sdk_bt) if d.startswith("3") and not d.startswith("37")]
+        if stable:
+            stable.sort()
+            bt_path = os.path.join(sdk_bt, stable[-1])
+            aapt1 = os.path.join(bt_path, "aapt")
+            if os.path.exists(aapt1):
+                aapt_flag = ["--aapt", aapt1]
+
+    cmd = apktool_cmd + ["b"] + aapt_flag + ["--no-crunch", target_dir, "-o", unsigned_apk]
+    try:
+        run_cmd(cmd)
+    except Exception:
+        log_warn("Retrying build with apktool default AAPT...")
+        cmd_fallback = apktool_cmd + ["b", "-c", "--no-crunch", target_dir, "-o", unsigned_apk]
+        run_cmd(cmd_fallback)
 
     # ZipAlign
     log_info("Aligning APK bytes with zipalign...")
     if shutil.which("zipalign"):
-        run_cmd(["zipalign", "-f", "-v", "4", unsigned_apk, aligned_apk])
+        run_cmd(["zipalign", "-p", "-f", "-v", "4", unsigned_apk, aligned_apk])
     else:
         log_warn("zipalign not found on system PATH; skipping alignment step.")
         aligned_apk = unsigned_apk

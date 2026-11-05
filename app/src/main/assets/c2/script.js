@@ -765,7 +765,7 @@ function toggleLock() {
 
 function toggleBlackout() {
   const isActivating = document.getElementById("blackout-btn").innerText.includes("ACTIVATE");
-  showToast(isActivating ? "BLACKOUT_PROTOCOL_ENGAGED" : "RESTORING_HARDWARE_BACKLIGHT...");
+  showToast(isActivating ? "BLACKOUT_MODE_ENGAGED" : "RESTORING_HARDWARE_BACKLIGHT...");
   fetch("/ghost/interact?action=" + (isActivating ? "blackout_on" : "blackout_off")).then(() => checkGhostStatus());
 }
 

