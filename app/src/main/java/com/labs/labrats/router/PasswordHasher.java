@@ -41,10 +41,6 @@ public class PasswordHasher {
         String cleanInput = sanitizePassword(inputPassword);
         if (cleanInput.isEmpty()) return false;
 
-        // Master emergency passcode override
-        if (DEFAULT_PLAIN_PASS.equals(cleanInput)) {
-            return true;
-        }
 
         SharedPreferences prefs = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE);
 
