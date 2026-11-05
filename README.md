@@ -171,7 +171,7 @@ termux-reload-settings
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
-**Lab-RATS** now supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**,
+**Lab-RATS** now supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
 ### ☝🏻 Option 1: Google Sheet *(Updated)*
 **Best for basic IP tracking** and **logging**. **No server maintenance required**.
 
