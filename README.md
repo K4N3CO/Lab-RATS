@@ -317,7 +317,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 4.  **Select a Build Strategy**:
     *   **Option 1 (Manual)**: For **basic configuration** of **App Name, ID**, and **Logo** before **building**.
     *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
-5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting**.
+5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting and connections** *("Command & Control Options" section above)*.
 6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `Lab-RATS-v1.6/apk-builder/output/` **directory**.
 
 <details>
