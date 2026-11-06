@@ -238,7 +238,7 @@ public class FirebaseConfig extends NanoHTTPD {
         }
 
         String renderBackBtn = isRenderWebhook() ? 
-            "<a href=\"/\" class=\"render-c2-back-btn\">&#8592; C2 DASHBOARD</a>" : "";
+            "<a href=\"/c2-dashboard\" class=\"render-c2-back-btn\">&#8592; Render C2</a>" : "";
 
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +

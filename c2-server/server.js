@@ -415,6 +415,11 @@ app.post('/api/rename-device', (req, res) => {
     }
 });
 
+// Route Handler for Render C2 Dashboard Navigation
+app.get(['/c2-dashboard', '/c2-home', '/render-c2'], (req, res) => {
+    return res.redirect('/');
+});
+
 // GET / serves Operator Dashboard HTML or handles GET check-ins
 app.get('/', (req, res) => {
     if (req.query && (req.query.ip || req.query.device || req.query.model || req.query.deviceId)) {
