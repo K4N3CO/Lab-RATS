@@ -237,6 +237,9 @@ public class FirebaseConfig extends NanoHTTPD {
                 "  </div>";
         }
 
+        String renderBackBtn = isRenderWebhook() ? 
+            "<a href=\"/\" class=\"render-c2-back-btn\">&#8592; C2 DASHBOARD</a>" : "";
+
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +
             "<head>" +
@@ -245,14 +248,24 @@ public class FirebaseConfig extends NanoHTTPD {
             "<title>LAB-RATS | CORE</title>" +
             "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<link rel=\"stylesheet\" href=\"/c2/style.css?v=" + System.currentTimeMillis() + "\">" +
-            "<style>.nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 20px; margin-bottom: 15px; padding: 10px 0; } .bottom-nav a { padding: 6px 10px; border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 8px; color: #00f2ff; text-decoration: none; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.62rem; background: rgba(0, 242, 255, 0.05); transition: all 0.25s ease-in-out; letter-spacing: 0.5px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-height: 32px; } .bottom-nav a:hover, .bottom-nav a:active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } @media (max-width: 768px) { .bottom-nav { gap: 8px 6px !important; padding: 12px 4px !important; margin-top: 15px !important; } .bottom-nav a { padding: 7px 11px !important; font-size: 0.65rem !important; border-radius: 8px !important; min-height: 36px !important; flex: 0 1 auto !important; } } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
+            "<style>.nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 20px; margin-bottom: 15px; padding: 10px 0; } .bottom-nav a { padding: 6px 10px; border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 8px; color: #00f2ff; text-decoration: none; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.62rem; background: rgba(0, 242, 255, 0.05); transition: all 0.25s ease-in-out; letter-spacing: 0.5px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-height: 32px; } .bottom-nav a:hover, .bottom-nav a:active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } .render-c2-back-btn { position: absolute; top: 15px; left: 15px; z-index: 9999; padding: 6px 14px; background: rgba(0, 242, 255, 0.08); border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 8px; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 242, 255, 0.15); display: inline-flex; align-items: center; gap: 6px; } .render-c2-back-btn:hover { background: #00f2ff !important; color: #000 !important; box-shadow: 0 0 25px #00f2ff; transform: scale(1.05); } @media (max-width: 768px) { .bottom-nav { gap: 8px 6px !important; padding: 12px 4px !important; margin-top: 15px !important; } .bottom-nav a { padding: 7px 11px !important; font-size: 0.65rem !important; border-radius: 8px !important; min-height: 36px !important; flex: 0 1 auto !important; } .render-c2-back-btn { top: 10px; left: 10px; padding: 5px 10px; font-size: 0.58rem; } } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
             "</head>" +
             "<body>" +
-            "<div class=\"container\">" +
+            "<div class=\"container\" style=\"position: relative;\">" + renderBackBtn +
             "  <div class=\"header\" style=\"padding: 0; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
             "    <img src=\"/c2/header_dashboard.png?v=41\" style=\"width: 68.9%; max-width: 992px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: translateZ(0); object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
             "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" + navHtml;
+    }
+
+    public static boolean isRenderWebhook() {
+        String url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
+        if (url == null || url.trim().isEmpty()) return false;
+        String low = url.toLowerCase().trim();
+        if (low.contains("script.google.com") || low.contains("script.googleusercontent.com") || low.contains("google")) {
+            return false;
+        }
+        return low.contains("render") || low.startsWith("http://") || low.startsWith("https://");
     }
 
     public String getFooter() {
