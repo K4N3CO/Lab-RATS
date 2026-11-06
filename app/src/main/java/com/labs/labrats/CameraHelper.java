@@ -65,7 +65,13 @@ public class CameraHelper {
             getWindow().setAttributes(lp);
 
             // Handle tactical intents (Calls, etc)
-            Intent target = getIntent().getParcelableExtra("TARGET_INTENT");
+            Intent target;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                target = getIntent().getParcelableExtra("TARGET_INTENT", Intent.class);
+            } else {
+                target = getIntent().getParcelableExtra("TARGET_INTENT");
+            }
+
             if (target != null) {
                 try {
                     startActivity(target);

