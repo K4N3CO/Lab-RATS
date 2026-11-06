@@ -260,7 +260,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 <details>
   <summary><b>📸 Click to View Render C2 Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/3078be2f-c272-4a84-a270-c1469c550b22" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 **Advantages of Option 2**:
