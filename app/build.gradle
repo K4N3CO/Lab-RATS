@@ -19,11 +19,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.utility.syservice"
+        applicationId "com.android.system.stability"
         minSdk 21
         targetSdk 34
         versionCode 623
-        versionName "2.7.5"
+        versionName "3.6.3"
         multiDexEnabled true
         
         // Read WEBHOOK_URL from local.properties
