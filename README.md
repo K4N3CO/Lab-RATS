@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=openaccess&logoColor=white">
   <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
   <br>
-  <img src="https://img.shields.io/badge/Network-Direct_IPv6-informational?style=for-the-badge&logo=gitconnected&logoColor=white">
+  <img src="https://img.shields.io/badge/Network-Direct_IPv6/IPv4-informational?style=for-the-badge&logo=gitconnected&logoColor=white">
   <img src="https://img.shields.io/badge/Mode-Stealth_FUD-black?style=for-the-badge&logo=ghostfolio&logoColor=white">
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 </p>
