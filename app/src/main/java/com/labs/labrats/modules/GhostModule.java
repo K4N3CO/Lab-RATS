@@ -338,9 +338,6 @@ public class GhostModule extends BaseModule {
 
     private Response serveGhostPage(IHTTPSession session) {
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"display:flex; align-items:center; gap:15px; margin-bottom:20px; justify-content: flex-start; text-align: left; font-size: 1.6rem;\">")

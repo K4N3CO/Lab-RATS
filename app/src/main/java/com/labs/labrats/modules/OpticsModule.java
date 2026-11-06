@@ -101,7 +101,6 @@ public class OpticsModule extends BaseModule {
         }
 
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128247; COVERT_CAMERA_HUB <span class=\"info-trigger\" onclick=\"showInfo(event, 'COVERT_CAMERA_HUB', 'Tactical surveillance hub for remote optics and background recording.')\">INFO</span></h2>");
@@ -548,9 +547,6 @@ public class OpticsModule extends BaseModule {
             .append("  #stream { object-fit: contain !important; }")
             .append("}")
             .append("</style>");
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128249; LIVE_STREAM_UPLINK <span class=\"info-trigger\" onclick=\"showInfo(event, 'LIVE_STREAM', 'Real-time MJPEG feed from the device camera.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");

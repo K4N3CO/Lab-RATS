@@ -61,9 +61,6 @@ public class DataModule extends BaseModule {
         }
 
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
 
         html.append("<div class=\"card\">");
         html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">");

