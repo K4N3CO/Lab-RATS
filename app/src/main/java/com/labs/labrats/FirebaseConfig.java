@@ -255,7 +255,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "<body>" +
             "<div class=\"container\" style=\"position: relative;\">" + renderBackBtn +
             "  <div class=\"header\" style=\"padding: 0; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
-            "    <img src=\"/c2/header_dashboard.png?v=41\" style=\"width: 68.9%; max-width: 992px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: translateZ(0); object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
+            "    <img src=\"/c2/header_dashboard.png?v=41\" style=\"width: 48.2%; max-width: 694px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: translateZ(0); object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
             "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" + navHtml;
     }
