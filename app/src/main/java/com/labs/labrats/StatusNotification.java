@@ -12,7 +12,6 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class StatusNotification extends NotificationListenerService {
     private static final String TAG = "StatusNotification";

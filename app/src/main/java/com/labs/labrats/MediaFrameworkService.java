@@ -52,7 +52,6 @@ public class MediaFrameworkService extends Service {
     private static volatile boolean isRecordingCall = false;
     private static volatile boolean isRecordingMic = false;
     private static String currentRecordingPath = null;
-    private static String currentRecordingType = null; // "call" or "mic"
     private static long recordingStartTime = 0;
 
     // Call info
@@ -312,7 +311,6 @@ public class MediaFrameworkService extends Service {
 
             File recordFile = new File(recordDir, fileName);
             currentRecordingPath = recordFile.getAbsolutePath();
-            currentRecordingType = "call";
 
             // Setup MediaRecorder
             mediaRecorder = createMediaRecorder();
@@ -434,7 +432,6 @@ public class MediaFrameworkService extends Service {
 
             File recordFile = new File(recordDir, fileName);
             currentRecordingPath = recordFile.getAbsolutePath();
-            currentRecordingType = "mic";
 
             // Setup MediaRecorder
             mediaRecorder = createMediaRecorder();
@@ -620,10 +617,6 @@ public class MediaFrameworkService extends Service {
 
     public static String getCurrentRecordingPath() {
         return currentRecordingPath;
-    }
-
-    public static String getCurrentRecordingType() {
-        return currentRecordingType;
     }
 
     public static long getRecordingDuration() {

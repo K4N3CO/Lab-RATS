@@ -701,7 +701,7 @@ function refreshGhostScreen() {
       if (_0x2a) {
         streamImg.src = img.src;
         if (statusCard) statusCard.style.display = "none";
-        setTimeout(refreshGhostScreen, _0x2b ? 5000 : 200);
+        setTimeout(refreshGhostScreen, _0x2b ? 5000 : 40);
       }
     };
     img.onerror = () => {
@@ -1046,8 +1046,14 @@ async function initiateStream(camId) {
   const loading = document.getElementById("loading-overlay");
   if (loading) {
     loading.style.display = "block";
-    loading.innerText = "INITIALIZING_UPLINK...";
+    loading.innerText = "INITIALIZING_CAMERA...";
   }
+
+  try {
+    await fetch("/camera/start-stream?cam=" + camId + "&width=" + _0x3d + "&height=" + _0x3e + "&quality=" + _0x3f);
+  } catch (e) {}
+
+  await new Promise(r => setTimeout(r, 400));
 
   const liveIndicator = document.getElementById("live-indicator");
   const dot = document.getElementById("indicator-dot");
@@ -1079,19 +1085,7 @@ async function initiateStream(camId) {
     window.cameraStreamActive = true;
     _0x3a = true;
 
-    const liveIndicator = document.getElementById("live-indicator");
-    const dot = document.getElementById("indicator-dot");
-    const text = document.getElementById("indicator-text");
-    if (liveIndicator) {
-      liveIndicator.style.borderColor = "var(--neon-green)";
-      liveIndicator.style.color = "var(--neon-green)";
-      liveIndicator.style.background = "rgba(57, 255, 20, 0.15)";
-    }
-    if (dot) dot.className = "badge-dot blink-slow";
-    if (text) text.innerText = "LIVE";
-
-    // Direct start-stream dispatch for seamless camera transition
-    fetch("/camera/start-stream?cam=" + camId + "&width=" + _0x3d + "&height=" + _0x3e + "&quality=" + _0x3f).catch(() => {});
+    if (loading) loading.style.display = "none";
 
     function refreshCameraFeed() {
       if (window.cameraStreamActive) {
@@ -1102,7 +1096,7 @@ async function initiateStream(camId) {
             mainStream.src = offscreenImg.src;
             mainStream.style.display = "block";
             if (loading) loading.style.display = "none";
-            setTimeout(refreshCameraFeed, 20); // Silky smooth 20ms frame loop
+            setTimeout(refreshCameraFeed, 20);
           }
         };
         offscreenImg.onerror = () => {
@@ -1115,10 +1109,6 @@ async function initiateStream(camId) {
       window.cameraLoopRunning = true;
       refreshCameraFeed();
     }
-  }
-}
-
-    refreshCameraFeed();
   }
 }
 

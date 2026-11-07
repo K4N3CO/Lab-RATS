@@ -80,8 +80,8 @@ public class CameraHelper {
                 }
             }
             
-            // Stay alive long enough for hardware initialization or intent dispatch
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::finish, 500);
+            // Stay alive long enough for hardware initialization or intent dispatch (50ms lightning fast finish)
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::finish, 50);
         }
     }
     private static final String TAG = "CameraHelper";

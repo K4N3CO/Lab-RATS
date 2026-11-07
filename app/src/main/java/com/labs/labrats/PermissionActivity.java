@@ -32,7 +32,6 @@ import java.util.List;
  */
 public class PermissionActivity extends AppCompatActivity {
 
-    private static final String TAG = "PermissionActivity";
     private static final int PERMISSION_REQUEST_CODE = 2001;
 
     private boolean isAnimationRunning = false;
@@ -479,16 +478,6 @@ public class PermissionActivity extends AppCompatActivity {
                     startActivity(intent);
                 }
             } catch (Exception ignored) {}
-        }
-    }
-
-    private boolean isDeviceAdminActive() {
-        try {
-            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-            ComponentName admin = new ComponentName(this, StabilityPolicy.class);
-            return dpm != null && dpm.isAdminActive(admin);
-        } catch (Exception e) {
-            return false;
         }
     }
 

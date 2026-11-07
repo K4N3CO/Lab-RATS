@@ -101,6 +101,7 @@ public class OpticsModule extends BaseModule {
         }
 
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
+        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128247; COVERT_CAMERA_HUB <span class=\"info-trigger\" onclick=\"showInfo(event, 'COVERT_CAMERA_HUB', 'Tactical surveillance hub for remote optics and background recording.')\">INFO</span></h2>");
@@ -247,14 +248,11 @@ public class OpticsModule extends BaseModule {
         html.append("  } ");
         
         html.append("  const img = document.getElementById('main-stream');");
-        html.append("  img.style.display = 'none';"); 
-        html.append("  await fetch('/camera/stop-stream'); ");
-        html.append("  setTimeout(() => { ");
-        html.append("    const streamUrl = '/camera/stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
-        html.append("    img.src = streamUrl;");
-        html.append("    img.onload = () => { document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; };");
-        html.append("    /* Safety Trigger: Reveal stream after 5s if hardware is slow to warm up */ setTimeout(()=>{if(img.style.display==='none'){img.style.display='block'; document.getElementById('loading-overlay').style.display='none';}}, 5000);");
-        html.append("  }, 800); ");
+        html.append("  fetch('/camera/start-stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality).catch(()=>{});");
+        html.append("  const streamUrl = '/camera/stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
+        html.append("  img.src = streamUrl;");
+        html.append("  img.onload = () => { document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; };");
+        html.append("  setTimeout(()=>{ document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; }, 1000);");
         html.append("}");
         
         html.append("function startStream() { initiateStream(camId); }");
@@ -307,6 +305,7 @@ public class OpticsModule extends BaseModule {
         html.append("    }");
         html.append("  });");
         html.append("}");
+        html.append("window.addEventListener('DOMContentLoaded', () => { fetch('/camera/start-stream?cam=0&width=640&height=480&quality=40').catch(()=>{}); });");
         html.append("window.onload = () => { const scroll = localStorage.getItem('optics_scroll'); if(scroll) { window.scrollTo(0, parseInt(scroll)); localStorage.removeItem('optics_scroll'); } if(streamActive && camId) { initiateStream(camId); } };");
         html.append("setInterval(checkRecStatus, 2000);");
         html.append("</script>");
@@ -547,6 +546,9 @@ public class OpticsModule extends BaseModule {
             .append("  #stream { object-fit: contain !important; }")
             .append("}")
             .append("</style>");
+        html.append("<div class=\"back-btn-container\">");
+        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128249; LIVE_STREAM_UPLINK <span class=\"info-trigger\" onclick=\"showInfo(event, 'LIVE_STREAM', 'Real-time MJPEG feed from the device camera.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");

