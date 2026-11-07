@@ -116,26 +116,26 @@ alt="Typing Banner"
 - **Smishing Library**: Pre-configured **tactical phishing templates**.
 - **Shadow Overlay**: Remotely **inject functional, pixel-perfect credential-harvesting overlays** to the device.
 
-### 💀 Anti-Removal Shield & Self Destruct *(Optimized)*:
-- **High-speed, event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the **app**.
-- **Suicide Protocol (Self-Destruct)**: **Remote-triggered persistent loop** that **wipes all local configuration** and **initiates a hard uninstallation of the C2 core**.
+### 💀 Anti-Removal & Self Destruct:
+- **High-speed, event-driven protection shield** that **Blocks Attempts** to **Uninstall** or **Force Stop** the **app**.
+- **Suicide (Self-Destruct)**: **Remote-triggered persistent loop** that **wipes all local configuration** and **initiates a hard uninstallation of the C2 Core**.
 
-### 🛰️ Live GPS Tracking & Intel Stream *(Sniffer)*:
+### 🛰️ Live GPS Tracking & Intel Stream:
 - **One-click uplink** to open the **devices exact real-time location** using **Google Maps**.
 - **Intercept every app notification** *(WhatsApp, Telegram, RCS, System...etc)* in a **live feed**.
 
 ### 📸 Tactical Surveillance Hub *(Ultra-Stability)*:
 - **Covert Recording**: **Stealthily record video without any user-facing activity**.
 - **Snap Photos**: **Covert image capture** integrated into the **live stream**.
-- **Nightmode V2**: Aggressive **electronic brightening** for **low-light environments**. Now features **Hardware Breathe Sync** and **AE Bypass** for **zero-freeze operation** on **modern high-latency sensors**.
+- **Nightmode V2**: Aggressive **electronic brightening** for **low-light environments**.
 
 ### 🎙️ Acoustics & Interception:
 - **Timed or Live microphone recording** and **automated call recording** for **both incoming and outgoing calls**.
 
 ### 📂 Advanced Data Uplink:
-- **Integrated File Manager**: **Navigate, download**, and **manage files**. Features an **instant Search Bar** and **Category Filters**.
 - **Info Gathering**: Access **Call Logs**, **Contacts**, **Hardware Analytics**, and **Installed Apps** remotely.
-- **📝 Direct File Editor**: **Live-edit text, JSON**, and **log files** directly **on the device**.
+- **Integrated File Manager**: **Navigate, download**, and **manage files**. Features an **instant Search Bar** and **Category Filters**.
+- **Direct File Editor**: **Live-edit text, JSON**, and **log files** directly **on the device**.
 
 ### 🖥️ Enhanced Remote Shell:
 The **Terminal Tabs Built-in Shell has been overhauled** for **professional workflows**:
@@ -153,7 +153,7 @@ The **Terminal Tabs Built-in Shell has been overhauled** for **professional work
 </p>
 
 ### 🛠️ Termux Bridge Integration:
-**Lab-RATS** now features a **high-performance bridge to the Termux environment**. If **Termux is installed on the target device**, the remote terminal can **instantly elevate its capabilities**:
+**Lab-RATS** features a **high-performance bridge to the Termux environment**. If **Termux is installed on the target device**, the remote terminal can **instantly elevate its capabilities**:
 - **Auto-Routing**: Common commands like `pkg`, `apt`, `pip`, and `python` are **routed through the bridge**.
 - **Unrestricted Tools**: **Install** and **run Python scripts, Nmap scans, or Metasploit** from the **C2 web terminal**.
 - **Persistent Environment**: Full support for **Termux's internal storage** and **standard Linux binaries**.
@@ -171,11 +171,11 @@ termux-reload-settings
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
-**Lab-RATS** now supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
+**Lab-RATS** supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
 ### ☝🏻 Option 1: Google Sheet *(Updated)*
 **Best for basic IP tracking** and **logging**. **No server maintenance required**.
 
-1. **Create** a new <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
+1. **Create a new** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
 2. Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:**
 
 ```javascript
@@ -230,7 +230,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 3. Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(E-Mail)* → **Who has Access: Anyone**.
 
 > [!IMPORTANT]
-> 4. **Copy the Webhook URL provided** and **prepare to paste it into the APK-builder tool** when **prompted** *(Get Started Section Below)*.
+> 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ0dYdi...`)* and **prepare to paste it into the APK-builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
 
 <details>
   <summary><b>📸 Click to View Google Sheet Reporting Example</summary></b>
@@ -239,7 +239,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 ---
 
-### ✌🏻 NEW! Option 2: Tactical Node.js Backend *(Upgraded)*
+### ✌🏻 Option 2: Tactical Node.js Backend
 **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
 **1. Fork the Lab-RATS-v1.6 repository**.
@@ -249,7 +249,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 <br>**5. Deploy!**
 
 > [!IMPORTANT]
-> **Once live, Copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, and **Enter it into the APK-Builder when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
+> **Once live, Copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, and **prepare to enter it into the APK-Builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
 <details>
   <summary><b>📸 Click to View Render Setup</summary></b>
   <br>
@@ -263,10 +263,10 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   <img src="https://github.com/user-attachments/assets/308a906f-c331-406b-8718-23b2d113a04a" alt="Full Web Page Screenshot" width="80%">
 </details>
 
-**Advantages of Option 2**:
+### Advantages of Option 2:
 - 🌐 **Dual-Stack IP Binding**: **Full support for both IPv4 and IPv6 connections**, **enabling seamless C2 telemetry** and **reverse WebSocket tunneling** across **cellular carrier NAT64** and **dual-stack Wi-Fi networks worldwide**.
-- 📂 **Exfiltration Vault**: **Audio/Video recordings** are automatically uploaded and **stored on your server**.
-- 📡 **Live Fleet List**: A **professional dashboard** to **manage all devices in one place**, with **editable device name** for **easy device recognition** and **NEW "Quick Action" pull-down menu** to **deploy some features without directly connecting**.
+- 📂 **Exfiltration Vault**: **Audio/Video recordings** are **automatically uploaded** and **stored on your server**.
+- 📡 **Live Fleet List**: A **professional dashboard** to **manage all devices in one place**, with **editable device name** for **easy device recognition** and **NEW 'Quick Action' pull-down menu** to **deploy some features without directly connecting**.
 - 🔄 **Dynamic Sync**: **Heartbeat reporting** ensures your **P2P links are always up-to-date**.
 
 ---
@@ -277,7 +277,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your environment meets the following requirements**:
 
-### 1. Workstation & Build Requirements: *(For Building APKs)*
+### 1. Workstation & Build Requirements: *(To Build APKs)*
 * **Java Development Kit (JDK)**: **JDK 17 or JDK 21** *(JDK 21 recommended)*.
     * Ensure `JAVA_HOME` is set in **your environment paths**.
 * **Android SDK**: **Android SDK 34** *(API Level 34)* or **higher**.
@@ -315,9 +315,10 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
     *   **Mac/Linux**: `chmod +x build.sh && ./build.sh`
     *   **Windows**: `build.bat`
 4.  **Select a Build Strategy**:
-    *   **Option 1 (Manual)**: For **basic configuration** of **App Name, ID**, and **Logo** before **building**.
+    *   **Option 1 (Manual)**: For **standard configuration** of **App Name, ID**, and **Logo** before **building**.
     *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
-5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting and connections** *("Command & Control Options" section above)*.
+> [!IMPORTANT]
+> 5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting and connections** *("Command & Control Options" section above)*.
 6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS-v1.6/apk-builder/output/`
 
 <details>
@@ -330,11 +331,11 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 
 #### A. Strategic Weaponization: *(The Wrapper)*
 **Standard** `.apk` files are **often blocked by email filters and browser security**. Use the **Infection Chain Wizard** *(Option 6)* in the `apk-builder` tool to **wrap your link inside a high-compatibility carrier file**:
-*   **📑 Stealth PDF (Highly Recommended)**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download, bypassing standard PDF security filters**.
+*   **📑 Stealth PDF**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download, bypassing standard PDF security filters**.
 *   **🎬 Zero-Click MP4**: **Send as a video file**. It **exploits** mobile **Media Heap Overflows** during **gallery indexing or thumbnail generation** to **force-register the C2 link in the background**.
 *   **🗓️ Meeting Invite (ICS)**: Injects a **persistent event** into the **target's Calendar with automated reminders** and a **weaponized "Security Review" link**.
 *   **🔳 QR Code / 📡 NFC**: **Best for physical placement** or **"Tap-to-Infect" proximity delivery**. Generates a **high-density QR** or **NDEF record** pointing to the **hardened delivery URL**.
-*   **and Many More**: The **Wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document macros**.
+*   **And Many More**: The **Wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document macros**.
 
 #### B. Hosting Strategies:
 *   **Anonymous Cloud**: **Option 6** uses `Catbox.moe` **by default**. It is **anonymous, fast**, and **generates a direct link**. Now has   **fallback hosting on `Litterbox` or `Tmpfiles` if `Catbox.moe` fails**.
@@ -343,8 +344,8 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 #### C. Installation & Initialization:
 Once the **target device** downloads the **APK**:
 1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed.apk`
-2.  **NEW! 'One-Click' Permission Granting (CRITICAL)**: **Open the app ONCE**. **Only the initial pop-up *(Accessibility Services)* must be manually toggled on**, **ALL other permissions are now auto-granted by the system** using a **convincing security sequence**.
--  -  **Remote Permission Prompt**: If a **user removes any permissions**, you can **remotely trigger the system prompts again** from the **Ghost Tab** using the **repair buttons** in the **GHOST UTILITIES** section.
+2.  **NEW! 'One-Click' Permission Granting (CRITICAL)**: **Open the app ONCE**. **Only the initial Pop-up *(Accessibility Services)* must be manually toggled on**, **ALL other permissions are now auto-granted by the system** using a **convincing security sequence**.
+-  -  **Remote Permission Prompt**: If a **user removes any permissions**, you can **remotely trigger the system prompts again** using the **repair buttons** in the **GHOST UTILITIES** section.
 3.  **Self-Vanishing**: A **few seconds after launch**, the app will **automatically replace its icon and name** with the **decoy you chose during build** *("System Update", "Calculator"...etc)*.
 4.  **Uplink Confirmation**: Check your **Google Sheet or Render  C2. Within 5 seconds of initialization**, the **Device ID, Connection Type, IP, Port, C2 Dashboard Link, Battery % and more will appear in the log**.
 
@@ -354,7 +355,7 @@ Once the **target device** downloads the **APK**:
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
 </p>
 
-**If** you find **Lab-RATS awesome** and **useful for your security research**, **please Star ⭐ the project**—it **drives further development!**
+**If** you find **Lab-RATS awesome** and **useful for your security research**, **Please Star ⭐ the project**—it **drives further development!**
 
 <p align="left">
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
@@ -390,7 +391,7 @@ https://github.com/user-attachments/assets/ff955171-67bd-4450-a6ce-4375207e5ae4
 
 ---
 
-### NEW! Initial Install Sequence *(One-Click)*:
+### NEW! 'One-Click' Initial Install Sequence:
 
 https://github.com/user-attachments/assets/cab0c7ee-52bb-40a0-b7c6-46a0f8b38c5f
 
@@ -419,7 +420,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
  />
 </p>
 
-### 00. Lab-RATS Server Installed on Android Device (Samsung Flip 7):
+### 00. Lab-RATS Server Installed on Android Device:
 
 <details>
   <summary>📸 Click to View App Screenshot</summary>
@@ -564,7 +565,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
  />
 </p>
 
-**Lab-RATS is for educational and authorized security testing purposes ONLY!**. The **Developers & Contributors assume NO Responsibility for ANY** **Misuse, Damage to Devices or Relationships caused by this Software**. **Please use it Responsibly**. **Thank You!**
+**Lab-RATS is for Educational and Authorized Security testing purposes ONLY!**. The **Developers & Contributors assume NO Responsibility for ANY** **Misuse, Damage to Devices or Relationships caused by this Software**. **Please use it Responsibly**. **Thank You!**
 
 ---
 
