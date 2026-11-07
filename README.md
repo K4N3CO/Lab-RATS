@@ -1,5 +1,5 @@
 <p align="center">
-<img width="1315" height="493" alt="Screenshot 2026-11-06 at 4 59 47 AM" src="https://github.com/user-attachments/assets/7747d8b1-3724-423d-8ac9-5a2bf4c873c8" />
+<img width="1308" height="478" alt="Screenshot 2026-11-06 at 10 08 05 PM" src="https://github.com/user-attachments/assets/e5146a81-9475-438c-bb6b-9ad5808d57ca" />
 
 <p align="center">
   <img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -260,7 +260,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 <details>
   <summary><b>📸 Click to View Render C2 Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/3078be2f-c272-4a84-a270-c1469c550b22" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/308a906f-c331-406b-8718-23b2d113a04a" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 **Advantages of Option 2**:
