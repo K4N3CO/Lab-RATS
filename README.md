@@ -371,12 +371,6 @@ Once the **target device** downloads the **APK**:
 
 [<img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black">](https://buymeacoffee.com/k4n3co)
 
-<img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white">
-
-```
-bc1q8d66m0qthnh6nw9hc5wl09m7pfydk46q5w8rxx
-```
-
 ---
 
 <p align="left">
