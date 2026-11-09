@@ -20,6 +20,11 @@
 > Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S)*
 
 **Developed from the ground up by K4N3CO, Lab-RATS is an open-source, lightweight Android Remote Administration framework** packed with powerful **monitoring** and **interaction capabilities**. The system **automates the generation of custom, signed `.apk` files** for **deployment onto any Android device**, providing **full device telemetry** via a **sleek, web-based C2 dashboard**. Built to adapt to **strict modern mobile environments**, it delivers a **robust feature suite** that **operates reliably** across both **legacy** and the **newest Android releases**.
+<details>
+  <summary>📸 Click to View Comparative Breakdown</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/a2beda0b-122b-4e76-9daa-4d543e94dac3" alt="Full Web Page Screenshot" width="70%">
+</details>
 
 ---
 
