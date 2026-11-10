@@ -526,12 +526,12 @@ app.get('/', (req, res) => {
 </head>
 <body>
     <div class="container">
-        <div class="header" style="text-align:center; padding:0; margin-bottom:-10px;">
+        <div class="header" style="text-align:center; padding:0; margin-bottom:-32px;">
             <img src="/c2/header_dashboard.png?v=${Date.now()}" style="width: 58.7%; max-width: 643px; height: auto; margin: 0 auto; display: block; transform: scale(1.10, 1.03); object-fit: contain;" alt="LAB-RATS Header">
-            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: -6px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
+            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: -26px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 
-        <div class="card" style="margin-top: -4px; border-left: 3px solid var(--neon-cyan);">
+        <div class="card" style="margin-top: -28px; border-left: 3px solid var(--neon-cyan);">
             <h2 style="text-align: center; color: var(--neon-cyan); margin-bottom: 20px;">CONNECTED_TARGETS</h2>
             <div style="width: 100%;">
                 <table>
