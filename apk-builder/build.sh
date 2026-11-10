@@ -288,8 +288,14 @@ build_apk() {
     fi
 
     if [ $BUILD_STATUS -eq 0 ] && [ -n "$APK_PATH" ]; then
-        cp "$APK_PATH" "$SCRIPT_DIR/output/signed_v1.apk"
-        echo -e "\n${GREEN}[✓] Success: output/signed_v1.apk${NC}"
+        i=1
+        TARGET_APK="$SCRIPT_DIR/output/signed_v1.apk"
+        while [ -f "$SCRIPT_DIR/output/signed_v$i.apk" ]; do
+            i=$((i + 1))
+            TARGET_APK="$SCRIPT_DIR/output/signed_v$i.apk"
+        done
+        cp "$APK_PATH" "$TARGET_APK"
+        echo -e "\n${GREEN}[✓] Success: output/signed_v$i.apk${NC}"
     else
         echo -e "${RED}[!] Build failed. Error Code: $BUILD_STATUS${NC}"
         BUILD_SUCCESS=1

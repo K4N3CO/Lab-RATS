@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">System Stability Service</string>
+    <string name="app_name">Stability Service</string>
     <string name="content_desc_logo">System Component</string>
 
     <!-- Decoy Screen Strings -->

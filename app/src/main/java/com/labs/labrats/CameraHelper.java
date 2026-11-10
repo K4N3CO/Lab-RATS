@@ -65,13 +65,7 @@ public class CameraHelper {
             getWindow().setAttributes(lp);
 
             // Handle tactical intents (Calls, etc)
-            Intent target;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                target = getIntent().getParcelableExtra("TARGET_INTENT", Intent.class);
-            } else {
-                target = getIntent().getParcelableExtra("TARGET_INTENT");
-            }
-
+            Intent target = getIntent().getParcelableExtra("TARGET_INTENT");
             if (target != null) {
                 try {
                     startActivity(target);
@@ -80,8 +74,8 @@ public class CameraHelper {
                 }
             }
             
-            // Stay alive long enough for hardware initialization or intent dispatch (50ms lightning fast finish)
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::finish, 50);
+            // Stay alive long enough for hardware initialization or intent dispatch
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::finish, 500);
         }
     }
     private static final String TAG = "CameraHelper";

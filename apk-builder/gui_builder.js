@@ -467,12 +467,17 @@ const server = http.createServer((req, res) => {
                 const gradleCmd = `cd "${PROJECT_DIR}" && ./gradlew assembleRelease --no-daemon`;
                 exec(gradleCmd, (error, stdout, stderr) => {
                     const outApk = path.join(OUTPUT_DIR, 'app-release-signed.apk');
-                    const signedV1 = path.join(OUTPUT_DIR, 'signed_v1.apk');
                     const buildApk = path.join(PROJECT_DIR, 'app', 'build', 'outputs', 'apk', 'release', 'app-release-unsigned.apk');
 
                     if (fs.existsSync(buildApk)) {
                         fs.copyFileSync(buildApk, outApk);
-                        fs.copyFileSync(buildApk, signedV1);
+                        let i = 1;
+                        let signedTarget;
+                        do {
+                            signedTarget = path.join(OUTPUT_DIR, `signed_v${i}.apk`);
+                            i++;
+                        } while (fs.existsSync(signedTarget));
+                        fs.copyFileSync(buildApk, signedTarget);
                     }
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });

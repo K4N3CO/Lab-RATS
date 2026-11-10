@@ -248,11 +248,14 @@ public class OpticsModule extends BaseModule {
         html.append("  } ");
         
         html.append("  const img = document.getElementById('main-stream');");
-        html.append("  fetch('/camera/start-stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality).catch(()=>{});");
-        html.append("  const streamUrl = '/camera/stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
-        html.append("  img.src = streamUrl;");
-        html.append("  img.onload = () => { document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; };");
-        html.append("  setTimeout(()=>{ document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; }, 1000);");
+        html.append("  img.style.display = 'none';"); 
+        html.append("  await fetch('/camera/stop-stream'); ");
+        html.append("  setTimeout(() => { ");
+        html.append("    const streamUrl = '/camera/stream?cam=' + id + '&width=' + streamWidth + '&height=' + streamHeight + '&quality=' + streamQuality + '&t=' + Date.now();");
+        html.append("    img.src = streamUrl;");
+        html.append("    img.onload = () => { document.getElementById('loading-overlay').style.display = 'none'; img.style.display = 'block'; };");
+        html.append("    /* Safety Trigger: Reveal stream after 5s if hardware is slow to warm up */ setTimeout(()=>{if(img.style.display==='none'){img.style.display='block'; document.getElementById('loading-overlay').style.display='none';}}, 5000);");
+        html.append("  }, 800); ");
         html.append("}");
         
         html.append("function startStream() { initiateStream(camId); }");
@@ -305,7 +308,6 @@ public class OpticsModule extends BaseModule {
         html.append("    }");
         html.append("  });");
         html.append("}");
-        html.append("window.addEventListener('DOMContentLoaded', () => { fetch('/camera/start-stream?cam=0&width=640&height=480&quality=40').catch(()=>{}); });");
         html.append("window.onload = () => { const scroll = localStorage.getItem('optics_scroll'); if(scroll) { window.scrollTo(0, parseInt(scroll)); localStorage.removeItem('optics_scroll'); } if(streamActive && camId) { initiateStream(camId); } };");
         html.append("setInterval(checkRecStatus, 2000);");
         html.append("</script>");

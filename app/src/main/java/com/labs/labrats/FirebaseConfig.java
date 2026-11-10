@@ -738,9 +738,30 @@ public class FirebaseConfig extends NanoHTTPD {
             // 3. Main Routing & Auth Check
             else {
                 String token = cookies.read("token");
+                if (token == null || token.isEmpty()) {
+                    token = session.getParms().get("token");
+                }
+                if (token == null || token.isEmpty()) {
+                    token = session.getHeaders().get("token");
+                }
+                if (token == null || token.isEmpty()) {
+                    token = session.getHeaders().get("authorization");
+                    if (token != null && token.toLowerCase().startsWith("bearer ")) {
+                        token = token.substring(7).trim();
+                    }
+                }
+
                 sessionToken = WorkManager_Sync.activeSessionToken;
 
-                boolean isLoggedIn = (token != null && !token.isEmpty() && token.equals(sessionToken));
+                boolean isLoggedIn = (token != null && !token.isEmpty() && sessionToken != null && !sessionToken.isEmpty() && token.equals(sessionToken));
+
+                if (!isLoggedIn && (uri.startsWith("/camera/") || uri.startsWith("/c2/"))) {
+                    String remoteIp = session.getHeaders().get("http-client-ip");
+                    if (remoteIp == null) remoteIp = session.getHeaders().get("remote-addr");
+                    if ("127.0.0.1".equals(remoteIp) || "localhost".equals(remoteIp) || (remoteIp != null && remoteIp.startsWith("127."))) {
+                        isLoggedIn = true;
+                    }
+                }
 
                 if (!isLoggedIn) {
                     if (uri.startsWith("/c2/")) {
@@ -749,6 +770,8 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = serveLogo(session);
                     } else if (uri.startsWith("/font/orbitron.ttf")) {
                         response = serveFont(session);
+                    } else if (uri.startsWith("/camera/stream") || uri.startsWith("/camera/frame") || uri.startsWith("/camera/photo")) {
+                        response = newFixedLengthResponse(Response.Status.UNAUTHORIZED, "text/plain", "Unauthorized Session Token");
                     } else {
                         response = serveGzipped(session, "text/html", LOGIN_HTML);
                     }
