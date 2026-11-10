@@ -385,13 +385,13 @@ Once the **target device** downloads the **APK**:
 
 ### Git Clone & APK-Builder Example *(MacBook-Air M2)*:
 
-https://github.com/user-attachments/assets/ff955171-67bd-4450-a6ce-4375207e5ae4
+https://github.com/user-attachments/assets/035088f1-e906-48c6-a1a6-0f7dd0356276
 
 ---
 
 ### NEW! 'One-Click' Initial Install Sequence:
 
-https://github.com/user-attachments/assets/cab0c7ee-52bb-40a0-b7c6-46a0f8b38c5f
+https://github.com/user-attachments/assets/f4464f26-8043-4bfa-b55b-c57efb224512
 
 ---
 
@@ -403,13 +403,13 @@ https://github.com/user-attachments/assets/37109047-b727-4914-b19f-42edcedd770a
 
 ### Remote C2 Dashboard - Ghost Ops & Locate:
 
-https://github.com/user-attachments/assets/806b7132-370b-49d8-b6b5-3823d0ebe0f0
+https://github.com/user-attachments/assets/ccaae63f-493b-44b3-a662-f9d1d2792523
 
 ---
 
 ### Remote C2 Dashboard - Covert Camera Hub:
 
-https://github.com/user-attachments/assets/8ab2970a-2a3b-437c-bc20-6bd74bc21cba
+https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 
 ---
 
