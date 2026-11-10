@@ -41,6 +41,7 @@
                 android:layout_width="352dp"
                 android:layout_height="218dp"
                 android:layout_gravity="bottom|center"
+                android:layout_marginBottom="-25dp"
                 android:adjustViewBounds="true"
                 android:paddingLeft="10dp"
                 android:paddingTop="10dp"
