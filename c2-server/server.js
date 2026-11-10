@@ -514,8 +514,10 @@ app.get('/', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAB-RATS | C2 COMMAND RELAY</title>
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/c2/style.css">
+    <link rel="stylesheet" href="/c2/style.css?v=${Date.now()}">
     <style>
+        .nav { margin-top: -11px !important; }
+        @media (max-width: 768px) { .nav { margin-top: -11px !important; } }
         @media (min-width: 1024px) { body { zoom: 0.9; } }
         .container { max-width: 1400px !important; width: 95% !important; margin: 0 auto !important; }
         .card { padding: 22px !important; overflow: visible !important; width: 100% !important; }
