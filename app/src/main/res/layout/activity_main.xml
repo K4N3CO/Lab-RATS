@@ -66,6 +66,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_marginBottom="15dp"
                         android:background="@drawable/header_card_bg"
                         android:gravity="bottom"
                         android:orientation="vertical"
@@ -153,10 +154,10 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnStartStop"
-                android:layout_width="236dp"
+                android:layout_width="281dp"
                 android:layout_height="43dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="13dp"
                 android:backgroundTint="#EA00F2FF"
                 android:fontFamily="@font/orbitron"
                 android:gravity="center"
@@ -173,10 +174,10 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCopyUrl"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="195dp"
+                android:layout_width="223dp"
                 android:layout_height="37dp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="9dp"
                 android:fontFamily="@font/orbitron"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
@@ -201,7 +202,7 @@
                 android:letterSpacing="0.15"
                 android:text=" BYPASS_POWER_LIMITS"
                 android:textColor="@color/neon_cyan"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
                 app:cornerRadius="24dp" />
 
