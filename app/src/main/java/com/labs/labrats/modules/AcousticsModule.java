@@ -125,16 +125,8 @@ public class AcousticsModule extends BaseModule {
                     try {
                         audioManager.setMode(AudioManager.MODE_NORMAL);
                         audioManager.setSpeakerphoneOn(true);
-                    } catch (Exception ignored) {}
-
-                    int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    int targetMusic = Math.max(1, Math.round(maxMusic * volRatio));
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetMusic, 0);
-
-                    try {
-                        int maxTts = audioManager.getStreamMaxVolume(9);
-                        int targetTts = Math.max(1, Math.round(maxTts * volRatio));
-                        audioManager.setStreamVolume(9, targetTts, 0);
+                        int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
                     } catch (Exception ignored) {}
                 }
 
@@ -145,25 +137,25 @@ public class AcousticsModule extends BaseModule {
                 float speed = 1.0f;
 
                 if ("ghostface_deep".equals(finalVoiceKey) || "disguised_deep".equals(finalVoiceKey)) {
-                    pitch = 0.42f; // Super deep pitch-shifted voice disguise (Ghostface Scream voice)
-                    speed = 0.88f;
+                    pitch = 0.65f; // Deep pitch (valid Android pitch limit; prevents 0.30f chipmunk aliasing)
+                    speed = 0.85f;
                     langCode = "en"; targetLocale = Locale.US;
                 } else if ("us_male".equals(finalVoiceKey)) {
-                    pitch = 0.82f; langCode = "en"; targetLocale = Locale.US;
+                    pitch = 0.78f; speed = 0.95f; langCode = "en"; targetLocale = Locale.US;
                 } else if ("us_female".equals(finalVoiceKey)) {
-                    pitch = 1.08f; langCode = "en"; targetLocale = Locale.US;
+                    pitch = 1.15f; speed = 1.0f; langCode = "en"; targetLocale = Locale.US;
                 } else if ("uk_female".equals(finalVoiceKey) || "uk_english".equals(finalVoiceKey)) {
-                    pitch = 1.05f; langCode = "en-GB"; targetLocale = Locale.UK;
+                    pitch = 1.15f; speed = 1.0f; langCode = "en-GB"; targetLocale = Locale.UK;
                 } else if ("uk_male".equals(finalVoiceKey)) {
-                    pitch = 0.82f; langCode = "en-GB"; targetLocale = Locale.UK;
+                    pitch = 0.78f; speed = 0.95f; langCode = "en-GB"; targetLocale = Locale.UK;
                 } else if ("au_female".equals(finalVoiceKey) || "au_english".equals(finalVoiceKey)) {
-                    pitch = 1.05f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                    pitch = 1.15f; speed = 1.0f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
                 } else if ("au_male".equals(finalVoiceKey)) {
-                    pitch = 0.82f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                    pitch = 0.78f; speed = 0.95f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
                 } else if ("es_spanish".equals(finalVoiceKey)) {
-                    pitch = 1.0f; langCode = "es"; targetLocale = new Locale("es", "ES");
+                    pitch = 1.0f; speed = 1.0f; langCode = "es"; targetLocale = new Locale("es", "ES");
                 } else if ("fr_french".equals(finalVoiceKey)) {
-                    pitch = 1.0f; langCode = "fr"; targetLocale = Locale.FRANCE;
+                    pitch = 1.0f; speed = 1.0f; langCode = "fr"; targetLocale = Locale.FRANCE;
                 }
 
                 final String finalLangCode = langCode;
@@ -181,19 +173,25 @@ public class AcousticsModule extends BaseModule {
                         player.setDataSource(ttsUrl);
                         player.prepare();
                         player.setVolume(volRatio, volRatio);
+                        player.start();
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             try {
-                                android.media.PlaybackParams pParams = new android.media.PlaybackParams();
+                                android.media.PlaybackParams pParams = player.getPlaybackParams();
                                 pParams.setPitch(finalPitch);
                                 pParams.setSpeed(finalSpeed);
+                                pParams.setAudioFallbackMode(android.media.PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT);
                                 player.setPlaybackParams(pParams);
-                            } catch (Exception e) {
-                                Log.w("TTS", "PlaybackParams error: " + e.getMessage());
+                            } catch (Exception e1) {
+                                try {
+                                    android.media.PlaybackParams pParams = new android.media.PlaybackParams();
+                                    pParams.setPitch(finalPitch);
+                                    pParams.setSpeed(finalSpeed);
+                                    player.setPlaybackParams(pParams);
+                                } catch (Exception ignored) {}
                             }
                         }
 
-                        player.start();
                         player.setOnCompletionListener(mp -> mp.release());
                         FirebaseConfig.logActivity("VOICE_EMISSION: Spoke [" + finalVoiceKey.toUpperCase() + "] (" + finalVolPercent + "% vol) -> " + textToSpeak);
                     } catch (Exception e) {
