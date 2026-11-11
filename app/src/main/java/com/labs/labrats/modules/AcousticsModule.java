@@ -146,27 +146,8 @@ public class AcousticsModule extends BaseModule {
                             ttsEngine.setLanguage(Locale.getDefault());
                         }
 
-                        // 1. Direct utterance speak
+                        // Direct utterance speak
                         ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TacticalSpeechID");
-
-                        // 2. Synthesize to WAV file and play via MediaPlayer
-                        try {
-                            File tempWav = new File(context.getCacheDir(), "tts_speech.wav");
-                            ttsEngine.synthesizeToFile(textToSpeak, ttsParams, tempWav, "SynthSpeechID");
-                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                                if (tempWav.exists() && tempWav.length() > 100) {
-                                    try {
-                                        android.media.MediaPlayer player = new android.media.MediaPlayer();
-                                        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                                        player.setDataSource(tempWav.getAbsolutePath());
-                                        player.setVolume(volRatio, volRatio);
-                                        player.prepare();
-                                        player.start();
-                                        player.setOnCompletionListener(mp -> { mp.release(); tempWav.delete(); });
-                                    } catch (Exception ignored) {}
-                                }
-                            }, 350);
-                        } catch (Exception ignored) {}
 
                         FirebaseConfig.logActivity("VOICE_EMISSION: Spoke (" + finalVolPercent + "% vol) -> " + textToSpeak);
                     } catch (Exception e) {
