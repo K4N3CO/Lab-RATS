@@ -1460,26 +1460,47 @@ function toggleStealth() {
 }
 
 // Robust Audio Bridge Logic with _ih cleanup
+let audioCtx = null;
+
+async function pollAudioChunk() {
+  if (!_ac) return;
+  try {
+    const res = await fetch('/audio/chunk?t=' + Date.now());
+    if (res.ok) {
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength > 100 && _ac) {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+        }
+        audioCtx.decodeAudioData(buf, decoded => {
+          if (_ac && decoded) {
+            const source = audioCtx.createBufferSource();
+            source.buffer = decoded;
+            source.connect(audioCtx.destination);
+            source.start(0);
+          }
+        }, err => console.warn("Audio decode notice:", err));
+      }
+    }
+  } catch (e) {
+    console.warn("Audio chunk fetch notice:", e);
+  }
+  if (_ac) {
+    setTimeout(pollAudioChunk, 900);
+  }
+}
+
 async function toggleLiveAudio() {
   const btn = document.getElementById('live-listen-btn');
-  const player = document.getElementById('live-audio-player');
-  if (audioStream) {
-    fetch('/audio/speakerphone?enable=false').catch(() => {});
-    if (_ih) {
-      try { _ih.processor.disconnect(); } catch (e) {}
-      try { _ih.source.disconnect(); } catch (e) {}
-      try { if (_ih.context.state !== 'closed') _ih.context.close(); } catch (e) {}
-      try { _ih.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
-      _ih = null;
-    }
-    audioStream.getTracks().forEach(t => t.stop());
-    if (player) {
-      player.pause();
-      player.removeAttribute('src');
-      player.load();
-    }
-    audioStream = null;
+  if (_ac) {
     _ac = false;
+    if (audioCtx) {
+      try { if (audioCtx.state !== 'closed') audioCtx.close(); } catch (e) {}
+      audioCtx = null;
+    }
     if (btn) {
       btn.innerText = 'LISTEN_LIVE';
       btn.style.borderColor = 'var(--neon-cyan)';
@@ -1487,36 +1508,18 @@ async function toggleLiveAudio() {
       btn.style.background = 'transparent';
       btn.style.opacity = '1';
     }
+    showToast("LIVE_LISTENING_STOPPED");
   } else {
+    _ac = true;
     if (btn) {
-      btn.innerText = 'CONNECTING...';
-      btn.style.opacity = '0.5';
+      btn.innerText = 'STOP_LISTENING';
+      btn.style.opacity = '1';
+      btn.style.borderColor = 'var(--danger)';
+      btn.style.color = 'var(--danger)';
+      btn.style.background = 'rgba(255, 49, 49, 0.05)';
     }
-    if (player) {
-      player.src = '/audio/stream?t=' + Date.now();
-      const playPromise = player.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          _ac = true;
-          if (btn) {
-            btn.innerText = 'STOP_LISTENING';
-            btn.style.opacity = '1';
-            btn.style.borderColor = 'var(--danger)';
-            btn.style.color = 'var(--danger)';
-            btn.style.background = 'rgba(255, 49, 49, 0.05)';
-          }
-          audioStream = { getTracks: () => [{ stop: () => { try { player.pause(); player.removeAttribute('src'); player.load(); } catch(e){} } }] };
-        }).catch(e => {
-          console.warn("Live audio stream autoplay notice:", e);
-          _ac = false;
-          if (btn) {
-            btn.innerText = 'LISTEN_LIVE';
-            btn.style.opacity = '1';
-          }
-          showToast('Audio stream ready. Tap LISTEN_LIVE again if blocked by browser.', 'info');
-        });
-      }
-    }
+    showToast("VIRTUAL_COMM: Audio uplink engaged");
+    pollAudioChunk();
   }
 }
 

@@ -451,8 +451,7 @@ public class MediaFrameworkService extends Service {
                     mediaRecorder.setAudioSource(source);
                     mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
                     mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                    mediaRecorder.setAudioEncodingBitRate(128000);
-                    mediaRecorder.setAudioSamplingRate(44100);
+                    mediaRecorder.setAudioEncodingBitRate(96000);
                     mediaRecorder.setOutputFile(currentRecordingPath);
 
                     // Set max duration if specified

