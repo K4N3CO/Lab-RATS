@@ -256,6 +256,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .setTargetRotation(targetRotation)
+                                .setTargetResolution(new android.util.Size(streamWidth, streamHeight))
                                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888);
 
                         imageAnalysis = analysisBuilder.build();

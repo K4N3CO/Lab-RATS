@@ -204,12 +204,12 @@ public class OpticsModule extends BaseModule {
         html.append("var currentRotation = 0;");
         html.append("const resOptions = ['ultra_low', 'very_low', 'low', 'medium', 'high', 'very_high'];");
         html.append("const resConfig = {");
-        html.append("  'ultra_low': { w: 640, h: 480, q: 15, fps: 2 },");
-        html.append("  'very_low':  { w: 640, h: 480, q: 25, fps: 4 },");
-        html.append("  'low':       { w: 640, h: 480, q: 35, fps: 6 },");
-        html.append("  'medium':    { w: 640, h: 480, q: 45, fps: 8 },");
-        html.append("  'high':      { w: 1920, h: 1080, q: 85, fps: 10 },");
-        html.append("  'very_high': { w: 1920, h: 1080, q: 100, fps: 10 }");
+        html.append("  'ultra_low': { w: 640, h: 480, q: 35, fps: 15 },");
+        html.append("  'very_low':  { w: 640, h: 480, q: 50, fps: 20 },");
+        html.append("  'low':       { w: 640, h: 480, q: 60, fps: 25 },");
+        html.append("  'medium':    { w: 960, h: 540, q: 70, fps: 30 },");
+        html.append("  'high':      { w: 1280, h: 720, q: 75, fps: 30 },");
+        html.append("  'very_high': { w: 1280, h: 720, q: 85, fps: 30 }");
         html.append("};");
         html.append("var streamWidth = ").append(width).append(";");
         html.append("var streamHeight = ").append(height).append(";");
