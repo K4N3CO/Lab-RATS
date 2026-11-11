@@ -111,22 +111,45 @@ public class AcousticsModule extends BaseModule {
             try {
                 AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
                 if (audioManager != null) {
-                    int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVol, 0);
+                    try {
+                        audioManager.setMode(AudioManager.MODE_NORMAL);
+                        audioManager.setSpeakerphoneOn(true);
+                    } catch (Exception ignored) {}
+
+                    int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
+                    int maxAlarm = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
+                    int maxNotif = audioManager.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+                    audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, maxNotif, 0);
                 }
+
+                android.os.Bundle ttsParams = new android.os.Bundle();
+                ttsParams.putInt(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC);
+                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
+
+                Runnable speakTask = () -> {
+                    try {
+                        int res = ttsEngine.setLanguage(Locale.US);
+                        if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
+                            ttsEngine.setLanguage(Locale.getDefault());
+                        }
+                        ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TacticalSpeechID");
+                        FirebaseConfig.logActivity("VOICE_EMISSION: Spoke text -> " + textToSpeak);
+                    } catch (Exception e) {
+                        Log.e("TTS", "Speak error: " + e.getMessage());
+                    }
+                };
 
                 if (ttsEngine == null) {
                     ttsEngine = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
                         if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                            ttsEngine.setLanguage(Locale.US);
-                            ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "TacticalSpeechID");
+                            speakTask.run();
                         }
                     });
                 } else {
-                    ttsEngine.setLanguage(Locale.US);
-                    ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "TacticalSpeechID");
+                    speakTask.run();
                 }
-                FirebaseConfig.logActivity("VOICE_EMISSION: Spoke text -> " + textToSpeak);
             } catch (Exception e) {
                 Log.e("TTS", "Error speaking text: " + e.getMessage());
             }
