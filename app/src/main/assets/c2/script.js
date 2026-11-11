@@ -1001,7 +1001,7 @@ async function checkGhostStatus() {
 
       const screenStream = document.getElementById("ghost-screen-stream");
       if (screenStream) {
-        screenStream.style.filter = "none";
+        screenStream.style.filter = data.blackout ? "brightness(3.2) contrast(1.2)" : "none";
       }
 
       if (antiRemovalBtn) {
