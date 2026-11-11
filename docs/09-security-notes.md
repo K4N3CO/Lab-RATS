@@ -1,4 +1,4 @@
-# 🛡️ Security Notes & Considerations (Lab-RATS v1.6.0)
+# 9 ⏤ Security Notes & Considerations  
 
 > **Audience**: Operators, security researchers, and analysts evaluating threat models, transport security, forensic footprints, and attack surface mitigations on target deployments.
 
