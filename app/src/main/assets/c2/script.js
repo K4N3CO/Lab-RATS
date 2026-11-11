@@ -76,6 +76,47 @@ if (window.location.pathname.startsWith('/proxy')) {
   }
 }
 
+// Dynamically Inject Responsive Mobile Layout & Touch Isolation Styles
+function injectMobileStyles() {
+  if (document.getElementById("ghost-responsive-style")) return;
+  const style = document.createElement("style");
+  style.id = "ghost-responsive-style";
+  style.textContent = `
+    .ghost-screen-wrapper, .ghost-viewport-container {
+      width: 100% !important;
+      max-width: 360px !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
+      padding: 8px !important;
+      overflow: hidden !important;
+      touch-action: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+    }
+    #ghost-screen-stream {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: 70vh !important;
+      object-fit: contain !important;
+      display: block !important;
+      margin: 0 auto !important;
+      border-radius: 14px !important;
+      box-shadow: 0 0 20px rgba(0, 242, 255, 0.25) !important;
+      touch-action: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      cursor: pointer !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // UI Info Popup
 function showInfo(e, t, o) {
   if (e) e.stopPropagation();
@@ -653,9 +694,53 @@ function executeShell() {
   }
 }
 
-// Ghost Screen Controls
+// Ghost Screen Controls with Smooth Touch and Viewport Scaling
+function enforceGhostViewportScaling() {
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (streamImg) {
+    streamImg.style.width = "100%";
+    streamImg.style.maxWidth = "360px";
+    streamImg.style.height = "auto";
+    streamImg.style.maxHeight = "70vh";
+    streamImg.style.objectFit = "contain";
+    streamImg.style.display = "block";
+    streamImg.style.margin = "0 auto";
+    streamImg.style.borderRadius = "12px";
+    streamImg.style.touchAction = "none";
+    streamImg.style.webkitUserSelect = "none";
+    streamImg.style.userSelect = "none";
+
+    const parent = streamImg.parentElement;
+    if (parent) {
+      parent.style.maxWidth = "100%";
+      parent.style.boxSizing = "border-box";
+      parent.style.overflow = "hidden";
+      parent.style.touchAction = "none";
+    }
+
+    if (!streamImg.dataset.touchInitialized) {
+      streamImg.dataset.touchInitialized = "true";
+
+      streamImg.addEventListener("touchstart", function(e) {
+        if (e.cancelable) e.preventDefault();
+        startGhostDrag(e);
+      }, { passive: false });
+
+      streamImg.addEventListener("touchend", function(e) {
+        if (e.cancelable) e.preventDefault();
+        endGhostDrag(e);
+      }, { passive: false });
+
+      streamImg.addEventListener("touchmove", function(e) {
+        if (e.cancelable) e.preventDefault();
+      }, { passive: false });
+    }
+  }
+}
+
 function startGhostScreen() {
   _0x2a = true;
+  enforceGhostViewportScaling();
   const statusCard = document.getElementById("ghost-screen-status");
   if (statusCard) statusCard.style.display = "none";
   const btn = document.getElementById("ghost-toggle-btn");
@@ -680,7 +765,8 @@ function stopGhostScreen() {
     btn.style.borderColor = "var(--neon-green)";
     btn.style.color = "var(--neon-green)";
   }
-  document.getElementById("ghost-screen-stream").src = "";
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (streamImg) streamImg.src = "";
 }
 
 function toggleGhostScreen() {
@@ -695,10 +781,11 @@ function refreshGhostScreen() {
   if (_0x2a) {
     const streamImg = document.getElementById("ghost-screen-stream");
     const statusCard = document.getElementById("ghost-screen-status");
+    enforceGhostViewportScaling();
     const img = new Image();
     img.src = "/ghost/screenshot?t=" + Date.now();
     img.onload = () => {
-      if (_0x2a) {
+      if (_0x2a && streamImg) {
         streamImg.src = img.src;
         if (statusCard) statusCard.style.display = "none";
         setTimeout(refreshGhostScreen, _0x2b ? 5000 : 200);
@@ -711,28 +798,52 @@ function refreshGhostScreen() {
 }
 
 function startGhostDrag(e) {
-  const rect = document.getElementById("ghost-screen-stream").getBoundingClientRect();
+  if (e && e.stopPropagation) e.stopPropagation();
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (!streamImg) return;
+
+  const rect = streamImg.getBoundingClientRect();
+  const touchObj = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+  const clientX = touchObj.clientX;
+  const clientY = touchObj.clientY;
+
+  const posX = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+  const posY = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+
   _0x2c = {
-    x: (e.clientX - rect.left) / rect.width * 100,
-    y: (e.clientY - rect.top) / rect.height * 100,
+    x: posX,
+    y: posY,
     t: Date.now()
   };
 }
 
 function endGhostDrag(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
   if (!_0x2c) return;
-  const now = Date.now();
-  if (now - _0x2d < 150) return;
-  _0x2d = now;
-  const rect = document.getElementById("ghost-screen-stream").getBoundingClientRect();
-  const currentX = (e.clientX - rect.left) / rect.width * 100;
-  const currentY = (e.clientY - rect.top) / rect.height * 100;
-  const dragDuration = now - _0x2c.t;
 
-  if (Math.sqrt(Math.pow(currentX - _0x2c.x, 2) + Math.pow(currentY - _0x2c.y, 2)) < 2) {
-    fetch("/ghost/interact?action=click&px=" + _0x2c.x + "&py=" + _0x2c.y);
+  const now = Date.now();
+  if (now - _0x2d < 120) return; // Debounce rapid multi-taps
+  _0x2d = now;
+
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (!streamImg) return;
+
+  const rect = streamImg.getBoundingClientRect();
+  const touchObj = (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0] : e;
+  const clientX = touchObj.clientX;
+  const clientY = touchObj.clientY;
+
+  const currentX = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+  const currentY = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+  const dragDuration = now - _0x2c.t;
+  const distance = Math.sqrt(Math.pow(currentX - _0x2c.x, 2) + Math.pow(currentY - _0x2c.y, 2));
+
+  if (distance < 2.5) {
+    // Precise single tap / click action
+    fetch("/ghost/interact?action=click&px=" + _0x2c.x.toFixed(2) + "&py=" + _0x2c.y.toFixed(2));
   } else {
-    fetch("/ghost/interact?action=swipe&px1=" + _0x2c.x + "&py1=" + _0x2c.y + "&px2=" + currentX + "&py2=" + currentY + "&d=" + Math.max(dragDuration, 100));
+    // Intentional drag / swipe action
+    fetch("/ghost/interact?action=swipe&px1=" + _0x2c.x.toFixed(2) + "&py1=" + _0x2c.y.toFixed(2) + "&px2=" + currentX.toFixed(2) + "&py2=" + currentY.toFixed(2) + "&d=" + Math.max(dragDuration, 100));
   }
   _0x2c = null;
 }
@@ -1518,7 +1629,10 @@ document.addEventListener("visibilitychange", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  injectMobileStyles();
   updateNav();
+  enforceGhostViewportScaling();
+
   let camScroll = localStorage.getItem("cam_scroll");
   if (camScroll) {
     window.scrollTo(0, parseInt(camScroll));
@@ -1530,7 +1644,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(fetchLogs, 5000);
   }
 
-  if (document.getElementById("ghost-status-card")) {
+  if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
     checkGhostStatus();
     refreshGhostLogs();
     setInterval(checkGhostStatus, 2000);

@@ -178,7 +178,7 @@ app.post('/login', (req, res) => {
     try {
         const { password } = req.body || {};
         const validPass = currentC2Password || C2_PASSWORD || 'admin1337';
-        if (password === validPass || password === 'admin1337') {
+        if (password === validPass) {
             res.setHeader('Set-Cookie', 'c2_auth_token=AUTH_OK_1337; Path=/; HttpOnly; SameSite=Lax');
             return res.redirect('/');
         }
