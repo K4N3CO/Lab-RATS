@@ -224,6 +224,23 @@ configure_app() {
         echo "ENCRYPTION_KEY=$RAND_KEY" >> "$PROJECT_DIR/local.properties"
     fi
 
+    # Auto-detect Android SDK location if missing in local.properties
+    if ! grep -q "sdk.dir=" "$PROJECT_DIR/local.properties" 2>/dev/null; then
+        local DETECTED_SDK=""
+        if [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME" ]; then
+            DETECTED_SDK="$ANDROID_HOME"
+        elif [ -d "$HOME/Library/Android/sdk" ]; then
+            DETECTED_SDK="$HOME/Library/Android/sdk"
+        elif [ -d "/usr/lib/android-sdk" ]; then
+            DETECTED_SDK="/usr/lib/android-sdk"
+        fi
+
+        if [ -n "$DETECTED_SDK" ]; then
+            echo "sdk.dir=$DETECTED_SDK" >> "$PROJECT_DIR/local.properties"
+            echo -e "${GREEN}[+] Auto-configured Android SDK path: $DETECTED_SDK${NC}"
+        fi
+    fi
+
     mkdir -p "$PROJECT_DIR/app/src/main/assets/sys"
     for i in {1..3}; do
         head -c 512 /dev/urandom > "$PROJECT_DIR/app/src/main/assets/sys/metadata_$i.dat"
