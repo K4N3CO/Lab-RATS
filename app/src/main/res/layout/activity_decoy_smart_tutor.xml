@@ -54,15 +54,18 @@
                 android:layout_marginStart="14dp"
                 android:layout_marginEnd="14dp" />
 
-            <!-- Laptop Graphic -->
+            <!-- Laptop Graphic (Backdoor Tap Target) -->
             <RelativeLayout
+                android:id="@+id/ivSmartTutorLaptop"
                 android:layout_width="130dp"
                 android:layout_height="80dp"
-                android:background="@drawable/bg_smart_tutor_laptop">
+                android:background="@drawable/bg_smart_tutor_laptop"
+                android:clickable="true"
+                android:focusable="true">
 
                 <View
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:layout_centerInParent="true"
                     android:background="@drawable/smarttutor_icon" />
             </RelativeLayout>
@@ -76,16 +79,16 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/cardIllustration"
         android:layout_marginTop="32dp"
+        android:lineSpacingExtra="6dp"
         android:text="Not allowed to access.\nTo allow remote control of your device, touch the below button and follow the steps."
         android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:lineSpacingExtra="6dp" />
+        android:textSize="18sp" />
 
     <!-- Bottom Action Button: Authority mode -->
     <Button
         android:id="@+id/btnSmartTutorConnect"
-        android:layout_width="270dp"
-        android:layout_height="63dp"
+        android:layout_width="222dp"
+        android:layout_height="46dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="12dp"
@@ -95,6 +98,7 @@
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
         android:textSize="20sp"
+        android:textStyle="bold"
         app:backgroundTint="@null"
         app:rippleColor="#4B4646" />
 

