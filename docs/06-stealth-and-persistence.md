@@ -1,4 +1,4 @@
-# Stealth and persistence
+# 06 ⏤ Stealth and persistence
 
 ## Identity layers
 
@@ -8,6 +8,8 @@ few seconds after first launch. The package stays whatever you built.
 Decoy screens (Play Protect, Calculator, Weather, System Update) are real activities, not images. The
 calculator computes; the weather screen pulls Open-Meteo. Tapping around behaves normally until you
 hit the unlock gesture.
+
+---
 
 ## Recovery hooks
 
@@ -22,6 +24,8 @@ hit the unlock gesture.
 `!RESTART_C2` needs the SMS receiver alive, so it survives a process kill but not a force-stop of
 the package. It also matches on substring — any text containing it triggers.
 
+---
+
 ## Persistence layers
 
 1. **Accessibility watchdog** — an enabled Accessibility service is high-survival; it reanimates the
@@ -33,15 +37,21 @@ the package. It also matches on substring — any text containing it triggers.
 These compose. Disabling Accessibility breaks the chain at step 1 and the rest degrade to
 opportunistic restarts.
 
+---
+
 ## Anti-removal
 
 Blocks Settings → Uninstall and Force Stop by intercepting the uninstall intent and re-launching.
 It is not bulletproof: `adb uninstall` and Safe Mode both bypass it, as does a Play Store update.
 
+---
+
 ## Recent-apps ghosting
 
 Hard-coded — the activity never appears in Recents. You can't turn it off, and it's the fastest way
 to confirm the app is running: it isn't in the switcher but it is in Settings → Apps.
+
+---
 
 ## Detection surface
 
