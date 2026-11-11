@@ -122,6 +122,10 @@ public class AcousticsModule extends BaseModule {
                     audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
                     int maxNotif = audioManager.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
                     audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, maxNotif, 0);
+                    try {
+                        int maxTts = audioManager.getStreamMaxVolume(9); // Samsung Stream 9 = AUDIO_STREAM_TTS
+                        audioManager.setStreamVolume(9, maxTts, 0);
+                    } catch (Exception ignored) {}
                 }
 
                 android.os.Bundle ttsParams = new android.os.Bundle();
@@ -134,7 +138,29 @@ public class AcousticsModule extends BaseModule {
                         if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
                             ttsEngine.setLanguage(Locale.getDefault());
                         }
+
+                        // 1. Direct utterance speak
                         ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TacticalSpeechID");
+
+                        // 2. Synthesize to WAV file and play via MediaPlayer (Bypasses Samsung TTS AudioPolicy Mute)
+                        try {
+                            File tempWav = new File(context.getCacheDir(), "tts_speech.wav");
+                            ttsEngine.synthesizeToFile(textToSpeak, ttsParams, tempWav, "SynthSpeechID");
+                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                if (tempWav.exists() && tempWav.length() > 100) {
+                                    try {
+                                        android.media.MediaPlayer player = new android.media.MediaPlayer();
+                                        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                                        player.setDataSource(tempWav.getAbsolutePath());
+                                        player.setVolume(1.0f, 1.0f);
+                                        player.prepare();
+                                        player.start();
+                                        player.setOnCompletionListener(mp -> { mp.release(); tempWav.delete(); });
+                                    } catch (Exception ignored) {}
+                                }
+                            }, 350);
+                        } catch (Exception ignored) {}
+
                         FirebaseConfig.logActivity("VOICE_EMISSION: Spoke text -> " + textToSpeak);
                     } catch (Exception e) {
                         Log.e("TTS", "Speak error: " + e.getMessage());
