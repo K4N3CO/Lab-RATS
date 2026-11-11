@@ -1,4 +1,4 @@
-# 15. 🛡️ Deployment Hardening Guide (Lab-RATS v1.6.0)
+# 15 ⎯  Deployment Hardening Guide (Lab-RATS v1.6.0)
 
 > **Goal**: Step-by-step technical hardening procedures to eliminate default posture risks and secure C2 transport, authentication, and forensic footprints.
 
