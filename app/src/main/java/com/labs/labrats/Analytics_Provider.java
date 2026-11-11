@@ -202,7 +202,16 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
     @androidx.camera.camera2.interop.ExperimentalCamera2Interop
     public void startStreaming(String cameraId, int width, int height, int quality) {
         if (cameraProvider == null) {
-            Log.e(TAG, "OPTICS_ERROR: CameraProvider not ready. Deferring stream...");
+            Log.w(TAG, "OPTICS_WARN: CameraProvider not ready yet. Scheduling stream start...");
+            com.google.common.util.concurrent.ListenableFuture<ProcessCameraProvider> future = ProcessCameraProvider.getInstance(this);
+            future.addListener(() -> {
+                try {
+                    cameraProvider = future.get();
+                    startStreaming(cameraId, width, height, quality);
+                } catch (Exception e) {
+                    Log.e(TAG, "CameraProvider init error: " + e.getMessage());
+                }
+            }, androidx.core.content.ContextCompat.getMainExecutor(this));
             return;
         }
         
