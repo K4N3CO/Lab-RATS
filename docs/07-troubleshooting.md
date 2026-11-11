@@ -1,4 +1,4 @@
-# Troubleshooting
+# 07 ⏤ Troubleshooting
 
 ## Build
 
@@ -28,6 +28,8 @@ swaps, the decoy activity failed to start — check `logcat` for `DecoyActivity`
 Clear the launcher cache or reinstall. The adaptive icon is written at runtime and some launchers
 cache hard.
 
+---
+
 ## Install
 
 **"App not installed" / parse error**
@@ -40,6 +42,8 @@ the Play Protect decoy carrier reduces friction because the fake scan screen rea
 
 **Install succeeds, nothing happens**
 The app must be opened once. Nothing starts from the installer.
+
+---
 
 ## Runtime
 
@@ -55,4 +59,12 @@ the relay.
 OEM battery/background manager. Disable battery optimization for the package, then
 REPAIR PERMISSIONS. On Xiaomi and Huawei also enable Autostart.
 
-**Termux commands fail**
+---
+
+## Termux Bridge Issues
+"**Termux `allow-external-apps` setting is disabled**" *(Most Common)*.
+<br>**Solution**: **On the Target Device** open **Termux and run**:
+```zsh
+echo "allow-external-apps = true" >> ~/.termux/termux.properties
+termux-reload-settings
+```
