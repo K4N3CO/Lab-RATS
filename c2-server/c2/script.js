@@ -795,6 +795,20 @@ function ghostType() {
   e.value = "";
 }
 
+function transmitVoicePayload() {
+  const input = document.getElementById("tts-input");
+  if (!input || !input.value.trim()) { showToast("PLEASE_ENTER_TEXT_TO_EMIT", "error"); return; }
+  const text = input.value.trim();
+  showToast("TRANSMITTING_VOICE_PAYLOAD...");
+  fetch("/audio/speak?text=" + encodeURIComponent(text))
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) { showToast("VOICE_EMISSION_QUEUED"); input.value = ""; }
+      else showToast("VOICE_EMISSION_FAILED", "error");
+    })
+    .catch(() => showToast("TRANSMISSION_ERROR", "error"));
+}
+
 // Base Actions
 function ghostAction(e) {
   fetch("/ghost/interact?action=" + e);

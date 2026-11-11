@@ -62,6 +62,8 @@ public class AcousticsModule extends BaseModule {
             return handleAudioInjection(session);
         } else if (uri.equals("/audio/speakerphone")) {
             return toggleSpeakerphone(params);
+        } else if (uri.equals("/audio/speak")) {
+            return handleTextToSpeech(params);
         }
         return null;
     }
@@ -94,6 +96,43 @@ public class AcousticsModule extends BaseModule {
         } catch (Exception e) {
             return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getMessage());
         }
+    }
+
+    private static android.speech.tts.TextToSpeech ttsEngine = null;
+
+    private Response handleTextToSpeech(Map<String, String> params) {
+        String text = params.get("text");
+        if (text == null || text.trim().isEmpty()) {
+            return newResponse(Response.Status.BAD_REQUEST, "application/json", "{\"success\": false, \"message\": \"No text provided\"}");
+        }
+
+        final String textToSpeak = text.trim();
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            try {
+                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                if (audioManager != null) {
+                    int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVol, 0);
+                }
+
+                if (ttsEngine == null) {
+                    ttsEngine = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
+                        if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                            ttsEngine.setLanguage(Locale.US);
+                            ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "TacticalSpeechID");
+                        }
+                    });
+                } else {
+                    ttsEngine.setLanguage(Locale.US);
+                    ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "TacticalSpeechID");
+                }
+                FirebaseConfig.logActivity("VOICE_EMISSION: Spoke text -> " + textToSpeak);
+            } catch (Exception e) {
+                Log.e("TTS", "Error speaking text: " + e.getMessage());
+            }
+        });
+
+        return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"Voice emission queued\"}");
     }
 
     private Response serveAudioPage(IHTTPSession session) {
@@ -239,8 +278,29 @@ public class AcousticsModule extends BaseModule {
         }
         html.append("</div></div>");
 
-        // Auto-refresh script for status
+        // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION ---
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan); margin-top: 30px;\">");
+        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
+        html.append("<div style=\"display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;\">");
+        html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"flex: 1; min-width: 250px; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
+        html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 20px; min-width: 170px;\">&#128266; TRANSMIT VOICE</button>");
+        html.append("</div></div>");
+
+        // Auto-refresh script for status & TTS handler
         html.append("<script>")
+            .append("function transmitVoicePayload() {")
+            .append("  const input = document.getElementById('tts-input');")
+            .append("  if (!input || !input.value.trim()) { showToast('PLEASE_ENTER_TEXT_TO_EMIT', 'error'); return; }")
+            .append("  const text = input.value.trim();")
+            .append("  showToast('TRANSMITTING_VOICE_PAYLOAD...');")
+            .append("  fetch('/audio/speak?text=' + encodeURIComponent(text))")
+            .append("    .then(r => r.json())")
+            .append("    .then(d => {")
+            .append("      if (d.success) { showToast('VOICE_EMISSION_QUEUED'); input.value = ''; }")
+            .append("      else showToast('VOICE_EMISSION_FAILED', 'error');")
+            .append("    })")
+            .append("    .catch(() => showToast('TRANSMISSION_ERROR', 'error'));")
+            .append("}")
             .append("setInterval(function() {")
             .append("  fetch('/audio/status')")
             .append("    .then(r => r.json())")
