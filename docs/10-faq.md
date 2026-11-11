@@ -1,4 +1,4 @@
-# FAQ
+# 10 ⏤ FAQ
 
 **Does it need root?**
 No. Everything works unrooted. Root only expands the shell and enables priv-app install via the AOSP
