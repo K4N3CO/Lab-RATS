@@ -32,8 +32,7 @@ is direct reachability. Every control below is a trade against that. Pick delibe
 
 | Item | Default | Severity |
 | --- | --- | --- |
-| Password | `admin1337` | **Critical** — published, no lockout |
-| Master override | Always accepted, even after change | **High** — can't be revoked by config |
+| Password | `admin1337` | **Critical** — published |
 | Session cookie | Constant `AUTH_OK_1337`, all devices | **High** — portable, no expiry |
 | Transport | Plain HTTP | **High** on shared networks |
 | Rate limiting | None | **High** — makes short passwords guessable |
@@ -57,20 +56,7 @@ against offline-speed guessing over the wire.
 - Unique per device. A shared password across a fleet means one leak is the whole fleet.
 - Change it at first login, before anything else.
 
-### 1.2 Kill the master override
-
-`admin1337` is hardcoded as a permanent fallback in `PasswordHasher`. It survives every password
-change. To remove it, edit the fallback comparison and rebuild:
-
-```bash
-grep -rn "admin1337" app/src/main/java/com/labs/labrats/
-```
-
-Change the literal to something only you know — cheaper than removing the branch, and it keeps the
-recovery path if you lock yourself out. **Keep a copy of the new value outside the device**, or you
-have no recovery once the password is also lost.
-
-### 1.3 Replace the session cookie
+### 1.2 Replace the session cookie
 
 The cookie value `AUTH_OK_1337` is identical on every device and every install, and the app checks
 presence, not signature. A cookie lifted from one device works on all of them, forever.
@@ -309,8 +295,7 @@ it.
 ## 11. Residual risk
 
 After everything above, these remain true:
-
-- `admin1337` still works unless you patched it.
+    
 - The cookie is a bearer token with no expiry.
 - Traffic is cleartext unless you tunnelled.
 - Anyone who reaches the login page can hammer it.
