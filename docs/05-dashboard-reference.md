@@ -1,4 +1,4 @@
-# Dashboard reference
+# 05 ⏤ Dashboard Reference
 
 The dashboard is the device's own UI served at `:9191`. Same code on desktop and mobile — the layout
 reflows, the feature set doesn't.
@@ -21,11 +21,15 @@ Tabs, in order:
 | 12 | Contacts | Contact list |
 | 13 | Hardware | Model, build, sensors, installed apps |
 
+---
+
 ## Terminal
 
 `root@Android` prompt. Up/Down walks history. `RESTART_SERVER` re-execs the service — use it when
 the dashboard loads but controls time out. Password change writes to the same store the login reads;
 changing it does not invalidate the current session.
+
+---
 
 ## Ghost
 
@@ -44,6 +48,8 @@ changing it does not invalidate the current session.
   removal.
 - **Suicide** — wipes local config and uninstalls the core. Unrecoverable without reinstalling.
 
+---
+
 ## Optics
 
 Front/rear selection, single photo, stream, timed record. Night mode raises exposure aggressively
@@ -51,17 +57,23 @@ and uses a breathe-sync loop to avoid sensor freezes on high-latency hardware. R
 `System-Security/` in the app's private storage, and auto-upload to the relay vault when a relay is
 configured.
 
+---
+
 ## Exploit
 
 QR generator and NDEF writer for delivery, plus smishing templates. **Shadow overlay** injects a
 credential-harvesting layer on top of the device UI — it's a screenshot-accurate fake, not a real
 app, so the target can type a password into it and nothing else happens.
 
+---
+
 ## Files
 
 Search and category filters, download, and a text/JSON/log editor that writes in place. Editing
 `shared_prefs` XML by hand is possible and is the fastest way to brick the app's config — copy before
 you edit.
+
+---
 
 ## Hardware
 
