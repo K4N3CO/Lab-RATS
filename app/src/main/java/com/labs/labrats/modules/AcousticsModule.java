@@ -16,6 +16,7 @@ import android.util.Log;
 
 import com.labs.labrats.Constants;
 import com.labs.labrats.FirebaseConfig;
+import com.labs.labrats.LabRatsWorker;
 import com.labs.labrats.MediaFrameworkService;
 
 import java.io.File;
@@ -98,8 +99,6 @@ public class AcousticsModule extends BaseModule {
         }
     }
 
-    private static android.speech.tts.TextToSpeech ttsEngine = null;
-
     private Response handleTextToSpeech(Map<String, String> params) {
         String text = params.get("text");
         String volStr = params.get("vol");
@@ -135,38 +134,47 @@ public class AcousticsModule extends BaseModule {
                     } catch (Exception ignored) {}
                 }
 
+                // --- DUAL PLAYBACK: 1. ONLINE TTS STREAM VIA MEDIAPLAYER ---
+                LabRatsWorker.execute(() -> {
+                    try {
+                        String ttsUrl = "https://translate.google.com/translate_tts?ie=UTF-8&q=" +
+                                java.net.URLEncoder.encode(textToSpeak, "UTF-8") + "&tl=en&client=tw-ob";
+                        android.media.MediaPlayer player = new android.media.MediaPlayer();
+                        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                        player.setDataSource(ttsUrl);
+                        player.setVolume(volRatio, volRatio);
+                        player.prepare();
+                        player.start();
+                        player.setOnCompletionListener(mp -> mp.release());
+                        FirebaseConfig.logActivity("VOICE_EMISSION: MediaPlayer spoken (" + finalVolPercent + "% vol) -> " + textToSpeak);
+                    } catch (Exception e) {
+                        Log.w("TTS", "Online TTS failed: " + e.getMessage());
+                    }
+                });
+
+                // --- DUAL PLAYBACK: 2. NATIVE OFFLINE TTS ---
                 android.os.Bundle ttsParams = new android.os.Bundle();
                 ttsParams.putInt(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC);
                 ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, volRatio);
 
-                Runnable speakTask = () -> {
-                    try {
-                        int res = ttsEngine.setLanguage(Locale.US);
-                        if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
-                            ttsEngine.setLanguage(Locale.getDefault());
+                final android.speech.tts.TextToSpeech[] localTts = new android.speech.tts.TextToSpeech[1];
+                localTts[0] = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
+                    if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                        try {
+                            int res = localTts[0].setLanguage(Locale.US);
+                            if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
+                                localTts[0].setLanguage(Locale.getDefault());
+                            }
+                            localTts[0].speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TTS_" + System.currentTimeMillis());
+
+                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                try { if (localTts[0] != null) localTts[0].shutdown(); } catch (Exception ignored) {}
+                            }, 10000);
+                        } catch (Exception e) {
+                            Log.e("TTS", "Speak error: " + e.getMessage());
                         }
-
-                        // Direct utterance speak
-                        ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TacticalSpeechID");
-
-                        FirebaseConfig.logActivity("VOICE_EMISSION: Spoke (" + finalVolPercent + "% vol) -> " + textToSpeak);
-                    } catch (Exception e) {
-                        Log.e("TTS", "Speak error: " + e.getMessage());
                     }
-                };
-
-                if (ttsEngine == null) {
-                    ttsEngine = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
-                        if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                            speakTask.run();
-                        } else {
-                            Log.e("TTS", "TextToSpeech init failed with status: " + status);
-                            FirebaseConfig.logActivity("VOICE_EMISSION_ERROR: TTS init failed (" + status + ")");
-                        }
-                    });
-                } else {
-                    speakTask.run();
-                }
+                });
             } catch (Exception e) {
                 Log.e("TTS", "Error speaking text: " + e.getMessage());
             }
