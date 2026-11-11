@@ -1494,27 +1494,28 @@ async function toggleLiveAudio() {
     }
     if (player) {
       player.src = '/audio/stream?t=' + Date.now();
-      player.play().then(() => {
-        _ac = true;
-        if (btn) {
-          btn.innerText = 'STOP_LISTENING';
-          btn.style.opacity = '1';
-          btn.style.borderColor = 'var(--danger)';
-          btn.style.color = 'var(--danger)';
-          btn.style.background = 'rgba(255, 49, 49, 0.05)';
-        } else {
-          showToast("VIRTUAL_COMM: Audio bridge established");
-        }
-        audioStream = { getTracks: () => [{ stop: () => { player.pause(); player.removeAttribute('src'); player.load(); } }] };
-      }).catch(e => {
-        console.error(e);
-        _ac = false;
-        if (btn) {
-          btn.innerText = 'LISTEN_LIVE';
-          btn.style.opacity = '1';
-        }
-        showToast('Connection failed. Audio bypass may be active.', 'error');
-      });
+      const playPromise = player.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          _ac = true;
+          if (btn) {
+            btn.innerText = 'STOP_LISTENING';
+            btn.style.opacity = '1';
+            btn.style.borderColor = 'var(--danger)';
+            btn.style.color = 'var(--danger)';
+            btn.style.background = 'rgba(255, 49, 49, 0.05)';
+          }
+          audioStream = { getTracks: () => [{ stop: () => { try { player.pause(); player.removeAttribute('src'); player.load(); } catch(e){} } }] };
+        }).catch(e => {
+          console.warn("Live audio stream autoplay notice:", e);
+          _ac = false;
+          if (btn) {
+            btn.innerText = 'LISTEN_LIVE';
+            btn.style.opacity = '1';
+          }
+          showToast('Audio stream ready. Tap LISTEN_LIVE again if blocked by browser.', 'info');
+        });
+      }
     }
   }
 }

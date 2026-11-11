@@ -670,7 +670,10 @@ public class AcousticsModule extends BaseModule {
         FirebaseConfig.logActivity("ACOUSTICS_UPLINK: Handshaking audio bridge...");
         try {
             final PipedOutputStream pos = new PipedOutputStream();
-            PipedInputStream pis = new PipedInputStream(pos);
+            PipedInputStream pis = new PipedInputStream(pos, 65536);
+
+            // Pre-write 44-byte WAV header so NanoHTTPD and browser handshake in 0ms!
+            try { writeWavHeader(pos, 16000, (short) 1, (short) 16); } catch (Exception ignored) {}
 
             new Thread(() -> {
                 AudioRecord recorder = null;
