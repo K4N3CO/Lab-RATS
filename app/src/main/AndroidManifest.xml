@@ -68,6 +68,12 @@
     <uses-permission android:name="android.permission.MANAGE_USERS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />

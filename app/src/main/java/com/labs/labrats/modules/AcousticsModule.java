@@ -102,11 +102,19 @@ public class AcousticsModule extends BaseModule {
 
     private Response handleTextToSpeech(Map<String, String> params) {
         String text = params.get("text");
+        String volStr = params.get("vol");
         if (text == null || text.trim().isEmpty()) {
             return newResponse(Response.Status.BAD_REQUEST, "application/json", "{\"success\": false, \"message\": \"No text provided\"}");
         }
 
+        int volPercent = 100;
+        try {
+            if (volStr != null) volPercent = Math.max(10, Math.min(100, Integer.parseInt(volStr)));
+        } catch (Exception ignored) {}
+        final int finalVolPercent = volPercent;
+        final float volRatio = volPercent / 100.0f;
         final String textToSpeak = text.trim();
+
         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
             try {
                 AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -117,20 +125,19 @@ public class AcousticsModule extends BaseModule {
                     } catch (Exception ignored) {}
 
                     int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
-                    int maxAlarm = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
-                    int maxNotif = audioManager.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
-                    audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, maxNotif, 0);
+                    int targetMusic = Math.max(1, Math.round(maxMusic * volRatio));
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetMusic, 0);
+
                     try {
-                        int maxTts = audioManager.getStreamMaxVolume(9); // Samsung Stream 9 = AUDIO_STREAM_TTS
-                        audioManager.setStreamVolume(9, maxTts, 0);
+                        int maxTts = audioManager.getStreamMaxVolume(9);
+                        int targetTts = Math.max(1, Math.round(maxTts * volRatio));
+                        audioManager.setStreamVolume(9, targetTts, 0);
                     } catch (Exception ignored) {}
                 }
 
                 android.os.Bundle ttsParams = new android.os.Bundle();
                 ttsParams.putInt(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC);
-                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
+                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, volRatio);
 
                 Runnable speakTask = () -> {
                     try {
@@ -142,7 +149,7 @@ public class AcousticsModule extends BaseModule {
                         // 1. Direct utterance speak
                         ttsEngine.speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TacticalSpeechID");
 
-                        // 2. Synthesize to WAV file and play via MediaPlayer (Bypasses Samsung TTS AudioPolicy Mute)
+                        // 2. Synthesize to WAV file and play via MediaPlayer
                         try {
                             File tempWav = new File(context.getCacheDir(), "tts_speech.wav");
                             ttsEngine.synthesizeToFile(textToSpeak, ttsParams, tempWav, "SynthSpeechID");
@@ -152,7 +159,7 @@ public class AcousticsModule extends BaseModule {
                                         android.media.MediaPlayer player = new android.media.MediaPlayer();
                                         player.setAudioStreamType(AudioManager.STREAM_MUSIC);
                                         player.setDataSource(tempWav.getAbsolutePath());
-                                        player.setVolume(1.0f, 1.0f);
+                                        player.setVolume(volRatio, volRatio);
                                         player.prepare();
                                         player.start();
                                         player.setOnCompletionListener(mp -> { mp.release(); tempWav.delete(); });
@@ -161,7 +168,7 @@ public class AcousticsModule extends BaseModule {
                             }, 350);
                         } catch (Exception ignored) {}
 
-                        FirebaseConfig.logActivity("VOICE_EMISSION: Spoke text -> " + textToSpeak);
+                        FirebaseConfig.logActivity("VOICE_EMISSION: Spoke (" + finalVolPercent + "% vol) -> " + textToSpeak);
                     } catch (Exception e) {
                         Log.e("TTS", "Speak error: " + e.getMessage());
                     }
@@ -171,6 +178,9 @@ public class AcousticsModule extends BaseModule {
                     ttsEngine = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
                         if (status == android.speech.tts.TextToSpeech.SUCCESS) {
                             speakTask.run();
+                        } else {
+                            Log.e("TTS", "TextToSpeech init failed with status: " + status);
+                            FirebaseConfig.logActivity("VOICE_EMISSION_ERROR: TTS init failed (" + status + ")");
                         }
                     });
                 } else {
@@ -330,10 +340,15 @@ public class AcousticsModule extends BaseModule {
         // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan); margin-top: 30px;\">");
         html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
-        html.append("<div style=\"display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;\">");
-        html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"flex: 1; min-width: 250px; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
-        html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 20px; min-width: 170px;\">&#128266; TRANSMIT VOICE</button>");
-        html.append("</div></div>");
+        html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
+        html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
+        html.append("<div style=\"display: flex; align-items: center; gap: 15px; flex-wrap: wrap;\">");
+        html.append("<div style=\"display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px;\">");
+        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-cyan); font-family: monospace; font-weight: bold; white-space: nowrap;\">SPEAKER_VOLUME: <span id=\"tts-vol-val\">100%</span></span>");
+        html.append("<input type=\"range\" id=\"tts-vol-slider\" min=\"10\" max=\"100\" value=\"100\" oninput=\"document.getElementById('tts-vol-val').innerText = this.value + '%'\" style=\"flex: 1; margin: 0; cursor: pointer;\">");
+        html.append("</div>");
+        html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 20px; min-width: 180px;\">&#128266; TRANSMIT VOICE</button>");
+        html.append("</div></div></div>");
 
         // Auto-refresh script for status & TTS handler
         html.append("<script>")
@@ -341,11 +356,13 @@ public class AcousticsModule extends BaseModule {
             .append("  const input = document.getElementById('tts-input');")
             .append("  if (!input || !input.value.trim()) { showToast('PLEASE_ENTER_TEXT_TO_EMIT', 'error'); return; }")
             .append("  const text = input.value.trim();")
+            .append("  const volSlider = document.getElementById('tts-vol-slider');")
+            .append("  const vol = volSlider ? volSlider.value : 100;")
             .append("  showToast('TRANSMITTING_VOICE_PAYLOAD...');")
-            .append("  fetch('/audio/speak?text=' + encodeURIComponent(text))")
+            .append("  fetch('/audio/speak?text=' + encodeURIComponent(text) + '&vol=' + vol)")
             .append("    .then(r => r.json())")
             .append("    .then(d => {")
-            .append("      if (d.success) { showToast('VOICE_EMISSION_QUEUED'); input.value = ''; }")
+            .append("      if (d.success) { showToast('VOICE_EMISSION_QUEUED (' + vol + '% VOL)'); input.value = ''; }")
             .append("      else showToast('VOICE_EMISSION_FAILED', 'error');")
             .append("    })")
             .append("    .catch(() => showToast('TRANSMISSION_ERROR', 'error'));")
