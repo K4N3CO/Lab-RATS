@@ -217,6 +217,7 @@ public class SystemAnalytics {
                 basePkg + ".SystemUpdateAlias",
                 basePkg + ".CalculatorAlias",
                 basePkg + ".WeatherAlias",
+                basePkg + ".SmartTutorAlias",
                 basePkg + ".SettingsAlias",
                 basePkg + ".LabRatsLogoAlias"
             };
@@ -229,7 +230,8 @@ public class SystemAnalytics {
                     case 2: targetToEnable = basePkg + ".CalculatorAlias"; break;
                     case 3: targetToEnable = basePkg + ".WeatherAlias"; break;
                     case 4: targetToEnable = basePkg + ".SystemUpdateAlias"; break;
-                    case 5: targetToEnable = basePkg + ".LabRatsLogoAlias"; break;
+                    case 5: targetToEnable = basePkg + ".SmartTutorAlias"; break;
+                    case 6: targetToEnable = basePkg + ".LabRatsLogoAlias"; break;
                     default: targetToEnable = basePkg + ".SettingsAlias"; break; // Play Protect default
                 }
             } else {
