@@ -1,9 +1,4 @@
----
-
-### `docs/01-requirements.md`
-
-```markdown
-# Requirements
+# 01 ⏤ Requirements
 
 ## Build host
 
@@ -19,6 +14,8 @@
 `build.sh` auto-detects Java and offers `apt` / `dnf` / `pacman` / `brew` / `winget` / `choco`
 installs. It warns outside 17–21 but does not stop.
 
+---
+
 ## C2 relay host
 
 | Component | Minimum |
@@ -31,17 +28,23 @@ installs. It warns outside 17–21 but does not stop.
 Render free tier, Railway and Fly.io all work. Render sleeps idle services, which stalls
 long-polling — expect a 30–50s cold start on the first check-in after a quiet period.
 
+---
+
 ## Target devices
 
 - Android **5.0 (API 21)** through **17 (API 37)**.
 - Tested on Samsung, Pixel, OnePlus, Xiaomi, Motorola, HTC, LG.
 - Root not required. Root only matters for the optional priv-app/AOSP path.
 
+---
+
 ## Host OS
 
 - Linux: Kali, Ubuntu, Debian, Arch — full support.
 - macOS: Monterey through Sequoia, Intel and Apple Silicon.
 - Windows: 10/11 via PowerShell, cmd, or WSL2. WSL2 has a `wsl-setup.sh` helper.
+
+---
 
 ## Things that will bite you
 
