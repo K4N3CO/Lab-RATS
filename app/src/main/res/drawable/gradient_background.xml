@@ -11,7 +11,7 @@
             <gradient
                 android:type="linear"
                 android:angle="270"
-                android:startColor="#0D00F2FF"
+                android:startColor="#0B00F2FF"
                 android:endColor="#02080D"/>
         </shape>
     </item>
@@ -24,8 +24,8 @@
                 android:gradientRadius="500dp"
                 android:centerX="50%"
                 android:centerY="0%"
-                android:startColor="#2200F2FF"
-                android:centerColor="#0B00A8B3"
+                android:startColor="#1200F2FF"
+                android:centerColor="#2B00A8B3"
                 android:endColor="#0002080D"/>
         </shape>
     </item>
@@ -39,7 +39,7 @@
                 android:centerX="0%"
                 android:centerY="100%"
                 android:startColor="#1700F2FF"
-                android:endColor="#0002080D"/>
+                android:endColor="#2B02080D"/>
         </shape>
     </item>
 

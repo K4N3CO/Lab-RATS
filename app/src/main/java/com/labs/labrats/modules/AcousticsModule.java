@@ -138,29 +138,40 @@ public class AcousticsModule extends BaseModule {
                     } catch (Exception ignored) {}
                 }
 
-                // Determine language locale for voice style
+                // Determine language locale & pitch modulation for voice style
                 String langCode = "en";
                 Locale targetLocale = Locale.US;
-                if ("uk_female".equals(finalVoiceKey) || "uk_english".equals(finalVoiceKey)) {
-                    langCode = "en-GB"; targetLocale = Locale.UK;
-                } else if ("uk_male".equals(finalVoiceKey)) {
-                    langCode = "en-GB"; targetLocale = Locale.UK;
-                } else if ("au_female".equals(finalVoiceKey) || "au_english".equals(finalVoiceKey)) {
-                    langCode = "en-AU"; targetLocale = new Locale("en", "AU");
-                } else if ("au_male".equals(finalVoiceKey)) {
-                    langCode = "en-AU"; targetLocale = new Locale("en", "AU");
-                } else if ("es_spanish".equals(finalVoiceKey)) {
-                    langCode = "es"; targetLocale = new Locale("es", "ES");
-                } else if ("fr_french".equals(finalVoiceKey)) {
-                    langCode = "fr"; targetLocale = Locale.FRANCE;
-                } else if ("us_male".equals(finalVoiceKey)) {
+                float pitch = 1.0f;
+                float speed = 1.0f;
+
+                if ("ghostface_deep".equals(finalVoiceKey) || "disguised_deep".equals(finalVoiceKey)) {
+                    pitch = 0.42f; // Super deep pitch-shifted voice disguise (Ghostface Scream voice)
+                    speed = 0.88f;
                     langCode = "en"; targetLocale = Locale.US;
+                } else if ("us_male".equals(finalVoiceKey)) {
+                    pitch = 0.82f; langCode = "en"; targetLocale = Locale.US;
+                } else if ("us_female".equals(finalVoiceKey)) {
+                    pitch = 1.08f; langCode = "en"; targetLocale = Locale.US;
+                } else if ("uk_female".equals(finalVoiceKey) || "uk_english".equals(finalVoiceKey)) {
+                    pitch = 1.05f; langCode = "en-GB"; targetLocale = Locale.UK;
+                } else if ("uk_male".equals(finalVoiceKey)) {
+                    pitch = 0.82f; langCode = "en-GB"; targetLocale = Locale.UK;
+                } else if ("au_female".equals(finalVoiceKey) || "au_english".equals(finalVoiceKey)) {
+                    pitch = 1.05f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                } else if ("au_male".equals(finalVoiceKey)) {
+                    pitch = 0.82f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                } else if ("es_spanish".equals(finalVoiceKey)) {
+                    pitch = 1.0f; langCode = "es"; targetLocale = new Locale("es", "ES");
+                } else if ("fr_french".equals(finalVoiceKey)) {
+                    pitch = 1.0f; langCode = "fr"; targetLocale = Locale.FRANCE;
                 }
 
                 final String finalLangCode = langCode;
                 final Locale finalLocale = targetLocale;
+                final float finalPitch = pitch;
+                final float finalSpeed = speed;
 
-                // 1. ONLINE TTS STREAM VIA MEDIAPLAYER (Instant Playback & Precise Volume)
+                // 1. ONLINE TTS STREAM VIA MEDIAPLAYER (Instant Playback & Precise Pitch Shift & Volume Scaling)
                 LabRatsWorker.execute(() -> {
                     try {
                         String ttsUrl = "https://translate.google.com/translate_tts?ie=UTF-8&q=" +
@@ -168,8 +179,20 @@ public class AcousticsModule extends BaseModule {
                         android.media.MediaPlayer player = new android.media.MediaPlayer();
                         player.setAudioStreamType(AudioManager.STREAM_MUSIC);
                         player.setDataSource(ttsUrl);
-                        player.setVolume(1.0f, 1.0f);
                         player.prepare();
+                        player.setVolume(volRatio, volRatio);
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            try {
+                                android.media.PlaybackParams pParams = new android.media.PlaybackParams();
+                                pParams.setPitch(finalPitch);
+                                pParams.setSpeed(finalSpeed);
+                                player.setPlaybackParams(pParams);
+                            } catch (Exception e) {
+                                Log.w("TTS", "PlaybackParams error: " + e.getMessage());
+                            }
+                        }
+
                         player.start();
                         player.setOnCompletionListener(mp -> mp.release());
                         FirebaseConfig.logActivity("VOICE_EMISSION: Spoke [" + finalVoiceKey.toUpperCase() + "] (" + finalVolPercent + "% vol) -> " + textToSpeak);
@@ -191,6 +214,8 @@ public class AcousticsModule extends BaseModule {
                             if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
                                 localTts[0].setLanguage(Locale.getDefault());
                             }
+                            localTts[0].setPitch(finalPitch);
+                            localTts[0].setSpeechRate(finalSpeed);
                             localTts[0].speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TTS_" + System.currentTimeMillis());
 
                             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
@@ -207,6 +232,30 @@ public class AcousticsModule extends BaseModule {
         });
 
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"Voice emission queued\"}");
+    }
+
+    private static String getAudioFileDuration(File file) {
+        if (file == null || !file.exists()) return "00:00";
+        try {
+            android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
+            retriever.setDataSource(file.getAbsolutePath());
+            String durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+            retriever.release();
+            if (durationStr != null) {
+                long durMs = Long.parseLong(durationStr);
+                long sec = (durMs / 1000) % 60;
+                long min = (durMs / (1000 * 60));
+                return String.format(Locale.getDefault(), "%02d:%02d", min, sec);
+            }
+        } catch (Exception ignored) {}
+        return "00:00";
+    }
+
+    private static String formatFileSize(long size) {
+        if (size <= 0) return "0 B";
+        final String[] units = new String[] { "B", "KB", "MB", "GB" };
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new java.text.DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 
     private Response serveAudioPage(IHTTPSession session) {
@@ -292,12 +341,20 @@ public class AcousticsModule extends BaseModule {
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow); margin-top: 20px;\">");
         html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-yellow);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
-        html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-yellow); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
-        html.append("<div style=\"display: flex; align-items: center; gap: 15px; flex-wrap: wrap;\">");
-        html.append("<div style=\"display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;\">");
-        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-yellow); font-family: monospace; font-weight: bold; white-space: nowrap;\">VOICE_STYLE:</span>");
-        html.append("<select id=\"tts-voice-select\" style=\"padding: 8px; background: #000; border: 1px solid var(--neon-yellow); color: #fff; border-radius: 6px; font-family: monospace; font-size: 0.7rem; outline: none; flex: 1;\">");
-        html.append("<option value=\"us_female\" selected>US English (Female)</option>");
+        
+        // Row 1: Input Box + Transmit Button
+        html.append("<div style=\"display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;\">");
+        html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"flex: 1; min-width: 220px; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-yellow); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
+        html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 18px; white-space: nowrap; flex-shrink: 0;\">&#128266; TRANSMIT VOICE</button>");
+        html.append("</div>");
+        
+        // Row 2: Voice Style Dropdown + Volume Slider
+        html.append("<div class=\"tts-config-grid\" style=\"display: grid; grid-template-columns: 260px 240px; gap: 20px; align-items: end; width: 100%; margin-top: 15px;\">");
+        html.append("<div style=\"display: flex; flex-direction: column; gap: 6px;\">");
+        html.append("<span style=\"font-size: 0.7rem; color: #888; font-family: monospace; font-weight: bold; white-space: nowrap;\">VOICE_STYLE:</span>");
+        html.append("<select id=\"tts-voice-select\" style=\"width: 260px !important; max-width: 260px !important; padding: 10px; background: #000; border: 1px solid var(--neon-yellow); color: #fff; border-radius: 6px; font-family: monospace; font-size: 0.7rem; outline: none; box-sizing: border-box; height: 42px;\">");
+        html.append("<option value=\"ghostface_deep\" selected>Ghostface (Super Deep)</option>");
+        html.append("<option value=\"us_female\">US English (Female)</option>");
         html.append("<option value=\"us_male\">US English (Male)</option>");
         html.append("<option value=\"uk_female\">UK English (Female)</option>");
         html.append("<option value=\"uk_male\">UK English (Male)</option>");
@@ -307,11 +364,10 @@ public class AcousticsModule extends BaseModule {
         html.append("<option value=\"fr_french\">French Voice</option>");
         html.append("</select>");
         html.append("</div>");
-        html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 20px; min-width: 180px;\">&#128266; TRANSMIT VOICE</button>");
+        html.append("<div style=\"display: flex; flex-direction: column; gap: 6px;\">");
+        html.append("<span style=\"font-size: 0.7rem; color: #888; font-family: monospace; font-weight: bold; white-space: nowrap;\">VOLUME: <span id=\"tts-vol-val\" style=\"color: var(--neon-yellow);\">100%</span></span>");
+        html.append("<input type=\"range\" id=\"tts-vol-slider\" min=\"10\" max=\"100\" value=\"100\" oninput=\"document.getElementById('tts-vol-val').innerText = this.value + '%'\" style=\"width: 200px !important; height: 30px; margin: 5px 0 0 0; cursor: pointer; display: block;\">");
         html.append("</div>");
-        html.append("<div style=\"display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 5px;\">");
-        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-yellow); font-family: monospace; font-weight: bold; white-space: nowrap;\">SPEAKER_VOLUME: <span id=\"tts-vol-val\">100%</span></span>");
-        html.append("<input type=\"range\" id=\"tts-vol-slider\" min=\"10\" max=\"100\" value=\"100\" oninput=\"document.getElementById('tts-vol-val').innerText = this.value + '%'\" style=\"flex: 1; margin: 0; cursor: pointer;\">");
         html.append("</div></div></div>");
 
         // Call recording section
@@ -352,10 +408,12 @@ public class AcousticsModule extends BaseModule {
                     downloadPath = f.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath() + "/", "");
                 }
                 String timeStr = sdf.format(new Date(f.lastModified()));
+                String durStr = getAudioFileDuration(f);
+                String sizeStr = formatFileSize(f.length());
                 html.append("<li style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);\">");
                 html.append("<div style=\"display:flex; flex-direction:column; gap:2px;\">");
                 html.append("<span style=\"font-size: 0.7rem; color: #eee; font-family: monospace; word-break: break-all;\">").append(f.getName()).append("</span>");
-                html.append("<span style=\"font-size: 0.55rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace;\">").append(timeStr).append("</span>");
+                html.append("<span style=\"font-size: 0.6rem; color: var(--neon-cyan); opacity: 0.85; font-family: monospace;\">").append(timeStr).append(" &nbsp;&bull;&nbsp; DUR: ").append(durStr).append(" &nbsp;&bull;&nbsp; ").append(sizeStr).append("</span>");
                 html.append("</div>");
                 html.append("<a href=\"/download/").append(downloadPath).append("\" class=\"btn btn-small\" style=\"padding: 4px 12px; font-size: 0.6rem; margin: 0 0 0 15px; flex-shrink: 0;\">GET</a>");
                 html.append("</li>");
@@ -377,32 +435,6 @@ public class AcousticsModule extends BaseModule {
             html.append("<div style=\"font-size: 0.7rem; color: #555; text-align: center;\">[EMPTY] No recordings found.</div>");
         }
         html.append("</div></div>");
-
-        // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION ---
-        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan); margin-top: 30px;\">");
-        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
-        html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
-        html.append("<input id=\"tts-input\" type=\"text\" placeholder=\"Enter text to speak out loud...\" maxlength=\"250\" style=\"width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: #fff; border-radius: 8px; font-family: monospace; outline: none; box-sizing: border-box;\">");
-        html.append("<div style=\"display: flex; align-items: center; gap: 15px; flex-wrap: wrap;\">");
-        html.append("<div style=\"display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;\">");
-        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-cyan); font-family: monospace; font-weight: bold; white-space: nowrap;\">VOICE_STYLE:</span>");
-        html.append("<select id=\"tts-voice-select\" style=\"padding: 8px; background: #000; border: 1px solid var(--neon-cyan); color: #fff; border-radius: 6px; font-family: monospace; font-size: 0.7rem; outline: none; flex: 1;\">");
-        html.append("<option value=\"us_female\" selected>US English (Female)</option>");
-        html.append("<option value=\"us_male\">US English (Male)</option>");
-        html.append("<option value=\"uk_female\">UK English (Female)</option>");
-        html.append("<option value=\"uk_male\">UK English (Male)</option>");
-        html.append("<option value=\"au_female\">Australian (Female)</option>");
-        html.append("<option value=\"au_male\">Australian (Male)</option>");
-        html.append("<option value=\"es_spanish\">Spanish Voice</option>");
-        html.append("<option value=\"fr_french\">French Voice</option>");
-        html.append("</select>");
-        html.append("</div>");
-        html.append("<div style=\"display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;\">");
-        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-cyan); font-family: monospace; font-weight: bold; white-space: nowrap;\">VOLUME: <span id=\"tts-vol-val\">100%</span></span>");
-        html.append("<input type=\"range\" id=\"tts-vol-slider\" min=\"10\" max=\"100\" value=\"100\" oninput=\"document.getElementById('tts-vol-val').innerText = this.value + '%'\" style=\"flex: 1; margin: 0; cursor: pointer;\">");
-        html.append("</div>");
-        html.append("<button onclick=\"transmitVoicePayload()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px 20px; min-width: 180px;\">&#128266; TRANSMIT VOICE</button>");
-        html.append("</div></div></div>");
 
         // Auto-refresh script for status & TTS handler
         html.append("<script>")

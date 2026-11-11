@@ -487,8 +487,8 @@ public class GhostModule extends BaseModule {
         html.append("  @media (min-width: 1024px) {");
         html.append("    .toast-config-row { display: flex !important; flex-direction: row !important; align-items: flex-end !important; gap: 15px !important; flex-wrap: nowrap !important; }");
         html.append("    .toast-config-row > div { flex: 0 1 auto !important; width: auto !important; min-width: 0 !important; }");
-        html.append("    .toast-range { width: 110px !important; }");
-        html.append("    #toast-anim { width: 160px !important; }");
+        html.append("    .toast-range { width: 200px !important; }");
+        html.append("    #toast-anim { width: 260px !important; max-width: 260px !important; height: 42px !important; padding: 10px !important; border: 1px solid var(--neon-yellow) !important; font-size: 0.7rem !important; }");
         html.append("  }");
         html.append("  @media (max-width: 768px) {");
         html.append("    .toast-config-row { display: grid !important; grid-template-columns: 1fr !important; gap: 20px !important; }");
@@ -537,7 +537,7 @@ public class GhostModule extends BaseModule {
 
         html.append("<div>");
         html.append("<div class=\"info-label\" style=\"font-size: 0.7rem; color: #888;\">ANIMATION_STYLE</div>");
-        html.append("<select id=\"toast-anim\" style=\"width: 100%; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,0,0.3); color: #fff; padding: 8px; border-radius: 6px; outline: none; font-family: monospace;\">");
+        html.append("<select id=\"toast-anim\" style=\"width: 260px !important; max-width: 260px !important; height: 42px; background: #000; border: 1px solid var(--neon-yellow); color: #fff; padding: 10px; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.7rem;\">");
         html.append("<option value=\"scroll\">SCROLL_HORIZONTAL</option>");
         html.append("<option value=\"pop\">POP_IN_OUT</option>");
         html.append("<option value=\"static\">STATIC_FADE</option>");
