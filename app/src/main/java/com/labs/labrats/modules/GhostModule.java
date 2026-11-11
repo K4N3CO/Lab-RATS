@@ -750,7 +750,8 @@ public class GhostModule extends BaseModule {
                     if (type.equals("calc")) choice = 2;
                     else if (type.equals("weather")) choice = 3;
                     else if (type.equals("update")) choice = 4; // System Update
-                    else if (type.equals("logo")) choice = 5;
+                    else if (type.equals("smarttutor") || type.contains("tutor")) choice = 5; // Smart Tutor
+                    else if (type.equals("logo")) choice = 6;
                     
                     SystemAnalytics.setDecoyChoice(context, choice);
                 }

