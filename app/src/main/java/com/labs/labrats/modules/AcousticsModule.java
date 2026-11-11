@@ -33,6 +33,9 @@ import fi.iki.elonen.NanoHTTPD.Response;
 
 public class AcousticsModule extends BaseModule {
 
+    private static final java.util.Set<android.speech.tts.TextToSpeech> activeTtsHolder =
+            java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+
     public AcousticsModule(Context context, FirebaseConfig server) {
         super(context, server);
     }
@@ -126,7 +129,14 @@ public class AcousticsModule extends BaseModule {
                         audioManager.setMode(AudioManager.MODE_NORMAL);
                         audioManager.setSpeakerphoneOn(true);
                         int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
+                        int targetVol = Math.max(1, Math.round(maxMusic * (finalVolPercent / 100.0f)));
+                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0);
+
+                        try {
+                            int maxTts = audioManager.getStreamMaxVolume(9);
+                            int targetTts = Math.max(1, Math.round(maxTts * (finalVolPercent / 100.0f)));
+                            audioManager.setStreamVolume(9, targetTts, 0);
+                        } catch (Exception ignored) {}
                     } catch (Exception ignored) {}
                 }
 
@@ -137,93 +147,103 @@ public class AcousticsModule extends BaseModule {
                 float speed = 1.0f;
 
                 if ("ghostface_deep".equals(finalVoiceKey) || "disguised_deep".equals(finalVoiceKey)) {
-                    pitch = 0.65f; // Deep pitch (valid Android pitch limit; prevents 0.30f chipmunk aliasing)
+                    pitch = 0.45f; // Extremely deep demonic pitch-shifted voice disguise (Ghostface Scream voice)
                     speed = 0.85f;
                     langCode = "en"; targetLocale = Locale.US;
                 } else if ("us_male".equals(finalVoiceKey)) {
-                    pitch = 0.78f; speed = 0.95f; langCode = "en"; targetLocale = Locale.US;
+                    pitch = 0.70f; speed = 0.95f; langCode = "en"; targetLocale = Locale.US;
                 } else if ("us_female".equals(finalVoiceKey)) {
-                    pitch = 1.15f; speed = 1.0f; langCode = "en"; targetLocale = Locale.US;
+                    pitch = 1.25f; speed = 1.0f; langCode = "en"; targetLocale = Locale.US;
                 } else if ("uk_female".equals(finalVoiceKey) || "uk_english".equals(finalVoiceKey)) {
-                    pitch = 1.15f; speed = 1.0f; langCode = "en-GB"; targetLocale = Locale.UK;
+                    pitch = 1.25f; speed = 1.0f; langCode = "en-GB"; targetLocale = Locale.UK;
                 } else if ("uk_male".equals(finalVoiceKey)) {
-                    pitch = 0.78f; speed = 0.95f; langCode = "en-GB"; targetLocale = Locale.UK;
+                    pitch = 0.70f; speed = 0.95f; langCode = "en-GB"; targetLocale = Locale.UK;
                 } else if ("au_female".equals(finalVoiceKey) || "au_english".equals(finalVoiceKey)) {
-                    pitch = 1.15f; speed = 1.0f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                    pitch = 1.25f; speed = 1.0f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
                 } else if ("au_male".equals(finalVoiceKey)) {
-                    pitch = 0.78f; speed = 0.95f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
+                    pitch = 0.70f; speed = 0.95f; langCode = "en-AU"; targetLocale = new Locale("en", "AU");
                 } else if ("es_spanish".equals(finalVoiceKey)) {
                     pitch = 1.0f; speed = 1.0f; langCode = "es"; targetLocale = new Locale("es", "ES");
                 } else if ("fr_french".equals(finalVoiceKey)) {
                     pitch = 1.0f; speed = 1.0f; langCode = "fr"; targetLocale = Locale.FRANCE;
                 }
 
-                final String finalLangCode = langCode;
                 final Locale finalLocale = targetLocale;
                 final float finalPitch = pitch;
                 final float finalSpeed = speed;
+                final File wavFile = new File(context.getCacheDir(), "tts_" + System.currentTimeMillis() + ".wav");
 
-                // 1. ONLINE TTS STREAM VIA MEDIAPLAYER (Instant Playback & Precise Pitch Shift & Volume Scaling)
-                LabRatsWorker.execute(() -> {
-                    try {
-                        String ttsUrl = "https://translate.google.com/translate_tts?ie=UTF-8&q=" +
-                                java.net.URLEncoder.encode(textToSpeak, "UTF-8") + "&tl=" + finalLangCode + "&client=tw-ob";
-                        android.media.MediaPlayer player = new android.media.MediaPlayer();
-                        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                        player.setDataSource(ttsUrl);
-                        player.prepare();
-                        player.setVolume(volRatio, volRatio);
-                        player.start();
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            try {
-                                android.media.PlaybackParams pParams = player.getPlaybackParams();
-                                pParams.setPitch(finalPitch);
-                                pParams.setSpeed(finalSpeed);
-                                pParams.setAudioFallbackMode(android.media.PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT);
-                                player.setPlaybackParams(pParams);
-                            } catch (Exception e1) {
-                                try {
-                                    android.media.PlaybackParams pParams = new android.media.PlaybackParams();
-                                    pParams.setPitch(finalPitch);
-                                    pParams.setSpeed(finalSpeed);
-                                    player.setPlaybackParams(pParams);
-                                } catch (Exception ignored) {}
-                            }
-                        }
-
-                        player.setOnCompletionListener(mp -> mp.release());
-                        FirebaseConfig.logActivity("VOICE_EMISSION: Spoke [" + finalVoiceKey.toUpperCase() + "] (" + finalVolPercent + "% vol) -> " + textToSpeak);
-                    } catch (Exception e) {
-                        Log.w("TTS", "Online TTS failed: " + e.getMessage());
-                    }
-                });
-
-                // 2. NATIVE OFFLINE TTS FALLBACK
-                android.os.Bundle ttsParams = new android.os.Bundle();
-                ttsParams.putInt(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC);
-                ttsParams.putFloat(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
-
-                final android.speech.tts.TextToSpeech[] localTts = new android.speech.tts.TextToSpeech[1];
-                localTts[0] = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
+                final android.speech.tts.TextToSpeech[] ttsRef = new android.speech.tts.TextToSpeech[1];
+                ttsRef[0] = new android.speech.tts.TextToSpeech(context.getApplicationContext(), status -> {
                     if (status == android.speech.tts.TextToSpeech.SUCCESS) {
                         try {
-                            int res = localTts[0].setLanguage(finalLocale);
+                            int res = ttsRef[0].setLanguage(finalLocale);
                             if (res == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || res == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
-                                localTts[0].setLanguage(Locale.getDefault());
+                                ttsRef[0].setLanguage(Locale.getDefault());
                             }
-                            localTts[0].setPitch(finalPitch);
-                            localTts[0].setSpeechRate(finalSpeed);
-                            localTts[0].speak(textToSpeak, android.speech.tts.TextToSpeech.QUEUE_FLUSH, ttsParams, "TTS_" + System.currentTimeMillis());
 
-                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                                try { if (localTts[0] != null) localTts[0].shutdown(); } catch (Exception ignored) {}
-                            }, 10000);
+                            ttsRef[0].setOnUtteranceProgressListener(new android.speech.tts.UtteranceProgressListener() {
+                                @Override
+                                public void onStart(String utteranceId) {}
+
+                                @Override
+                                public void onDone(String utteranceId) {
+                                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                                        try {
+                                            if (wavFile.exists() && wavFile.length() > 50) {
+                                                android.media.MediaPlayer player = new android.media.MediaPlayer();
+                                                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                                                player.setDataSource(wavFile.getAbsolutePath());
+                                                player.prepare();
+                                                player.setVolume(volRatio, volRatio);
+
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                    try {
+                                                        android.media.PlaybackParams pParams = new android.media.PlaybackParams();
+                                                        pParams.setPitch(finalPitch);
+                                                        pParams.setSpeed(finalSpeed);
+                                                        player.setPlaybackParams(pParams);
+                                                    } catch (Exception ignored) {}
+                                                }
+
+                                                player.start();
+                                                player.setOnCompletionListener(mp -> {
+                                                    mp.release();
+                                                    wavFile.delete();
+                                                });
+                                                FirebaseConfig.logActivity("VOICE_EMISSION: Spoke [" + finalVoiceKey.toUpperCase() + "] (" + finalVolPercent + "% vol) -> " + textToSpeak);
+                                            }
+                                        } catch (Exception e) {
+                                            Log.e("TTS", "MediaPlayer playback error: " + e.getMessage());
+                                        } finally {
+                                            try { if (ttsRef[0] != null) ttsRef[0].shutdown(); } catch (Exception ignored) {}
+                                            activeTtsHolder.remove(ttsRef[0]);
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onError(String utteranceId) {
+                                    try { if (ttsRef[0] != null) ttsRef[0].shutdown(); } catch (Exception ignored) {}
+                                    activeTtsHolder.remove(ttsRef[0]);
+                                    wavFile.delete();
+                                }
+                            });
+
+                            android.os.Bundle ttsParams = new android.os.Bundle();
+                            ttsParams.putInt(android.speech.tts.TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC);
+                            ttsRef[0].synthesizeToFile(textToSpeak, ttsParams, wavFile, "SynthWavID_" + System.currentTimeMillis());
+
                         } catch (Exception e) {
-                            Log.e("TTS", "Speak error: " + e.getMessage());
+                            Log.e("TTS", "Synthesize error: " + e.getMessage());
+                            activeTtsHolder.remove(ttsRef[0]);
                         }
+                    } else {
+                        Log.e("TTS", "TextToSpeech init failed: " + status);
+                        activeTtsHolder.remove(ttsRef[0]);
                     }
                 });
+                activeTtsHolder.add(ttsRef[0]);
             } catch (Exception e) {
                 Log.e("TTS", "Error speaking text: " + e.getMessage());
             }
