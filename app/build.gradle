@@ -23,7 +23,7 @@ android {
         minSdk 21
         targetSdk 34
         versionCode 623
-        versionName "4.3.8"
+        versionName "1.1.2"
         multiDexEnabled true
         
         // Read WEBHOOK_URL from local.properties
