@@ -1,9 +1,4 @@
----
-
-### `docs/04-device-http-api.md`
-
-```markdown
-# HTTP API
+# 04 ⏤ Device HTTP API
 
 Two servers expose HTTP. Both are plain HTTP, no TLS.
 
@@ -12,5 +7,3 @@ Two servers expose HTTP. Both are plain HTTP, no TLS.
 
 All device endpoints require the session cookie `c2_auth_token=AUTH_OK_1337`. A request without it
 gets the login page (HTTP 200, not 401 — scripts that check status codes will be fooled).
-
-## Login
