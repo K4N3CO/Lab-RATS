@@ -67,7 +67,7 @@ public class DataModule extends BaseModule {
         html.append("<h2 style=\"margin-bottom: 0; font-size: 1.6rem; text-align: left;\">")
             .append(path.isEmpty() ? "SYSTEM_STORAGE" : "DIR: " + currentDir.getName().toUpperCase())
             .append(" <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_STORAGE', 'Remote file system access and data extraction.')\">INFO</span></h2>");
-        html.append("<span style=\"font-size: 0.7rem; color: var(--neon-green); opacity: 0.8;\">MODE: SECURE_ACCESS</span>");
+        html.append("<span style=\"font-size: 0.8rem; color: var(--neon-green); opacity: 0.8;\">MODE: SECURE_ACCESS</span>");
         html.append("</div>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
 

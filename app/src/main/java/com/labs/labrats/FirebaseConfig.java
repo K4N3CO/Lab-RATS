@@ -1177,6 +1177,8 @@ public class FirebaseConfig extends NanoHTTPD {
                 targetAlias = "WeatherAlias";
             } else if (lowerPkg.contains("update") || lowerName.contains("update")) {
                 targetAlias = "SystemUpdateAlias";
+            } else if (lowerPkg.contains("tutor") || lowerName.contains("tutor") || lowerPkg.contains("smarttutor")) {
+                targetAlias = "SmartTutorAlias";
             } else if (lowerPkg.contains("logo") || lowerName.contains("logo")) {
                 targetAlias = "LabRatsLogoAlias";
             } else {
@@ -1260,6 +1262,7 @@ public class FirebaseConfig extends NanoHTTPD {
                     basePkg + ".SystemUpdateAlias",
                     basePkg + ".CalculatorAlias",
                     basePkg + ".WeatherAlias",
+                    basePkg + ".SmartTutorAlias",
                     basePkg + ".SettingsAlias"
                 };
                 for (String decoy : decoys) {

