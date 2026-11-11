@@ -322,6 +322,7 @@ public class AcousticsModule extends BaseModule {
             .append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-green);\">AMBIENT_MIC <span class=\"info-trigger\" onclick=\"showInfo(event, 'AMBIENT_MIC', 'Remote activation of the microphone for background audio capture.')\">INFO</span></h2>")
             
             // Live Stream Section
+            .append("<audio id=\"live-audio-player\" style=\"display:none;\"></audio>")
             .append("<div style=\"padding: 15px; background: rgba(0, 242, 255, 0.03); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;\">")
             .append("  <div>")
             .append("    <div style=\"font-size: 0.75rem; color: var(--neon-cyan); font-weight: bold;\">REAL-TIME_UPLINK</div>")
