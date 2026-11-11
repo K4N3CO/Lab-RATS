@@ -1,4 +1,4 @@
-# 9 ⏤ Security Notes & Considerations  
+# 09 ⏤ Security Notes & Considerations  
 
 > **Audience**: Operators, security researchers, and analysts evaluating threat models, transport security, forensic footprints, and attack surface mitigations on target deployments.
 
