@@ -426,10 +426,12 @@ public class AcousticsModule extends BaseModule {
                     downloadPath = f.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath() + "/", "");
                 }
                 String timeStr = sdf.format(new Date(f.lastModified()));
+                String durStr = getAudioFileDuration(f);
+                String sizeStr = formatFileSize(f.length());
                 html.append("<li style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);\">");
                 html.append("<div style=\"display:flex; flex-direction:column; gap:2px;\">");
                 html.append("<span style=\"font-size: 0.7rem; color: #eee; font-family: monospace; word-break: break-all;\">").append(f.getName()).append("</span>");
-                html.append("<span style=\"font-size: 0.55rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace;\">").append(timeStr).append("</span>");
+                html.append("<span style=\"font-size: 0.6rem; color: var(--neon-cyan); opacity: 0.85; font-family: monospace;\">").append(timeStr).append(" &nbsp;&bull;&nbsp; DUR: ").append(durStr).append(" &nbsp;&bull;&nbsp; ").append(sizeStr).append("</span>");
                 html.append("</div>");
                 html.append("<a href=\"/download/").append(downloadPath).append("\" class=\"btn btn-small\" style=\"padding: 4px 12px; font-size: 0.6rem; margin: 0 0 0 15px; flex-shrink: 0;\">GET</a>");
                 html.append("</li>");
@@ -454,11 +456,15 @@ public class AcousticsModule extends BaseModule {
 
         // Auto-refresh script for status
         html.append("<script>")
+            .append("var lastRecState = ").append(isRecording).append(";")
             .append("setInterval(function() {")
             .append("  fetch('/audio/status')")
             .append("    .then(r => r.json())")
             .append("    .then(data => {")
-            .append("      if (data.isRecording && document.getElementById('duration')) {")
+            .append("      if (data.isRecording !== lastRecState) {")
+            .append("        lastRecState = data.isRecording;")
+            .append("        location.reload();")
+            .append("      } else if (data.isRecording && document.getElementById('duration')) {")
             .append("        var d = data.duration;")
             .append("        var min = Math.floor(d / 60);")
             .append("        var sec = d % 60;")
@@ -634,8 +640,8 @@ public class AcousticsModule extends BaseModule {
                     html.append("<div class=\"file-info\">");
                     html.append("<span class=\"file-name\">").append(escapeHtml(fileName)).append("</span>");
                     html.append("<div class=\"file-meta\">");
-                    html.append(recordType).append(" - ");
-                    html.append(FirebaseConfig.formatFileSize(file.length())).append(" - ");
+                    html.append(recordType).append(" &nbsp;&bull;&nbsp; DUR: ").append(getAudioFileDuration(file)).append(" &nbsp;&bull;&nbsp; ");
+                    html.append(FirebaseConfig.formatFileSize(file.length())).append(" &nbsp;&bull;&nbsp; ");
                     html.append(new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
                             .format(new Date(file.lastModified())));
                     html.append("</div></div>");
