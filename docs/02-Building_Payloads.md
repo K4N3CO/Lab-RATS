@@ -2,6 +2,8 @@
 
 > The `apk-builder/` directory contains all tools needed to configure, compile, sign, and weaponize Lab-RATS.
 
+---
+
 ## 📋 Builder Menu Options
 
 > When you launch `./build.sh` or `build.bat`, you can choose from these options:
@@ -20,7 +22,7 @@
 
 ---
 
-## 🎭 Stealth Decoy Personas
+## 🎭 Stealth Decoys
 
 > During build configuration, you can choose which decoy persona the app presents on the home screen:
 
