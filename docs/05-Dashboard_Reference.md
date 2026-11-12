@@ -32,6 +32,11 @@
 - **Stealth Operations**: Remotely swap the entire app identity and icon instantly using convincing, fully functional clones.
 - **`CHANGE C2 PASSWORD`**: Updates the C2 password. Uses `PasswordHasher` PBKDF2 with SHA-256 salted hashing and permanently revokes the default `admin1337` key.
 - **System Activity Log**: Live scrolling log of C2 events, check-ins, and executed commands.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/7f4e02c5-4984-48e5-a76c-6c4ba530495c" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -45,6 +50,11 @@
 - **`REPAIR_PERMISSIONS`**: Re-prompts the user for any revoked permissions after OEM system updates.
 - **`ANTI_REMOVAL`**: Prevents app uninstallation or force-stopping by hooking Settings intents.
 - **`SUICIDE`**: Remotely wipes local app configuration and uninstalls the core payload.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/3eb33ae7-aebd-4464-8547-979bb296eb27" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -55,6 +65,11 @@
 - **`LIVE_STREAM`**: Streams live camera video frames (`/camera/frame`) directly to your browser.
 - **`RECORD_VIDEO`**: Timed background video recording.
 - **`NIGHT_MODE`**: Aggressively boosts sensor exposure and ISO parameters in low-light environments.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/bea953b9-753e-412d-b10e-12ded5055d82" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -63,6 +78,11 @@
 - **`REFRESH_GPS`**: Obtains precise GPS latitude, longitude, altitude, and accuracy coordinates.
 - **Interactive Map View**: Displays device location on an interactive map with 1-click Google Maps links.
 - **Multi-Provider Triangulation**: Automatic fallback across GPS hardware, Wi-Fi network location, and Cell Tower triangulation.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/3425ccc3-db7b-43ab-b3b9-8cb3c555469b" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -72,6 +92,11 @@
 - **`NDEF_WRITER`**: Writes payload URLs to NFC tags for close-range proximity delivery.
 - **`SMISHING_TEMPLATES`**: Pre-formatted phishing SMS templates for delivery campaigns.
 - **`SHADOW_OVERLAY`**: Projects screenshot-accurate credential harvesting login screens over target applications.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/2aaa4c63-1ee8-4589-a78c-c2fc6e4deadf" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -80,6 +105,11 @@
 - **Remote File Manager**: Browse internal and external SD card directories with category filters (Images, Documents, Audio, Video, Archives).
 - **In-Place File Editor**: View and edit text, JSON, and XML files directly from your browser.
 - **File Download & Vault Exfiltration**: Download any file directly to your workstation or C2 cloud vault.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/835edd2f-35b4-4b7d-b527-c36ffa18990f" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -88,6 +118,11 @@
 - **Live Notification Feed**: Captures incoming app notifications, WhatsApp messages, and system alerts.
 - **Clipboard Manager**: Reads and writes system clipboard text in real time.
 - **Browser Credentials**: Extracts saved browser form data, autofill history, and stored session tokens.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/5ff097a0-4460-4a54-a149-253b628f7f01" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -96,6 +131,11 @@
 - **Inbox Thread Inspector**: Browse and read full SMS conversation threads.
 - **`SEND_SMS`**: Transmits custom SMS messages to any phone number directly from the target phone.
 - **`WORM_BROADCAST`**: Broadcasts payload delivery links to all contacts via SMS.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/54acccb7-b412-4a57-9c15-ca36ce58050d" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -104,6 +144,11 @@
 - **MMS Thread Viewer**: View incoming multimedia messages and thread histories.
 - **Attachment Inspector**: Inspect and download image, audio, and video MMS attachments.
 - **`SEND_MMS`**: Send custom MMS messages with file attachments.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/5340b242-bec6-440f-80ae-b1850d6eb163" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -116,6 +161,11 @@
   - **Volume Slider**: Adjust speech volume output from 10% to 100%.
 - **Ambient Burst Recording**: Quick-record buttons (`30s_BURST`, `60s_BURST`, `5m_BURST`) save `.m4a` files directly into the **`ACOUSTICS_VAULT`**.
 - **Acoustics Vault**: Lists saved recordings with timestamp, recording duration (`DUR: 00:30`), file size, and 1-click **`GET`** download link.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/4ec71933-6264-4d75-90db-aebfdf40e636" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -123,12 +173,22 @@
 
 - **Call Log Inspector**: View complete cellular call history (incoming, outgoing, missed calls).
 - **Call Metadata**: Inspect call durations, timestamps, and resolved contact names.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/ae00ca08-43e0-42c8-8bfa-fde16523d096" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
 ## 👥 12. Contacts Tab
 
 - **Address Book Reader**: Search and inspect all saved contacts (names, phone numbers, email addresses, and physical addresses).
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/1da37dba-a84a-4e0f-8453-d763e73bade0" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
@@ -137,6 +197,11 @@
 - **Battery & Sensor Status**: Live battery percentage, charging status, battery temperature, and health.
 - **System Specifications**: Inspect device model, brand, Android version, API level, build fingerprint, and memory usage.
 - **Installed Applications Manager**: View all installed system and user apps with 1-click **`LAUNCH`** or **`FORCE_STOP`** controls.
+<details>
+  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/f1874c3d-0866-4c1f-9f94-f5ca2c1aed6e" alt="Full Web Page Screenshot" width="60%">
+</details>
 
 ---
 
