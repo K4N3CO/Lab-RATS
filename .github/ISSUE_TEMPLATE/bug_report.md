@@ -1,4 +1,4 @@
-## Bug Report
+## Lab-RATS Bug Report
 <p align="center">
 <img width="1490" height="550" alt="Screenshot 2026-11-11 at 7 21 26 AM" src="https://github.com/user-attachments/assets/5fcd0ec1-6fd4-407f-9a38-53e9636e6c7f" />
 
