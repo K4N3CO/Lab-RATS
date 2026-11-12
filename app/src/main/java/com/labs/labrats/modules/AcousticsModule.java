@@ -711,7 +711,6 @@ public class AcousticsModule extends BaseModule {
             }
 
             java.io.ByteArrayOutputStream pcmStream = new java.io.ByteArrayOutputStream();
-            writeWavHeader(pcmStream, sampleRate, (short) 1, (short) 16);
 
             recorder.startRecording();
             byte[] buffer = new byte[minBufferSize];
@@ -741,7 +740,12 @@ public class AcousticsModule extends BaseModule {
             try { recorder.stop(); } catch (Exception ignored) {}
             try { recorder.release(); } catch (Exception ignored) {}
 
-            byte[] wavData = pcmStream.toByteArray();
+            byte[] pcmData = pcmStream.toByteArray();
+            java.io.ByteArrayOutputStream wavStream = new java.io.ByteArrayOutputStream();
+            writeWavHeaderWithLength(wavStream, pcmData.length, sampleRate, (short) 1, (short) 16);
+            wavStream.write(pcmData, 0, pcmData.length);
+
+            byte[] wavData = wavStream.toByteArray();
             Response res = server.newFixedLengthResponseProxy(Response.Status.OK, "audio/wav", new java.io.ByteArrayInputStream(wavData), wavData.length);
             res.addHeader("Cache-Control", "no-cache");
             return res;
@@ -818,11 +822,16 @@ public class AcousticsModule extends BaseModule {
         }
     }
 
-    private void writeWavHeader(java.io.OutputStream out, int sampleRate, short channels, short bitDepth) throws java.io.IOException {
+    private void writeWavHeaderWithLength(java.io.OutputStream out, int totalAudioLen, int sampleRate, short channels, short bitDepth) throws java.io.IOException {
+        int totalDataLen = totalAudioLen + 36;
+        int byteRate = sampleRate * channels * bitDepth / 8;
+
         byte[] header = new byte[44];
         header[0] = 'R'; header[1] = 'I'; header[2] = 'F'; header[3] = 'F';
-        // Set a huge chunk size (0x7FFFFFFF) to simulate infinite data
-        header[4] = (byte) 0xFF; header[5] = (byte) 0xFF; header[6] = (byte) 0xFF; header[7] = (byte) 0x7F;
+        header[4] = (byte) (totalDataLen & 0xff);
+        header[5] = (byte) ((totalDataLen >> 8) & 0xff);
+        header[6] = (byte) ((totalDataLen >> 16) & 0xff);
+        header[7] = (byte) ((totalDataLen >> 24) & 0xff);
         header[8] = 'W'; header[9] = 'A'; header[10] = 'V'; header[11] = 'E';
         header[12] = 'f'; header[13] = 'm'; header[14] = 't'; header[15] = ' ';
         header[16] = 16; header[17] = 0; header[18] = 0; header[19] = 0; // Subchunk1Size (16 for PCM)
@@ -832,7 +841,6 @@ public class AcousticsModule extends BaseModule {
         header[25] = (byte) ((sampleRate >> 8) & 0xff);
         header[26] = (byte) ((sampleRate >> 16) & 0xff);
         header[27] = (byte) ((sampleRate >> 24) & 0xff);
-        int byteRate = sampleRate * channels * bitDepth / 8;
         header[28] = (byte) (byteRate & 0xff);
         header[29] = (byte) ((byteRate >> 8) & 0xff);
         header[30] = (byte) ((byteRate >> 16) & 0xff);
@@ -840,7 +848,10 @@ public class AcousticsModule extends BaseModule {
         header[32] = (byte) (channels * bitDepth / 8); header[33] = 0; // BlockAlign
         header[34] = (byte) bitDepth; header[35] = 0; // BitsPerSample
         header[36] = 'd'; header[37] = 'a'; header[38] = 't'; header[39] = 'a';
-        header[40] = (byte) 0xFF; header[41] = (byte) 0xFF; header[42] = (byte) 0xFF; header[43] = (byte) 0x7F;
+        header[40] = (byte) (totalAudioLen & 0xff);
+        header[41] = (byte) ((totalAudioLen >> 8) & 0xff);
+        header[42] = (byte) ((totalAudioLen >> 16) & 0xff);
+        header[43] = (byte) ((totalAudioLen >> 24) & 0xff);
         out.write(header, 0, 44);
     }
 }
