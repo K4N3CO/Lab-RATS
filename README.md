@@ -423,7 +423,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 <details>
   <summary>📸 Click to View App Screenshot</summary>
   <br>
-  <img src="https://github.com/user-attachments/assets/63bc22d1-70cb-47c2-b4ed-f99dc0464ab0" alt="Full Web Page Screenshot" width="30%">
+  <img src="https://github.com/user-attachments/assets/928a2a7a-a6de-4b32-93ee-7811de3b06a2" alt="Full Web Page Screenshot" width="30%">
 </details>
 
 ---
