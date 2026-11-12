@@ -17,6 +17,6 @@ Do 1–2 and 5 as a set; a partial rebrand with the default package still leaks 
 ## Upgrading from upstream
 
 ```bash
-git remote add upstream https://github.com/K4N3CO/Lab-RATS-v1.6.git
+git remote add upstream https://github.com/K4N3CO/Lab-RATS.git
 git fetch upstream
 git diff upstream/main --stat
