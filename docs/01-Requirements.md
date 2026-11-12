@@ -1,6 +1,6 @@
 # 01 ⏤ System & Build Requirements
 
-This document outlines workstation build environment requirements, C2 server dependencies, target device compatibility, and OS support.
+> This document outlines workstation build environment requirements, C2 server dependencies, target device compatibility, and OS support.
 
 ---
 
