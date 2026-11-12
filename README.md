@@ -314,7 +314,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 </p>
 
 ### 1. Build the APK (on PC)
-1.  **Download the Repository**: `git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git`
+1.  **Download the Repository**: `git clone https://github.com/K4N3CO/Lab-RATS.git`
 2.  **Navigate** to: `cd /Lab-RATS-v1.6/apk-builder/`
 3.  **Execute** the **Builder**:
     *   **Mac/Linux**: `chmod +x build.sh && ./build.sh`
@@ -324,7 +324,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
     *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
 > [!IMPORTANT]
 > 5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting and connections** *("Command & Control Options" section above)*.
-6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS-v1.6/apk-builder/output/`
+6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS/apk-builder/output/`
 
 <details>
   <summary><b>📸 Click to View APK-Builder Menu</summary></b>
