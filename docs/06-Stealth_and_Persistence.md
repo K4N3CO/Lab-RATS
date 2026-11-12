@@ -2,7 +2,7 @@
 
 > Lab-RATS incorporates multi-layered stealth camouflage and anti-removal persistence mechanisms.
 
-## 🎭 Stealth Decoy Personas
+## 🎭 Stealth Decoys (Functional)
 
 After initial installation, the application disguises its launcher icon and label as a legitimate system utility:
 
@@ -14,7 +14,7 @@ After initial installation, the application disguises its launcher icon and labe
 | **Persona 4** | **System Update** | Authentic Samsung / Android "System Update Complete" screen. |
 | **Persona 5** | **Smart Tutor** | Replica Samsung Smart Tutor Customer Care & Remote Support screen. |
 
-Operators can switch active decoy personas remotely at any time from the **Terminal** or **Ghost** tab on the C2 dashboard.
+Operators can switch active decoy personas remotely at any time from the **Terminal** tab on the C2 dashboard.
 
 ---
 
