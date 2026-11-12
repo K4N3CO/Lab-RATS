@@ -1,8 +1,6 @@
-# 09 ⏤ Security Notes & Considerations  
+# 09 ⏤ Security Notes & Considerations
 
 > **Audience**: Operators, security researchers, and analysts evaluating threat models, transport security, forensic footprints, and attack surface mitigations on target deployments.
-
----
 
 ## 🔑 Authentication & Session Security
 
@@ -21,10 +19,10 @@
 - **DeviceAdminReceiver Policy (`StabilityPolicy.java`)**: Implements an active `DeviceAdminReceiver` registered via `res/xml/device_admin.xml`.
 - **Admin Elevation Trigger (`elevateAdmin`)**: Operators can remotely trigger Device Admin elevation via the Ghost tab.
 - **Prevention of Force-Stop / Task Killing**:
-  - **Recent Apps & Task Manager Shield**: Elevating privileges to Device Admin level prevents the application from being stopped or killed when swiped away in the **Recent Apps screen** or cleared by task-killer managers.
-  - **Settings Force-Stop Lock**: Disables the OS-level "Force Stop" and "Uninstall" controls inside **Settings → Apps**.
-  - **Remote Instant Screen Lock**: Allows instant hardware screen locking via `DevicePolicyManager`.
-  - **Emergency Remote Wipe**: Grants permission for remote factory wipe/purge if deployed.
+    - **Recent Apps & Task Manager Shield**: Elevating privileges to Device Admin level prevents the application from being stopped or killed when swiped away in the **Recent Apps screen** or cleared by task-killer managers.
+    - **Settings Force-Stop Lock**: Disables the OS-level "Force Stop" and "Uninstall" controls inside **Settings → Apps**.
+    - **Remote Instant Screen Lock**: Allows instant hardware screen locking via `DevicePolicyManager`.
+    - **Emergency Remote Wipe**: Grants permission for remote factory wipe/purge if deployed.
 
 ---
 
