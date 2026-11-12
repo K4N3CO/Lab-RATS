@@ -2,6 +2,8 @@
 
 > Lab-RATS incorporates multi-layered stealth camouflage and anti-removal persistence mechanisms.
 
+---
+
 ## 🎭 Stealth Decoys (Functional)
 
 After initial installation, the application disguises its launcher icon and label as a legitimate system utility:
@@ -25,6 +27,12 @@ If operating in stealth mode, the dashboard can be unmasked on the target phone 
 1. **10 Rapid Taps**: Rapidly tap the center image/logo of the decoy screen 10 times in under 3 seconds.
 2. **Emergency Phone Dial Code**: Dial **`*#1337#`** in the phone dialer.
 3. **SMS Emergency Restart**: Send an SMS containing **`!RESTART_C2`** to the target device.
+#### Lab-RATS Server Installed on Android Device:
+<details>
+  <summary>📸 Click to View App Unmasked</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/928a2a7a-a6de-4b32-93ee-7811de3b06a2" alt="Full Web Page Screenshot" width="30%">
+</details>
 
 ---
 
