@@ -1,6 +1,6 @@
 # 00 ⏤ 3-Minute Quickstart Guide
 
-Get Lab-RATS built, deployed, and connected in under 3 minutes.
+> Get Lab-RATS built, deployed, and connected in under 3 minutes.
 
 ---
 
