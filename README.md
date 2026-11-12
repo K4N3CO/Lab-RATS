@@ -315,7 +315,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 
 ### 1. Build the APK (on PC)
 1.  **Download the Repository**: `git clone https://github.com/K4N3CO/Lab-RATS.git`
-2.  **Navigate** to: `cd /Lab-RATS-v1.6/apk-builder/`
+2.  **Navigate** to: `cd /Lab-RATS/apk-builder/`
 3.  **Execute** the **Builder**:
     *   **Mac/Linux**: `chmod +x build.sh && ./build.sh`
     *   **Windows**: `build.bat`
