@@ -1460,30 +1460,21 @@ function toggleStealth() {
 }
 
 // Robust Audio Bridge Logic with _ih cleanup
-let audioCtx = null;
+let livePlayerObj = null;
 
 async function pollAudioChunk() {
   if (!_ac) return;
   try {
     const res = await fetch('/audio/chunk?t=' + Date.now());
     if (res.ok) {
-      const buf = await res.arrayBuffer();
-      if (buf.byteLength > 100 && _ac) {
-        if (!audioCtx) {
-          const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-          audioCtx = new AudioCtxClass({ sampleRate: 16000 });
+      const blob = await res.blob();
+      if (blob.size > 100 && _ac) {
+        const audioUrl = URL.createObjectURL(blob);
+        if (!livePlayerObj) {
+          livePlayerObj = new Audio();
         }
-        if (audioCtx.state === 'suspended') {
-          await audioCtx.resume();
-        }
-        audioCtx.decodeAudioData(buf, decoded => {
-          if (_ac && decoded) {
-            const source = audioCtx.createBufferSource();
-            source.buffer = decoded;
-            source.connect(audioCtx.destination);
-            source.start(0);
-          }
-        }, err => console.warn("Audio decode notice:", err));
+        livePlayerObj.src = audioUrl;
+        livePlayerObj.play().catch(e => console.warn("Blob play notice:", e));
       }
     }
   } catch (e) {
@@ -1498,9 +1489,9 @@ async function toggleLiveAudio() {
   const btn = document.getElementById('live-listen-btn');
   if (_ac) {
     _ac = false;
-    if (audioCtx) {
-      try { if (audioCtx.state !== 'closed') audioCtx.close(); } catch (e) {}
-      audioCtx = null;
+    if (livePlayerObj) {
+      try { livePlayerObj.pause(); livePlayerObj.removeAttribute('src'); } catch (e) {}
+      livePlayerObj = null;
     }
     if (btn) {
       btn.innerText = 'LISTEN_LIVE';
@@ -1512,20 +1503,6 @@ async function toggleLiveAudio() {
     showToast("LIVE_LISTENING_STOPPED");
   } else {
     _ac = true;
-
-    // Initialize & resume AudioContext directly inside click handler to satisfy browser autoplay
-    try {
-      if (!audioCtx) {
-        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AudioCtxClass({ sampleRate: 16000 });
-      }
-      if (audioCtx.state === 'suspended') {
-        await audioCtx.resume();
-      }
-    } catch (e) {
-      console.warn("AudioContext init notice:", e);
-    }
-
     if (btn) {
       btn.innerText = 'STOP_LISTENING';
       btn.style.opacity = '1';
