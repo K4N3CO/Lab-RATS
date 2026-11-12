@@ -75,7 +75,7 @@ Add an `index.html` at the root and send *that* URL:
 
 ```bash
 cd /tmp && mkdir labrats-dl && cd labrats-dl
-cp ~/Lab-RATS-v1.6/apk-builder/output/signed_v1.apk .
+cp ~/Lab-RATS/apk-builder/output/signed_v1.apk .
 touch .nojekyll
 git init -b main
 git remote add origin git@github.com:<user>/labrats-dl.git
