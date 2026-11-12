@@ -1664,22 +1664,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  if (document.getElementById("duration")) {
+  if (window.location.pathname.includes('/audio') || document.getElementById('live-listen-btn') || document.getElementById('audio-recordings-list')) {
+    let lastRecState = null;
     setInterval(() => {
       fetch("/audio/status")
         .then(res => res.json())
         .then(data => {
-          const durationElement = document.getElementById("duration");
-          if (data.isRecording && durationElement) {
-            const sec = data.duration;
-            const min = Math.floor(sec / 60);
-            const remainingSec = sec % 60;
-            durationElement.textContent = min + ":" + (remainingSec < 10 ? "0" : "") + remainingSec;
+          if (lastRecState !== null && data.isRecording !== lastRecState) {
+            lastRecState = data.isRecording;
+            location.reload();
+          } else {
+            lastRecState = data.isRecording;
+            const durationElement = document.getElementById("duration");
+            if (data.isRecording && durationElement) {
+              const sec = data.duration;
+              const min = Math.floor(sec / 60);
+              const remainingSec = sec % 60;
+              durationElement.textContent = min + ":" + (remainingSec < 10 ? "0" : "") + remainingSec;
+            }
           }
           if (data.callInProgress && !document.querySelector(".call-alert")) {
             location.reload();
           }
-        });
+        })
+        .catch(err => console.warn("Audio status check error:", err));
     }, 2000);
   }
 
