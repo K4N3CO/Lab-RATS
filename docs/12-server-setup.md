@@ -157,7 +157,7 @@ with socketserver.TCPServer(("::", 8080), functools.partial(H, directory=".")) a
 ```
 
 ```bash
-cd Lab-RATS-v1.6/apk-builder/output
+cd Lab-RATS/apk-builder/output
 python3 ../serve_apk.py     # adjust the path
 ```
 
@@ -247,8 +247,8 @@ screen — check-in will silently fail and the `Active C2 Link` field stays empt
 ## 5. Build
 
 ```bash
-git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git
-cd Lab-RATS-v1.6/apk-builder
+git clone https://github.com/K4N3CO/Lab-RATS.git
+cd Lab-RATS/apk-builder
 chmod +x build.sh && ./build.sh
 ```
 
