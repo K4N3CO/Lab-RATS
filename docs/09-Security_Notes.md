@@ -2,6 +2,8 @@
 
 > **Audience**: Operators, security researchers, and analysts evaluating threat models, transport security, forensic footprints, and attack surface mitigations on target deployments.
 
+---
+
 ## 🔑 Authentication & Session Security
 
 - **PBKDF2/SHA-256 On-Device Verification**: Passwords are authenticated on-device using PBKDF2 with SHA-256 hashing (`PasswordHasher.java`).
