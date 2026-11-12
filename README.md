@@ -356,6 +356,30 @@ Once the **target device** downloads the **APK**:
 ---
 
 <p align="left">
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Documentation+Index" alt="Typing Banner"/>
+</p>
+
+| File                                                               | Subject & Contents                                                  |
+|:-------------------------------------------------------------------|:--------------------------------------------------------------------|
+| **[00-Quickstart.md](00-Quickstart.md)**                           | 3-step quickstart guide from clone to live dashboard connection.    |
+| **[01-Requirements.md](01-Requirements.md)**                       | Workstation build host, JDK, Android SDK, and device compatibility. |
+| **[02-Building_Payloads.md](02-Building_Payloads.md)**             | Builder menu options, configuration keys, and decoy personas.       |
+| **[03-C2_Deployment.md](03-C2_Deployment.md)**                     | C2 deployment options: Render C2 relay, Direct IP, Google Sheets.   |
+| **[04-Device_HTTP-API.md](04-Device_HTTP-API.md)**                 | Device HTTP API reference for control endpoints.                    |
+| **[05-Dashboard_Reference.md](05-Dashboard_Reference.md)**         | Overview of the 13 C2 dashboard tabs and features.                  |
+| **[06-Stealth_and_Persistence.md](06-Stealth_and_Persistence.md)** | Decoy personas, 10-tap backdoor, watchdog layers, and anti-removal. |
+| **[07-Troubleshooting.md](07-Troubleshooting.md)**                 | Solutions for common build, installation, and connection issues.    |
+| **[08-Architecture.md](08-Architecture.md)**                       | High-level system architecture diagram and component map.           |
+| **[09-Security_Notes.md](09-Security_Notes.md)**                   | Security considerations, authentication, and forensic reduction.    |
+| **[10-FAQ.md](10-FAQ.md)**                                         | Frequently asked questions and answers.                             |
+| **[11-Maintaining_Your_Fork.md](11-Maintaining_Your_Fork.md)**     | Guidelines for rebranding and syncing upstream updates.             |
+| **[12-Server_Setup.md](12-Server_Setup.md)**                       | C2 server setup guide for Render.com and Linux VPS.                 |
+| **[13-Direct_IPv6_Hardening.md](13-Direct_IPv6_Hardening.md)**     | Direct IPv6 connection & pre-flight security hardening guide.       |
+| **[14-Free_IPv6_Hosting.md](14-Free_IPv6_Hosting.md)**             | Free hosting provider comparison.                                   |
+
+---
+
+<p align="left">
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
 </p>
 
