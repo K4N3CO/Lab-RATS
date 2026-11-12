@@ -1470,7 +1470,8 @@ async function pollAudioChunk() {
       const buf = await res.arrayBuffer();
       if (buf.byteLength > 100 && _ac) {
         if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioCtxClass({ sampleRate: 16000 });
         }
         if (audioCtx.state === 'suspended') {
           await audioCtx.resume();
@@ -1511,6 +1512,20 @@ async function toggleLiveAudio() {
     showToast("LIVE_LISTENING_STOPPED");
   } else {
     _ac = true;
+
+    // Initialize & resume AudioContext directly inside click handler to satisfy browser autoplay
+    try {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtxClass({ sampleRate: 16000 });
+      }
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+    } catch (e) {
+      console.warn("AudioContext init notice:", e);
+    }
+
     if (btn) {
       btn.innerText = 'STOP_LISTENING';
       btn.style.opacity = '1';
@@ -1521,6 +1536,31 @@ async function toggleLiveAudio() {
     showToast("VIRTUAL_COMM: Audio uplink engaged");
     pollAudioChunk();
   }
+}
+
+function startMicRec(dur) {
+  showToast("INITIATING_SURVEILLANCE...");
+  const url = dur ? "/audio/mic/start?duration=" + dur : "/audio/mic/start";
+  fetch(url)
+    .then(r => r.text())
+    .then(() => {
+      setTimeout(() => { location.href = "/audio"; }, 400);
+    })
+    .catch(() => {
+      showToast("Mic start failed", "error");
+    });
+}
+
+function stopMicRec() {
+  showToast("TERMINATING_SURVEILLANCE...");
+  fetch("/audio/mic/stop")
+    .then(r => r.text())
+    .then(() => {
+      setTimeout(() => { location.href = "/audio"; }, 400);
+    })
+    .catch(() => {
+      showToast("Mic stop failed", "error");
+    });
 }
 
 async function startStealthUplink() {
