@@ -3,7 +3,7 @@ services:
     name: lab-rats-c2
     env: node
     rootDir: c2-server
-    buildCommand: npm install
+    buildCommand: npm install --production
     startCommand: npm start
     plan: free
     autoDeploy: true
