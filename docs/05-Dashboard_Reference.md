@@ -1,6 +1,6 @@
 # 05 ⏤ Dashboard & Control Feature Reference
 
-The C2 Dashboard is the central web interface served directly by the device's internal server on port `9191` (or proxied via the Render C2 Relay).
+> The C2 Dashboard is the central web interface served directly by the device's internal server on port `9191` (or proxied via the Render C2 Relay).
 
 ---
 
@@ -8,7 +8,7 @@ The C2 Dashboard is the central web interface served directly by the device's in
 
 | # | Tab | Primary Function |
 | :--- | :--- | :--- |
-| **01** | **Terminal / Home** | Command shell, system monitor, C2 password management, server restart. |
+| **01** | **Terminal / Home** | Command shell, system monitor, C2 password management, Stealth, server restart. |
 | **02** | **Ghost** | Live touch control, blackout mode, remote screen lock, toast popups, keylogger, admin elevation. |
 | **03** | **Optics** | Remote camera photos, live video streaming, video recording, night mode exposure boost. |
 | **04** | **Locate** | GPS location tracking, satellite triangulation, interactive map view. |
@@ -29,6 +29,7 @@ The C2 Dashboard is the central web interface served directly by the device's in
 - **Interactive Shell (`root@Android`)**: Executes system shell commands directly on the device.
 - **Server Health Monitor**: Displays server status, active port, uptime, and active connection IP.
 - **`RESTART_SERVER`**: Re-executes the internal NanoHTTPD server engine if controls time out or hang.
+- **Stealth Operations**: Remotely swap the entire app identity and icon instantly using convincing, fully functional clones.
 - **`CHANGE C2 PASSWORD`**: Updates the C2 password. Uses `PasswordHasher` PBKDF2 with SHA-256 salted hashing and permanently revokes the default `admin1337` key.
 - **System Activity Log**: Live scrolling log of C2 events, check-ins, and executed commands.
 
