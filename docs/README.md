@@ -1,10 +1,10 @@
-# Lab-RATS v1.6 — Documentation
+# Lab-RATS — Documentation
 
 > Lightweight Android remote administration framework. Builds a signed APK, hosts a C2
 > dashboard on the device itself, and reaches it over IPv6 (or relays through a hosted
 > Node backend).
 
-**Upstream:** https://github.com/K4N3CO/Lab-RATS-v1.6 · **License:** MIT · **Author:** K4N3CO
+**Upstream:** https://github.com/K4N3CO/Lab-RATS · **License:** MIT · **Author:** K4N3CO
 
 ---
 
@@ -52,6 +52,6 @@ ngrok.
 ## 60-second tour
 
 ```bash
-git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git
-cd Lab-RATS-v1.6/apk-builder
+git clone https://github.com/K4N3CO/Lab-RATS.git
+cd Lab-RATS/apk-builder
 chmod +x build.sh && ./build.sh
