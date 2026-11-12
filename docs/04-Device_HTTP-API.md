@@ -2,6 +2,8 @@
 
 > The on-device server binds to port `9191` and exposes control endpoints over HTTP/JSON.
 
+---
+
 ## 🔑 Authentication
 
 All endpoints require authentication via session cookie or parameter:
