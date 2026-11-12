@@ -2,6 +2,8 @@
 
 > Lab-RATS offers 3 flexible C2 deployment options depending on your operational needs.
 
+---
+
 ## 🚀 Comparison Matrix
 
 | Option | Transport | C2 Web Dashboard | File Vault Storage | Setup Difficulty |
