@@ -17,7 +17,7 @@
 ### Option 1: Render.com C2 Relay Deployment (Recommended)
 **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
-**1. Fork the Lab-RATS-v1.6 repository**.
+**1. Fork the Lab-RATS repository**.
 <br>**2. Create a new Web Service for Free** on <a href="https://render.com" target="_blank">Render.com</a> and **connect your forked Lab-RATS repo**.
 <br>**3. Once connected, Set the Root Directory** to `c2-server/`
 <br>**4. Set the Build Command** to `npm install` & **the Start Command** to `npm start`
