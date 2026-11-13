@@ -438,29 +438,59 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
 
-### 1. Workstation & Build Requirements: *(To Build APKs)*
-* **Java Development Kit (JDK)**: **JDK 17 or JDK 21** *(JDK 21 recommended)*.
-    * Ensure `JAVA_HOME` is set in **your environment paths**.
-* **Android SDK**: **Android SDK 34** *(API Level 34)* or **higher**.
-    * **Build-Tools**: Version `34.0.0` or **higher** *(includes `aapt2`, `zipalign`, and `apksigner`)*.
-* **Python 3.x**: Required for **Option 7: Smali Surgery & APK Binder** *(`binder.py`)*.
-* **Gradle**: Handled **automatically** via the included `./gradlew` *(Gradle 8.10+)*.
+<details>
+  <summary><b>🛠️ 1. Workstation & Build Requirements (To Build APKs)</b></summary>
+  <br>
+  <ul>
+    <li><strong>Java Development Kit (JDK):</strong><br>
+  - <strong>JDK 17 or JDK 21</strong> <em>(JDK 21 recommended)</em>. Ensure <code>JAVA_HOME</code> is set in <strong>your environment paths</strong>.</li>
+    <li><strong>Android SDK:</strong><br>
+  - <strong>Android SDK 34</strong> <em>(API Level 34)</em> or <strong>higher</strong>. Build-Tools version <code>34.0.0</code> or <strong>higher</strong> <em>(includes <code>aapt2</code>, <code>zipalign</code>, and <code>apksigner</code>)</em>.</li>
+    <li><strong>Python 3.x:</strong><br>
+  - Required for <strong>Option 7: Smali Surgery & APK Binder</strong> <em>(<code>binder.py</code>)</em>.</li>
+    <li><strong>Gradle:</strong><br>
+  - Handled <strong>automatically</strong> via the included <code>./gradlew</code> <em>(Gradle 8.10+)</em>.</li>
+  </ul>
+</details>
 
-### 2. C2 Server Hosting Requirements: *(For Option 2: Render.com/Railway)*
-* **Node.js**: **v18.0.0** or **higher**.
-* **npm**: **v9.0.0** or **higher**.
-* **Render / Linux Hosting**: 512 MB RAM minimum *(Render Free Tier supported)*.
+<details>
+  <summary><b>☁️ 2. C2 Server Hosting Requirements (For Option 2: Render.com/Railway)</b></summary>
+  <br>
+  <ul>
+    <li><strong>Node.js:</strong><br>
+  - <strong>v18.0.0</strong> or <strong>higher</strong>.</li>
+    <li><strong>npm:</strong><br>
+  - <strong>v9.0.0</strong> or <strong>higher</strong>.</li>
+    <li><strong>Render / Linux Hosting:</strong><br>
+  - 512 MB RAM minimum <em>(Render Free Tier supported)</em>.</li>
+  </ul>
+</details>
 
-### 3. Android Device Compatibility:
-* **Minimum OS**: **Android 5.0** *(Lollipop/API 21)* or **higher**.
-* **Target OS**: **Android 14 - 17** *(API 34 - 37)* **fully supported**.
-* **Supported Devices**: **Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG**, and **generic Android devices/
-  emulators**.
+<details>
+  <summary><b>📱 3. Android Device Compatibility</b></summary>
+  <br>
+  <ul>
+    <li><strong>Minimum OS:</strong><br>
+  - <strong>Android 5.0</strong> <em>(Lollipop/API 21)</em> or <strong>higher</strong>.</li>
+    <li><strong>Target OS:</strong><br>
+  - <strong>Android 14 - 17</strong> <em>(API 34 - 37)</em> <strong>fully supported</strong>.</li>
+    <li><strong>Supported Devices:</strong><br>
+  - <strong>Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG</strong>, and <strong>generic Android devices/emulators</strong>.</li>
+  </ul>
+</details>
 
-### 4. Operating System Compatibility:
-* 🐧 **Linux**: **Kali Linux, Ubuntu, Debian, Arch** *(Full support for build scripts & C2 server)*.
-* 🍎 **macOS**: **macOS Monterey / Ventura / Sonoma / Sequoia** *(Intel & Apple Silicon M1/M2/M3/M4)*.
-* 🪟 **Windows**: **Windows 10 / 11 via PowerShell, Command Prompt**, or **WSL2**.
+<details>
+  <summary><b>💻 4. Operating System Compatibility</b></summary>
+  <br>
+  <ul>
+    <li><strong>🐧 Linux:</strong><br>
+  - <strong>Kali Linux, Ubuntu, Debian, Arch</strong> <em>(Full support for build scripts & C2 server)</em>.</li>
+    <li><strong>🍎 macOS:</strong><br>
+  - <strong>macOS Monterey / Ventura / Sonoma / Sequoia</strong> <em>(Intel & Apple Silicon M1/M2/M3/M4)</em>.</li>
+    <li><strong>🪟 Windows:</strong><br>
+  - <strong>Windows 10 / 11 via PowerShell, Command Prompt</strong>, or <strong>WSL2</strong>.</li>
+  </ul>
+</details>
 
 ---
 
@@ -490,24 +520,50 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 ### 2. Deploy & Install onto Android Devices
 **Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
-#### A. Strategic Weaponization: *(The Wrapper)*
-**Standard** `.apk` files are **often blocked by email filters and browser security**. Use the **Infection Chain Wizard** *(Option 6)* in the `apk-builder` tool to **wrap your link inside a high-compatibility carrier file**:
-*   **📑 Stealth PDF**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download, bypassing standard PDF security filters**.
-*   **🎬 Zero-Click MP4**: **Send as a video file**. It **exploits** mobile **Media Heap Overflows** during **gallery indexing or thumbnail generation** to **force-register the C2 link in the background**.
-*   **🔳 QR Code / 📡 NFC**: **Best for physical placement** or **"Tap-to-Infect" proximity delivery**. Generates a **high-density QR** or **NDEF record** pointing to the **hardened delivery URL**.
-*   **And Many More**: The **Wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document macros**.
+<details>
+  <summary><b>📑 Strategic Weaponization (The Wrapper)</b></summary>
+  <br>
+  <strong>Standard <code>.apk</code> files are often blocked by email filters and browser security. Use the Infection Chain Wizard <em>(Option 6)</em> in the <code>apk-builder</code> tool to wrap your link inside a high-compatibility carrier file:</strong>
+  <ul>
+    <li><strong>📑 Stealth PDF:</strong><br>
+  - Send to <strong>targets via Email or Drive</strong>. Utilizes <strong>URI Actions</strong> instead of <strong>JavaScript</strong> to trigger an <strong>automatic browser-based download, bypassing standard PDF security filters</strong>.</li>
+    <li><strong>🎬 Zero-Click MP4:</strong><br>
+  - <strong>Send as a video file</strong>. Exploits mobile <strong>Media Heap Overflows</strong> during <strong>gallery indexing or thumbnail generation</strong> to <strong>force-register the C2 link in the background</strong>.</li>
+    <li><strong>🔳 QR Code / 📡 NFC:</strong><br>
+  - <strong>Best for physical placement</strong> or <strong>"Tap-to-Infect" proximity delivery</strong>. Generates a <strong>high-density QR</strong> or <strong>NDEF record</strong> pointing to the <strong>hardened delivery URL</strong>.</li>
+    <li><strong>And Many More:</strong><br>
+  - The <strong>Wizard</strong> also supports <strong>ADB Strategic Bridge, Stego Image Tails, PWA Manifests</strong>, and <strong>Office Document macros</strong>.</li>
+  </ul>
+</details>
 
-#### B. Hosting Strategies:
-*   **Anonymous Cloud**: **Option 6** uses `Catbox.moe` **by default**. It is **anonymous, fast**, and **generates a direct link**. Now has   **fallback hosting on `Litterbox` or `Tmpfiles` if `Catbox.moe` fails**.
-*   **P2P Direct**: Host the **APK directly from your PC using a public tunnel**, or from **another infected device** using the `/download/` endpoint.
+<details>
+  <summary><b>🌐 Hosting Strategies</b></summary>
+  <br>
+  <ul>
+    <li><strong>Anonymous Cloud:</strong><br>
+  - <strong>Option 6</strong> uses <code>Catbox.moe</code> <strong>by default</strong>. It is <strong>anonymous, fast</strong>, and <strong>generates a direct link</strong>. Features <strong>fallback hosting on <code>Litterbox</code> or <code>Tmpfiles</code> if <code>Catbox.moe</code> fails</strong>.</li>
+    <li><strong>P2P Direct:</strong><br>
+  - Host the <strong>APK directly from your PC using a public tunnel</strong>, or from <strong>another infected device</strong> using the <code>/download/</code> endpoint.</li>
+  </ul>
+</details>
 
-#### C. Installation & Initialization:
-Once the **target device** downloads the **APK**:
-1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed.apk`
-2.  **NEW! 'One-Click' Permission Granting (CRITICAL)**: **Open the app ONCE**. **Only the initial Pop-up *(Accessibility Services)* must be manually toggled on**, **ALL other permissions are now auto-granted by the system** using a **convincing security sequence**.
--  -  **Remote Permission Prompt**: If a **User removes any permissions**, you can **remotely trigger the system prompts again** using the **repair buttons** in the **GHOST UTILITIES** section.
-3.  **Self-Vanishing**: A **few seconds after launch**, the app will **automatically replace its icon and name** with the **decoy you chose during build** *("System Update", "Calculator"...etc)*.
-4.  **Uplink Confirmation**: Check your **Google Sheet or Render  C2. Within 5 seconds of initialization**, the **Device ID, Connection Type, IP, Port, C2 Dashboard Link, Battery % and more will appear in the log**.
+<details>
+  <summary><b>🚀 Installation & Initialization</b></summary>
+  <br>
+  <strong>Once the target device downloads the APK:</strong>
+  <ul>
+    <li><strong>1. Manual Sideload:</strong><br>
+  - If you have <strong>physical access to the device</strong>, use <code>adb install signed.apk</code></li>
+    <li><strong>2. 'One-Click' Permission Granting (CRITICAL):</strong><br>
+  - <strong>Open the app ONCE</strong>. <strong>Only the initial Pop-up <em>(Accessibility Services)</em> must be manually toggled on</strong>; <strong>ALL other permissions are now auto-granted by the system</strong> using a <strong>convincing security sequence</strong>.</li>
+    <li><strong>3. Remote Permission Prompt:</strong><br>
+  - If a <strong>user removes any permissions</strong>, you can <strong>remotely trigger the system prompts again</strong> using the <strong>repair buttons</strong> in the <strong>GHOST UTILITIES</strong> section.</li>
+    <li><strong>4. Self-Vanishing:</strong><br>
+  - A <strong>few seconds after launch</strong>, the app will <strong>automatically replace its icon and name</strong> with the <strong>decoy you chose during build</strong> <em>("System Update", "Calculator"...etc)</em>.</li>
+    <li><strong>5. Uplink Confirmation:</strong><br>
+  - Check your <strong>Google Sheet or Render C2</strong>. <strong>Within 5 seconds of initialization</strong>, the <strong>Device ID, Connection Type, IP, Port, C2 Dashboard Link, Battery % and more will appear in the log</strong>.</li>
+  </ul>
+</details>
 
 ---
 
