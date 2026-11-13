@@ -308,10 +308,12 @@ alt="Typing Banner"
     <li><strong>Persistent Environment:</strong><br>
   - Full support for <strong>Termux's internal storage</strong> and <strong>standard Linux binaries</strong>.</li>
   </ul>
-  > [!NOTE]
-  > **Termux Bridge Issues**: "**Termux `allow-external-apps` setting is disabled**" *(Most Common)*.
-  <br>**Solution**: **On the Target Device** open **Termux and run**:
-  ```zsh
+  
+  > Termux Bridge Issues:<br>
+  > "Termux `allow-external-apps` setting is disabled" (Most Common).<br>
+  > Fix:<br>
+  > On the Target Device open Termux and run:
+  ```
   echo "allow-external-apps = true" >> ~/.termux/termux.properties
   termux-reload-settings
   ```
