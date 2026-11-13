@@ -518,7 +518,12 @@ app.get('/', (req, res) => {
     <link rel="stylesheet" href="/c2/style.css?v=${Date.now()}">
     <style>
         .nav { margin-top: -11px !important; }
-        @media (max-width: 768px) { .nav { margin-top: -11px !important; } }
+        @media (max-width: 768px) {
+            .header img { transform: none !important; width: 92% !important; max-width: 400px !important; margin-bottom: 8px !important; }
+            .header div { margin-top: 4px !important; font-size: 0.52rem !important; letter-spacing: 1px !important; }
+            .nav { margin-top: 10px !important; }
+            .card { margin-top: 10px !important; }
+        }
         @media (min-width: 1024px) { body { zoom: 0.9; } }
         .container { max-width: 1400px !important; width: 95% !important; margin: 0 auto !important; }
         .card { padding: 22px !important; overflow: visible !important; width: 100% !important; }

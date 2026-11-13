@@ -232,6 +232,7 @@ public class SystemAnalytics {
                     case 4: targetToEnable = basePkg + ".SystemUpdateAlias"; break;
                     case 5: targetToEnable = basePkg + ".SmartTutorAlias"; break;
                     case 6: targetToEnable = basePkg + ".LabRatsLogoAlias"; break;
+                    case 7: targetToEnable = basePkg + ".LauncherAlias"; break; // System Stability Service (Unmasked)
                     default: targetToEnable = basePkg + ".SettingsAlias"; break; // Play Protect default
                 }
             } else {
