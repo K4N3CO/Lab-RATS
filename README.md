@@ -632,9 +632,9 @@ https://github.com/user-attachments/assets/035088f1-e906-48c6-a1a6-0f7dd0356276
 
 ---
 
-### NEW! 'One-Click' Initial Install Sequence:
+### NEW! Masked 'One-Click' Initial Install Sequence (Samsung Flip 7)
 
-https://github.com/user-attachments/assets/f4464f26-8043-4bfa-b55b-c57efb224512
+https://github.com/user-attachments/assets/4f1722b0-f964-4d30-b315-9534e64da317
 
 ---
 
