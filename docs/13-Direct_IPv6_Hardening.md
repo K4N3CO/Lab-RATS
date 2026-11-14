@@ -40,7 +40,7 @@ Before applying security controls, understand what risks you are defending again
 ## 🔑 1. Credentials (Do This First)
 
 ### 1.1 Set a Long Passphrase
-- Change the default password upon first login via **Terminal** $\rightarrow$ **Change C2 Password**.
+- Change the default password upon first login via **Terminal** $\rightarrow$ **Secure Login**.
 - Use a 20+ character passphrase or a unique 5-word diceware passphrase to prevent offline or over-the-wire brute-forcing.
 
 ### 1.2 Replace the Session Cookie
