@@ -26,13 +26,13 @@
 - Update the default port constant in `FirebaseConfig.java`, update the wizard configuration in `build.sh`, and rebuild the APK.
 
 ### `How do I remove the app cleanly?`
-- Navigate to C2 Terminal $\rightarrow$ disable Anti-Removal $\rightarrow$ open Android Settings $\rightarrow$ Apps $\rightarrow$ Uninstall. Alternatively, trigger the remote **Suicide Command** to wipe local data and uninstall.
+- Navigate to the C2's Ghost Tab $\rightarrow$ disable Anti-Removal $\rightarrow$ open Android Settings $\rightarrow$ Apps $\rightarrow$ Uninstall. Alternatively, trigger the remote **Suicide Command** to wipe local data and uninstall.
 
 ### `Is Google Sheets check-in logging secure?`
 - Anyone with the Google Apps Script Web App URL can log check-in rows. Keep the Web App URL private and unlisted.
 
 ### `Does it run on Android emulators?`
-= Yes. However, Android emulators typically run on NATed IPv4 network bridges; use Render Relay Mode for emulator testing.
+- Yes. However, Android emulators typically run on NATed IPv4 network bridges; use Render Relay Mode for emulator testing.
 
 ### `Can I compile on Windows without WSL?`
 - Yes. `build.bat` (CMD) and `build.ps1` (PowerShell) run natively on Windows.
