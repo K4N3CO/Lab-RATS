@@ -1,4 +1,4 @@
-# 12 ⏤ Direct IPv6 Server Setup (Path C)
+# 12 ⏤ Direct IPv6 Server Setup
 
 > This guide provides complete instructions for operating in **Direct IPv6 Mode (Path C)** where no cloud relay backend is required—the target Android device itself acts as the C2 web server on port **9191**.
 
@@ -6,9 +6,12 @@
 
 ## 📌 When to Use This Setup
 
-- **When to use it:** The target device is assigned a publicly routable global IPv6 address by its carrier or Wi-Fi network, and you want direct peer-to-peer control without deploying a cloud relay server.
-- **When NOT to use it:** The target is behind an aggressive carrier firewall that blocks inbound ports, or is on an IPv4-only / NAT64 network. (In those cases, use **Render.com Relay Deployment** described in `03-C2_Deployment.md`).
-- **What "Server Config" means here:** Because the payload app runs its own HTTP server directly on the Android device, there is no external backend to deploy. Server setup consists of verifying network reachability, configuring discovery webhooks, hosting the installer APK, and connecting directly.
+### When to use it:
+- The target device is assigned a publicly routable global IPv6 address by its carrier or Wi-Fi network, and you want direct peer-to-peer control without deploying a cloud relay server.
+### When NOT to use it:
+- The target is behind an aggressive carrier firewall that blocks inbound ports, or is on an IPv4-only / NAT64 network. (In those cases, use **Render.com Relay Deployment** described in `03-C2_Deployment.md`).
+### What "Server Config" means here:
+- Because the payload app runs its own HTTP server directly on the Android device, there is no external backend to deploy. Server setup consists of verifying network reachability, configuring discovery webhooks, hosting the installer APK, and connecting directly.
 
 ---
 
@@ -98,7 +101,8 @@ sudo ufw allow 9191/tcp
 sudo ip6tables -A INPUT -p tcp --dport 8080 -j ACCEPT
 ```
 
-*Note:* If hosting on a cloud VM (AWS, Oracle, DigitalOcean), also open TCP port `8080` in your Cloud Security Group / Inbound Rules.
+> [!IMPORTANT]
+> If hosting on a cloud VM (AWS, Oracle, DigitalOcean), also open TCP port `8080` in your Cloud Security Group / Inbound Rules.
 
 ---
 
@@ -120,11 +124,11 @@ Host a minimal HTTP endpoint to capture incoming POST check-in payloads containi
 ```
 
 ### Option 4c — Google Sheets Logging Webhook
-Use a free Google Apps Script web app to log device check-ins directly into a Google Sheet:
+Use a **free Google Apps Script web app** to log device check-ins directly into a Google Sheet:
 1. Open [Google Sheets](https://docs.google.com/spreadsheets/) and create a new spreadsheet.
 2. Click **Extensions** $\rightarrow$ **Apps Script**.
 3. Paste the Apps Script code from `03-C2_Deployment.md` and click **Deploy** $\rightarrow$ **New deployment**.
-4. Set **Who has access** to **Anyone**. Copy the published Web App URL and use it as your C2 Webhook URL.
+4. Set **Who has access** (your E-mail) $\rightarrow$ **Anyone**. **Copy the published Web App URL and use it as your C2 Webhook URL**.
 
 ---
 
@@ -144,7 +148,7 @@ Follow the interactive prompts:
 3. Enter your **C2 Webhook URL** (or leave blank if using physical access).
 4. Set your **C2 Password** (default: `admin1337`).
 
-The build wizard outputs the final compiled binary to `apk-builder/output/signed_v1.apk`.
+The **build wizard** outputs the final compiled binary to `apk-builder/output/`.
 
 ---
 
@@ -207,6 +211,6 @@ To avoid managing raw IPv6 strings:
 
 When exposing port `9191` directly to the internet:
 
-1. **Change Default Password:** Change `admin1337` immediately upon first login via **Terminal** $\rightarrow$ **Change C2 Password**.
+1. **Change Default Password:** Change `admin1337` immediately upon first login via **Terminal** $\rightarrow$ **Secure Login**.
 2. **Restrict Public Exposure:** Use SSH tunneling (`ssh -N -L 9191:[<target-v6>]:9191 user@server`) or a TLS reverse proxy (Caddy / Nginx) to encrypt communications.
 3. **Custom Package Name:** Set a unique `PKG_NAME` in `local.properties` before compilation to avoid detection.

@@ -388,7 +388,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 3. Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(E-Mail)* → **Who has Access: Anyone**.
 
 > [!IMPORTANT]
-> 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ0dYdi...`)* and **prepare to paste it into the APK-builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
+> 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ0dYdi...`)* and **prepare to paste it into the APK-Builder when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
 
 <details>
   <summary><b>📸 View Google Sheet Reporting Example</summary></b>
@@ -400,14 +400,14 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ### ✌🏻 Option 2: Render Web Service (Tactical Node.js Backend)
 **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
-**1. Fork the Lab-RATS-v1.6 repository**.
-<br>**2. Create a new Web Service for Free** on <a href="https://render.com" target="_blank">Render.com</a> and **connect your forked Lab-RATS repo**.
+**1. Fork the Lab-RATS repository**.
+<br>**2. Create a New Web Service for Free** on <a href="https://render.com" target="_blank">Render.com</a> and **connect your forked Lab-RATS repo**.
 <br>**3. Once connected, Set the Root Directory** to `c2-server/`
 <br>**4. Set the Build Command** to `npm install` & **the Start Command** to `npm start`
 <br>**5. Deploy!**
 
 > [!IMPORTANT]
-> **Once live, Copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, and **prepare to enter it into the APK-Builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
+> **Once live, Copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, and **prepare to enter it into the APK-Builder when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
 
 <details>
   <summary><b>🌐 Advantages of Option 2</b></summary>
@@ -661,7 +661,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
  />
 </p>
 
-### 00. Lab-RATS Server Installed on Android Device:
+### 00. Lab-RATS Installed on Android Device:
 
 <details>
   <summary>📸 View App Screenshot</summary>
@@ -674,7 +674,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 01. Home/Terminal Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/7f4e02c5-4984-48e5-a76c-6c4ba530495c" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -684,7 +684,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 02. Ghost Operations Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/3eb33ae7-aebd-4464-8547-979bb296eb27" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -694,7 +694,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 03. Optics/Live Camera Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/bea953b9-753e-412d-b10e-12ded5055d82" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -704,7 +704,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 04. Locate/Live GPS Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/3425ccc3-db7b-43ab-b3b9-8cb3c555469b" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -714,7 +714,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 05. Exploit Factory Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/2aaa4c63-1ee8-4589-a78c-c2fc6e4deadf" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -724,7 +724,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 06. Device Data/Storage Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/835edd2f-35b4-4b7d-b527-c36ffa18990f" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -734,7 +734,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 07. Intel/App Notifications Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/5ff097a0-4460-4a54-a149-253b628f7f01" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -744,7 +744,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 08. SMS/Text Message Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/54acccb7-b412-4a57-9c15-ca36ce58050d" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -754,7 +754,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 09. MMS/Multimedia Message Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/5340b242-bec6-440f-80ae-b1850d6eb163" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -764,7 +764,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 10. Acoustics/Audio Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/4ec71933-6264-4d75-90db-aebfdf40e636" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -774,7 +774,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 11. Comms/Call Logs Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/ae00ca08-43e0-42c8-8bfa-fde16523d096" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -784,7 +784,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 12. Contacts Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/1da37dba-a84a-4e0f-8453-d763e73bade0" alt="Full Web Page Screenshot" width="80%">
 </details>
@@ -794,7 +794,7 @@ https://github.com/user-attachments/assets/cff1facc-8657-4707-a1dc-5208640e9c2a
 ### 13. Hardware/Device Info Tab:
 
 <details>
-  <summary>📸 View Dashboard Screenshot</summary>
+  <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/f1874c3d-0866-4c1f-9f94-f5ca2c1aed6e" alt="Full Web Page Screenshot" width="80%">
 </details>
