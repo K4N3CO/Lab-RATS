@@ -20,9 +20,9 @@
  />
 </p>
 
-> Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S)*
+> Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S.)*
 
-**Developed from the ground up by K4N3CO, Lab-RATS is an open-source, lightweight Android Remote Administration framework** packed with powerful **monitoring** and **interaction capabilities**. The system **automates the generation of custom, signed `.apk` files** for **deployment onto any Android device**, providing **full device telemetry** via a **sleek, web-based C2 dashboard**. Built to adapt to **strict modern mobile environments**, it delivers a **robust feature suite** that **operates reliably** across both **legacy** and the **newest Android releases**.
+Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, lightweight Android Remote Administration Framework** packed with **real-time telemetry** and **covert control capabilities**. The framework **automates the generation of custom, signed `.apk` payloads** for seamless deployment onto **any Android devices**, paired with a **responsive, web-based C2 dashboard**. Engineered for **resilience in modern mobile security environments**, **Lab-RATS** delivers a **robust feature suite** operating reliably across both **legacy** and **current Android OS releases**.
 <details>
   <summary><b>📸 View Comparative Breakdown</summary></b>
   <br>
@@ -37,7 +37,20 @@ alt="Typing Banner"
  />
 </p>
 
-**Lab-RATS leverages the unique characteristics of publicly routable IPv6 addresses assigned by modern Wi-Fi and cellular *(5G/LTE)* carriers**. By **binding the control server directly to a device's Global Unicast Address** *(GUA)*, the tool **completely bypasses Carrier-Grade NAT** *(CGNAT)* and **inbound firewall restrictions**. This architecture **enables seamless, Zero-Configuration peer-to-peer** *(P2P)* **remote access from any modern web browser worldwide**—completely **eliminating the need for router manipulation, port forwarding**, or **third-party tunneling services** like **Ngrok** or **Pinggy**.
+## 🌐 How Direct IPv6 Mode Works in Lab-RATS
+
+### 1. What is Direct IPv6 Mode?
+In Direct IPv6 Mode, **the target Android device itself acts as the C2 web server**. An embedded HTTP server (`NanoHTTPD`) runs inside the background Android service and listens directly on port `9191`.
+
+### 2. The IPv6 Advantage: Eliminating CGNAT & Port Forwarding
+* **The Traditional IPv4 Problem:** On standard IPv4 mobile networks (3G/4G/5G), cellular carriers place devices behind **Carrier-Grade NAT (CGNAT)**. This shares a single public IP address among thousands of mobile devices, making incoming connections impossible without port forwarding, reverse proxies, or tools like Ngrok.
+* **The IPv6 Solution:** IPv6 assigns a unique **Global Unicast Address (GUA)** directly to the phone on 5G/LTE and Wi-Fi networks. Because every IPv6 address is globally unique and addressable across the internet, the C2 operator can connect directly to the target phone using its IPv6 address in any web browser (`http://[2001:db8::1]:9191`).
+
+### 3. Zero-Configuration Peer-to-Peer (P2P) Control
+* **No Cloud Relay Required:** Traffic flows directly between the operator's browser and the target device without passing through an intermediate cloud server.
+* **No Router Access Needed:** Eliminates the need to access the target's Wi-Fi router or configure firewall rules.
+* **Low Latency:** Eliminating middleman servers results in instant command execution and live screen streaming.
+
 <details>
   <summary><b>📸 View IPv6 Exploit Vector</summary></b>
   <br><p align="center">
@@ -45,7 +58,7 @@ alt="Typing Banner"
 </details>
 
 > [!NOTE]
-> **Lab-RATS now supports IPv4 connections** by **hosting on Render.com** *(Free Tier Supported)*. See **"Command & Control Option 2"** below for the **setup guide**.
+> **Lab-RATS also supports IPv4 connections** by **hosting on Render.com** *(Free Tier Supported)*. See **"Command & Control Option 2"** below for the **setup guide**.
 
 ---
 
@@ -330,7 +343,19 @@ alt="Typing Banner"
 </p>
 
 **Lab-RATS** supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
-### ☝🏻 Option 1: Google Sheet *(Updated)*
+
+### 🔄 Direct IPv6 (Google Sheet) vs. Render Cloud Relay (Node.js)
+
+| Feature | Direct IPv6 Mode (P2P) | Render Cloud Relay Mode |
+| :--- | :--- | :--- |
+| **Server Architecture** | On-Device (`NanoHTTPD` on port `9191`) | Cloud Server (`c2-server/server.js`) |
+| **Network Requirement** | Public IPv6 Address (`2xxx:` or `3xxx:`) | Any Network (IPv4, IPv6, NAT, Firewall) |
+| **Bypasses CGNAT & Routers** | Yes (via IPv6 Global Address) | Yes (via Outbound Relay Tunnel) |
+| **Third-Party Infrastructure** | None (Direct P2P Connection) | Render / Express Node |
+| **Latency** | Ultra-Low (Direct Stream) | Low (Relay Stream) |
+| **Best Used For** | Direct peer-to-peer control on 5G/Wi-Fi | Networks blocking inbound connections |
+
+### ☝🏻 Option 1: Direct IPv6 (Google Sheet) 
 **Best for Basic IP tracking** & **logging**. **NO server maintenance required!**.
 
 1. **Create a New** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
@@ -397,7 +422,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 ---
 
-### ✌🏻 Option 2: Render Web Service (Tactical Node.js Backend)
+### ✌🏻 Option 2: Render Cloud Relay (Tactical Node.js Backend)
 **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
 **1. Fork the Lab-RATS repository**.
