@@ -112,3 +112,8 @@ build_log.txt
 # Node / Builder
 node_modules/
 package-lock.json
+
+# Environment / Secret Files
+.env
+*.env
+

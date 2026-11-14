@@ -156,7 +156,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnStartStop"
-                android:layout_width="241dp"
+                android:layout_width="256dp"
                 android:layout_height="43dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="13dp"
@@ -176,7 +176,7 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCopyUrl"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="237dp"
+                android:layout_width="244dp"
                 android:layout_height="37dp"
                 android:layout_gravity="center"
                 android:layout_marginBottom="9dp"
@@ -220,7 +220,7 @@
 
                 <TextView
                     android:id="@+id/tvTerminalFeedback"
-                    android:layout_width="275dp"
+                    android:layout_width="276dp"
                     android:layout_height="36dp"
                     android:alpha="0.8"
                     android:fontFamily="@font/aldrich"

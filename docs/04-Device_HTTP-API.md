@@ -6,9 +6,13 @@
 
 ## 🔑 Authentication
 
-All endpoints require authentication via session cookie or parameter:
-- **Session Cookie**: `c2_auth_token=AUTH_OK_1337` (issued upon POST to `/login` with valid password).
-- **Default Credentials**: Password defaults to `admin1337` on fresh installs until customized.
+All endpoints require authentication via JWT HttpOnly session cookies or legacy bearer tokens:
+- **JWT Rotated Cookies**: Authenticated sessions issue two strict `HttpOnly` cookies upon POST to `/login` or `/api/auth/login`:
+  - `access_token`: Short-lived access token (5 min expiration, verified with `ACCESS_SECRET`).
+  - `refresh_token`: Long-lived refresh token (7 days expiration, path restricted to `/api/auth/rotate`).
+- **Token Rotation & Breach Detection**: Client calls `POST /api/auth/rotate` to swap an expired `access_token` for a new pair. If a refresh token reuse attempt is detected, the server nukes the entire session family (`familyId`) and revokes access.
+- **Legacy Token Fallback**: `c2_auth_token=AUTH_OK_1337` (issued for backward compatibility).
+- **Default Credentials**: Password defaults to `admin1337` on fresh installs until customized via environment variable `C2_PASSWORD` or on-device `PasswordHasher`. Rate-limited to 5 attempts per 15 minutes via `express-rate-limit`.
 
 ---
 

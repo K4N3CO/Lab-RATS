@@ -22,33 +22,35 @@ Before applying security controls, understand what risks you are defending again
 
 ---
 
-## ⚡ Severity of Default Posture
+## ⚡ Severity of Default Posture & Hardened Controls
 
-| Setting | Default Posture | Risk Level | Description |
+| Setting | Default Posture | Risk Level | Hardened Mitigation |
 | :--- | :--- | :--- | :--- |
-| **Password** | `admin1337` | **Critical** | Public default password known to scanners |
-| **Session Cookie** | `AUTH_OK_1337` | **High** | Portable static bearer token without expiration |
-| **Transport** | Plain HTTP | **High** | Cleartext traffic susceptible to interception on open networks |
-| **Rate Limiting** | None | **High** | Allows rapid brute-force passphrase attempts |
-| **Bind Scope** | `0.0.0.0` | **Medium** | Listens on all active interfaces (Wi-Fi, Cellular, Tethering) |
-| **Source Allowlist** | None | **Medium** | Open to all incoming IPv6 addresses |
-| **Port** | `9191` | **Low** | Fixed port fingerprint |
-| **Package / Signer** | Lab-RATS Defaults | **Low** | Default app package name and signature attribution |
+| **Password** | `admin1337` | **Critical** | Override via `C2_PASSWORD` in `.env` or C2 Terminal |
+| **Session Cookie** | `access_token` / `refresh_token` | **Mitigated** | Single-use JWT rotated HttpOnly cookies with Breach Detection |
+| **Rate Limiting** | Active on `/login` | **Mitigated** | `express-rate-limit` enforces 5 attempts max per 15m window |
+| **Transport** | HTTPS on Render | **Mitigated** | TLS termination with `SameSite=None` and `Secure: true` |
+| **Bind Scope** | `0.0.0.0` | **Medium** | Listens on active interfaces (Wi-Fi, Cellular, Tethering) |
+| **Source Allowlist** | None | **Medium** | Open to incoming connections without overlay/firewall |
+| **Port** | `9191` | **Low** | Fixed port fingerprint (customizable in `FirebaseConfig.java`) |
 
 ---
 
-## 🔑 1. Credentials (Do This First)
+## 🔑 1. Credentials & Session Hardening (Do This First)
 
-### 1.1 Set a Long Passphrase
-- Change the default password upon first login via **Terminal** $\rightarrow$ **Secure Login**.
-- Use a 20+ character passphrase or a unique 5-word diceware passphrase to prevent offline or over-the-wire brute-forcing.
-
-### 1.2 Replace the Session Cookie
-- The default session cookie constant (`AUTH_OK_1337`) is static across installs.
-- Replace `AUTH_OK_1337` with a unique value across `app/src/main/java/` and `c2-server/`:
-  ```bash
-  grep -rn "AUTH_OK_1337" app/src/main/java/ c2-server/
+### 1.1 Set a Custom Passphrase & Secrets
+- Configure custom secrets in `c2-server/.env` or deployment variables:
+  ```env
+  C2_PASSWORD=YourStrongCustomPasscode2026
+  ACCESS_SECRET=your_unique_access_secret_key_987654321
+  REFRESH_SECRET=your_unique_refresh_secret_key_123456789
   ```
+- Change the default password upon first login via **Terminal** $\rightarrow$ **Secure Login**.
+
+### 1.2 JWT Cookie Rotation & Breach Detection
+- Authentication issues short-lived 5-minute `access_token` cookies and 7-day single-use `refresh_token` cookies (path restricted to `/api/auth/rotate`).
+- On every token rotation call, the server marks the refresh token as spent (`used = true`).
+- If token reuse is detected (indicating token theft), **Breach Detection** revokes the entire session family (`familyId`) and invalidates access across all devices.
 
 ---
 
@@ -182,18 +184,17 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST -d 'p=invalid_pass' "http://[<t
 ## ⚠️ 11. Residual Risk
 
 Even after full hardening:
-- Session cookies act as bearer tokens without built-in expiration dates.
-- Direct mode traffic requires SSH or TLS proxies to prevent cleartext network inspection.
-- Anyone with port access can attempt authentication on the login endpoint.
+- Direct mode traffic on raw IP requires SSH or TLS proxies to prevent cleartext network inspection.
+- Anyone with port access can attempt authentication on the login endpoint (mitigated by 5-attempt rate limiting and JWT rotation).
 - Accessibility remains a visible service listing in Android System Settings.
 
 ---
 
 ## 📋 12. Hardening Checklist
 
-- [ ] Long, unique passphrase set at first login.
-- [ ] `admin1337` default password overridden in source code and rebuilt.
-- [ ] Cookie constant changed from `AUTH_OK_1337` in `app` and `c2-server`.
+- [ ] Long, unique passphrase set in `C2_PASSWORD` or via C2 Terminal.
+- [ ] Unique `ACCESS_SECRET` and `REFRESH_SECRET` defined in `c2-server/.env`.
+- [ ] JWT HttpOnly cookie rotation and rate limiting verified.
 - [ ] Non-default Package ID and RSA Keystore generated.
 - [ ] Port `9191` changed, or IPv6 allowlist / Tailscale overlay configured.
 - [ ] SSH tunnel or Caddy TLS reverse proxy configured for unencrypted transport protection.

@@ -174,9 +174,9 @@ adb shell am start -n <package_id>/.MainActivity
 Once the device checks in:
 
 1. Open your web browser on your workstation.
-2. Navigate to the device's IPv6 address on port `9191` enclosed in square brackets:
-   `http://[<target-ipv6-address>]:9191/`
-3. Enter the C2 password (default: `admin1337`) to access the full 13-tab control dashboard.
+2. Navigate to your C2 Server on Render (`https://your-c2.onrender.com`) or direct address `http://[<target-ipv6-address>]:9191/`.
+3. Enter the C2 password (default: `admin1337` or value of `C2_PASSWORD` in `.env`) to access the full 13-tab control dashboard.
+4. Upon authentication, the server sets strict `HttpOnly` JWT `access_token` and `refresh_token` cookies.
 
 ---
 
@@ -207,10 +207,18 @@ To avoid managing raw IPv6 strings:
 
 ---
 
-## 10. Security Hardening
+## 10. Security Hardening & Environment Configuration
 
-When exposing port `9191` directly to the internet:
+When deploying the C2 Server (e.g. on Render) or exposing port `9191`:
 
-1. **Change Default Password:** Change `admin1337` immediately upon first login via **Terminal** $\rightarrow$ **Secure Login**.
-2. **Restrict Public Exposure:** Use SSH tunneling (`ssh -N -L 9191:[<target-v6>]:9191 user@server`) or a TLS reverse proxy (Caddy / Nginx) to encrypt communications.
-3. **Custom Package Name:** Set a unique `PKG_NAME` in `local.properties` before compilation to avoid detection.
+1. **Configure Environment Secrets (`.env`):** Set strong, unique values in your environment variables:
+   ```env
+   C2_PASSWORD=YourStrongCustomPassword2026
+   ACCESS_SECRET=your_jwt_access_secret_key_32_chars_long
+   REFRESH_SECRET=your_jwt_refresh_secret_key_32_chars_long
+   NODE_ENV=production
+   ```
+2. **Enable Trust Proxy on Reverse Proxies:** Ensured `app.set('trust proxy', 1)` is enabled in `server.js` for Render reverse-proxy rate limiting and secure HttpOnly cookies.
+3. **Change Default Password:** Change `admin1337` immediately upon first login via **Terminal** $\rightarrow$ **Secure Login**.
+4. **Restrict Public Exposure:** Use SSH tunneling (`ssh -N -L 9191:[<target-v6>]:9191 user@server`) or a TLS reverse proxy (Caddy / Nginx) to encrypt communications.
+5. **Custom Package Name:** Set a unique `PKG_NAME` in `local.properties` before compilation to avoid detection.

