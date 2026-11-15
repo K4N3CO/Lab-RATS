@@ -1283,20 +1283,16 @@ public class IO_Persistence_Manager extends AccessibilityService {
         int cy = sh / 2;
 
         if ("down".equalsIgnoreCase(direction) || "forward".equalsIgnoreCase(direction)) {
-            // Scroll DOWN (drag finger UP from 70% to 25%)
+            // Scroll DOWN (drag finger UP vertically from 70% to 25%)
             success = swipe(cx, (int)(sh * 0.70), cx, (int)(sh * 0.25), 350);
-            boolean nativeOk = performNativeScroll(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
-            success = success || nativeOk;
         } else if ("up".equalsIgnoreCase(direction) || "backward".equalsIgnoreCase(direction)) {
-            // Scroll UP (drag finger DOWN from 25% to 70%)
+            // Scroll UP (drag finger DOWN vertically from 25% to 70%)
             success = swipe(cx, (int)(sh * 0.25), cx, (int)(sh * 0.70), 350);
-            boolean nativeOk = performNativeScroll(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
-            success = success || nativeOk;
         } else if ("left".equalsIgnoreCase(direction)) {
-            // Swipe LEFT (drag finger LEFT from 80% to 20%)
+            // Swipe LEFT (drag finger LEFT horizontally from 80% to 20%)
             success = swipe((int)(sw * 0.80), cy, (int)(sw * 0.20), cy, 350);
         } else if ("right".equalsIgnoreCase(direction)) {
-            // Swipe RIGHT (drag finger RIGHT from 20% to 80%)
+            // Swipe RIGHT (drag finger RIGHT horizontally from 20% to 80%)
             success = swipe((int)(sw * 0.20), cy, (int)(sw * 0.80), cy, 350);
         }
         return success;
