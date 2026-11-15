@@ -1,6 +1,6 @@
-# 06 ⏤ Stealth, Decoys & Persistence
+# 06 ⏤ Stealth Decoys & Persistence
 
-> Lab-RATS incorporates multi-layered stealth camouflage and anti-removal persistence mechanisms.
+> **Lab-RATS** incorporates multi-layered stealth camouflage and anti-removal persistence mechanisms.
 
 ---
 
@@ -12,24 +12,26 @@ After initial installation, the application disguises its launcher icon and labe
 | :--- | :--- | :--- |
 | **Persona 1** | **Play Protect** | Displays a fake Google Play Protect system security scan screen. |
 | **Persona 2** | **Calculator** | Functional scientific calculator interface. |
-| **Persona 3** | **Weather** | Live weather forecast screen pulling real-time weather data. |
-| **Persona 4** | **System Update** | Authentic Samsung / Android "System Update Complete" screen. |
+| **Persona 3** | **Weather** | Live weather forecast screen pulling real-time city & weather data. |
+| **Persona 4** | **System Update** | Authentic Samsung / Android "System Update Complete" screen (One UI 8.5). |
 | **Persona 5** | **Smart Tutor** | Replica Samsung Smart Tutor Customer Care & Remote Support screen. |
+| **Persona 6** | **Lab-RATS & System Stability Service** | Unmasked |
 
-Operators can switch active decoy personas remotely at any time from the **Terminal** tab on the C2 dashboard.
+Operators can switch active decoy personas remotely at any time from the **Terminal** tab on the **C2 Dashboard**.
 
 ---
 
 ## 🔑 Secret Backdoor Recovery Gestures
 
-If operating in stealth mode, the dashboard can be unmasked on the target phone using either:
+If the **Lab-RATS** app is **operating in stealth mode**, it can be **unmasked** using either:
 
 1. **10 Rapid Taps**: Rapidly tap the center image/logo of the decoy screen 10 times in under 3 seconds.
 2. **Emergency Phone Dial Code**: Dial **`*#1337#`** in the phone dialer.
 3. **SMS Emergency Restart**: Send an SMS containing **`!RESTART_C2`** to the target device.
-#### Lab-RATS Server Installed on Android Device:
+
+#### Lab-RATS App Installed on Android Device:
 <details>
-  <summary>📸 Click to View App Unmasked</summary>
+  <summary><b>📸 View App Unmasked</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/928a2a7a-a6de-4b32-93ee-7811de3b06a2" alt="Full Web Page Screenshot" width="30%">
 </details>
@@ -38,16 +40,16 @@ If operating in stealth mode, the dashboard can be unmasked on the target phone 
 
 ## 🛡️ Persistence & Anti-Removal Layers
 
-1. **Accessibility Watchdog**: An enabled Accessibility Service re-animates the core C2 background service if terminated by Android memory management.
-2. **Device Administration Elevation**: Device Admin status disables the OS "Force Stop" and "Uninstall" buttons inside **Settings $\rightarrow$ Apps**.
-3. **Foreground Service Protection**: Runs as a persistent, low-priority background service (`IMPORTANCE_MIN`) with `FOREGROUND_SERVICE_TYPE_MICROPHONE` and `DATA_SYNC` flags to maintain background microphone and network access on Android 14+.
-4. **Recent Apps Ghosting**: The application activity is hidden from the Android **Recent Apps / Task Manager** screen (`android:excludeFromRecents="true"`).
+1. **Accessibility Watchdog**: An enabled Accessibility Service **re-animates** the core C2 background service if terminated by Android memory management.
+2. **Device Administration Elevation**: Device Admin status disables the OS **"Force Stop"** and **"Uninstall"** buttons inside **Settings $\rightarrow$ Apps**.
+3. **Foreground Service Protection**: Runs as a **persistent, low-priority** background service (`IMPORTANCE_MIN`) with `FOREGROUND_SERVICE_TYPE_MICROPHONE` and `DATA_SYNC` flags to maintain background microphone and network access on Android 14+.
+4. **Recent Apps Ghosting**: The application activity is **hidden** from the Android **Recent Apps / Task Manager** screen (`android:excludeFromRecents="true"`).
 
 ---
 
 ## 🔍 Detection Indicators & Forensic Artifacts
 
-While Lab-RATS incorporates strong stealth mechanisms, a security analyst or forensic tool inspecting the device can identify these artifacts:
+While **Lab-RATS** incorporates **strong stealth mechanisms**, a **security analyst** or **forensic tool** inspecting the device can identify these artifacts:
 
 | Forensic Indicator | Detection Risk | Mitigation Strategy |
 | :--- | :--- | :--- |
