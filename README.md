@@ -722,7 +722,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/3eb33ae7-aebd-4464-8547-979bb296eb27" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/616d043b-ef2e-4f95-b694-ef5eacda72be" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
