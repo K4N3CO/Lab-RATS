@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Comparison Matrix
+## 👀 Comparison Matrix
 
 | Option | Transport | C2 Web Dashboard | File Vault Storage | Setup Difficulty |
 | :--- | :--- | :--- | :--- | :--- |
@@ -14,7 +14,7 @@
 
 ---
 
-### Option 1: Render.com C2 Relay Deployment (Recommended)
+## ☝🏻 Option 1: Render.com C2 Relay Deployment (Recommended)
 **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
 **1. Fork the Lab-RATS repository**.
@@ -24,28 +24,38 @@
 <br>**5. Deploy!**
 
 > [!IMPORTANT]
-> **Once live, Copy your Render URL** *(e.g., `https://labrats-github.onrender.com`)*, and **prepare to enter it into the APK-Builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
+> **Once live, Copy your Render URL** *(e.g., `https://your_lab_name.onrender.com`)*, and **prepare to enter it into the APK-Builder Tool when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
 <details>
-  <summary><b>📸 Click to View Render Setup</summary></b>
+  <summary><b>📸 View Render Setup</summary></b>
   <br>
   <img src="https://github.com/user-attachments/assets/7cc93099-7528-40b1-b261-de7f72dfc54a" alt="Full Web Page Screenshot" width="50%">
   <img src="https://github.com/user-attachments/assets/bc6d4e57-3053-4d21-b46e-f3241cdb959a" alt="Full Web Page Screenshot" width="50%">
   </details>
 
 <details>
-  <summary><b>📸 Click to View Render C2 Screenshot</summary></b>
+  <summary><b>📸 View Render C2 Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/308a906f-c331-406b-8718-23b2d113a04a" alt="Full Web Page Screenshot" width="80%">
+    <img width="967" height="700" alt="Screenshot 2026-11-14 at 3 00 47 PM" src="https://github.com/user-attachments/assets/a33d0f30-3963-4f79-a4b5-decea23f6639" />
 </details>
 
-### Advantages of Option 2:
-- 🌐 **Dual-Stack IP Binding**: **Full support for both IPv4 and IPv6 connections**, **enabling seamless C2 telemetry** and **reverse WebSocket tunneling** across **cellular carrier NAT64** and **dual-stack Wi-Fi networks worldwide**.
-- 📂 **Exfiltration Vault**: **Audio/Video recordings** are **automatically uploaded** and **stored on your server**.
-- 📡 **Live Fleet List**: A **professional dashboard** to **manage all devices in one place**, with **editable device name** for **easy device recognition** and **NEW 'Quick Action' pull-down menu** to **deploy some features without directly connecting**.
-- 🔄 **Dynamic Sync**: **Heartbeat reporting** ensures your **P2P links are always up-to-date**.
+<details>
+  <summary><b>🌐 Advantages of Option 2</b></summary>
+  <br>
+  <ul>
+    <li><strong>Dual-Stack IP Binding:</strong><br>
+  - <strong>Full support for both IPv4 and IPv6 connections</strong>, <strong>enabling seamless C2 telemetry</strong> and <strong>reverse WebSocket tunneling</strong> across <strong>cellular carrier NAT64</strong> and <strong>dual-stack Wi-Fi networks worldwide</strong>.</li>
+    <li><strong>Exfiltration Vault:</strong><br>
+  - <strong>Audio/Video recordings</strong> are <strong>automatically uploaded</strong> and <strong>stored on your server</strong>.</li>
+    <li><strong>Live Fleet List:</strong><br>
+  - A <strong>professional dashboard</strong> to <strong>manage all devices in one place</strong>, with <strong>editable device name</strong> for <strong>easy device recognition</strong> and <strong>NEW 'Quick Action' pull-down menu</strong> to <strong>deploy some features without directly connecting</strong>.</li>
+    <li><strong>Dynamic Sync:</strong><br>
+  - <strong>Heartbeat reporting</strong> ensures your <strong>P2P links are always up-to-date</strong>.</li>
+  </ul>
+</details>
+
 ---
 
-## 📡 Option 2: Direct IPv6 / Local IPv4 Mode
+## ✌🏻 Option 2: Direct IPv6 / Local IPv4 Mode
 
 When the target device has a publicly routable IPv6 address or is on the same local Wi-Fi network:
 1. The app starts a built-in HTTP server directly on the device at port **`9191`**.
@@ -54,7 +64,7 @@ When the target device has a publicly routable IPv6 address or is on the same lo
 
 ---
 
-## 📊 Option 3: Google Sheets Logging Webhook
+## 🤟🏻 Option 3: Google Sheets Logging Webhook
 
 For basic check-in logging without hosting a web server:
 1. **Create a new** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
@@ -114,6 +124,6 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ0dYdi...`)* and **prepare to paste it into the APK-builder Tool when prompted** for the **C2 Webhook URL**.
 
 <details>
-  <summary><b>📸 Click to View Google Sheet Reporting Example</summary></b>
+  <summary><b>📸 View Google Sheet Reporting Screenshot</summary></b>
   <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="80%">
 </details>
