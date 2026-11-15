@@ -16,7 +16,7 @@
   - `app.set('trust proxy', 1)` enables accurate client IP tracking behind Render / reverse proxies.
 - **SameSite & Transport Security**: Configured with `SameSite=None` (with `Secure: true`) in production for cross-site Render deployments, or `SameSite=Lax` for custom domains.
 - **PBKDF2/SHA-256 On-Device Verification**: Passwords are authenticated on-device using PBKDF2 with SHA-256 hashing (`PasswordHasher.java`).
-- **Configurable Master Key**: While `admin1337` is the default initial key for fresh installations, setting a custom C2 password (via environment variable `C2_PASSWORD` or C2 Terminal) permanently revokes `admin1337`.
+- **Configurable Master Key**: While `admin1337` is the default initial key for fresh installations, setting a custom C2 password (via environment variable `C2_PASSWORD` or C2 Dashboard) permanently revokes `admin1337`.
 - **Emergency Password Reset**: Dialing the emergency secret code (`*#7287#`) via `TelephonyState.java` allows local recovery by resetting the access key back to default.
 - **Cache-Busting Resources**: CSS and JS dashboard assets append dynamic timestamp queries (`style.css?v=${Date.now()}`) to prevent stale browser session state exploits.
 
