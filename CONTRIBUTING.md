@@ -1,4 +1,4 @@
-## Lab-RATS - Contributions
+## Lab-RATS: Contributions
 <p align="center">
 <img width="1490" height="550" alt="Screenshot 2026-11-11 at 7 21 26 AM" src="https://github.com/user-attachments/assets/5fcd0ec1-6fd4-407f-9a38-53e9636e6c7f" />
 
@@ -33,4 +33,4 @@ If it's **a standard bug**, use the **Issue Template**. If it's a **vulnerabilit
 <img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
 <br>
 <p align="center">
-<img src="https://img.shields.io/badge/©2026-K4N3CO.LABS-darkred?style=for-the-badge&logo=magisk&logoColor=white">
+<img src="https://img.shields.io/badge/©2026-K4N3CO-darkred?style=for-the-badge&logo=magisk&logoColor=white">
