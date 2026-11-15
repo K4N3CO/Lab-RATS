@@ -42,9 +42,18 @@ public class DecoyActivity extends AppCompatActivity {
     private String operator = "";
     private boolean calcJustCalculated = false;
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0);
+                overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0);
+            } else {
+                overridePendingTransition(0, 0);
+            }
+        } catch (Throwable ignored) {}
 
         // --- STABILITY_LAYOUT_SYNC: Force system bars to match decoy background ---
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

