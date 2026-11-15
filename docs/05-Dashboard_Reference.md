@@ -42,7 +42,7 @@
 
 ## 🎭 02. Ghost Tab
 
-- **`LIVE_CONTROL`**: High-speed screen mirror with interactive touch and swipe gesture injection without consent dialogs.
+- **`GHOST_CONTROL`**: High-speed screen mirror with interactive touch and swipe gesture injection without consent dialogs.
 - **`BLACKOUT`**: Sets hardware screen backlight brightness to `0.001f` for physical stealth while keeping the remote screen mirror feed active.
 - **`SYSTEM_DENIAL_LOCK`**: Deploys a full-screen lock overlay blocking physical touch input until released.
 - **`TOAST_OVERLAY`**: Displays custom animated pop-up text on screen with customizable font size, color, and position. `BURNT` floods the screen with randomized pop-up overlays.
@@ -50,10 +50,38 @@
 - **`REPAIR_PERMISSIONS`**: Re-prompts the user for any revoked permissions after OEM system updates.
 - **`ANTI_REMOVAL`**: Prevents app uninstallation or force-stopping by hooking Settings intents.
 - **`SUICIDE`**: Remotely wipes local app configuration and uninstalls the core payload.
+
+<details>
+<summary><b>Ghost_Control D-Pad & Touch Isolation Explained</b></summary>
+<br>
+
+#### 1. The Dual-Interaction Problem
+When controlling a remote phone from your web browser, the screen image serves two competing purposes:
+- **Controlling the Target Phone**: Clicking or touching the live screen image sends touch taps and swipes directly to the remote Android device.
+- **Navigating the Dashboard Page**: Scrollable web pages require you to drag up and down to view lower controls (like the D-pad, text input, or logs).
+
+> **Note**: If touch controls were always active on the live stream image, dragging on the screen image to scroll down the webpage would accidentally swipe or open apps on the target phone.
+
+---
+
+#### 2. What Each Mode Does
+
+| Mode | Visual Indicator | Behavior & Purpose |
+| :--- | :--- | :--- |
+| **Target Control Mode** | `🟢 CONTROL ACTIVE` | **Controls the Remote Target**. Touch/click events on the stream image send live touch taps, long-presses, and drag gestures directly to the target phone UI. Web page scrolling over the image is blocked. |
+| **Page Scroll Mode** | `🔒 SCROLL LOCKED` | **Navigates the Web Dashboard**. Touch/click events on the stream image pass through to your browser page. This allows you to scroll down the C2 dashboard on laptops or mobile devices without accidentally tapping or swiping on the target phone. |
+
+---
+
+#### 💡 Summary
+Tap **`🟢 CONTROL ACTIVE`** when you want to interact directly with the target phone UI, and tap **`🔒 SCROLL LOCKED`** when you want to scroll down the web page to use other dashboard tools without accidentally triggering touches on the target phone.
+
+</details>
+  
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/3eb33ae7-aebd-4464-8547-979bb296eb27" alt="Full Web Page Screenshot" width="60%">
+  <img src="https://github.com/user-attachments/assets/f1af13d8-caa3-47a1-9039-650c4798ea56" alt="Full Web Page Screenshot" width="60%">
 </details>
 
 ---
