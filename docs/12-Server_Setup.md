@@ -1,6 +1,6 @@
 # 12 ⏤ Direct IPv6 Server Setup
 
-> This guide provides complete instructions for operating in **Direct IPv6 Mode (Path C)** where no cloud relay backend is required—the target Android device itself acts as the C2 web server on port **9191**.
+> This guide provides complete instructions for operating in **Direct IPv6 Mode** where no cloud relay backend is required—the target Android device itself acts as the C2 web server on port **9191**.
 
 ---
 
