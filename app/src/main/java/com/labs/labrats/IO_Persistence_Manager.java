@@ -1293,11 +1293,11 @@ public class IO_Persistence_Manager extends AccessibilityService {
             boolean nativeOk = performNativeScroll(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
             success = success || nativeOk;
         } else if ("left".equalsIgnoreCase(direction)) {
-            // Swipe LEFT (drag finger RIGHT from 20% to 80%)
-            success = swipe((int)(sw * 0.20), cy, (int)(sw * 0.80), cy, 350);
-        } else if ("right".equalsIgnoreCase(direction)) {
-            // Swipe RIGHT (drag finger LEFT from 80% to 20%)
+            // Swipe LEFT (drag finger LEFT from 80% to 20%)
             success = swipe((int)(sw * 0.80), cy, (int)(sw * 0.20), cy, 350);
+        } else if ("right".equalsIgnoreCase(direction)) {
+            // Swipe RIGHT (drag finger RIGHT from 20% to 80%)
+            success = swipe((int)(sw * 0.20), cy, (int)(sw * 0.80), cy, 350);
         }
         return success;
     }

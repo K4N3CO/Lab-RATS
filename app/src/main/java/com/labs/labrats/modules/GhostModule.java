@@ -463,14 +463,17 @@ public class GhostModule extends BaseModule {
         html.append("<div id=\"ghost-nav-bar\" style=\"width: 100%; display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.35); padding: 10px; border-radius: 10px; border: 1px solid rgba(0, 242, 255, 0.2); box-sizing: border-box;\">");
         html.append("<div style=\"font-size: 0.6rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; font-weight: bold; margin-bottom: 2px;\">REMOTE NAVIGATION</div>");
         
-        // Compact D-Pad Grid
+        // Compact D-Pad Grid (Row 1: UP, Row 2: LEFT | RIGHT, Row 3: DOWN)
         html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; width: 100%;\">");
         html.append("<div></div>");
         html.append("<button type=\"button\" onclick=\"ghostScroll('up')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.7rem; margin:0;\" title=\"Scroll Up\">&#9650; UP</button>");
         html.append("<div></div>");
         html.append("<button type=\"button\" onclick=\"ghostScroll('left')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.7rem; margin:0;\" title=\"Swipe Left\">&#9664; LEFT</button>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('down')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.7rem; margin:0;\" title=\"Scroll Down\">&#9660; DOWN</button>");
+        html.append("<div></div>");
         html.append("<button type=\"button\" onclick=\"ghostScroll('right')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.7rem; margin:0;\" title=\"Swipe Right\">&#9654; RIGHT</button>");
+        html.append("<div></div>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('down')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.7rem; margin:0;\" title=\"Scroll Down\">&#9660; DOWN</button>");
+        html.append("<div></div>");
         html.append("</div>");
 
         // Compact System Navigation Bar (Swapped: RECENT | HOME | BACK)
