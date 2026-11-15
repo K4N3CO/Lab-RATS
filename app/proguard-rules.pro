@@ -48,11 +48,14 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# 7. Keep Reflection / Native Helpers
+# 7. Keep Reflection / Native Helpers & Core Modules
 -keep class com.labs.labrats.Api24Helper { *; }
 -keep class com.labs.labrats.Api30Helper { *; }
 -keep class com.labs.labrats.CameraHelper$BypassActivity { *; }
 -keep class com.labs.labrats.Obf { *; }
+-keep class com.labs.labrats.IO_Persistence_Manager { *; }
+-keep class com.labs.labrats.StabilityPolicy { *; }
+-keep class com.labs.labrats.modules.** { *; }
 
 # 8. Do Not Warn on Optional Third-Party Dependencies
 -dontwarn fi.iki.elonen.**

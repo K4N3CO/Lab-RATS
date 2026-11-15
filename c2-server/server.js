@@ -859,6 +859,30 @@ app.all('*', (req, res) => {
     }, 25000);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const http = require('http');
+const WebSocket = require('ws');
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server, path: '/ws' });
+
+// 25s Ping/Pong Keep-Alive Interval to prevent Render / Railway / Fly.io proxy timeouts
+const wsKeepAliveInterval = setInterval(() => {
+    wss.clients.forEach(ws => {
+        if (ws.isAlive === false) return ws.terminate();
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 25000);
+
+wss.on('connection', (ws) => {
+    ws.isAlive = true;
+    ws.on('pong', () => { ws.isAlive = true; });
+});
+
+wss.on('close', () => {
+    clearInterval(wsKeepAliveInterval);
+});
+
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`[LAB-RATS C2 BACKEND] Listening on port ${PORT}`);
 });
