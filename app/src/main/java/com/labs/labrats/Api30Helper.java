@@ -28,12 +28,12 @@ public class Api30Helper {
                         if (bitmap != null) {
                             android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
                             if (softwareBitmap != null) {
-                                int targetWidth = 720;
+                                int targetWidth = 540;
                                 int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
-                                android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
+                                android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, false);
                                 
-                                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-                                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, out);
+                                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(32768);
+                                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
                                 callback.onSuccess(out.toByteArray());
                                 
                                 scaled.recycle();

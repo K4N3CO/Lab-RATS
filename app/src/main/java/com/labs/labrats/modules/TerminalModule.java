@@ -205,7 +205,7 @@ public class TerminalModule extends BaseModule {
         html.append("<h2 style=\"color: var(--neon-orange); font-size: 1.15rem; text-align: left;\">STEALTH_OPERATIONS <span class=\"info-trigger\" onclick=\"showInfo(event, 'STEALTH_OPERATIONS', 'Advanced application camouflage. Choose an identity to masquerade as a functional decoy. Use dial pad code &lt;b&gt;*#1337#&lt;/b&gt; or the hidden backdoor to restore access.')\">INFO</span></h2>");
         
         html.append("<div style=\"margin-bottom: 15px; display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<label class=\"info-label\" style=\"align-self: flex-start; font-size: 0.8rem;\">MASQUERADE_IDENTITY:</label>");
+        html.append("<label for=\"stealth-type\" class=\"info-label\" style=\"align-self: flex-start; font-size: 0.8rem;\">MASQUERADE_IDENTITY:</label>");
         html.append("<select id=\"stealth-type\" style=\"width:100%; max-width:450px; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border:1px solid var(--neon-orange); color:#fff; padding:10px; border-radius:8px; outline:none; font-family:monospace; margin-top:5px;\">");
         html.append("<option value=\"settings\">Play Protect (Google Shield)</option>");
         html.append("<option value=\"calc\">Calculator</option>");

