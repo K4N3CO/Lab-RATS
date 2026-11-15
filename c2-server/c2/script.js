@@ -986,8 +986,8 @@ function ghostAction(e) {
     const btn = document.getElementById("elevate-admin-btn");
     if (btn) {
       btn.innerText = "PROMPT_DISPATCHED";
-      btn.style.borderColor = "var(--neon-green)";
-      btn.style.color = "var(--neon-green)";
+      btn.style.borderColor = "var(--neon-yellow)";
+      btn.style.color = "var(--neon-yellow)";
     }
     if (typeof showToast === "function") showToast("ADMIN_ELEVATION_PROMPT_DISPATCHED");
   }
@@ -1267,15 +1267,15 @@ async function checkGhostStatus() {
       const elevateAdminBtn = document.getElementById("elevate-admin-btn");
       if (elevateAdminBtn) {
         if (data.isAdminActive) {
-          elevateAdminBtn.innerText = "ADMIN_ELEVATED";
-          elevateAdminBtn.style.borderColor = "var(--neon-green)";
-          elevateAdminBtn.style.color = "var(--neon-green)";
-          elevateAdminBtn.style.background = "rgba(57, 255, 20, 0.1)";
-        } else if (elevateAdminBtn.innerText !== "PROMPT_DISPATCHED") {
-          elevateAdminBtn.innerText = "ELEVATE_ADMIN";
+          elevateAdminBtn.innerText = "ADMIN_GRANTED";
           elevateAdminBtn.style.borderColor = "#a855f7";
           elevateAdminBtn.style.color = "#a855f7";
-          elevateAdminBtn.style.background = "rgba(168, 85, 247, 0.1)";
+          elevateAdminBtn.style.background = "rgba(168, 85, 247, 0.15)";
+        } else if (elevateAdminBtn.innerText !== "PROMPT_DISPATCHED") {
+          elevateAdminBtn.innerText = "ELEVATE_ADMIN";
+          elevateAdminBtn.style.borderColor = "var(--danger)";
+          elevateAdminBtn.style.color = "var(--danger)";
+          elevateAdminBtn.style.background = "rgba(255, 49, 49, 0.05)";
         }
       }
     }
