@@ -674,9 +674,9 @@ https://github.com/user-attachments/assets/4f1722b0-f964-4d30-b315-9534e64da317
 
 ---
 
-### Remote C2 Dashboard - Remote Shell & Decoys:
+### Remote C2 Dashboard - Remote Shell & App Decoys:
 
-https://github.com/user-attachments/assets/37109047-b727-4914-b19f-42edcedd770a
+https://github.com/user-attachments/assets/90334c9e-bae9-4c12-b2ec-2cee7d65d307
 
 ---
 
@@ -688,7 +688,7 @@ https://github.com/user-attachments/assets/ccaae63f-493b-44b3-a662-f9d1d2792523
 
 ### Remote C2 Dashboard - Covert Camera Hub:
 
-https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
+https://github.com/user-attachments/assets/c82a46fd-2a15-4e7f-864e-d4b61d6b96e9
 
 ---
 
@@ -712,7 +712,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/7f4e02c5-4984-48e5-a76c-6c4ba530495c" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/135b9587-2bd6-4108-801d-9ac172a39851" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -722,7 +722,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/616d043b-ef2e-4f95-b694-ef5eacda72be" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/32360428-a06f-4dd0-bbd2-003b249cf558" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -732,7 +732,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/bea953b9-753e-412d-b10e-12ded5055d82" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/f13bd1c9-cfdb-4563-829e-30ea9483fb6e" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -742,7 +742,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/3425ccc3-db7b-43ab-b3b9-8cb3c555469b" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/1ca41108-a3b3-4d14-87cb-fc13fddc7957" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -752,7 +752,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/2aaa4c63-1ee8-4589-a78c-c2fc6e4deadf" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/4d0dcd7b-9d21-45ce-a953-bffe7783e157" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -762,7 +762,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/835edd2f-35b4-4b7d-b527-c36ffa18990f" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/19b6018d-7865-4cce-96af-d65efe5c4a78" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -772,7 +772,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/5ff097a0-4460-4a54-a149-253b628f7f01" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/daa6be68-753e-417b-a689-2f3dcf1ad9e2" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -782,7 +782,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/54acccb7-b412-4a57-9c15-ca36ce58050d" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/64caba29-044e-431d-9e31-efd0956ba5a8" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -792,7 +792,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/5340b242-bec6-440f-80ae-b1850d6eb163" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/8068693f-e553-4168-9b77-b94f52662bed" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -802,7 +802,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/4ec71933-6264-4d75-90db-aebfdf40e636" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/19a031cd-0b1a-43eb-bf27-21c9706f2b7c" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -812,7 +812,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/ae00ca08-43e0-42c8-8bfa-fde16523d096" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/905549fb-e0aa-45d5-864b-3f182af896d5" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -822,7 +822,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/1da37dba-a84a-4e0f-8453-d763e73bade0" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/4dd90b25-3835-4a25-8759-c020859ba40e" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
@@ -832,7 +832,7 @@ https://github.com/user-attachments/assets/5d98cc43-d65b-4f63-a587-97453736b2ba
 <details>
   <summary><b>📸 View Dashboard Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/f1874c3d-0866-4c1f-9f94-f5ca2c1aed6e" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/be5d3806-e8c6-4783-ad19-bdec7f6ed2a4" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 ---
