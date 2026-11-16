@@ -414,7 +414,11 @@ public class PermissionActivity extends Activity {
             home.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(home);
         } catch (Exception ignored) {}
-        finish();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            finishAndRemoveTask();
+        } else {
+            finish();
+        }
     }
 
     private void showAccessibilityGuide() {

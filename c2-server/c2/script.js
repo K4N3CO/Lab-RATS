@@ -797,11 +797,11 @@ function refreshGhostScreen() {
       if (_0x2a && streamImg) {
         streamImg.src = img.src;
         if (statusCard) statusCard.style.display = "none";
-        setTimeout(refreshGhostScreen, _0x2b ? 3000 : 16);
+        setTimeout(refreshGhostScreen, _0x2b ? 2000 : 30);
       }
     };
     img.onerror = () => {
-      if (_0x2a) setTimeout(refreshGhostScreen, 150);
+      if (_0x2a) setTimeout(refreshGhostScreen, 80);
     };
   }
 }

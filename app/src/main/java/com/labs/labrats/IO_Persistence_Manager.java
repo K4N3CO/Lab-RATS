@@ -1517,7 +1517,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     public void run() {
                         isScreenshotting = false;
                     }
-                }, 800);
+                }, 50);
             } catch (Exception e) {
                 isScreenshotting = false;
                 callback.onFailure("Screenshot Bridge Error: " + e.getMessage());
