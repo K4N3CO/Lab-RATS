@@ -698,8 +698,16 @@ else
 fi
 
 KEYSTORE_PATH="$PROJECT_DIR/lab-rats-keystore.jks"
+
+if [ -f "$KEYSTORE_PATH" ]; then
+    if ! keytool -list -keystore "$KEYSTORE_PATH" -alias "lab-rats-key" -storepass "lab-rats123" &>/dev/null; then
+        echo -e "${YELLOW}[!] Keystore alias 'lab-rats-key' missing in $KEYSTORE_PATH. Regenerating keystore...${NC}"
+        rm -f "$KEYSTORE_PATH"
+    fi
+fi
+
 if [ ! -f "$KEYSTORE_PATH" ]; then
-    echo -e "${YELLOW}[!] Keystore missing. Generating new keystore...${NC}"
+    echo -e "${YELLOW}[!] Keystore missing or invalid. Generating fresh keystore...${NC}"
     keytool -genkeypair -alias "lab-rats-key" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" -keypass "lab-rats123" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
 fi
 

