@@ -619,9 +619,9 @@ app.get('/', (req, res) => {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header" style="text-align:center; padding: 0; margin-bottom: 0;">
-            <img src="/c2/header_dashboard.png?v=${Date.now()}" style="width: 58.7%; max-width: 643px; height: auto; margin: 0 auto; display: block; transform: scale(1.10, 1.03); object-fit: contain; position: relative !important; top: -65px !important; margin-bottom: -65px !important;" alt="LAB-RATS Header">
+    <div class="container" style="padding-top: 25px !important;">
+        <div class="header" style="text-align:center; padding: 10px 0 0 0 !important; margin-bottom: 0;">
+            <img src="/c2/header_dashboard.png?v=${Date.now()}" style="width: 58.7%; max-width: 643px; height: auto; margin: 0 auto; display: block; transform: scale(1.10, 1.03); object-fit: contain; position: relative !important; top: -25px !important; margin-bottom: -25px !important;" alt="LAB-RATS Header">
             <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: -26px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 
