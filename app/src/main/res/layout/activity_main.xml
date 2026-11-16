@@ -39,8 +39,8 @@
 
             <ImageView
                 android:id="@+id/ivHeaderBanner"
-                android:layout_width="398dp"
-                android:layout_height="218dp"
+                android:layout_width="367dp"
+                android:layout_height="197dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="0dp"
                 android:layout_marginBottom="0dp"
