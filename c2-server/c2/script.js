@@ -816,7 +816,7 @@ function toggleGhostControlLock() {
 
   if (window.isGhostControlLocked) {
     if (lockBtn) {
-      lockBtn.innerHTML = "&#128274; SCROLL LOCKED";
+      lockBtn.innerHTML = "&#128274; SCROLL LOCK";
       lockBtn.style.borderColor = "var(--neon-yellow)";
       lockBtn.style.color = "var(--neon-yellow)";
       lockBtn.style.background = "rgba(255, 255, 0, 0.08)";
@@ -829,7 +829,7 @@ function toggleGhostControlLock() {
     showToast("PAGE_SCROLL_MODE_ENABLED");
   } else {
     if (lockBtn) {
-      lockBtn.innerHTML = "&#128994; CONTROL ACTIVE";
+      lockBtn.innerHTML = "&#128274; SCROLL LOCK";
       lockBtn.style.borderColor = "var(--neon-green)";
       lockBtn.style.color = "var(--neon-green)";
       lockBtn.style.background = "rgba(57, 255, 20, 0.08)";
@@ -845,14 +845,7 @@ function toggleGhostControlLock() {
 
 function ghostScroll(dir) {
   let actionName = "scroll_" + dir;
-  fetch("/ghost/interact?action=" + actionName)
-    .then(res => res.json())
-    .then(() => {
-      if (typeof showToast === "function") showToast("SCROLL_" + dir.toUpperCase() + "_SENT");
-    })
-    .catch(() => {
-      if (typeof showToast === "function") showToast("SCROLL_DISPATCH_FAILED", "error");
-    });
+  fetch("/ghost/interact?action=" + actionName);
 }
 
 function startGhostDrag(e) {
@@ -1233,11 +1226,11 @@ async function checkGhostStatus() {
 
       if (lockBtn) {
         if (data.lock) {
-          lockBtn.innerHTML = "Unlock";
+          lockBtn.innerHTML = "UNLOCK";
           lockBtn.style.borderColor = "var(--neon-green)";
           lockBtn.style.color = "var(--neon-green)";
         } else {
-          lockBtn.innerHTML = "Lockout";
+          lockBtn.innerHTML = "LOCKOUT";
           lockBtn.style.borderColor = "var(--danger)";
           lockBtn.style.color = "var(--danger)";
         }

