@@ -75,7 +75,7 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); background: rgba(0, 0, 0, 0.4); padding: 15px; box-sizing: border-box;\">");
         html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;\">");
         html.append("<div style=\"font-size: 0.75rem; color: var(--neon-cyan); letter-spacing: 2px; font-weight: bold; text-transform: uppercase;\">CONNECTED TARGET <span style=\"color:#888; font-size:0.65rem; font-weight:normal;\">(LIVE AUTO-REFRESH 20s)</span></div>");
-        html.append("<button type=\"button\" onclick=\"refreshTargetsTable()\" class=\"btn btn-small\" style=\"margin:0; padding:6px 12px; font-size:0.65rem; border-color:var(--neon-cyan); color:var(--neon-cyan); background:rgba(0,242,255,0.05);\">REFRESH TARGET</button>");
+        html.append("<button type=\"button\" onclick=\"refreshTargetsTable()\" class=\"btn btn-small\" style=\"margin:0; padding:6px 12px; font-size:0.65rem; border-color:var(--neon-cyan); color:var(--neon-cyan); background:#000 !important;\">REFRESH TARGET</button>");
         html.append("</div>");
 
         html.append("<table style=\"width: 100%; border-collapse: separate; border-spacing: 0 4px; font-family: monospace; font-size: 0.75rem; text-align: left;\">");
@@ -129,7 +129,7 @@ public class TerminalModule extends BaseModule {
         html.append("</div>");
         html.append("<div style=\"border-top: 1px solid rgba(0, 242, 255, 0.1); padding: 10px; display: flex; align-items: center; background: rgba(0,0,0,0.5);\">");
         html.append("<span id=\"terminal-prompt\" style=\"color: var(--terminal-green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 10px; white-space: nowrap;\">root@Android:").append(escapeHtml(currentShellPath)).append(promptSymbol).append("</span>");
-        html.append("<input id=\"shell-cmd\" type=\"text\" autocapitalize=\"none\" autocorrect=\"off\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"enter command...\" style=\"background: transparent; border: none; color: #fff; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex-grow: 1; padding: 5px 0;\">");
+        html.append("<input id=\"shell-cmd\" type=\"text\" autocapitalize=\"none\" autocorrect=\"off\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"enter command...\" style=\"background: transparent !important; border: none !important; border-color: transparent !important; outline: none !important; box-shadow: none !important; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex-grow: 1; padding: 5px 0;\">");
         html.append("</div>");
         html.append("</div>");
         html.append("<div class=\"terminal-input-wrap\" style=\"margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;\">");

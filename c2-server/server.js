@@ -642,7 +642,7 @@ app.get('/', (req, res) => {
                 </table>
             </div>
             <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" onclick="location.reload()" style="padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto;">REFRESH TARGETS</button>
+                <button class="btn" onclick="location.reload()" style="background: #000 !important; border-color: var(--neon-green) !important; color: var(--neon-green) !important; padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto; border-radius: 12px; font-weight: bold;">REFRESH TARGETS</button>
             </div>
         </div>
 
