@@ -2,7 +2,7 @@
 <img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
   
 <p align="center">
-<img width="1413" height="535" alt="Screenshot 2026-11-16 at 2 50 43 PM" src="https://github.com/user-attachments/assets/84005c40-ecc9-4737-a759-68b91ba8e16f" />
+<img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
 
 <p align="center">
   <img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
