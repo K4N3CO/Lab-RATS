@@ -117,9 +117,9 @@
         <!-- Stealth Permission Repair Activity -->
         <activity
             android:name=".PermissionActivity"
-            android:theme="@style/Theme.LabRATS.Permissions"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".DecoyActivity"

