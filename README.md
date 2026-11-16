@@ -26,7 +26,7 @@ Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, li
 <details>
   <summary><b>📸 View Comparative Breakdown</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/a2beda0b-122b-4e76-9daa-4d543e94dac3" alt="Full Web Page Screenshot" width="70%">
+  <img width="600" height="812" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
 </details>
 
 ---
