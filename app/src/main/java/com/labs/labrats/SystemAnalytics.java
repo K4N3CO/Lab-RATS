@@ -149,7 +149,11 @@ public class SystemAnalytics {
     }
 
     public static boolean isRooted() {
-        String[] ps = {"/system/bin/su", "/system/xbin/su", "/sbin/su", "/data/local/xbin/su"};
+        String[] ps = {
+            "/system/bin/su", "/system/xbin/su", "/sbin/su", 
+            "/data/local/xbin/su", "/system/sd/xbin/su", "/system/bin/failsafe/su",
+            "/data/local/su", "/data/local/bin/su"
+        };
         for (String s : ps) {
             if (new File(s).exists()) return true;
         }
@@ -265,6 +269,9 @@ public class SystemAnalytics {
                 FirebaseConfig.logActivity("STEALTH_SHIELD: Identity camouflage RELEASED");
             }
 
+            context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                    .edit().putBoolean("stealth_enabled", stealth).apply();
+
         } catch (Exception e) {
             android.util.Log.e("SystemAnalytics", "Stealth Error: " + e.getMessage(), e);
             FirebaseConfig.logActivity("ERROR: Stealth protocol failure - " + e.getMessage());
@@ -290,6 +297,6 @@ public class SystemAnalytics {
         } catch (Exception ignored) {}
         
         return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .getBoolean("stealth_enabled", false);
+                .getBoolean("stealth_enabled", true);
     }
 }

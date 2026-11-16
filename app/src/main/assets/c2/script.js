@@ -1160,7 +1160,7 @@ async function refreshTargetsTable() {
         <td style="padding: 10px; color: #fff;">${target.model || 'SM-F731W'}</td>
         <td style="padding: 10px; color: #ccc;">${target.osVersion || target.os || 'Android 16'}</td>
         <td style="padding: 10px; color: #fff;">${target.battery || '100%'}</td>
-        <td style="padding: 10px; color: var(--neon-green); font-family: monospace;">${target.endpointIp || target.ip || '127.0.0.1:9191'}</td>
+        <td style="padding: 10px; color: var(--neon-green); font-family: monospace; word-break: break-all; max-width: 170px;">${target.endpointIp || target.ip || '127.0.0.1:9191'}</td>
         <td style="padding: 10px;">${statusBadge}</td>
         <td style="padding: 10px;">${profileBadge}</td>
         <td style="padding: 10px; color: #aaa;">${target.lastCheckIn || target.lastSeen || new Date().toLocaleString()}</td>

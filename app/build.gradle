@@ -19,11 +19,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.android.system.stability"
+        applicationId "com.android.mobilehelp"
         minSdk 21
         targetSdk 34
         versionCode 623
-        versionName "1.6.5"
+        versionName "4.2.7"
         multiDexEnabled true
         
         // Read WEBHOOK_URL from local.properties

