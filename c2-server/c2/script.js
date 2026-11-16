@@ -752,10 +752,10 @@ function startGhostScreen() {
   if (statusCard) statusCard.style.display = "none";
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
-    btn.innerHTML = "&#9209; TERMINATE";
+    btn.innerHTML = "TERMINATE";
     btn.style.borderColor = "var(--danger)";
     btn.style.color = "var(--danger)";
-    btn.style.background = "rgba(255, 49, 49, 0.15)";
+    btn.style.background = "rgba(255, 49, 49, 0.08)";
   }
   refreshGhostScreen();
 }

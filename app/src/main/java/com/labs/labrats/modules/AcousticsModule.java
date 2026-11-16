@@ -415,7 +415,7 @@ public class AcousticsModule extends BaseModule {
 
         if (files != null && files.length > 0) {
             java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy, hh:mm:ss a", Locale.getDefault());
             html.append("<ul style=\"list-style: none; padding: 0; margin: 0;\">");
             for (int i = 0; i < Math.min(files.length, 5); i++) {
                 File f = files[i];

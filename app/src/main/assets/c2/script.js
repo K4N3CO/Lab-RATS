@@ -752,9 +752,10 @@ function startGhostScreen() {
   if (statusCard) statusCard.style.display = "none";
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
-    btn.innerText = "TERMINATE";
+    btn.innerHTML = "TERMINATE";
     btn.style.borderColor = "var(--danger)";
     btn.style.color = "var(--danger)";
+    btn.style.background = "rgba(255, 49, 49, 0.08)";
   }
   refreshGhostScreen();
 }
@@ -768,9 +769,10 @@ function stopGhostScreen() {
   }
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
-    btn.innerText = "INITIATE_VIEW";
-    btn.style.borderColor = "var(--neon-green)";
-    btn.style.color = "var(--neon-green)";
+    btn.innerHTML = "INITIATE_VIEW";
+    btn.style.borderColor = "var(--neon-cyan)";
+    btn.style.color = "var(--neon-cyan)";
+    btn.style.background = "rgba(0, 242, 255, 0.05)";
   }
   const streamImg = document.getElementById("ghost-screen-stream");
   if (streamImg) streamImg.src = "";
