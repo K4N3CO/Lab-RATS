@@ -376,13 +376,7 @@ public class WorkManager_Sync extends Service {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
                 
-                // Add LOCATION type if permission is granted (Required for Android 14+ background access)
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
-                }
-                
-                // Add SPECIAL_USE for Android 14+ Persistence
+                // Add SPECIAL_USE for Android 14+ Persistence (DATA_SYNC and SPECIAL_USE are valid for background startup)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
                 }
@@ -409,7 +403,7 @@ public class WorkManager_Sync extends Service {
                         }
                         isForeground = false;
                     } catch (Exception ignored) {}
-                }, 500);
+                }, 100);
             }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS startup failure: " + e.getMessage());

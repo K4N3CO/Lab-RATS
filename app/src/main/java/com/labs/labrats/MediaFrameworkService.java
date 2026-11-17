@@ -160,23 +160,15 @@ public class MediaFrameworkService extends Service {
                 .build();
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE | ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
                 try {
                     startForeground(NOTIFICATION_ID, notification, serviceType);
                     isForeground = true;
                 } catch (Exception e) {
-                    try {
-                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-                        isForeground = true;
-                    } catch (Exception ex) {
-                        startForeground(NOTIFICATION_ID, notification);
-                        isForeground = true;
-                    }
+                    startForeground(NOTIFICATION_ID, notification);
+                    isForeground = true;
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-                isForeground = true;
             } else {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
@@ -192,7 +184,7 @@ public class MediaFrameworkService extends Service {
                         }
                         isForeground = false;
                     } catch (Exception ignored) {}
-                }, 500);
+                }, 100);
             }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS failure: " + e.getMessage());
