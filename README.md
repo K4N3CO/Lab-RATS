@@ -5,14 +5,16 @@
 <img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
 
 <p align="center">
-  <img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
-  <img src="https://img.shields.io/badge/Android-SDK_36-green?style=for-the-badge&logo=android&logoColor=white">
-  <img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=openaccess&logoColor=white">
-  <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
-  <br>
-  <img src="https://img.shields.io/badge/Network-Direct_IPv6/IPv4-informational?style=for-the-badge&logo=gitconnected&logoColor=white">
-  <img src="https://img.shields.io/badge/Mode-Stealth-black?style=for-the-badge&logo=ghostfolio&logoColor=white">
+  <img src="https://img.shields.io/badge/JDK-17/21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
+  <img src="https://img.shields.io/badge/android-SDK_36-green?style=for-the-badge&logo=android&logoColor=white">
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
+  <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
+  <img src="https://img.shields.io/badge/relay-node.js-darkgreen?style=for-the-badge&logo=nodedotjs&logoColor=white">
+ <br>
+  <img src="https://img.shields.io/badge/Network-IPv6/IPv4-informational?style=for-the-badge&logo=gitconnected&logoColor=white">
+  <img src="https://img.shields.io/badge/Stealth_Mode-Ghost-white?style=for-the-badge&logo=ghostfolio&logoColor=white">
+  <img src="https://img.shields.io/badge/C2-render-black?style=for-the-badge&logo=render&logoColor=white">
+  <img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=openaccess&logoColor=white">
 </p>
 
 <p align="left">
