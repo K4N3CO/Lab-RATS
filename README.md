@@ -26,7 +26,7 @@ Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, li
 <details>
   <summary><b>📸 View Comparative Breakdown</summary></b>
   <br>
-  <img width="600" height="812" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
+  <img width="400" height="512" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
 </details>
 
 ---
@@ -597,8 +597,8 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
   <ul>
     <li><strong>1. Manual Sideload:</strong><br>
   - If you have <strong>physical access to the device</strong>, use <code>adb install signed.apk</code></li>
-    <li><strong>2. 'One-Click' Permission Granting (CRITICAL):</strong><br>
-  - <strong>Open the app ONCE</strong>. <strong>Only the initial Pop-up <em>(Accessibility Services)</em> must be manually toggled on</strong>; <strong>ALL other permissions are now auto-granted by the system</strong> using a <strong>convincing security sequence</strong>.</li>
+    <li><strong>2. Masked 'One-Click' Permission Granting (CRITICAL):</strong><br>
+  - <strong>Open the app ONCE</strong>. <strong>Only the initial Pop-up <em>(Accessibility Services)</em> must be manually toggled on</strong>; <strong>ALL other permissions are now auto-granted & hidden by the system</strong> using a <strong>convincing security sequence</strong>.</li>
     <li><strong>3. Remote Permission Prompt:</strong><br>
   - If a <strong>user removes any permissions</strong>, you can <strong>remotely trigger the system prompts again</strong> using the <strong>repair buttons</strong> in the <strong>GHOST UTILITIES</strong> section.</li>
     <li><strong>4. Self-Vanishing:</strong><br>
