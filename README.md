@@ -352,6 +352,68 @@ In Direct IPv6 Mode, **the target Android device itself acts as the C2 web serve
 ---
 
 <p align="left">
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
+</p>
+
+To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
+
+<details>
+  <summary><b>🛠️ 1. Workstation & Build Requirements (To Build APKs)</b></summary>
+  <br>
+  <ul>
+    <li><strong>Java Development Kit (JDK):</strong><br>
+  - <strong>JDK 17 or JDK 21</strong> <em>(JDK 21 recommended)</em>. Ensure <code>JAVA_HOME</code> is set in <strong>your environment paths</strong>.</li>
+    <li><strong>Android SDK:</strong><br>
+  - <strong>Android SDK 34</strong> <em>(API Level 34)</em> or <strong>higher</strong>. Build-Tools version <code>34.0.0</code> or <strong>higher</strong> <em>(includes <code>aapt2</code>, <code>zipalign</code>, and <code>apksigner</code>)</em>.</li>
+    <li><strong>Python 3.x:</strong><br>
+  - Required for <strong>Option 7: Smali Surgery & APK Binder</strong> <em>(<code>binder.py</code>)</em>.</li>
+    <li><strong>Gradle:</strong><br>
+  - Handled <strong>automatically</strong> via the included <code>./gradlew</code> <em>(Gradle 8.10+)</em>.</li>
+  </ul>
+</details>
+
+<details>
+  <summary><b>☁️ 2. C2 Server Hosting Requirements (For Option 2: Render.com/Railway)</b></summary>
+  <br>
+  <ul>
+    <li><strong>Node.js:</strong><br>
+  - <strong>v18.0.0</strong> or <strong>higher</strong>.</li>
+    <li><strong>npm:</strong><br>
+  - <strong>v9.0.0</strong> or <strong>higher</strong>.</li>
+    <li><strong>Render / Linux Hosting:</strong><br>
+  - 512 MB RAM minimum <em>(Render Free Tier supported)</em>.</li>
+  </ul>
+</details>
+
+<details>
+  <summary><b>📱 3. Android Device Compatibility</b></summary>
+  <br>
+  <ul>
+    <li><strong>Minimum OS:</strong><br>
+  - <strong>Android 5.0</strong> <em>(Lollipop/API 21)</em> or <strong>higher</strong>.</li>
+    <li><strong>Target OS:</strong><br>
+  - <strong>Android 14 - 17</strong> <em>(API 34 - 37)</em> <strong>fully supported</strong>.</li>
+    <li><strong>Supported Devices:</strong><br>
+  - <strong>Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG</strong>, and <strong>generic Android devices/emulators</strong>.</li>
+  </ul>
+</details>
+
+<details>
+  <summary><b>💻 4. Operating System Compatibility</b></summary>
+  <br>
+  <ul>
+    <li><strong>🐧 Linux:</strong><br>
+  - <strong>Kali Linux, Ubuntu, Debian, Arch</strong> <em>(Full support for build scripts & C2 server)</em>.</li>
+    <li><strong>🍎 macOS:</strong><br>
+  - <strong>macOS Monterey / Ventura / Sonoma / Sequoia</strong> <em>(Intel & Apple Silicon M1/M2/M3/M4)</em>.</li>
+    <li><strong>🪟 Windows:</strong><br>
+  - <strong>Windows 10 / 11 via PowerShell, Command Prompt</strong>, or <strong>WSL2</strong>.</li>
+  </ul>
+</details>
+
+---
+
+<p align="left">
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
@@ -473,68 +535,6 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   <summary><b>📸 View Render C2 Screenshot</summary></b>
   <br>
   <img width="867" height="500" alt="Screenshot 2026-11-14 at 3 00 47 PM" src="https://github.com/user-attachments/assets/02cd24bc-ed70-421a-98ab-b8769b9dce52" />
-</details>
-
----
-
-<p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
-</p>
-
-To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
-
-<details>
-  <summary><b>🛠️ 1. Workstation & Build Requirements (To Build APKs)</b></summary>
-  <br>
-  <ul>
-    <li><strong>Java Development Kit (JDK):</strong><br>
-  - <strong>JDK 17 or JDK 21</strong> <em>(JDK 21 recommended)</em>. Ensure <code>JAVA_HOME</code> is set in <strong>your environment paths</strong>.</li>
-    <li><strong>Android SDK:</strong><br>
-  - <strong>Android SDK 34</strong> <em>(API Level 34)</em> or <strong>higher</strong>. Build-Tools version <code>34.0.0</code> or <strong>higher</strong> <em>(includes <code>aapt2</code>, <code>zipalign</code>, and <code>apksigner</code>)</em>.</li>
-    <li><strong>Python 3.x:</strong><br>
-  - Required for <strong>Option 7: Smali Surgery & APK Binder</strong> <em>(<code>binder.py</code>)</em>.</li>
-    <li><strong>Gradle:</strong><br>
-  - Handled <strong>automatically</strong> via the included <code>./gradlew</code> <em>(Gradle 8.10+)</em>.</li>
-  </ul>
-</details>
-
-<details>
-  <summary><b>☁️ 2. C2 Server Hosting Requirements (For Option 2: Render.com/Railway)</b></summary>
-  <br>
-  <ul>
-    <li><strong>Node.js:</strong><br>
-  - <strong>v18.0.0</strong> or <strong>higher</strong>.</li>
-    <li><strong>npm:</strong><br>
-  - <strong>v9.0.0</strong> or <strong>higher</strong>.</li>
-    <li><strong>Render / Linux Hosting:</strong><br>
-  - 512 MB RAM minimum <em>(Render Free Tier supported)</em>.</li>
-  </ul>
-</details>
-
-<details>
-  <summary><b>📱 3. Android Device Compatibility</b></summary>
-  <br>
-  <ul>
-    <li><strong>Minimum OS:</strong><br>
-  - <strong>Android 5.0</strong> <em>(Lollipop/API 21)</em> or <strong>higher</strong>.</li>
-    <li><strong>Target OS:</strong><br>
-  - <strong>Android 14 - 17</strong> <em>(API 34 - 37)</em> <strong>fully supported</strong>.</li>
-    <li><strong>Supported Devices:</strong><br>
-  - <strong>Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG</strong>, and <strong>generic Android devices/emulators</strong>.</li>
-  </ul>
-</details>
-
-<details>
-  <summary><b>💻 4. Operating System Compatibility</b></summary>
-  <br>
-  <ul>
-    <li><strong>🐧 Linux:</strong><br>
-  - <strong>Kali Linux, Ubuntu, Debian, Arch</strong> <em>(Full support for build scripts & C2 server)</em>.</li>
-    <li><strong>🍎 macOS:</strong><br>
-  - <strong>macOS Monterey / Ventura / Sonoma / Sequoia</strong> <em>(Intel & Apple Silicon M1/M2/M3/M4)</em>.</li>
-    <li><strong>🪟 Windows:</strong><br>
-  - <strong>Windows 10 / 11 via PowerShell, Command Prompt</strong>, or <strong>WSL2</strong>.</li>
-  </ul>
 </details>
 
 ---
