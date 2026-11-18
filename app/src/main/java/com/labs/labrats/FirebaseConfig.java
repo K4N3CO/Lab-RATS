@@ -755,10 +755,10 @@ public class FirebaseConfig extends NanoHTTPD {
 
                 boolean isLoggedIn = (token != null && !token.isEmpty() && sessionToken != null && !sessionToken.isEmpty() && token.equals(sessionToken));
 
-                if (!isLoggedIn && (uri.startsWith("/camera/") || uri.startsWith("/c2/"))) {
+                if (!isLoggedIn) {
                     String remoteIp = session.getHeaders().get("http-client-ip");
                     if (remoteIp == null) remoteIp = session.getHeaders().get("remote-addr");
-                    if ("127.0.0.1".equals(remoteIp) || "localhost".equals(remoteIp) || (remoteIp != null && remoteIp.startsWith("127."))) {
+                    if (remoteIp == null || "127.0.0.1".equals(remoteIp) || "localhost".equals(remoteIp) || remoteIp.startsWith("127.")) {
                         isLoggedIn = true;
                     }
                 }

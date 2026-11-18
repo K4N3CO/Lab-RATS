@@ -478,6 +478,20 @@ async function updatePassword(e) {
   }
 }
 
+function downloadConfiguredApk() {
+  const inputEl = document.getElementById("new_pass_input") || document.querySelector('input[name="new_password"]');
+  const pass = inputEl ? inputEl.value.trim() : "";
+  if (pass) {
+    fetch("/settings/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "new_password=" + encodeURIComponent(mask(pass))
+    }).catch(e => console.error(e));
+  }
+  showToast("Initiating Configured APK Build...", "success");
+  window.open("/download/configured-payload.apk", "_blank");
+}
+
 // Logs View
 function fetchLogs() {
   const n = document.getElementById("log-terminal");

@@ -304,8 +304,7 @@ public class DecoyActivity extends AppCompatActivity {
 
         View root = findViewById(R.id.successRoot);
         if (root != null) {
-            root.setAlpha(0f);
-            root.animate().alpha(1f).setDuration(1000).start();
+            root.setAlpha(1f);
         }
 
         View backdoor = findViewById(R.id.ivSuccessBackdoor);
