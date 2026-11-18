@@ -1,3 +1,6 @@
+<p align="center">
+<img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
+
 # 13 ⏤ Direct IPv6 Hardening Guide
 
 > This document details security hardening procedures, threat models, credential management, network restrictions, transport layer security, fingerprint reduction, operational hygiene, verification steps, and teardown procedures for Direct IPv6 deployments.
