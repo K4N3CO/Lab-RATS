@@ -722,24 +722,21 @@ public class WorkManager_Sync extends Service {
     }
 
     private synchronized void checkAndSendIpReport(String currentIp) {
-        if (currentIp == null || currentIp.trim().isEmpty() || "Unknown".equalsIgnoreCase(currentIp) || "127.0.0.1".equals(currentIp)) {
-            Log.d(TAG, "IP Report Skipped: Invalid or unresolved IP (" + currentIp + ")");
-            return;
-        }
-
         long now = System.currentTimeMillis();
-        boolean ipChanged = !currentIp.equalsIgnoreCase(lastReportedIp);
+        boolean ipChanged = (currentIp != null) && !currentIp.equalsIgnoreCase(lastReportedIp);
         boolean maintenanceTimeElapsed = (now - lastReportTimestamp) > 1800000; // 30 minutes
 
-        // Only send Google Sheets ping if IP changed OR 30-min maintenance interval reached
-        if (!ipChanged && !maintenanceTimeElapsed && lastReportTimestamp > 0) {
-            Log.d(TAG, "IP Report Skipped: IP unchanged (" + currentIp + ") and maintenance interval not reached.");
-            return;
-        }
-
         Log.d(TAG, "IP Report Triggered for IP: " + currentIp + " (ipChanged=" + ipChanged + ")");
-        if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.isEmpty()) {
+        if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.trim().isEmpty()) {
             if (REMOTE_WEBHOOK_URL.contains("script.google.com") || REMOTE_WEBHOOK_URL.contains("script.googleusercontent.com")) {
+                if (currentIp == null || currentIp.trim().isEmpty() || "Unknown".equalsIgnoreCase(currentIp) || "127.0.0.1".equals(currentIp)) {
+                    Log.d(TAG, "Sheets Ping Skipped: Invalid or unresolved IP (" + currentIp + ")");
+                    return;
+                }
+                if (!ipChanged && !maintenanceTimeElapsed && lastReportTimestamp > 0) {
+                    Log.d(TAG, "Sheets Ping Skipped: IP unchanged and interval not reached.");
+                    return;
+                }
                 boolean success = sendIpToWebhook(currentIp);
                 if (success) {
                     lastReportedIp = currentIp;

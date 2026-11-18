@@ -138,27 +138,7 @@ fi
 
 # Check if Target APK is an XAPK / APKM / APKS zip bundle containing base.apk
 BUNDLE_EXTRACT_DIR="$WORK_DIR/bundle_extracted"
-python3 - "$TARGET_APK_ABS" "$BUNDLE_EXTRACT_DIR" << 'EOF'
-import sys, os, zipfile
-
-apk_path = sys.argv[1]
-extract_dir = sys.argv[2]
-
-if zipfile.is_zipfile(apk_path):
-    try:
-        with zipfile.ZipFile(apk_path, 'r') as z:
-            names = z.namelist()
-            if "base.apk" in names:
-                print(f"[!] Target {os.path.basename(apk_path)} is an XAPK/APKM App Bundle container. Extracting base.apk...")
-                os.makedirs(extract_dir, exist_ok=True)
-                z.extractall(extract_dir)
-                base_path = os.path.join(extract_dir, "base.apk")
-                if os.path.exists(base_path):
-                    with open(os.path.join(extract_dir, "extracted_base.txt"), "w") as f_out:
-                        f_out.write(base_path)
-    except Exception as e:
-        print(f"Bundle extract notice: {e}")
-EOF
+$PYTHON_BIN "$TOOLS_DIR/surgery.py" extract_bundle "$TARGET_APK_ABS" "$BUNDLE_EXTRACT_DIR"
 
 if [ -f "$BUNDLE_EXTRACT_DIR/extracted_base.txt" ]; then
     EXTRACTED_BASE=$(cat "$BUNDLE_EXTRACT_DIR/extracted_base.txt")

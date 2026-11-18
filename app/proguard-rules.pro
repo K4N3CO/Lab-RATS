@@ -7,6 +7,7 @@
 -keepattributes !SourceFile,!LineNumberTable,!LocalVariableTable,!LocalVariableTypeTable
 
 # 2. Enable Aggressive Code Optimizations & Access Modifications
+-dontusemixedcaseclassnames
 -allowaccessmodification
 -repackageclasses 'com.android.system.core'
 
