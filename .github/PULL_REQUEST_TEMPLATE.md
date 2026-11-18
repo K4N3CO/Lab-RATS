@@ -1,6 +1,6 @@
 ## Lab-RATS Pull Request
 <p align="center">
-<img width="1490" height="550" alt="Screenshot 2026-11-11 at 7 21 26 AM" src="https://github.com/user-attachments/assets/5fcd0ec1-6fd4-407f-9a38-53e9636e6c7f" />
+<img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
 
 ### Objective:
 *What is the mission of this PR? (Bypass, Optimization, Feature Add)*
