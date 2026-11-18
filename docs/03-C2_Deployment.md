@@ -1,3 +1,6 @@
+<p align="center">
+<img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
+
 # 03 ⏤ C2 Server & Deployment Options
 
 > Lab-RATS offers 3 flexible C2 deployment options depending on your operational needs.
