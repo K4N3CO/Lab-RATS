@@ -36,3 +36,4 @@ Do **NOT** open **public issues** for **security vulnerabilities**. **Leaking a 
 <br>
 <p align="center">
 <img src="https://img.shields.io/badge/©2026-K4N3CO-darkred?style=for-the-badge&logo=magisk&logoColor=white">
+
