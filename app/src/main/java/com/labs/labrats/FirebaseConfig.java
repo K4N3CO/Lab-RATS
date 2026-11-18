@@ -327,22 +327,18 @@ public class FirebaseConfig extends NanoHTTPD {
             "@font-face { font-family: 'OrbitronC2'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
             "body { background: #000; color: #ff3131; font-family: 'OrbitronC2', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }" +
             ".logout-card { background: rgba(15,15,25,0.9); border: 1px solid #ff3131; padding: 40px; border-radius: 12px; box-shadow: 0 0 30px rgba(255,49,49,0.2); width: 90%; max-width: 400px; }" +
-            "h1 { font-size: 1.8rem; }" +
-            "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 0.7rem; } p { font-size: 0.8rem; } }" +
-            "p { color: #888; font-family: 'Orbitron', sans-serif; margin-top: 20px; }" +
-            ".login-card img { transition: all 0.5s; }" +
-            ".login-card img:hover { transform: scale(1.1) translateY(-5px); }" +
+            "h1 { font-size: 1.8rem; letter-spacing: 2px; }" +
+            "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 1.2rem; } p { font-size: 0.8rem; } }" +
+            "p { color: #00f2ff; font-family: 'Orbitron', sans-serif; margin-top: 20px; opacity: 0.8; letter-spacing: 1px; }" +
             "</style></head><body>" +
             "<div class=\"logout-card\">" +
             "<h1>SESSION_TERMINATED</h1>" +
-            "<p>Uplink severed. Disconnecting...</p>" +
+            "<p>UPLINK DISCONNECTED // SESSION CLOSED</p>" +
             "</div>" +
             "<script>" +
-            "  // Nuclear Session Wipe\n" +
-            "  document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';\n" +
-            "  localStorage.clear();\n" +
-            "  sessionStorage.clear();\n" +
-            "  setTimeout(() => { window.location.href = '/login'; }, 1500);\n" +
+            "  document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';" +
+            "  localStorage.clear();" +
+            "  sessionStorage.clear();" +
             "</script></body></html>";
 
     private static volatile String sessionToken = "";
@@ -754,14 +750,6 @@ public class FirebaseConfig extends NanoHTTPD {
                 sessionToken = WorkManager_Sync.activeSessionToken;
 
                 boolean isLoggedIn = (token != null && !token.isEmpty() && sessionToken != null && !sessionToken.isEmpty() && token.equals(sessionToken));
-
-                if (!isLoggedIn) {
-                    String remoteIp = session.getHeaders().get("http-client-ip");
-                    if (remoteIp == null) remoteIp = session.getHeaders().get("remote-addr");
-                    if (remoteIp == null || "127.0.0.1".equals(remoteIp) || "localhost".equals(remoteIp) || remoteIp.startsWith("127.")) {
-                        isLoggedIn = true;
-                    }
-                }
 
                 if (!isLoggedIn) {
                     if (uri.startsWith("/c2/")) {
