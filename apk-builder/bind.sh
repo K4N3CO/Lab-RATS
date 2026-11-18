@@ -54,6 +54,30 @@ WORK_DIR="$SCRIPT_DIR/temp_binder"
 OUTPUT_DIR="$PROJECT_DIR/bind_output"
 TOOLS_DIR="$SCRIPT_DIR/tools"
 
+PYTHON_BIN="/usr/bin/python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(command -v python3 || command -v python)"
+fi
+chmod +x "$TOOLS_DIR/surgery.py" 2>/dev/null || true
+
+# Auto-detect Android SDK build-tools directory & tools
+STABLE_BT=""
+if [ -d "$HOME/Library/Android/sdk/build-tools" ]; then
+    STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/3[0-4]* 2>/dev/null | tail -n1)
+    if [ -z "$STABLE_BT" ]; then
+        STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/* 2>/dev/null | grep -v "37" | tail -n1)
+    fi
+elif [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME/build-tools" ]; then
+    STABLE_BT=$(ls -d "$ANDROID_HOME/build-tools"/* 2>/dev/null | grep -v "37" | tail -n1)
+fi
+
+AAPT2_BIN=""
+if [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/aapt2" ]; then
+    AAPT2_BIN="$STABLE_BT/aapt2"
+elif command -v aapt2 &>/dev/null; then
+    AAPT2_BIN="$(command -v aapt2)"
+fi
+
 mkdir -p "$OUTPUT_DIR" "$SCRIPT_DIR/bind_output" "$TOOLS_DIR"
 
 echo -e "${CYAN}"
