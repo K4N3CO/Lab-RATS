@@ -143,35 +143,17 @@ router.post('/logout', async (req, res) => {
       if (decoded?.familyId) await db.revokeTokenFamily(decoded.familyId);
     } catch (e) {}
   }
-  res.clearCookie('access_token');
+  res.clearCookie('access_token', { path: '/' });
+  res.clearCookie('refresh_token', { path: '/' });
   res.clearCookie('refresh_token', { path: '/api/auth/rotate' });
-  res.clearCookie('c2_auth_token');
+  res.clearCookie('c2_auth_token', { path: '/' });
+  res.clearCookie('token', { path: '/' });
 
   const isJson = req.headers['accept']?.includes('application/json') || req.body?.json === 'true' || req.xhr;
   if (isJson) {
-    return res.json({ success: true, message: 'Logged out.' });
+    return res.json({ success: true, message: 'Logged out. Session invalidated.' });
   }
-  return res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAB-RATS | SESSION TERMINATED</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
-    <style>
-        body { background: #02080d; color: #ff3131; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .card { background: rgba(15,15,25,0.85); border: 1px solid #ff3131; padding: 40px 30px; border-radius: 16px; box-shadow: 0 0 40px rgba(255,49,49,0.25); max-width: 450px; width: 90%; }
-        h1 { font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 15px; }
-        p { color: #00f2ff; font-size: 0.85rem; letter-spacing: 1px; opacity: 0.8; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>SESSION TERMINATED</h1>
-        <p>UPLINK DISCONNECTED // SESSION CLOSED</p>
-    </div>
-</body>
-</html>`);
+  return res.redirect('/login');
 });
 
 module.exports = router;
