@@ -1,3 +1,6 @@
+<p align="center">
+<img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
+
 # 06 ⏤ Stealth Decoys & Persistence
 
 > **Lab-RATS** incorporates multi-layered stealth camouflage and anti-removal persistence mechanisms.
