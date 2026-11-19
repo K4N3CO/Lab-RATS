@@ -1694,12 +1694,14 @@ function terminateGpsTracking() {
 }
 
 function openExternalMap() {
-  const lat = currentLat || localStorage.getItem("last_gps_lat");
-  const lon = currentLon || localStorage.getItem("last_gps_lon");
-  if (lat && lon) {
-    window.open("https://www.google.com/maps/search/?api=1&query=" + lat + "," + lon, "_blank");
+  const extMapBtn = document.getElementById("ext-map-btn");
+  let lat = (extMapBtn && extMapBtn.dataset.lat) ? extMapBtn.dataset.lat : (currentLat || localStorage.getItem("last_gps_lat"));
+  let lon = (extMapBtn && extMapBtn.dataset.lon) ? extMapBtn.dataset.lon : (currentLon || localStorage.getItem("last_gps_lon"));
+
+  if (lat && lon && lat !== "" && lon !== "") {
+    window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(lat) + "," + encodeURIComponent(lon), "_blank");
   } else {
-    showToast("NO_COORDINATES_AVAILABLE");
+    showToast("NO_COORDINATES_AVAILABLE", "error");
   }
 }
 
