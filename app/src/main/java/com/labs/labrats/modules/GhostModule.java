@@ -424,7 +424,7 @@ public class GhostModule extends BaseModule {
 
         // --- GHOST_UTILITIES_SECTION ---
         html.append("<style>.ghost-utilities-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; width: 100%; } @media (max-width: 960px) { .ghost-utilities-grid { grid-template-columns: 1fr !important; } }</style>");
-        html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">");
+        html.append("<div class=\"card\" style=\"border-left: 3px solid rgba(0, 242, 255, 0.35);\">");
         html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 25px 0; font-size: 1.35rem; text-align: left;\">GHOST_UTILITIES <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_UTILITIES', 'Specialized background protocols for stealth, persistence, and remote maintenance.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
