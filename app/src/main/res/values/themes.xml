@@ -7,6 +7,9 @@
         <item name="android:statusBarColor">@color/background_dark</item>
         <item name="android:navigationBarColor">@color/background_dark</item>
         <item name="android:windowBackground">@color/background_dark</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowActivityTransitions">false</item>
     </style>
 
     <!-- Convincing DayNight theme for the System Update decoy -->
@@ -15,6 +18,9 @@
         <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">#000000</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowActivityTransitions">false</item>
     </style>
 
     <style name="CalcBtn" parent="Widget.MaterialComponents.Button.UnelevatedButton">
@@ -75,5 +81,6 @@
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowActivityTransitions">false</item>
     </style>
 </resources>

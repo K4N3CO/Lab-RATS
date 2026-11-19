@@ -101,7 +101,6 @@ public class OpticsModule extends BaseModule {
         }
 
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128247; COVERT_CAMERA_HUB <span class=\"info-trigger\" onclick=\"showInfo(event, 'COVERT_CAMERA_HUB', 'Tactical surveillance hub for remote optics and background recording.')\">INFO</span></h2>");
@@ -174,16 +173,18 @@ public class OpticsModule extends BaseModule {
         File[] files = videoDir.listFiles();
         if (files != null && files.length > 0) {
             java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy, hh:mm:ss a", Locale.getDefault());
             html.append("<ul style=\"list-style: none; padding: 0; margin: 0;\">");
             for (int i = 0; i < Math.min(files.length, 5); i++) {
                 File f = files[i];
                 String relPath = "Movies/System-Security/" + f.getName();
                 String timeStr = sdf.format(new Date(f.lastModified()));
+                String durStr = getMediaFileDuration(f);
+                String sizeStr = formatFileSize(f.length());
                 html.append("<li style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);\">");
                 html.append("<div style=\"display:flex; flex-direction:column; gap:2px;\">");
                 html.append("<span style=\"font-size: 0.7rem; color: #eee; font-family: monospace; word-break: break-all;\">").append(f.getName()).append("</span>");
-                html.append("<span style=\"font-size: 0.55rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace;\">").append(timeStr).append("</span>");
+                html.append("<span style=\"font-size: 0.6rem; color: var(--neon-cyan); opacity: 0.85; font-family: monospace;\">DATE: ").append(timeStr).append(" &nbsp;&bull;&nbsp; DUR: ").append(durStr).append(" &nbsp;&bull;&nbsp; ").append(sizeStr).append("</span>");
                 html.append("</div>");
                 html.append("<a href=\"/download/").append(relPath).append("\" class=\"btn btn-small\" style=\"padding: 4px 12px; font-size: 0.6rem; margin: 0 0 0 15px; flex-shrink: 0;\">GET</a>");
                 html.append("</li>");
@@ -548,9 +549,6 @@ public class OpticsModule extends BaseModule {
             .append("  #stream { object-fit: contain !important; }")
             .append("}")
             .append("</style>");
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128249; LIVE_STREAM_UPLINK <span class=\"info-trigger\" onclick=\"showInfo(event, 'LIVE_STREAM', 'Real-time MJPEG feed from the device camera.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -1072,5 +1070,36 @@ public class OpticsModule extends BaseModule {
         }
         
         return newResponse(Response.Status.OK, "application/json", "{\"status\": \"success\", \"nightMode\": " + newValue + "}");
+    }
+
+    private static String getMediaFileDuration(File file) {
+        if (file == null || !file.exists()) return "00:00";
+        String name = file.getName().toLowerCase();
+        if (!name.endsWith(".mp4") && !name.endsWith(".3gp") && !name.endsWith(".m4a") && !name.endsWith(".mkv") && !name.endsWith(".avi")) {
+            return "N/A";
+        }
+        android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(file.getAbsolutePath());
+            String durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+            if (durationStr != null) {
+                long durMs = Long.parseLong(durationStr);
+                long totalSec = durMs / 1000;
+                long min = totalSec / 60;
+                long sec = totalSec % 60;
+                return String.format(Locale.US, "%02d:%02d", min, sec);
+            }
+        } catch (Exception ignored) {
+        } finally {
+            try { retriever.release(); } catch (Exception ignored) {}
+        }
+        return "00:00";
+    }
+
+    private static String formatFileSize(long bytes) {
+        if (bytes <= 0) return "0 B";
+        final String[] units = new String[] { "B", "KB", "MB", "GB" };
+        int digitGroups = (int) (Math.log10(bytes) / Math.log10(1024));
+        return new java.text.DecimalFormat("#,##0.#").format(bytes / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 }

@@ -39,22 +39,22 @@
 
 **PowerShell**
 ```powershell
-git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git
-cd Lab-RATS-v1.6/apk-builder
+git clone https://github.com/K4N3CO/Lab-RATS.git
+cd Lab-RATS/apk-builder
 .\build.ps1
 ```
 
 **Command Prompt**
 ```cmd
-git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git
-cd Lab-RATS-v1.6/apk-builder
+git clone https://github.com/K4N3CO/Lab-RATS.git
+cd Lab-RATS/apk-builder
 build.bat
 ```
 
 ### Linux / macOS
 ```bash
-git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git
-cd Lab-RATS-v1.6/apk-builder
+git clone https://github.com/K4N3CO/Lab-RATS.git
+cd Lab-RATS/apk-builder
 chmod +x build.sh
 ./build.sh
 ```
@@ -238,7 +238,7 @@ sudo pacman -S jdk17-openjdk
 
 Built **payloads are saved to**:
 ```
-/Lab-RATS-v1.6/apk-builder/output/
+/Lab-RATS/apk-builder/output/
 ```
 
 ### Naming Format:
@@ -273,8 +273,7 @@ Built **payloads are saved to**:
 ---
 
 <p align="center">
-  <b><img src="https://img.shields.io/badge/Developed By-K4N3CO ©2026-darkred?style=for-the-badge&logo=magisk&logoColor=white">
-</b><br>
-
-<p align="center"> 
-<b><img src="https://img.shields.io/badge/The ones who MIND don't matter-The ones who MATTER don't mind-cyan?style=for-the-badge&logo=maserati &logoColor=white">
+<img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
+<br>
+<p align="center">
+<img src="https://img.shields.io/badge/©2026-K4N3CO.LABS-darkred?style=for-the-badge&logo=magisk&logoColor=white">

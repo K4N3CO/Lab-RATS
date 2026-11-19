@@ -78,6 +78,7 @@
             android:layout_marginBottom="20dp"
             android:max="100"
             android:progress="0"
+            android:indeterminateTint="#34A853"
             android:progressTint="#34A853" />
 
         <com.google.android.material.button.MaterialButton

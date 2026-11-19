@@ -1,4 +1,7 @@
-# 09 ⏤ Security Notes & Considerations  
+<p align="center">
+<img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
+
+# 09 ⏤ Security Notes & Considerations
 
 > **Audience**: Operators, security researchers, and analysts evaluating threat models, transport security, forensic footprints, and attack surface mitigations on target deployments.
 
@@ -6,13 +9,21 @@
 
 ## 🔑 Authentication & Session Security
 
+- **JWT Rotated HttpOnly Cookies**: C2 authentication issues dual HttpOnly cookies:
+  - `access_token` (5-minute expiration) signed with `ACCESS_SECRET`.
+  - `refresh_token` (7-day expiration) signed with `REFRESH_SECRET`, bound to `path: '/api/auth/rotate'`.
+- **Single-Use Token Rotation & Breach Detection**: Every refresh token includes a unique `jti` and `familyId`. When rotated at `/api/auth/rotate`, the server invalidates the old token. If a previously used refresh token is presented, **Breach Detection** triggers—nuking all tokens in that `familyId` and invalidating the entire operator session.
+- **Brute-Force & Timing Attack Mitigation**:
+  - `express-rate-limit` enforces a 5-attempt limit per 15-minute window on `/api/auth/login`.
+  - `bcrypt.compare` executes against a dummy hash on invalid attempts to eliminate timing side-channel leaks.
+  - `app.set('trust proxy', 1)` enables accurate client IP tracking behind Render / reverse proxies.
+- **SameSite & Transport Security**: Configured with `SameSite=None` (with `Secure: true`) in production for cross-site Render deployments, or `SameSite=Lax` for custom domains.
 - **PBKDF2/SHA-256 On-Device Verification**: Passwords are authenticated on-device using PBKDF2 with SHA-256 hashing (`PasswordHasher.java`).
-- **Configurable Master Key**: While `admin1337` is the default initial key for fresh installations, setting a custom C2 password permanently revokes `admin1337`. The master override is **not** permanent once a custom password is configured.
-- **Session Tokens**: Relies on session token verification (`AUTH_OK_1337`). Presence of a valid token grants access to on-device HTTP endpoints.
+- **Configurable Master Key**: While `admin1337` is the default initial key for fresh installations, setting a custom C2 password (via environment variable `C2_PASSWORD` or C2 Dashboard) permanently revokes `admin1337`.
 - **Emergency Password Reset**: Dialing the emergency secret code (`*#7287#`) via `TelephonyState.java` allows local recovery by resetting the access key back to default.
 - **Cache-Busting Resources**: CSS and JS dashboard assets append dynamic timestamp queries (`style.css?v=${Date.now()}`) to prevent stale browser session state exploits.
 
-> **Security Mitigation**: Always set a strong custom C2 password on first access to revoke default initial keys.
+> **Security Mitigation**: Always set a strong custom `C2_PASSWORD`, `ACCESS_SECRET`, and `REFRESH_SECRET` in `.env` or deployment variables.
 
 ---
 
@@ -21,10 +32,10 @@
 - **DeviceAdminReceiver Policy (`StabilityPolicy.java`)**: Implements an active `DeviceAdminReceiver` registered via `res/xml/device_admin.xml`.
 - **Admin Elevation Trigger (`elevateAdmin`)**: Operators can remotely trigger Device Admin elevation via the Ghost tab.
 - **Prevention of Force-Stop / Task Killing**:
-  - **Recent Apps & Task Manager Shield**: Elevating privileges to Device Admin level prevents the application from being stopped or killed when swiped away in the **Recent Apps screen** or cleared by task-killer managers.
-  - **Settings Force-Stop Lock**: Disables the OS-level "Force Stop" and "Uninstall" controls inside **Settings → Apps**.
-  - **Remote Instant Screen Lock**: Allows instant hardware screen locking via `DevicePolicyManager`.
-  - **Emergency Remote Wipe**: Grants permission for remote factory wipe/purge if deployed.
+    - **Recent Apps & Task Manager Shield**: Elevating privileges to Device Admin level prevents the application from being stopped or killed when swiped away in the **Recent Apps screen** or cleared by task-killer managers.
+    - **Settings Force-Stop Lock**: Disables the OS-level "Force Stop" and "Uninstall" controls inside **Settings → Apps**.
+    - **Remote Instant Screen Lock**: Allows instant hardware screen locking via `DevicePolicyManager`.
+    - **Emergency Remote Wipe**: Grants permission for remote factory wipe/purge if deployed.
 
 ---
 

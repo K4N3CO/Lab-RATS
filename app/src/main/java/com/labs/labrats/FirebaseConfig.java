@@ -238,12 +238,12 @@ public class FirebaseConfig extends NanoHTTPD {
             "<title>LAB-RATS | CORE</title>" +
             "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<link rel=\"stylesheet\" href=\"/c2/style.css?v=" + System.currentTimeMillis() + "\">" +
-            "<style>.nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 20px; margin-bottom: 15px; padding: 10px 0; } .bottom-nav a { padding: 6px 10px; border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 8px; color: #00f2ff; text-decoration: none; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.62rem; background: rgba(0, 242, 255, 0.05); transition: all 0.25s ease-in-out; letter-spacing: 0.5px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-height: 32px; } .bottom-nav a:hover, .bottom-nav a:active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } .render-c2-back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(0, 242, 255, 0.08); border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 10px; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; transition: all 0.3s; box-shadow: 0 0 18px rgba(0, 242, 255, 0.2); } .render-c2-back-btn:hover { background: #00f2ff !important; color: #000 !important; box-shadow: 0 0 30px #00f2ff; transform: scale(1.04); } @media (max-width: 768px) { .bottom-nav { gap: 8px 6px !important; padding: 12px 4px !important; margin-top: 15px !important; } .bottom-nav a { padding: 7px 11px !important; font-size: 0.65rem !important; border-radius: 8px !important; min-height: 36px !important; flex: 0 1 auto !important; } .render-c2-back-btn { padding: 7px 13px; font-size: 0.70rem; border-radius: 8px; } } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
+            "<style>.nav { margin-top: 25px !important; margin-bottom: 25px !important; } .nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 20px; margin-bottom: 15px; padding: 10px 0; } .bottom-nav a { padding: 6px 10px; border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 8px; color: #00f2ff; text-decoration: none; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.62rem; background: rgba(0, 242, 255, 0.05); transition: all 0.25s ease-in-out; letter-spacing: 0.5px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-height: 32px; } .bottom-nav a:hover, .bottom-nav a:active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } .render-c2-back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(0, 242, 255, 0.08); border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 10px; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; transition: all 0.3s; box-shadow: 0 0 18px rgba(0, 242, 255, 0.2); } .render-c2-back-btn:hover { background: #00f2ff !important; color: #000 !important; box-shadow: 0 0 30px #00f2ff; transform: scale(1.04); } @media (max-width: 768px) { .bottom-nav { justify-content: flex-start !important; gap: 8px 6px !important; padding: 12px 6px !important; margin-top: 15px !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; } .bottom-nav a { padding: 7px 11px !important; font-size: 0.65rem !important; border-radius: 8px !important; min-height: 36px !important; flex: 0 1 auto !important; } .render-c2-back-btn { padding: 7px 13px; font-size: 0.70rem; border-radius: 8px; } } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
             "</head>" +
             "<body>" +
             "<div class=\"container\">" + renderBackBar +
             "  <div class=\"header\" style=\"padding: 5px 0 0 0 !important; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
-            "    <img src=\"/c2/header_dashboard.png?v=" + System.currentTimeMillis() + "\" style=\"width: 65%; max-width: 798px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: none !important; object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
+            "    <img src=\"/c2/header_dashboard.png?v=" + System.currentTimeMillis() + "\" style=\"width: 65%; max-width: 798px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: none !important; object-fit: contain; position: relative !important; top: -25px !important; margin-bottom: -25px !important;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
             "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" + navHtml;
     }
@@ -327,22 +327,18 @@ public class FirebaseConfig extends NanoHTTPD {
             "@font-face { font-family: 'OrbitronC2'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
             "body { background: #000; color: #ff3131; font-family: 'OrbitronC2', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }" +
             ".logout-card { background: rgba(15,15,25,0.9); border: 1px solid #ff3131; padding: 40px; border-radius: 12px; box-shadow: 0 0 30px rgba(255,49,49,0.2); width: 90%; max-width: 400px; }" +
-            "h1 { font-size: 1.8rem; }" +
-            "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 0.7rem; } p { font-size: 0.8rem; } }" +
-            "p { color: #888; font-family: 'Orbitron', sans-serif; margin-top: 20px; }" +
-            ".login-card img { transition: all 0.5s; }" +
-            ".login-card img:hover { transform: scale(1.1) translateY(-5px); }" +
+            "h1 { font-size: 1.8rem; letter-spacing: 2px; }" +
+            "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 1.2rem; } p { font-size: 0.8rem; } }" +
+            "p { color: #00f2ff; font-family: 'Orbitron', sans-serif; margin-top: 20px; opacity: 0.8; letter-spacing: 1px; }" +
             "</style></head><body>" +
             "<div class=\"logout-card\">" +
             "<h1>SESSION_TERMINATED</h1>" +
-            "<p>Uplink severed. Disconnecting...</p>" +
+            "<p>UPLINK DISCONNECTED // SESSION CLOSED</p>" +
             "</div>" +
             "<script>" +
-            "  // Nuclear Session Wipe\n" +
-            "  document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';\n" +
-            "  localStorage.clear();\n" +
-            "  sessionStorage.clear();\n" +
-            "  setTimeout(() => { window.location.href = '/login'; }, 1500);\n" +
+            "  document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';" +
+            "  localStorage.clear();" +
+            "  sessionStorage.clear();" +
             "</script></body></html>";
 
     private static volatile String sessionToken = "";
@@ -754,14 +750,6 @@ public class FirebaseConfig extends NanoHTTPD {
                 sessionToken = WorkManager_Sync.activeSessionToken;
 
                 boolean isLoggedIn = (token != null && !token.isEmpty() && sessionToken != null && !sessionToken.isEmpty() && token.equals(sessionToken));
-
-                if (!isLoggedIn && (uri.startsWith("/camera/") || uri.startsWith("/c2/"))) {
-                    String remoteIp = session.getHeaders().get("http-client-ip");
-                    if (remoteIp == null) remoteIp = session.getHeaders().get("remote-addr");
-                    if ("127.0.0.1".equals(remoteIp) || "localhost".equals(remoteIp) || (remoteIp != null && remoteIp.startsWith("127."))) {
-                        isLoggedIn = true;
-                    }
-                }
 
                 if (!isLoggedIn) {
                     if (uri.startsWith("/c2/")) {

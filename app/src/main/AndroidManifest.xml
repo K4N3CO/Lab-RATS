@@ -119,7 +119,7 @@
             android:name=".PermissionActivity"
             android:theme="@style/Theme.LabRATS.Permissions"
             android:excludeFromRecents="true"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".DecoyActivity"

