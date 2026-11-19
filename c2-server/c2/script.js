@@ -1688,24 +1688,29 @@ function locateDevice() {
 }
 
 function terminateGpsTracking() {
-  // Instantly hide map frame & wipe Leaflet blue dot marker immediately (0ms delay)
-  const mapFrame = document.getElementById("map-frame");
+  setPingBtnState(false);
+  _0x6a("[TERMINATE] Disconnecting from GPS satellites & map...");
+
+  const oldFrame = document.getElementById("map-frame");
   const mapOverlay = document.getElementById("map-overlay");
 
-  if (mapFrame) {
-    mapFrame.style.display = "none";
-    try {
-      if (mapFrame.contentWindow) mapFrame.contentWindow.location.replace("about:blank");
-    } catch(e) {}
-    mapFrame.removeAttribute("srcdoc");
-    mapFrame.srcdoc = "";
+  if (oldFrame) {
+    const newFrame = document.createElement("iframe");
+    newFrame.id = "map-frame";
+    newFrame.width = "100%";
+    newFrame.height = "100%";
+    newFrame.frameBorder = "0";
+    newFrame.setAttribute("referrerpolicy", "no-referrer");
+    newFrame.style.cssText = "border:0; display: none;";
+    newFrame.setAttribute("allowfullscreen", "");
+    if (oldFrame.parentNode) {
+      oldFrame.parentNode.replaceChild(newFrame, oldFrame);
+    }
   }
+
   if (mapOverlay) {
     mapOverlay.style.display = "flex";
   }
-
-  setPingBtnState(false);
-  _0x6a("[TERMINATE] Disconnecting from GPS satellites & map...");
 
   fetch("/gps/stop")
     .then(() => {
