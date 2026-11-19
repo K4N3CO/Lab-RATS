@@ -1721,10 +1721,6 @@ function terminateGpsTracking() {
   showToast("GPS_TRACKING_TERMINATED");
 }
 
-  updateCoordDisplay(null, null, false);
-  showToast("GPS_TRACKING_TERMINATED");
-}
-
 function openExternalMap() {
   const extMapBtn = document.getElementById("ext-map-btn");
   let lat = (extMapBtn && extMapBtn.dataset.lat) ? extMapBtn.dataset.lat : (currentLat || localStorage.getItem("last_gps_lat"));

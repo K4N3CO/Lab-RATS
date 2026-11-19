@@ -1637,10 +1637,14 @@ function updateCoordDisplay(lat, lon, isLive, errorMsg) {
     } catch(e) {}
     display.innerHTML = `<span style="color:var(--neon-green); font-weight:bold;">LIVE_FIX: LAT: ${lat} | LON: ${lon}</span>`;
     if (extMapBtn) extMapBtn.style.display = "inline-block";
-  } else if (lastLat && lastLon) {
+  } else if (lastLat && lastLon && lastLat !== "0" && lastLon !== "0") {
     const timeTag = lastTime ? ` (${lastTime})` : "";
+    if (extMapBtn) {
+      extMapBtn.dataset.lat = lastLat;
+      extMapBtn.dataset.lon = lastLon;
+      extMapBtn.style.display = "inline-block";
+    }
     display.innerHTML = `<span style="color:var(--neon-yellow); font-weight:bold;">&#9888;&#65039; LAST_KNOWN: LAT: ${lastLat} | LON: ${lastLon}${timeTag}</span>`;
-    if (extMapBtn) extMapBtn.style.display = "inline-block";
   } else {
     display.innerHTML = errorMsg ? `<span style="color:var(--danger);">${errorMsg}</span>` : "WAITING_FOR_DATA...";
     if (extMapBtn) extMapBtn.style.display = "none";
@@ -1648,7 +1652,9 @@ function updateCoordDisplay(lat, lon, isLive, errorMsg) {
 }
 
 function toggleLocationPing() {
-  if (isGpsActive) {
+  const btn = document.getElementById("ping-btn");
+  const isCurrentlyActive = isGpsActive || (btn && btn.innerText && btn.innerText.includes("TERMINATE"));
+  if (isCurrentlyActive) {
     terminateGpsTracking();
   } else {
     locateDevice();
@@ -1662,9 +1668,11 @@ function locateDevice() {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        updateCoordDisplay(data.lat, data.lon, true);
-        renderMap(data.lat, data.lon);
-        _0x6a("[SUCCESS] Fix acquired: " + data.lat + ", " + data.lon);
+        if (isGpsActive) {
+          updateCoordDisplay(data.lat, data.lon, true);
+          renderMap(data.lat, data.lon);
+          _0x6a("[SUCCESS] Fix acquired: " + data.lat + ", " + data.lon);
+        }
       } else {
         setPingBtnState(false);
         updateCoordDisplay(null, null, false, data.message);
@@ -1704,10 +1712,6 @@ function terminateGpsTracking() {
       _0x6a("[DISCONNECTED] Device location tracking disengaged.");
     })
     .catch(() => {});
-
-  updateCoordDisplay(null, null, false);
-  showToast("GPS_TRACKING_TERMINATED");
-}
 
   updateCoordDisplay(null, null, false);
   showToast("GPS_TRACKING_TERMINATED");
