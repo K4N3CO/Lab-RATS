@@ -49,9 +49,23 @@ public class LocateModule extends BaseModule {
         return null;
     }
 
+    private static volatile java.util.concurrent.CountDownLatch activeGpsLatch = null;
+    private static volatile android.location.LocationListener activeGpsListener = null;
+
     private Response stopGpsTracking() {
         Log.d("LocateModule", "Disengaging GPS location tracking");
         FirebaseConfig.logActivity("LOCATE_STOP: Precision GPS tracking disengaged");
+        try {
+            if (activeGpsLatch != null) {
+                activeGpsLatch.countDown();
+                activeGpsLatch = null;
+            }
+            if (activeGpsListener != null) {
+                LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                if (lm != null) lm.removeUpdates(activeGpsListener);
+                activeGpsListener = null;
+            }
+        } catch (Exception ignored) {}
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\":\"GPS_DISENGAGED\"}");
     }
 
