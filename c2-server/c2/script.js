@@ -111,15 +111,15 @@ function injectMobileStyles() {
       box-sizing: border-box !important;
       position: relative !important;
       overflow: hidden !important;
+      box-shadow: none !important;
     }
     #ghost-screen-stream {
       width: 100% !important;
       height: 100% !important;
       object-fit: fill !important;
-      display: block !important;
       margin: 0 auto !important;
       border-radius: 28px !important;
-      box-shadow: 0 0 20px rgba(0, 242, 255, 0.25) !important;
+      box-shadow: none !important;
       touch-action: none !important;
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
@@ -772,6 +772,8 @@ function startGhostScreen() {
   enforceGhostViewportScaling();
   const statusCard = document.getElementById("ghost-screen-status");
   if (statusCard) statusCard.style.display = "none";
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (streamImg) streamImg.style.display = "block";
   const btn = document.getElementById("ghost-toggle-btn");
   if (btn) {
     btn.innerHTML = "TERMINATE";
@@ -797,7 +799,10 @@ function stopGhostScreen() {
     btn.style.background = "rgba(0, 242, 255, 0.05)";
   }
   const streamImg = document.getElementById("ghost-screen-stream");
-  if (streamImg) streamImg.src = "";
+  if (streamImg) {
+    streamImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    streamImg.style.display = "none";
+  }
 }
 
 function toggleGhostScreen() {
@@ -823,6 +828,7 @@ function refreshGhostScreen() {
     isGhostFetching = false;
     if (_0x2a && streamImg) {
       streamImg.src = img.src;
+      streamImg.style.display = "block";
       if (statusCard) statusCard.style.display = "none";
       setTimeout(refreshGhostScreen, 10);
     }
