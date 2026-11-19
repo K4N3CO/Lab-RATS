@@ -1844,7 +1844,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
     checkGhostStatus();
     refreshGhostLogs();
-    startGhostScreen();
     setInterval(checkGhostStatus, 2000);
     setInterval(refreshGhostLogs, 2000);
   }
