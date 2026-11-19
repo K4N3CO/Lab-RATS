@@ -100,9 +100,6 @@ public class TerminalModule extends BaseModule {
         html.append("</div>");
         html.append("</div>"); // Close Status Monitor card
 
-        // Section Separator (Tactical Divider)
-        html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 15px 0;\"></div>");
-
         boolean termuxInstalled = isAppInstalled("com.termux");
         String promptSymbol = termuxInstalled ? "$" : "#";
 

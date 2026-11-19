@@ -331,7 +331,7 @@ public class AcousticsModule extends BaseModule {
         html.append("</div></div>");
 
         // Control buttons
-        html.append("<div class=\"card\" style=\"border-left-color: var(--neon-green);\">")
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-green);\">")
             .append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-green);\">AMBIENT_MIC <span class=\"info-trigger\" onclick=\"showInfo(event, 'AMBIENT_MIC', 'Remote activation of the microphone for background audio capture.')\">INFO</span></h2>")
             
             // Live Stream Section
@@ -385,7 +385,7 @@ public class AcousticsModule extends BaseModule {
         html.append("</div></div></div>");
 
         // Call recording section
-        html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">")
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">")
             .append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">COMMS_INTERCEPTION <span class=\"info-trigger\" onclick=\"showInfo(event, 'COMMS_INTERCEPTION', 'Automated monitoring and recording of cellular voice communications.')\">INFO</span></h2>")
             .append("<div style=\"display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px;\">")
             .append("<div class=\"toggle-container\">")
@@ -401,7 +401,7 @@ public class AcousticsModule extends BaseModule {
             .append("</div></div>");
 
         // --- ACOUSTICS VAULT SECTION ---
-        html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">");
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
         html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">ACOUSTICS_VAULT <span class=\"info-trigger\" onclick=\"showInfo(event, 'ACOUSTICS_VAULT', 'Access captured audio files from ambient surveillance or call intercepts.')\">INFO</span></h2>");
         html.append("<div id=\"audio-recordings-list\" style=\"background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 8px; padding: 15px; min-height: 50px; margin-top: 20px;\">");
 
