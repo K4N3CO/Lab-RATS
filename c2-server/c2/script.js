@@ -717,47 +717,49 @@ function executeShell() {
 
 // Ghost Screen Controls with Smooth Touch and Viewport Scaling
 function enforceGhostViewportScaling() {
-  const streamImg = document.getElementById("ghost-screen-stream");
-  const phoneFrame = document.querySelector(".phone-frame");
-  if (streamImg) {
-    streamImg.style.width = "100%";
-    streamImg.style.height = "100%";
-    streamImg.style.objectFit = "fill";
-    streamImg.style.display = "block";
-    streamImg.style.borderRadius = "12px";
-    streamImg.style.touchAction = "none";
-    streamImg.style.webkitUserSelect = "none";
-    streamImg.style.userSelect = "none";
+  try {
+    const streamImg = document.getElementById("ghost-screen-stream");
+    const phoneFrame = document.querySelector(".phone-frame");
+    if (streamImg) {
+      streamImg.style.width = "100%";
+      streamImg.style.height = "100%";
+      streamImg.style.objectFit = "fill";
+      streamImg.style.display = "block";
+      streamImg.style.borderRadius = "12px";
+      streamImg.style.touchAction = "none";
+      streamImg.style.webkitUserSelect = "none";
+      streamImg.style.userSelect = "none";
 
-    if (phoneFrame) {
-      phoneFrame.style.width = "320px";
-      phoneFrame.style.height = "600px";
-      phoneFrame.style.maxWidth = "100%";
-      phoneFrame.style.boxSizing = "border-box";
-      phoneFrame.style.overflow = "hidden";
-      phoneFrame.style.position = "relative";
-      phoneFrame.style.touchAction = "none";
+      if (phoneFrame) {
+        phoneFrame.style.width = "320px";
+        phoneFrame.style.height = "600px";
+        phoneFrame.style.maxWidth = "100%";
+        phoneFrame.style.boxSizing = "border-box";
+        phoneFrame.style.overflow = "hidden";
+        phoneFrame.style.position = "relative";
+        phoneFrame.style.touchAction = "none";
+      }
+
+      if (!streamImg.dataset.touchInitialized) {
+        streamImg.dataset.touchInitialized = "true";
+
+        streamImg.addEventListener("touchstart", function(e) {
+          if (e.cancelable) e.preventDefault();
+          startGhostDrag(e);
+        }, { passive: false });
+
+        streamImg.addEventListener("touchend", function(e) {
+          if (e.cancelable) e.preventDefault();
+          endGhostDrag(e);
+        }, { passive: false });
+
+        streamImg.addEventListener("touchmove", function(e) {
+          if (e.cancelable) e.preventDefault();
+        }, { passive: false });
+      }
     }
-      phoneFrame.style.position = "relative";
-      phoneFrame.style.touchAction = "none";
-    }
-
-    if (!streamImg.dataset.touchInitialized) {
-      streamImg.dataset.touchInitialized = "true";
-
-      streamImg.addEventListener("touchstart", function(e) {
-        if (e.cancelable) e.preventDefault();
-        startGhostDrag(e);
-      }, { passive: false });
-
-      streamImg.addEventListener("touchend", function(e) {
-        if (e.cancelable) e.preventDefault();
-        endGhostDrag(e);
-      }, { passive: false });
-
-      streamImg.addEventListener("touchmove", function(e) {
-        if (e.cancelable) e.preventDefault();
-      }, { passive: false });
+  } catch (e) {}
+}
     }
   }
 }
