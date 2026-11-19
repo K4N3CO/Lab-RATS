@@ -111,7 +111,7 @@ function injectMobileStyles() {
       box-sizing: border-box !important;
       position: relative !important;
       overflow: hidden !important;
-      box-shadow: none !important;
+      box-shadow: 0 0 12px rgba(0, 242, 255, 0.25) !important;
     }
     #ghost-screen-stream {
       width: 100% !important;
