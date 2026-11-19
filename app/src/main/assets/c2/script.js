@@ -1604,11 +1604,11 @@ function renderMap(lat, lon) {
   const mapOverlay = document.getElementById("map-overlay");
   const extMapBtn = document.getElementById("ext-map-btn");
 
-  if (mapFrame) {
+  if (mapFrame && isGpsActive) {
     mapFrame.srcdoc = `<!DOCTYPE html><html><head><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>html,body,#map{height:100%;width:100%;margin:0;padding:0;background:#060b10;overflow:hidden;}.leaflet-tile{filter:invert(100%) hue-rotate(180deg) brightness(0.9) contrast(1.3) !important;}.tactical-marker-wrap{position:relative;width:0;height:0;}.radar-ping{position:absolute;top:50%;left:50%;width:44px;height:44px;margin-top:-22px;margin-left:-22px;border:2px solid #00f2ff;border-radius:50%;background:rgba(0,242,255,0.1);box-shadow:0 0 15px #00f2ff;animation:radar 1.8s infinite ease-out;pointer-events:none;}.red-pin{position:absolute;top:50%;left:50%;width:18px;height:18px;margin-top:-9px;margin-left:-9px;background-color:#ff3131;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff3131, 0 0 24px #00f2ff;animation:pin-pulse 1.5s infinite alternate;}@keyframes radar{0%{transform:scale(0.2);opacity:1;}100%{transform:scale(2.2);opacity:0;}}@keyframes pin-pulse{0%{transform:scale(0.95);box-shadow:0 0 10px #ff3131, 0 0 20px #00f2ff;}100%{transform:scale(1.15);box-shadow:0 0 20px #ff3131, 0 0 35px #00f2ff;}}</style></head><body><div id="map"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>function loadMap(){if(typeof L==='undefined'){setTimeout(loadMap,100);return;}try{var m=L.map('map',{zoomControl:true}).setView([${lat},${lon}],16);var tileProviders=['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}','https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}','https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'];var providerIdx=0;function tryTileLayer(){if(providerIdx>=tileProviders.length)return;var currentUrl=tileProviders[providerIdx];var layer=L.tileLayer(currentUrl,{maxZoom:19,attribution:'Esri'});layer.on('tileerror',function(){m.removeLayer(layer);providerIdx++;tryTileLayer();});layer.addTo(m);}tryTileLayer();var pinIcon=L.divIcon({className:'custom-tactical-pin',html:'<div class="tactical-marker-wrap"><div class="radar-ping"></div><div class="red-pin"></div></div>',iconSize:[0,0]});L.marker([${lat},${lon}],{icon:pinIcon}).addTo(m);setTimeout(function(){m.invalidateSize();},200);}catch(e){console.error(e);}}if(document.readyState==='complete'){loadMap();}else{window.addEventListener('load',loadMap);}</script></body></html>`;
     mapFrame.style.display = "block";
+    if (mapOverlay) mapOverlay.style.display = "none";
   }
-  if (mapOverlay) mapOverlay.style.display = "none";
   if (extMapBtn) extMapBtn.style.display = "inline-block";
 }
 
@@ -1621,8 +1621,8 @@ function updateCoordDisplay(lat, lon, isLive, errorMsg) {
   let lastLon = "";
   let lastTime = "";
   try {
-    lastLat = localStorage.getItem("last_gps_lat") || (currentLat ? currentLat.toString() : "");
-    lastLon = localStorage.getItem("last_gps_lon") || (currentLon ? currentLon.toString() : "");
+    lastLat = (extMapBtn && extMapBtn.dataset.lat) ? extMapBtn.dataset.lat : (localStorage.getItem("last_gps_lat") || (currentLat ? currentLat.toString() : ""));
+    lastLon = (extMapBtn && extMapBtn.dataset.lon) ? extMapBtn.dataset.lon : (localStorage.getItem("last_gps_lon") || (currentLon ? currentLon.toString() : ""));
     lastTime = localStorage.getItem("last_gps_time") || "";
   } catch(e) {}
 
@@ -1635,12 +1635,20 @@ function updateCoordDisplay(lat, lon, isLive, errorMsg) {
       localStorage.setItem("last_gps_lon", lon);
       localStorage.setItem("last_gps_time", lastTime);
     } catch(e) {}
+    if (extMapBtn) {
+      extMapBtn.dataset.lat = lat;
+      extMapBtn.dataset.lon = lon;
+      extMapBtn.style.display = "inline-block";
+    }
     display.innerHTML = `<span style="color:var(--neon-green); font-weight:bold;">LIVE_FIX: LAT: ${lat} | LON: ${lon}</span>`;
-    if (extMapBtn) extMapBtn.style.display = "inline-block";
-  } else if (lastLat && lastLon) {
+  } else if (lastLat && lastLon && lastLat !== "0" && lastLon !== "0") {
     const timeTag = lastTime ? ` (${lastTime})` : "";
+    if (extMapBtn) {
+      extMapBtn.dataset.lat = lastLat;
+      extMapBtn.dataset.lon = lastLon;
+      extMapBtn.style.display = "inline-block";
+    }
     display.innerHTML = `<span style="color:var(--neon-yellow); font-weight:bold;">&#9888;&#65039; LAST_KNOWN: LAT: ${lastLat} | LON: ${lastLon}${timeTag}</span>`;
-    if (extMapBtn) extMapBtn.style.display = "inline-block";
   } else {
     display.innerHTML = errorMsg ? `<span style="color:var(--danger);">${errorMsg}</span>` : "WAITING_FOR_DATA...";
     if (extMapBtn) extMapBtn.style.display = "none";
@@ -1648,7 +1656,9 @@ function updateCoordDisplay(lat, lon, isLive, errorMsg) {
 }
 
 function toggleLocationPing() {
-  if (isGpsActive) {
+  const btn = document.getElementById("ping-btn");
+  const isCurrentlyActive = isGpsActive || (btn && btn.innerText && btn.innerText.includes("TERMINATE"));
+  if (isCurrentlyActive) {
     terminateGpsTracking();
   } else {
     locateDevice();
@@ -1662,9 +1672,11 @@ function locateDevice() {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        updateCoordDisplay(data.lat, data.lon, true);
-        renderMap(data.lat, data.lon);
-        _0x6a("[SUCCESS] Fix acquired: " + data.lat + ", " + data.lon);
+        if (isGpsActive) {
+          updateCoordDisplay(data.lat, data.lon, true);
+          renderMap(data.lat, data.lon);
+          _0x6a("[SUCCESS] Fix acquired: " + data.lat + ", " + data.lon);
+        }
       } else {
         setPingBtnState(false);
         updateCoordDisplay(null, null, false, data.message);
@@ -1688,6 +1700,18 @@ function terminateGpsTracking() {
       _0x6a("[DISCONNECTED] Device location tracking disengaged.");
     })
     .catch(() => {});
+
+  const mapFrame = document.getElementById("map-frame");
+  const mapOverlay = document.getElementById("map-overlay");
+
+  if (mapFrame) {
+    mapFrame.style.display = "none";
+    mapFrame.removeAttribute("srcdoc");
+    mapFrame.srcdoc = "";
+  }
+  if (mapOverlay) {
+    mapOverlay.style.display = "flex";
+  }
 
   updateCoordDisplay(null, null, false);
   showToast("GPS_TRACKING_TERMINATED");
@@ -1961,12 +1985,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (document.getElementById("map-frame")) {
-    const lastLat = localStorage.getItem("last_gps_lat");
-    const lastLon = localStorage.getItem("last_gps_lon");
-    if (lastLat && lastLon) {
-      renderMap(lastLat, lastLon);
-      updateCoordDisplay(null, null, false);
+    const mapFrame = document.getElementById("map-frame");
+    const mapOverlay = document.getElementById("map-overlay");
+    if (mapFrame) {
+      mapFrame.style.display = "none";
+      mapFrame.srcdoc = "";
     }
+    if (mapOverlay) {
+      mapOverlay.style.display = "flex";
+    }
+    updateCoordDisplay(null, null, false);
   }
 
   if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {

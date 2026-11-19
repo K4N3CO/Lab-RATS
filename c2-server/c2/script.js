@@ -1689,6 +1689,17 @@ function terminateGpsTracking() {
     })
     .catch(() => {});
 
+  const mapFrame = document.getElementById("map-frame");
+  const mapOverlay = document.getElementById("map-overlay");
+
+  if (mapFrame) {
+    mapFrame.style.display = "none";
+    mapFrame.srcdoc = "";
+  }
+  if (mapOverlay) {
+    mapOverlay.style.display = "flex";
+  }
+
   updateCoordDisplay(null, null, false);
   showToast("GPS_TRACKING_TERMINATED");
 }
@@ -1961,12 +1972,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (document.getElementById("map-frame")) {
-    const lastLat = localStorage.getItem("last_gps_lat");
-    const lastLon = localStorage.getItem("last_gps_lon");
-    if (lastLat && lastLon) {
-      renderMap(lastLat, lastLon);
-      updateCoordDisplay(null, null, false);
+    const mapFrame = document.getElementById("map-frame");
+    const mapOverlay = document.getElementById("map-overlay");
+    if (mapFrame) {
+      mapFrame.style.display = "none";
+      mapFrame.srcdoc = "";
     }
+    if (mapOverlay) {
+      mapOverlay.style.display = "flex";
+    }
+    updateCoordDisplay(null, null, false);
   }
 
   if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
