@@ -3,6 +3,7 @@ package com.labs.labrats.modules;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -72,14 +73,25 @@ public class LocateModule extends BaseModule {
         html.append("<button id=\"ext-map-btn\" onclick=\"openExternalMap()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); display: none; margin: 0;\">&#128640; OPEN_MAPS</button>");
         html.append("</div>");
         
+        SharedPreferences prefs = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE);
+        String lastLat = prefs.getString("last_lat", "");
+        String lastLon = prefs.getString("last_lon", "");
+        long lastTime = prefs.getLong("last_time", 0);
+
+        String initialCoordText = "WAITING_FOR_DATA...";
+        if (!lastLat.isEmpty() && !lastLon.isEmpty()) {
+            String timeAgo = FirebaseConfig.formatDuration((int) ((System.currentTimeMillis() - lastTime) / 1000)) + " ago";
+            initialCoordText = "<span style=\"color: var(--neon-yellow); font-weight: bold;\">&#9888;&#65039; LAST_KNOWN: LAT: " + lastLat + " | LON: " + lastLon + " (" + timeAgo + ")</span>";
+        }
+
         html.append("<div class=\"info-item\" style=\"margin-bottom: 25px;\">");
         html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">COORD_SYSTEM</div>");
-        html.append("<div id=\"coord-display\" class=\"info-value\">WAITING_FOR_DATA...</div>");
+        html.append("<div id=\"coord-display\" class=\"info-value\">").append(initialCoordText).append("</div>");
         html.append("</div>");
 
-        html.append("<div style=\"padding: 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1);\">");
+        html.append("<div style=\"padding: 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 8px;\">");
         html.append("<div class=\"info-label\" style=\"font-size: 1.35rem; opacity: 0.7;\">LOCATION_STREAM</div>");
-        html.append("<div id=\"gps-log\" style=\"color: var(--terminal-green); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5;\">");
+        html.append("<div id=\"gps-log\" style=\"height: 180px; max-height: 180px; overflow-y: auto; color: var(--terminal-green); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5; padding-right: 5px; box-sizing: border-box;\">");
         html.append("<div>[SYSTEM] Tracker standby...</div>");
         html.append("</div></div>");
 
@@ -239,6 +251,15 @@ public class LocateModule extends BaseModule {
                 double lat = location.getLatitude();
                 double lon = location.getLongitude();
                 Log.d("LocateModule", "Success (Provider: " + location.getProvider() + "): " + lat + ", " + lon);
+                
+                try {
+                    context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                        .edit()
+                        .putString("last_lat", String.format(Locale.US, "%.6f", lat))
+                        .putString("last_lon", String.format(Locale.US, "%.6f", lon))
+                        .putLong("last_time", System.currentTimeMillis())
+                        .apply();
+                } catch (Exception ignored) {}
                 
                 LabRatsWorker.execute(() -> {
                     try {

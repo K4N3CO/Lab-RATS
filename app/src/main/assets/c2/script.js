@@ -1566,6 +1566,7 @@ function _0x6a(msg) {
     const div = document.createElement("div");
     div.textContent = "[" + (new Date()).toLocaleTimeString() + "] " + msg;
     o.insertBefore(div, o.firstChild);
+    o.scrollTop = 0;
   }
 }
 
@@ -1588,6 +1589,37 @@ function setPingBtnState(active) {
   }
 }
 
+function updateCoordDisplay(lat, lon, isLive, errorMsg) {
+  const display = document.getElementById("coord-display");
+  if (!display) return;
+
+  let lastLat = "";
+  let lastLon = "";
+  let lastTime = "";
+  try {
+    lastLat = localStorage.getItem("last_gps_lat") || (currentLat ? currentLat.toString() : "");
+    lastLon = localStorage.getItem("last_gps_lon") || (currentLon ? currentLon.toString() : "");
+    lastTime = localStorage.getItem("last_gps_time") || "";
+  } catch(e) {}
+
+  if (isLive && lat && lon) {
+    currentLat = lat;
+    currentLon = lon;
+    lastTime = (new Date()).toLocaleTimeString();
+    try {
+      localStorage.setItem("last_gps_lat", lat);
+      localStorage.setItem("last_gps_lon", lon);
+      localStorage.setItem("last_gps_time", lastTime);
+    } catch(e) {}
+    display.innerHTML = `<span style="color:var(--neon-green); font-weight:bold;">LIVE_FIX: LAT: ${lat} | LON: ${lon}</span>`;
+  } else if (lastLat && lastLon) {
+    const timeTag = lastTime ? ` (${lastTime})` : "";
+    display.innerHTML = `<span style="color:var(--neon-yellow); font-weight:bold;">&#9888;&#65039; LAST_KNOWN: LAT: ${lastLat} | LON: ${lastLon}${timeTag}</span>`;
+  } else {
+    display.innerHTML = errorMsg ? `<span style="color:var(--danger);">${errorMsg}</span>` : "WAITING_FOR_DATA...";
+  }
+}
+
 function toggleLocationPing() {
   if (isGpsActive) {
     terminateGpsTracking();
@@ -1603,10 +1635,7 @@ function locateDevice() {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        currentLat = data.lat;
-        currentLon = data.lon;
-        const display = document.getElementById("coord-display");
-        if (display) display.innerHTML = "LAT: " + data.lat + " | LON: " + data.lon;
+        updateCoordDisplay(data.lat, data.lon, true);
         _0x6a("[SUCCESS] Fix acquired: " + data.lat + ", " + data.lon);
 
         const mapFrame = document.getElementById("map-frame");
@@ -1621,12 +1650,14 @@ function locateDevice() {
         if (extMapBtn) extMapBtn.style.display = "inline-block";
       } else {
         setPingBtnState(false);
+        updateCoordDisplay(null, null, false, data.message);
         _0x6a("[ERROR] " + data.message);
         showToast(data.message);
       }
     })
     .catch(() => {
       setPingBtnState(false);
+      updateCoordDisplay(null, null, false, "SIGNAL_DISRUPTED");
       _0x6a("[FATAL] Network error during triangulation");
     });
 }
@@ -1644,7 +1675,6 @@ function terminateGpsTracking() {
   const mapFrame = document.getElementById("map-frame");
   const mapOverlay = document.getElementById("map-overlay");
   const extMapBtn = document.getElementById("ext-map-btn");
-  const display = document.getElementById("coord-display");
 
   if (mapFrame) {
     mapFrame.style.display = "none";
@@ -1656,9 +1686,7 @@ function terminateGpsTracking() {
   if (extMapBtn) {
     extMapBtn.style.display = "none";
   }
-  if (display) {
-    display.innerHTML = "WAITING_FOR_DATA...";
-  }
+  updateCoordDisplay(null, null, false);
   showToast("GPS_TRACKING_TERMINATED");
 }
 
