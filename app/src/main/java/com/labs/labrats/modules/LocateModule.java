@@ -69,8 +69,7 @@ public class LocateModule extends BaseModule {
         html.append("</div>");
 
         html.append("<div class=\"btn-container\" style=\"margin-bottom: 30px; display: flex; justify-content: center; gap: 10px;\">");
-        html.append("<button id=\"ping-btn\" onclick=\"toggleLocationPing()\" class=\"btn\" style=\"margin: 0; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05);\">&#128205; PING_LOCATION</button>");
-        html.append("<button id=\"ext-map-btn\" onclick=\"openExternalMap()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); display: none; margin: 0;\">&#128640; OPEN_MAPS</button>");
+        html.append("<button id=\"ping-btn\" onclick=\"toggleLocationPing()\" class=\"btn\" style=\"margin: 0; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); border-radius: 50px !important; width: 210px !important; min-width: 210px !important; height: 45px !important; padding: 0 16px !important;\">&#128205; PING_LOCATION</button>");
         html.append("</div>");
         
         SharedPreferences prefs = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE);
@@ -78,15 +77,19 @@ public class LocateModule extends BaseModule {
         String lastLon = prefs.getString("last_lon", "");
         long lastTime = prefs.getLong("last_time", 0);
 
+        boolean hasLastLoc = !lastLat.isEmpty() && !lastLon.isEmpty();
         String initialCoordText = "WAITING_FOR_DATA...";
-        if (!lastLat.isEmpty() && !lastLon.isEmpty()) {
+        if (hasLastLoc) {
             String timeAgo = FirebaseConfig.formatDuration((int) ((System.currentTimeMillis() - lastTime) / 1000)) + " ago";
             initialCoordText = "<span style=\"color: var(--neon-yellow); font-weight: bold;\">&#9888;&#65039; LAST_KNOWN: LAT: " + lastLat + " | LON: " + lastLon + " (" + timeAgo + ")</span>";
         }
 
-        html.append("<div class=\"info-item\" style=\"margin-bottom: 25px;\">");
+        html.append("<div class=\"info-item\" style=\"margin-bottom: 25px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; width: 100%;\">");
+        html.append("<div style=\"flex: 1; min-width: 200px;\">");
         html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">COORD_SYSTEM</div>");
-        html.append("<div id=\"coord-display\" class=\"info-value\">").append(initialCoordText).append("</div>");
+        html.append("<div id=\"coord-display\" class=\"info-value\" style=\"font-size: 0.88rem; line-height: 1.4;\">").append(initialCoordText).append("</div>");
+        html.append("</div>");
+        html.append("<button id=\"ext-map-btn\" onclick=\"openExternalMap()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); border-radius: 50px !important; width: 210px !important; min-width: 210px !important; height: 45px !important; padding: 0 16px !important; margin: 0; white-space: nowrap; flex-shrink: 0; ").append(hasLastLoc ? "display: inline-block;" : "display: none;").append("\">&#128640; OPEN_ON_MAP</button>");
         html.append("</div>");
 
         html.append("<div style=\"padding: 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 8px;\">");
