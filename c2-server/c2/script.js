@@ -731,7 +731,7 @@ function enforceGhostViewportScaling() {
       streamImg.style.userSelect = "none";
 
       if (phoneFrame) {
-        phoneFrame.style.width = "260px";
+        phoneFrame.style.width = "280px";
         phoneFrame.style.height = "560px";
         phoneFrame.style.maxWidth = "100%";
         phoneFrame.style.boxSizing = "border-box";
