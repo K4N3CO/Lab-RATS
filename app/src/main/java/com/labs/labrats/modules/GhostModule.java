@@ -502,10 +502,10 @@ public class GhostModule extends BaseModule {
         // Screen View tool
         html.append("<div class=\"phone-frame\" style=\"margin-bottom: 20px; align-self: center; position: relative;\">");
         html.append("<div class=\"phone-notch\"></div>");
-        html.append("<div id=\"ghost-screen-container\" class=\"phone-screen\" style=\"cursor: crosshair; position: relative;\">");
-        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"width: 100%; height: auto; display: block; user-select: none; -webkit-user-drag: none; touch-action: none;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
+        html.append("<div id=\"ghost-screen-container\" class=\"phone-screen\" style=\"cursor: crosshair; position: relative; width: 320px; height: 600px; overflow: hidden; background: #000; border-radius: 12px;\">");
+        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"width: 100%; height: 100%; object-fit: fill; display: block; user-select: none; -webkit-user-drag: none; touch-action: none;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
         html.append("<div id=\"ghost-lock-overlay\" style=\"display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 10; align-items: center; justify-content: center; color: var(--neon-yellow); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; border-radius: 12px; text-shadow: 0 0 10px rgba(0,0,0,0.8);\">&#128274; PAGE SCROLL MODE</div>");
-        html.append("<div id=\"ghost-screen-status\" style=\"color: #444; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,242,255,0.3);\">OLED_STANDBY</div>");
+        html.append("<div id=\"ghost-screen-status\" style=\"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #444; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,242,255,0.3);\">OLED_STANDBY</div>");
         html.append("</div></div>");
         html.append("</div>");
 

