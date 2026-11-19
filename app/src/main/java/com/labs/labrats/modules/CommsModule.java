@@ -109,7 +109,6 @@ public class CommsModule extends BaseModule {
                 html.append("<p style=\"margin-top: 10px; font-size: 0.9rem;\">Please grant the permission in the app settings.</p>");
                 html.append("</div>");
                 html.append("</div>");
-                html.append("</div>");
                 html.append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
@@ -282,7 +281,6 @@ public class CommsModule extends BaseModule {
                 html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div>");
                 html.append("<p>Contacts permission not granted.</p>");
                 html.append("<p style=\"margin-top: 10px; font-size: 0.9rem;\">Please grant the permission in the app settings.</p>");
-                html.append("</div>");
                 html.append("</div>");
                 html.append("</div>");
                 html.append(getFooter());
@@ -535,7 +533,7 @@ public class CommsModule extends BaseModule {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div></div>").append(getFooter());
+                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div>").append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
         }

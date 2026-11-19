@@ -218,7 +218,7 @@ public class DeviceInfo {
             html.append(createInfoItem("Audio Info", "Unable to read"));
         }
 
-        html.append("</div></div>");
+        html.append("</div></div></div>");
 
         return html.toString();
     }
