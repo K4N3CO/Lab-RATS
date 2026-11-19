@@ -104,15 +104,21 @@ function injectMobileStyles() {
       -webkit-user-select: none !important;
       user-select: none !important;
     }
+    .phone-frame {
+      width: 270px !important;
+      height: 540px !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
     #ghost-screen-stream {
       width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      max-height: 70vh !important;
-      object-fit: contain !important;
+      height: 100% !important;
+      object-fit: fill !important;
       display: block !important;
       margin: 0 auto !important;
-      border-radius: 14px !important;
+      border-radius: 28px !important;
       box-shadow: 0 0 20px rgba(0, 242, 255, 0.25) !important;
       touch-action: none !important;
       -webkit-touch-callout: none !important;
@@ -725,7 +731,7 @@ function enforceGhostViewportScaling() {
       streamImg.style.height = "100%";
       streamImg.style.objectFit = "fill";
       streamImg.style.display = "block";
-      streamImg.style.borderRadius = "12px";
+      streamImg.style.borderRadius = "28px";
       streamImg.style.touchAction = "none";
       streamImg.style.webkitUserSelect = "none";
       streamImg.style.userSelect = "none";
