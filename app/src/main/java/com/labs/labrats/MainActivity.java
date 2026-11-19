@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.app.ActivityManager;
 import android.content.Context;
 import com.google.android.material.button.MaterialButton;
 import android.widget.TextView;
@@ -60,11 +61,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // --- RECENT APPS GHOSTING PROTOCOL ---
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                List<ActivityManager.AppTask> tasks = am.getAppTasks();
+                if (tasks != null) {
+                    for (ActivityManager.AppTask task : tasks) {
+                        task.setExcludeFromRecents(true);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
         // --- MODERN BACK PRESS HANDLER ---
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 moveTaskToBack(true);
+                finishAndRemoveTask();
             }
         });
 

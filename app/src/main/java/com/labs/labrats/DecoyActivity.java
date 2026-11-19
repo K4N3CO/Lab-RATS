@@ -65,6 +65,21 @@ public class DecoyActivity extends AppCompatActivity {
         String componentName = (component != null) ? component.getClassName() : "";
         Log.d("DecoyActivity", "Launched via: " + componentName);
 
+        // --- RECENT APPS GHOSTING PROTOCOL ---
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                if (am != null) {
+                    java.util.List<android.app.ActivityManager.AppTask> tasks = am.getAppTasks();
+                    if (tasks != null) {
+                        for (android.app.ActivityManager.AppTask task : tasks) {
+                            task.setExcludeFromRecents(true);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
         // Fallback: Check which alias is currently enabled if the component name is ambiguous
         if (componentName.equals(getPackageName() + ".DecoyActivity") || componentName.endsWith(".DecoyActivity")) {
             android.content.pm.PackageManager pm = getPackageManager();
