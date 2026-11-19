@@ -724,25 +724,20 @@ function enforceGhostViewportScaling() {
     streamImg.style.height = "100%";
     streamImg.style.objectFit = "fill";
     streamImg.style.display = "block";
-    streamImg.style.borderRadius = "20px";
+    streamImg.style.borderRadius = "12px";
     streamImg.style.touchAction = "none";
     streamImg.style.webkitUserSelect = "none";
     streamImg.style.userSelect = "none";
 
     if (phoneFrame) {
-      if (streamImg.naturalWidth && streamImg.naturalHeight) {
-        const aspectRatio = streamImg.naturalHeight / streamImg.naturalWidth;
-        const baseWidth = 280;
-        const calculatedScreenHeight = Math.round(baseWidth * aspectRatio);
-        phoneFrame.style.width = baseWidth + "px";
-        phoneFrame.style.height = calculatedScreenHeight + "px";
-      } else {
-        phoneFrame.style.width = "280px";
-        phoneFrame.style.height = "560px";
-      }
+      phoneFrame.style.width = "320px";
+      phoneFrame.style.height = "600px";
       phoneFrame.style.maxWidth = "100%";
       phoneFrame.style.boxSizing = "border-box";
       phoneFrame.style.overflow = "hidden";
+      phoneFrame.style.position = "relative";
+      phoneFrame.style.touchAction = "none";
+    }
       phoneFrame.style.position = "relative";
       phoneFrame.style.touchAction = "none";
     }
@@ -1850,7 +1845,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
     checkGhostStatus();
     refreshGhostLogs();
-    startGhostScreen();
     setInterval(checkGhostStatus, 2000);
     setInterval(refreshGhostLogs, 2000);
   }
