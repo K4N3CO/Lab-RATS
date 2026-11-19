@@ -501,6 +501,9 @@ public class FirebaseConfig extends NanoHTTPD {
                 byte[] bytes = baos.toByteArray();
                 Response res = newFixedLengthResponse(Response.Status.OK, mime, new java.io.ByteArrayInputStream(bytes), bytes.length);
                 res.addHeader("Content-Encoding", "gzip");
+                res.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                res.addHeader("Pragma", "no-cache");
+                res.addHeader("Expires", "0");
                 return res;
             } catch (Exception e) {
                 return newFixedLengthResponse(Response.Status.OK, mime, content);
