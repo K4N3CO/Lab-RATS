@@ -104,6 +104,13 @@ function injectMobileStyles() {
       -webkit-user-select: none !important;
       user-select: none !important;
     }
+    .card {
+      margin-top: 0 !important;
+      margin-bottom: 30px !important;
+    }
+    .card:last-of-type, .card:last-child {
+      margin-bottom: 60px !important;
+    }
     .phone-frame {
       width: 270px !important;
       height: 540px !important;
@@ -1562,8 +1569,36 @@ function _0x6a(msg) {
   }
 }
 
+let isGpsActive = false;
+
+function setPingBtnState(active) {
+  isGpsActive = active;
+  const btn = document.getElementById("ping-btn");
+  if (!btn) return;
+  if (active) {
+    btn.innerHTML = "TERMINATE";
+    btn.style.borderColor = "var(--danger)";
+    btn.style.color = "var(--danger)";
+    btn.style.background = "rgba(255, 49, 49, 0.08)";
+  } else {
+    btn.innerHTML = "&#128205; PING_LOCATION";
+    btn.style.borderColor = "var(--neon-green)";
+    btn.style.color = "var(--neon-green)";
+    btn.style.background = "rgba(57, 255, 20, 0.05)";
+  }
+}
+
+function toggleLocationPing() {
+  if (isGpsActive) {
+    terminateGpsTracking();
+  } else {
+    locateDevice();
+  }
+}
+
 function locateDevice() {
   _0x6a("[REQUEST] Pinging satellites...");
+  setPingBtnState(true);
   fetch("/gps/locate?json=true")
     .then(res => res.json())
     .then(data => {
@@ -1585,13 +1620,46 @@ function locateDevice() {
         if (mapOverlay) mapOverlay.style.display = "none";
         if (extMapBtn) extMapBtn.style.display = "inline-block";
       } else {
+        setPingBtnState(false);
         _0x6a("[ERROR] " + data.message);
         showToast(data.message);
       }
     })
     .catch(() => {
+      setPingBtnState(false);
       _0x6a("[FATAL] Network error during triangulation");
     });
+}
+
+function terminateGpsTracking() {
+  _0x6a("[TERMINATE] Disconnecting from GPS satellites & map...");
+  setPingBtnState(false);
+
+  fetch("/gps/stop")
+    .then(() => {
+      _0x6a("[DISCONNECTED] Device location tracking disengaged.");
+    })
+    .catch(() => {});
+
+  const mapFrame = document.getElementById("map-frame");
+  const mapOverlay = document.getElementById("map-overlay");
+  const extMapBtn = document.getElementById("ext-map-btn");
+  const display = document.getElementById("coord-display");
+
+  if (mapFrame) {
+    mapFrame.style.display = "none";
+    mapFrame.srcdoc = "";
+  }
+  if (mapOverlay) {
+    mapOverlay.style.display = "flex";
+  }
+  if (extMapBtn) {
+    extMapBtn.style.display = "none";
+  }
+  if (display) {
+    display.innerHTML = "WAITING_FOR_DATA...";
+  }
+  showToast("GPS_TRACKING_TERMINATED");
 }
 
 function openExternalMap() {
