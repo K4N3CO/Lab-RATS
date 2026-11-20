@@ -197,6 +197,15 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
+
+        // Remove from Samsung / Android 12+ "1 Active App" Recents Header
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    stopForeground(true);
+                } catch (Exception ignored) {}
+            }, 2000);
+        }
     }
 
     @androidx.camera.camera2.interop.ExperimentalCamera2Interop

