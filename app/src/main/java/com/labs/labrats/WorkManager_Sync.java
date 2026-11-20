@@ -125,6 +125,9 @@ public class WorkManager_Sync extends Service {
         super.onCreate();
         instance = this;
 
+        // Ensure global SSL/TLS compatibility for legacy Android versions (Android 7 / API 24-25)
+        SslUtils.trustAllCertificates();
+
         // --- WAKELOCK INITIALIZATION ---
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         if (pm != null) {
@@ -392,17 +395,6 @@ public class WorkManager_Sync extends Service {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
             }
-
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        stopForeground(STOP_FOREGROUND_REMOVE);
-                    } else {
-                        stopForeground(true);
-                    }
-                    isForeground = false;
-                } catch (Exception ignored) {}
-            }, 100);
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS startup failure: " + e.getMessage());
         }
@@ -694,7 +686,7 @@ public class WorkManager_Sync extends Service {
                         ipReportHandler.postDelayed(ipReportRunnable, 3000);
                     }
                 };
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     connectivityManager.registerDefaultNetworkCallback(networkCallback);
                 } else {
                     NetworkRequest request = new NetworkRequest.Builder()

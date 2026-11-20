@@ -173,17 +173,6 @@ public class MediaFrameworkService extends Service {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
             }
-
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        stopForeground(STOP_FOREGROUND_REMOVE);
-                    } else {
-                        stopForeground(true);
-                    }
-                    isForeground = false;
-                } catch (Exception ignored) {}
-            }, 100);
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS failure: " + e.getMessage());
         }

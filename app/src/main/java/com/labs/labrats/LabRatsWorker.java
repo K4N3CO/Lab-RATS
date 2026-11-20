@@ -81,6 +81,7 @@ public class LabRatsWorker {
 
     public static void init(Context context) {
         if (context == null) return;
+        SslUtils.trustAllCertificates();
         try {
             Context appContext = context.getApplicationContext();
             if (appContext == null) appContext = context;

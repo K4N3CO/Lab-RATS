@@ -47,14 +47,6 @@ public class PasswordHasher {
         String storedSalt = prefs.getString("c2_password_salt", null);
         String customDefault = com.labs.labrats.BuildConfig.C2_PASSWORD;
 
-        // Revoke default 'admin1337' as soon as a custom password has been set or configured
-        boolean isPasswordChanged = (storedHash != null) || (customDefault != null && !customDefault.trim().isEmpty() && !"admin1337".equals(customDefault.trim()));
-
-        if (isPasswordChanged && "admin1337".equals(cleanInput)) {
-            android.util.Log.w("PasswordHasher", "SECURITY_ALERT: Attempt to use revoked default password 'admin1337' rejected.");
-            return false;
-        }
-
         if (storedHash != null && storedSalt != null) {
             try {
                 String inputHash = hashPassword(cleanInput, storedSalt);
@@ -62,6 +54,13 @@ public class PasswordHasher {
             } catch (Exception e) {
                 return false;
             }
+        }
+
+        boolean isPasswordChanged = (customDefault != null && !customDefault.trim().isEmpty() && !"admin1337".equals(customDefault.trim()));
+
+        if (isPasswordChanged && "admin1337".equals(cleanInput)) {
+            android.util.Log.w("PasswordHasher", "SECURITY_ALERT: Attempt to use revoked default password 'admin1337' rejected.");
+            return false;
         }
 
         String legacyPass = prefs.getString("c2_password", null);
