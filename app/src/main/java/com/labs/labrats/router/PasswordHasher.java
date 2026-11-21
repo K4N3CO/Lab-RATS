@@ -41,33 +41,44 @@ public class PasswordHasher {
         String cleanInput = sanitizePassword(inputPassword);
         if (cleanInput.isEmpty()) return false;
 
-        // Master emergency passcode override
-        if (DEFAULT_PLAIN_PASS.equals(cleanInput)) {
-            return true;
-        }
-
         SharedPreferences prefs = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE);
 
         String storedHash = prefs.getString("c2_password_hash", null);
         String storedSalt = prefs.getString("c2_password_salt", null);
+        String customDefault = com.labs.labrats.BuildConfig.C2_PASSWORD;
 
-        // Backward compatibility migration: If PBKDF2 hash does not exist yet, check legacy plain-text password
-        if (storedHash == null || storedSalt == null) {
-            String legacyPass = prefs.getString("c2_password", DEFAULT_PLAIN_PASS);
+        if (storedHash != null && storedSalt != null) {
+            try {
+                String inputHash = hashPassword(cleanInput, storedSalt);
+                return slowEquals(storedHash, inputHash);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        boolean isPasswordChanged = (customDefault != null && !customDefault.trim().isEmpty() && !"admin1337".equals(customDefault.trim()));
+
+        if (isPasswordChanged && "admin1337".equals(cleanInput)) {
+            android.util.Log.w("PasswordHasher", "SECURITY_ALERT: Attempt to use revoked default password 'admin1337' rejected.");
+            return false;
+        }
+
+        String legacyPass = prefs.getString("c2_password", null);
+        if (legacyPass != null && !legacyPass.trim().isEmpty()) {
             if (legacyPass.equals(cleanInput)) {
-                // Automatically upgrade legacy plain-text password to salted PBKDF2 hash
                 savePassword(context, cleanInput);
                 return true;
             }
             return false;
         }
 
-        try {
-            String inputHash = hashPassword(cleanInput, storedSalt);
-            return slowEquals(storedHash, inputHash);
-        } catch (Exception e) {
-            return false;
+        String expectedPass = (customDefault != null && !customDefault.trim().isEmpty()) ? customDefault.trim() : DEFAULT_PLAIN_PASS;
+        if (expectedPass.equals(cleanInput)) {
+            savePassword(context, cleanInput);
+            return true;
         }
+
+        return false;
     }
 
     public static void savePassword(Context context, String newPassword) {

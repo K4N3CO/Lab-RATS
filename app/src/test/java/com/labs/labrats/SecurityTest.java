@@ -23,12 +23,16 @@ public class SecurityTest {
 
     @Test
     public void testPasswordHasherVerificationAndMigration() {
-        // Initial state: Default plain text password "admin1337"
-        boolean validDefault = PasswordHasher.verifyPassword(context, "admin1337");
+        String defaultPass = com.labs.labrats.BuildConfig.C2_PASSWORD;
+        if (defaultPass == null || defaultPass.trim().isEmpty()) {
+            defaultPass = "admin1337";
+        }
+        // Initial state: Default configured password
+        boolean validDefault = PasswordHasher.verifyPassword(context, defaultPass);
         Assert.assertTrue(validDefault);
 
         // After initial login, password is automatically migrated to PBKDF2 hash
-        boolean validAfterMigration = PasswordHasher.verifyPassword(context, "admin1337");
+        boolean validAfterMigration = PasswordHasher.verifyPassword(context, defaultPass);
         Assert.assertTrue(validAfterMigration);
 
         // Wrong password should fail

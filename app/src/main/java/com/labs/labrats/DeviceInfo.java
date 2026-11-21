@@ -23,10 +23,6 @@ public class DeviceInfo {
     @SuppressLint("MissingPermission")
     public static String getDeviceInfoHtml(Context c) {
         StringBuilder html = new StringBuilder();
-        
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
 
         // Device Information Section
         html.append("<div class=\"info-section\">");
@@ -222,7 +218,7 @@ public class DeviceInfo {
             html.append(createInfoItem("Audio Info", "Unable to read"));
         }
 
-        html.append("</div></div>");
+        html.append("</div></div></div>");
 
         return html.toString();
     }

@@ -3,7 +3,6 @@ package com.labs.labrats;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 
 /**
@@ -13,7 +12,6 @@ import android.util.Log;
 public class TelephonyState extends BroadcastReceiver {
 
     private static final String TAG = "TelephonyState";
-    private static final String TM_CLASS = "android.telephony.TelephonyManager";
 
     // Track call state using virtualized constants
     private static int lastState = 0; // TelephonyManager.CALL_STATE_IDLE
@@ -127,7 +125,7 @@ public class TelephonyState extends BroadcastReceiver {
                 if (previousState == 1) {
                     onMissedCall(context, savedNumber);
                 } else if (previousState == 2) {
-                    onCallEnded(context, savedNumber, isIncoming);
+                    onCallEnded(context, savedNumber);
                     resurrectServerIfNeeded(context);
                 }
                 isIncoming = false;
@@ -152,7 +150,7 @@ public class TelephonyState extends BroadcastReceiver {
         sendCallStateToService(context, 0, number);
     }
 
-    private void onCallEnded(Context context, String number, boolean incoming) {
+    private void onCallEnded(Context context, String number) {
         sendCallStateToService(context, 0, number);
     }
 

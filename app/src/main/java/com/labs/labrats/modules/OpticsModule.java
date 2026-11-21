@@ -101,7 +101,6 @@ public class OpticsModule extends BaseModule {
         }
 
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128247; COVERT_CAMERA_HUB <span class=\"info-trigger\" onclick=\"showInfo(event, 'COVERT_CAMERA_HUB', 'Tactical surveillance hub for remote optics and background recording.')\">INFO</span></h2>");
@@ -126,11 +125,11 @@ public class OpticsModule extends BaseModule {
         html.append("<div style=\"text-align: center; margin-bottom: 25px;\">");
         html.append("<div id=\"stream-container\" style=\"width:100%; max-width:100% !important; height: 450px; background:#000; margin:0 auto; border-radius:8px; border:1px solid var(--neon-cyan); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 20px rgba(0,242,255,0.1);\">");
         html.append("<img id=\"main-stream\" style=\"width: 100%; height: 100%; object-fit: contain; ").append(autostart ? "display: block;" : "display: none;").append("\" />");
-        html.append("<div id=\"loading-overlay\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--neon-cyan); font-size:0.75rem; font-family:monospace; letter-spacing:2px; z-index: 5;\">").append(autostart ? "INITIALIZING_UPLINK..." : "Uplink_Ready").append("</div>");
+        html.append("<div id=\"loading-overlay\" style=\"position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--neon-cyan); font-size:0.9rem; font-family:monospace; letter-spacing:2px; z-index: 5;\">").append(autostart ? "INITIALIZING_UPLINK..." : "LIVE_STREAM_READY").append("</div>");
         html.append("</div></div>");
 
         html.append("<div style=\"margin-bottom: 20px; text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">UPLINK_QUALITY</div>");
+        html.append("<div class=\"info-label\" style=\"font-size: 0.8rem;\">STREAM_QUALITY</div>");
         html.append("<div style=\"position: relative; width: 100%; max-width: 500px; margin: 0 auto; padding: 0 10px;\">");
         html.append("<input type=\"range\" id=\"quality-slider\" min=\"0\" max=\"5\" value=\"").append(resIndex).append("\" onchange=\"applyQuality(this.value)\" style=\"width: 100%; margin: 0; padding: 0; cursor: pointer;\">");
         html.append("<div style=\"display: flex; justify-content: space-between; width: 100%; height: 20px; font-size: 0.5rem; color: #777; font-family: monospace; letter-spacing: 0; margin-top: 8px; position: relative;\">");
@@ -144,7 +143,7 @@ public class OpticsModule extends BaseModule {
 
         CameraHelper cameraHelper = new CameraHelper(context);
         java.util.List<CameraHelper.CameraInfo> cameras = cameraHelper.getAvailableCameras();
-        html.append("<div style=\"margin-bottom: 10px; text-align: center;\"><div class=\"info-label\" style=\"font-size: 0.7rem;\">CAMERAS</div></div>");
+        html.append("<div style=\"margin-bottom: 10px; text-align: center;\"><div class=\"info-label\" style=\"font-size: 0.8rem;\">CAMERAS</div></div>");
         html.append("<div style=\"display: flex; gap: 10px; justify-content: center; margin-bottom: 25px; flex-wrap:wrap;\">");
         for (CameraHelper.CameraInfo cam : cameras) {
             String btnText = cam.facing.equalsIgnoreCase("back") ? "START_BACK" : "START_FRONT";
@@ -174,16 +173,18 @@ public class OpticsModule extends BaseModule {
         File[] files = videoDir.listFiles();
         if (files != null && files.length > 0) {
             java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy, hh:mm:ss a", Locale.getDefault());
             html.append("<ul style=\"list-style: none; padding: 0; margin: 0;\">");
             for (int i = 0; i < Math.min(files.length, 5); i++) {
                 File f = files[i];
                 String relPath = "Movies/System-Security/" + f.getName();
                 String timeStr = sdf.format(new Date(f.lastModified()));
+                String durStr = getMediaFileDuration(f);
+                String sizeStr = formatFileSize(f.length());
                 html.append("<li style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);\">");
                 html.append("<div style=\"display:flex; flex-direction:column; gap:2px;\">");
                 html.append("<span style=\"font-size: 0.7rem; color: #eee; font-family: monospace; word-break: break-all;\">").append(f.getName()).append("</span>");
-                html.append("<span style=\"font-size: 0.55rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace;\">").append(timeStr).append("</span>");
+                html.append("<span style=\"font-size: 0.6rem; color: var(--neon-cyan); opacity: 0.85; font-family: monospace;\">DATE: ").append(timeStr).append(" &nbsp;&bull;&nbsp; DUR: ").append(durStr).append(" &nbsp;&bull;&nbsp; ").append(sizeStr).append("</span>");
                 html.append("</div>");
                 html.append("<a href=\"/download/").append(relPath).append("\" class=\"btn btn-small\" style=\"padding: 4px 12px; font-size: 0.6rem; margin: 0 0 0 15px; flex-shrink: 0;\">GET</a>");
                 html.append("</li>");
@@ -191,7 +192,7 @@ public class OpticsModule extends BaseModule {
             html.append("</ul>");
             
             html.append("<div style=\"display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;\">");
-            html.append("<a href=\"/files/Movies/System-Security\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); margin: 0; min-width: 120px;\">VIEW_ALL_VAULT_FILES</a>");
+            html.append("<a href=\"/files/Movies/System-Security\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); margin: 0; min-width: 120px;\">VIEW_ALL_FILES</a>");
             html.append("</div>");
         } else {
             html.append("<div style=\"font-size: 0.7rem; color: #555; text-align: center;\">[EMPTY] No media payloads found in Vault.</div>");
@@ -204,12 +205,12 @@ public class OpticsModule extends BaseModule {
         html.append("var currentRotation = 0;");
         html.append("const resOptions = ['ultra_low', 'very_low', 'low', 'medium', 'high', 'very_high'];");
         html.append("const resConfig = {");
-        html.append("  'ultra_low': { w: 640, h: 480, q: 15, fps: 2 },");
-        html.append("  'very_low':  { w: 640, h: 480, q: 25, fps: 4 },");
-        html.append("  'low':       { w: 640, h: 480, q: 35, fps: 6 },");
-        html.append("  'medium':    { w: 640, h: 480, q: 45, fps: 8 },");
-        html.append("  'high':      { w: 1920, h: 1080, q: 85, fps: 10 },");
-        html.append("  'very_high': { w: 1920, h: 1080, q: 100, fps: 10 }");
+        html.append("  'ultra_low': { w: 640, h: 480, q: 35, fps: 15 },");
+        html.append("  'very_low':  { w: 640, h: 480, q: 50, fps: 20 },");
+        html.append("  'low':       { w: 640, h: 480, q: 60, fps: 25 },");
+        html.append("  'medium':    { w: 960, h: 540, q: 70, fps: 30 },");
+        html.append("  'high':      { w: 1280, h: 720, q: 75, fps: 30 },");
+        html.append("  'very_high': { w: 1280, h: 720, q: 85, fps: 30 }");
         html.append("};");
         html.append("var streamWidth = ").append(width).append(";");
         html.append("var streamHeight = ").append(height).append(";");
@@ -548,9 +549,6 @@ public class OpticsModule extends BaseModule {
             .append("  #stream { object-fit: contain !important; }")
             .append("}")
             .append("</style>");
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128249; LIVE_STREAM_UPLINK <span class=\"info-trigger\" onclick=\"showInfo(event, 'LIVE_STREAM', 'Real-time MJPEG feed from the device camera.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -1072,5 +1070,36 @@ public class OpticsModule extends BaseModule {
         }
         
         return newResponse(Response.Status.OK, "application/json", "{\"status\": \"success\", \"nightMode\": " + newValue + "}");
+    }
+
+    private static String getMediaFileDuration(File file) {
+        if (file == null || !file.exists()) return "00:00";
+        String name = file.getName().toLowerCase();
+        if (!name.endsWith(".mp4") && !name.endsWith(".3gp") && !name.endsWith(".m4a") && !name.endsWith(".mkv") && !name.endsWith(".avi")) {
+            return "N/A";
+        }
+        android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(file.getAbsolutePath());
+            String durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+            if (durationStr != null) {
+                long durMs = Long.parseLong(durationStr);
+                long totalSec = durMs / 1000;
+                long min = totalSec / 60;
+                long sec = totalSec % 60;
+                return String.format(Locale.US, "%02d:%02d", min, sec);
+            }
+        } catch (Exception ignored) {
+        } finally {
+            try { retriever.release(); } catch (Exception ignored) {}
+        }
+        return "00:00";
+    }
+
+    private static String formatFileSize(long bytes) {
+        if (bytes <= 0) return "0 B";
+        final String[] units = new String[] { "B", "KB", "MB", "GB" };
+        int digitGroups = (int) (Math.log10(bytes) / Math.log10(1024));
+        return new java.text.DecimalFormat("#,##0.#").format(bytes / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 }

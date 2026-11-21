@@ -18,7 +18,7 @@ public class Api24Helper {
         try {
             Path path = new Path();
             path.moveTo(x, y);
-            GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 50);
+            GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, 5);
             GestureDescription.Builder builder = new GestureDescription.Builder();
             builder.addStroke(stroke);
             boolean result = service.dispatchGesture(builder.build(), null, null);
