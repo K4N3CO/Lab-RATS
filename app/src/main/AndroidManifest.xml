@@ -121,8 +121,11 @@
             android:name=".PermissionActivity"
             android:theme="@style/Theme.LabRATS.Permissions"
             android:excludeFromRecents="true"
+<<<<<<< HEAD
             android:autoRemoveFromRecents="true"
             android:taskAffinity=""
+=======
+>>>>>>> origin/K4N3CO.v1.6
             android:exported="true" />
 
         <activity

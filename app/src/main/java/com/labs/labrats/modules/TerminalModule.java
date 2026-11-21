@@ -69,6 +69,7 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         html.append("<div style=\"margin-top: 15px;\">");
+<<<<<<< HEAD
         html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">");
         html.append("<div style=\"font-size:0.8rem; opacity:0.5; font-family:monospace;\">SESSION_ID: ").append(sessionId).append("</div>");
         html.append("<button type=\"button\" onclick=\"refreshTargetsTable()\" class=\"btn btn-small\" style=\"margin:0; padding:6px 14px; font-size:0.65rem; border-color:var(--neon-cyan); color:var(--neon-cyan); background:#000 !important; border-radius: 10px;\">REFRESH TARGET</button>");
@@ -78,6 +79,17 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); background: rgba(0, 0, 0, 0.4); padding: 15px; box-sizing: border-box;\">");
         html.append("<div style=\"font-size: 0.75rem; color: var(--neon-cyan); letter-spacing: 2px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px;\">CONNECTED TARGET <span style=\"color:#888; font-size:0.65rem; font-weight:normal;\">(LIVE AUTO-REFRESH 20s)</span></div>");
 
+=======
+        html.append("<div style=\"font-size:0.8rem; opacity:0.5; font-family:monospace; margin-bottom:15px; text-align: left;\">SESSION_ID: ").append(sessionId).append("</div>");
+
+        // Connected Target Table inside System Monitor Card
+        html.append("<div style=\"width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); background: rgba(0, 0, 0, 0.4); padding: 15px; box-sizing: border-box;\">");
+        html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;\">");
+        html.append("<div style=\"font-size: 0.75rem; color: var(--neon-cyan); letter-spacing: 2px; font-weight: bold; text-transform: uppercase;\">CONNECTED TARGET <span style=\"color:#888; font-size:0.65rem; font-weight:normal;\">(LIVE AUTO-REFRESH 20s)</span></div>");
+        html.append("<button type=\"button\" onclick=\"refreshTargetsTable()\" class=\"btn btn-small\" style=\"margin:0; padding:6px 12px; font-size:0.65rem; border-color:var(--neon-cyan); color:var(--neon-cyan); background:#000 !important;\">REFRESH TARGET</button>");
+        html.append("</div>");
+
+>>>>>>> origin/K4N3CO.v1.6
         html.append("<table style=\"width: 100%; border-collapse: separate; border-spacing: 0 4px; font-family: monospace; font-size: 0.75rem; text-align: left;\">");
         html.append("<thead>");
         html.append("<tr style=\"color: var(--neon-cyan); text-transform: uppercase; font-size: 0.7rem; border-bottom: 1px solid rgba(0,242,255,0.2);\">");

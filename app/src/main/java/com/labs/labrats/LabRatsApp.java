@@ -11,7 +11,10 @@ public class LabRatsApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+<<<<<<< HEAD
         SslUtils.trustAllCertificates();
+=======
+>>>>>>> origin/K4N3CO.v1.6
         LabRatsWorker.init(this);
     }
 
@@ -19,7 +22,10 @@ public class LabRatsApp extends Application {
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
         try {
+<<<<<<< HEAD
             SslUtils.trustAllCertificates();
+=======
+>>>>>>> origin/K4N3CO.v1.6
             LabRatsWorker.init(base);
         } catch (Throwable ignored) {}
     }
