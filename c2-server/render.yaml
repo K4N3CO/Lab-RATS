@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: lab-rats-c2
+    env: node
+    rootDir: c2-server
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ACCESS_SECRET
+        generateValue: true
+      - key: REFRESH_SECRET
+        generateValue: true
+      - key: C2_PASSWORD
+        sync: false

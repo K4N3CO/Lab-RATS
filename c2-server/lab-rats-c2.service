@@ -1,0 +1,19 @@
+[Unit]
+Description=Lab-RATS C2 Relay
+After=network-online.target
+
+[Service]
+Type=simple
+User=c2
+WorkingDirectory=/opt/lab-rats/c2-server
+EnvironmentFile=/opt/lab-rats/c2-server/.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/lab-rats/c2-server/uploads
+
+[Install]
+WantedBy=multi-user.target

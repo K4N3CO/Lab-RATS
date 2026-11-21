@@ -1,0 +1,6 @@
+{$C2_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:10000 {
+        header_up X-Forwarded-Proto https
+    }
+}
