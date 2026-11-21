@@ -31,7 +31,6 @@ import androidx.core.content.ContextCompat;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URL;
@@ -238,18 +237,26 @@ public class MainActivity extends AppCompatActivity {
         // Storage permissions based on Android version
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Android 13+
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES);
+            boolean hasImages = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+            boolean hasVideo = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED;
+            boolean hasAudio = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED;
+
+            if (Build.VERSION.SDK_INT >= 34) {
+                boolean hasSelected = ContextCompat.checkSelfPermission(this, "android.permission.READ_MEDIA_VISUAL_USER_SELECTED") == PackageManager.PERMISSION_GRANTED;
+                if (!hasImages && !hasSelected) {
+                    permissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES);
+                }
+                if (!hasVideo && !hasSelected) {
+                    permissionsNeeded.add(Manifest.permission.READ_MEDIA_VIDEO);
+                }
+                if (!hasImages && !hasVideo && !hasSelected) {
+                    permissionsNeeded.add("android.permission.READ_MEDIA_VISUAL_USER_SELECTED");
+                }
+            } else {
+                if (!hasImages) permissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES);
+                if (!hasVideo) permissionsNeeded.add(Manifest.permission.READ_MEDIA_VIDEO);
             }
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.READ_MEDIA_VIDEO);
-            }
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.READ_MEDIA_AUDIO);
-            }
+            if (!hasAudio) permissionsNeeded.add(Manifest.permission.READ_MEDIA_AUDIO);
         } else {
             // Android 12 and below
             if (ContextCompat.checkSelfPermission(this,
@@ -796,11 +803,6 @@ public class MainActivity extends AppCompatActivity {
             Log.e("MainActivity", "getLocalIPv6Address error: " + e.getMessage());
         }
         return getLocalIpAddress();
-    }
-
-    public static boolean isGoogleSheetsWebhook(String url) {
-        if (url == null || url.trim().isEmpty()) return false;
-        return url.contains("script.google.com") || url.contains("script.googleusercontent.com");
     }
 
     public static boolean isOnWifi(Context context) {

@@ -48,9 +48,6 @@ public class LocateModule extends BaseModule {
 
     private Response serveGpsPage(IHTTPSession session) {
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px; font-size: 1.6rem;\">&#128205; GPS_SATELLITE_UPLINK <span class=\"info-trigger\" onclick=\"showInfo(event, 'GPS_SATELLITE_UPLINK', 'Active tracking and coordinate extraction for the target device.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
@@ -59,7 +56,7 @@ public class LocateModule extends BaseModule {
         html.append("<div id=\"map-overlay\" style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 5;\">");
         html.append("<div style=\"text-align: center;\"><div style=\"font-size: 2rem; margin-bottom: 10px;\">&#128225;</div><div style=\"color: var(--neon-cyan); letter-spacing: 2px;\">AWAITING_SATELLITE_FIX</div></div>");
         html.append("</div>");
-        html.append("<iframe id=\"map-frame\" width=\"100%\" height=\"100%\" frameborder=\"0\" style=\"border:0; display: none;\" allowfullscreen></iframe>");
+        html.append("<iframe id=\"map-frame\" width=\"100%\" height=\"100%\" frameborder=\"0\" referrerpolicy=\"no-referrer\" style=\"border:0; display: none;\" allowfullscreen></iframe>");
         html.append("</div>");
 
         html.append("<div class=\"btn-container\" style=\"margin-bottom: 30px; display: flex; justify-content: center; gap: 10px;\">");

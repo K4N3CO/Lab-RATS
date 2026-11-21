@@ -33,9 +33,6 @@ public class IntelModule extends BaseModule {
     private Response serveIntel(Map<String, String> params, IHTTPSession session) {
         FirebaseConfig.logActivity("INTEL_UPLINK: Notification stream accessed");
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
-        html.append("<div class=\"back-btn-container\" style=\"margin-bottom: 15px;\">");
-        html.append("<a href=\"/terminal\" class=\"btn-back\">&#8592; Back to Terminal</a>");
-        html.append("</div>");
 
         html.append("<div class=\"card\">");
         html.append("<div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;\">");
@@ -141,6 +138,7 @@ public class IntelModule extends BaseModule {
                 html.append("</div>");
             }
         }
+        html.append("</div>");
         html.append("</div>");
         html.append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());

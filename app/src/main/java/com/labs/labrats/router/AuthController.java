@@ -82,11 +82,15 @@ public class AuthController {
 
     public Response handleLogout(IHTTPSession session, String logoutHtml) {
         FirebaseConfig.logActivity("AUTHENTICATION_TERMINATED: Session closed");
-        String newToken = UUID.randomUUID().toString();
-        WorkManager_Sync.activeSessionToken = newToken;
+        WorkManager_Sync.activeSessionToken = "";
         context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .edit().putString("session_token", newToken).apply();
+                .edit().remove("session_token").apply();
 
-        return server.serveGzippedProxy(session, "text/html", logoutHtml);
+        Response response = server.serveGzippedProxy(session, "text/html", logoutHtml);
+        response.addHeader("Set-Cookie", "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; HttpOnly; SameSite=Lax");
+        response.addHeader("Set-Cookie", "c2_auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; HttpOnly; SameSite=Lax");
+        response.addHeader("Set-Cookie", "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; HttpOnly; SameSite=Lax");
+        response.addHeader("Set-Cookie", "refresh_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; HttpOnly; SameSite=Lax");
+        return response;
     }
 }

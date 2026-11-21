@@ -4,8 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_gravity="center"
     android:background="@drawable/gradient_background"
     android:fitsSystemWindows="true"
+    android:padding="5dp"
     tools:context=".MainActivity">
 
     <!-- Cyber Grid Overlay -->
@@ -37,18 +39,17 @@
 
             <ImageView
                 android:id="@+id/ivHeaderBanner"
-                android:layout_width="352dp"
-                android:layout_height="240dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="15dp"
+                android:layout_width="367dp"
+                android:layout_height="197dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="0dp"
                 android:adjustViewBounds="true"
-                android:background="@drawable/header_card_bg"
                 android:paddingLeft="10dp"
-                android:paddingTop="8dp"
+                android:paddingTop="10dp"
                 android:paddingRight="10dp"
-                android:paddingBottom="6dp"
-                android:scaleType="fitXY"
-                app:srcCompat="@drawable/header" />
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/header_dashboard" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -63,15 +64,11 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="4dp"
-                        android:background="#E000F2FF" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="184dp"
-                        android:background="@drawable/gradient_background"
+                        android:layout_height="match_parent"
+                        android:layout_marginBottom="10dp"
+                        android:background="@drawable/header_card_bg"
                         android:gravity="bottom"
                         android:orientation="vertical"
                         android:padding="13dp">
@@ -80,20 +77,21 @@
                             android:id="@+id/tvStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
+                            android:layout_gravity="center|top"
                             android:layout_marginBottom="13dp"
                             android:fontFamily="@font/orbitron"
                             android:letterSpacing="0.1"
                             android:text="🔴 SERVER_OFFLINE"
                             android:textColor="@color/neon_red"
-                            android:textSize="19sp"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="2dp"
                             android:layout_marginBottom="15dp"
-                            android:background="#FC070707" />
+                            android:alpha="0.4"
+                            android:background="@color/neon_cyan" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -111,7 +109,7 @@
                             android:id="@+id/tvIpAddress"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="#050505"
+                            android:background="#072F35"
                             android:fontFamily="@font/aldrich"
                             android:gravity="center_vertical"
                             android:letterSpacing="0.16"
@@ -119,7 +117,7 @@
                             android:paddingStart="8dp"
                             android:text="[LOADING_DATA...]"
                             android:textColor="@color/neon_cyan"
-                            android:textSize="14sp"
+                            android:textSize="13sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -138,13 +136,14 @@
                         <TextView
                             android:id="@+id/tvServerUrl"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="#020202"
+                            android:layout_height="35dp"
+                            android:background="#062F35"
                             android:fontFamily="@font/assistant"
                             android:gravity="center_vertical"
                             android:letterSpacing="0.05"
                             android:minHeight="38dp"
                             android:padding="6dp"
+                            android:paddingBottom="5dp"
                             android:text="UPLINK_INACTIVE"
                             android:textColor="@color/neon_cyan"
                             android:textSize="14sp"
@@ -157,44 +156,48 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnStartStop"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="11dp"
+                android:layout_width="256dp"
+                android:layout_height="43dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="13dp"
                 android:backgroundTint="#EA00F2FF"
                 android:fontFamily="@font/orbitron"
+                android:gravity="center"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:letterSpacing="0.15"
                 android:paddingTop="2dp"
                 android:text="INITIALIZE_SERVER"
                 android:textColor="@color/bg_dark"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                app:cornerRadius="12dp" />
+                app:cornerRadius="20dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCopyUrl"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="41dp"
-                android:layout_marginBottom="12dp"
+                android:layout_width="244dp"
+                android:layout_height="37dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="9dp"
                 android:fontFamily="@font/orbitron"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:letterSpacing="0.15"
                 android:text="COPY_LINK"
                 android:textColor="@color/neon_cyan"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
-                app:cornerRadius="12dp"
+                app:cornerRadius="20dp"
                 app:strokeColor="@color/neon_cyan"
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBatteryOptimization"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
+                android:layout_width="333dp"
                 android:layout_height="50dp"
+                android:layout_gravity="center"
                 android:layout_marginBottom="24dp"
                 android:fontFamily="@font/orbitron"
                 android:gravity="bottom|center"
@@ -217,7 +220,7 @@
 
                 <TextView
                     android:id="@+id/tvTerminalFeedback"
-                    android:layout_width="278dp"
+                    android:layout_width="276dp"
                     android:layout_height="36dp"
                     android:alpha="0.8"
                     android:fontFamily="@font/aldrich"
