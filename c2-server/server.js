@@ -13,7 +13,7 @@ const { requireAuth, ACCESS_SECRET } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const C2_PASSWORD = process.env.C2_PASSWORD || 'admin1337';
+const C2_PASSWORD = process.env.C2_PASSWORD || 'Fly.admin1338';
 let currentC2Password = C2_PASSWORD;
 
 // 1. REQUIRED ON RENDER: Trust Render's reverse proxy for rate limiting & secure cookies
@@ -28,8 +28,8 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ extended: true, limit: '150mb' }));
 
 app.use('/api/auth', authRoutes);
 
@@ -80,7 +80,7 @@ const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
-app.use('/c2/downloads', express.static(UPLOADS_DIR));
+app.use('/c2/downloads',requireAuth, express.static(UPLOADS_DIR));
 
 const devices = new Map();
 const commandQueues = new Map();

