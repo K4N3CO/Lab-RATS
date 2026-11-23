@@ -355,7 +355,7 @@ In Direct IPv6 Mode, **the target Android device itself acts as the C2 web serve
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
 </p>
 
-To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
+> To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
 
 <details>
   <summary><b>🛠️ 1. Workstation & Build Requirements (To Build APKs)</b></summary>
@@ -417,18 +417,12 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
-**Lab-RATS** supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
-
-### 🔄 Direct IPv6 (Google Sheet) vs. Render Cloud Relay (Node.js)
-
-| Feature | Direct IPv6 Mode (P2P) | Render Cloud Relay Mode |
-| :--- | :--- | :--- |
-| **Server Architecture** | On-Device (`NanoHTTPD` on port `9191`) | Cloud Server (`c2-server/server.js`) |
-| **Network Requirement** | Public IPv6 Address (`2xxx:` or `3xxx:`) | Any Network (IPv4, IPv6, NAT, Firewall) |
-| **Bypasses CGNAT & Routers** | Yes (via IPv6 Global Address) | Yes (via Outbound Relay Tunnel) |
-| **Third-Party Infrastructure** | None (Direct P2P Connection) | Render / Express Node |
-| **Latency** | Ultra-Low (Direct Stream) | Low (Relay Stream) |
-| **Best Used For** | Direct peer-to-peer control on 5G/Wi-Fi | Networks blocking inbound connections |
+> **Lab-RATS** supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
+<details>
+  <summary><b>📸 View Direct IPv6 (Google Sheet) vs. Render Cloud Relay (Node.js) Chart</summary></b>
+  <br>
+  <img alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/a95fdd22-1226-45ab-ae61-b099a7d0311b" />
+</details>
 
 ### ☝🏻 Option 1: Direct IPv6 (Google Sheet) 
 **Best for Basic IP tracking** & **logging**. **NO server maintenance required!**.
@@ -498,7 +492,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ---
 
 ### ✌🏻 Option 2: Render Cloud Relay (Tactical Node.js Backend)
-**Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
+> **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
 
 **1. Fork the Lab-RATS repository**.
 <br>**2. Create a New Web Service for Free** on <a href="https://render.com" target="_blank">Render.com</a> and **connect your forked Lab-RATS repo**.
@@ -545,12 +539,25 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 </p>
 
 ### 1. Build the APK (on PC)
-1.  **Download the Repository**: `git clone https://github.com/K4N3CO/Lab-RATS.git`
-2.  **Navigate** to: `cd /Lab-RATS/apk-builder/`
-3.  **Execute** the **Builder**:
-    *   **Mac/Linux**: `chmod +x build.sh && ./build.sh`
-    *   **Windows**: `build.bat`
-4.  **Select a Build Strategy**:
+1.  **Download the Repository**:
+    ```
+    git clone https://github.com/K4N3CO/Lab-RATS.git
+    ```
+2.  **Navigate** to:
+    ```
+    cd /Lab-RATS/apk-builder/
+    ```
+3.  **Execute** the **Builder**:<br>
+
+    **Mac/Linux**:
+    ```
+    chmod +x build.sh && ./build.sh
+    ```
+    **Windows**:
+    ```
+    build.bat
+    ```
+5.  **Select a Build Strategy**:
     *   **Option 1 (Manual)**: For **standard configuration** of **App Name, ID**, and **Logo** before **building**.
     *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
 > [!IMPORTANT]
@@ -563,7 +570,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 </details>
 
 ### 2. Deploy & Install onto Android Devices
-**Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
+> **Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 <details>
   <summary><b>📑 Strategic Weaponization (The Wrapper)</b></summary>
