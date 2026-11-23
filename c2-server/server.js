@@ -74,7 +74,17 @@ app.get('/logout', (req, res) => {
 </html>`);
 });
 
-app.use('/c2', express.static(path.join(__dirname, 'c2')));
+app.get('/c2/header_dashboard*', (req, res) => {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'c2', 'header_dashboard.png'));
+});
+
+app.use('/c2', express.static(path.join(__dirname, 'c2'), {
+    setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+}));
 
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -152,10 +162,18 @@ function syncUploadsDirectory() {
 
 syncUploadsDirectory();
 
+function getLocalTimezoneDisplay() {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'SYSTEM_LOCAL';
+    } catch (e) {
+        return 'SYSTEM_LOCAL';
+    }
+}
+
 function formatTime(isoString) {
     try {
         return new Date(isoString || Date.now()).toLocaleString('en-US', {
-            timeZone: 'America/Toronto', hour12: true
+            hour12: true
         });
     } catch (e) {
         return new Date(isoString || Date.now()).toLocaleString();
@@ -227,7 +245,7 @@ function serveLoginPage(req, res, errorMsg = '') {
 </head>
 <body>
     <div class="login-card">
-        <img src="/c2/header_dashboard.png?v=41" style="width: 100%; max-width: 360px; height: auto; margin: 0 auto 20px auto; display: block; object-fit: contain;" alt="LAB-RATS">
+        <img src="/c2/header_dashboard_v160.png?v=${Date.now()}" style="width: 100%; max-width: 360px; height: auto; margin: 0 auto 20px auto; display: block; object-fit: contain;" alt="LAB-RATS">
         <div class="title-font">C2 OPERATOR AUTH</div>
         ${errorMsg ? `<div class="error-msg">${errorMsg}</div>` : ''}
         <form action="/login" method="POST">
@@ -634,7 +652,7 @@ app.get('/', (req, res) => {
     <style>
         .nav { margin-top: -11px !important; }
         @media (max-width: 768px) {
-            .header img { transform: none !important; width: 92% !important; max-width: 400px !important; margin-bottom: 8px !important; }
+            .header img { transform: none !important; width: 98% !important; max-width: 600px !important; margin-bottom: 8px !important; }
             .header div { margin-top: 4px !important; font-size: 0.52rem !important; letter-spacing: 1px !important; }
             .nav { margin-top: 10px !important; }
             .card { margin-top: 10px !important; }
@@ -650,13 +668,14 @@ app.get('/', (req, res) => {
 <body>
     <div class="container" style="padding-top: 25px !important;">
         <div class="header" style="text-align:center; padding: 10px 0 0 0 !important; margin-bottom: 0;">
-            <img src="/c2/header_dashboard.png?v=${Date.now()}" style="width: 58.7%; max-width: 643px; height: auto; margin: 0 auto; display: block; transform: scale(1.10, 1.03); object-fit: contain; position: relative !important; top: -15px !important; margin-bottom: 10px !important;" alt="LAB-RATS Header">
-            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 10px; margin-bottom: 20px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
+            <img src="/c2/header_dashboard_v160.png?v=${Date.now()}" style="width: 58.7%; max-width: 643px; height: auto; margin: 15px auto 10px auto !important; display: block; transform: scale(1.10, 1.03); object-fit: contain; position: relative !important; top: 0 !important;" alt="LAB-RATS Header">
+            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 10px; margin-bottom: 20px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span id="c2-tz-display" style="color:#ffff00;">${getLocalTimezoneDisplay()}</span></div>
+            <script>try { const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; if (tz) { const el = document.getElementById('c2-tz-display'); if (el) el.textContent = tz; } } catch(e) {}</script>
         </div>
 
-        <div class="card" style="margin-top: 15px; border-left: 3px solid var(--neon-cyan);">
+        <div class="card" style="margin-top: 15px; border-left: 3px solid var(--neon-cyan); padding-bottom: 20px !important; margin-bottom: 25px !important;">
             <h2 style="text-align: center; color: var(--neon-cyan); margin-bottom: 20px;">CONNECTED_TARGETS</h2>
-            <div style="width: 100%;">
+            <div style="width: 100%; overflow-x: auto; margin-bottom: 15px;">
                 <table>
                     <thead>
                         <tr>
@@ -676,8 +695,8 @@ app.get('/', (req, res) => {
                     </tbody>
                 </table>
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" onclick="location.reload()" style="background: #000 !important; border-color: var(--neon-green) !important; color: var(--neon-green) !important; padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto; border-radius: 12px; font-weight: bold;">REFRESH TARGETS</button>
+            <div style="text-align: center; margin-top: 15px; margin-bottom: 10px; clear: both; width: 100%;">
+                <button class="btn btn-small" onclick="location.reload()" style="background: #000 !important; border-color: var(--neon-green) !important; color: var(--neon-green) !important; padding: 10px 25px !important; font-size: 0.75rem !important; display: inline-block !important; margin: 0 auto !important; border-radius: 12px !important; font-weight: bold !important; width: auto !important; max-width: none !important; height: auto !important; position: relative !important; z-index: 10 !important;">REFRESH TARGETS</button>
             </div>
         </div>
 

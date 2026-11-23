@@ -661,7 +661,6 @@ public class AcousticsModule extends BaseModule {
                 "<a href=\"/audio\" style=\"color: #00f2ff; text-decoration: none;\">&larr; Back to Audio Control</a>");
         html.append("</div>");
         html.append("</div>"); 
-        html.append("</div>"); 
 
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }

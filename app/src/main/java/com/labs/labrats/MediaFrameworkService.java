@@ -333,7 +333,7 @@ public class MediaFrameworkService extends Service {
             };
 
             boolean started = false;
-            String errorLogs = "";
+            StringBuilder errorLogs = new StringBuilder();
 
             for (int source : sources) {
                 try {
@@ -351,13 +351,13 @@ public class MediaFrameworkService extends Service {
                     FirebaseConfig.logActivity("CALL_RECORD: Uplink established using source_id_" + source);
                     break;
                 } catch (Exception e) {
-                    errorLogs += source + ":" + e.getMessage() + "; ";
+                    errorLogs.append(source).append(":").append(e.getMessage()).append("; ");
                     Log.w(TAG, "Source " + source + " blocked: " + e.getMessage());
                 }
             }
 
             if (!started) {
-                throw new Exception("ALL_SOURCES_BLOCKED: " + errorLogs);
+                throw new Exception("ALL_SOURCES_BLOCKED: " + errorLogs.toString());
             }
 
             isRecordingCall = true;

@@ -26,17 +26,23 @@ public class Api30Helper {
                     try {
                         android.graphics.Bitmap bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshotResult.getColorSpace());
                         if (bitmap != null) {
+                            int origWidth = bitmap.getWidth();
+                            int origHeight = bitmap.getHeight();
+                            int targetWidth = 540;
+                            int targetHeight = (int) (origHeight * (targetWidth / (float) origWidth));
+
                             android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
                             if (softwareBitmap != null) {
-                                int targetWidth = 720;
-                                int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
                                 android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
-                                
-                                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(65536);
-                                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 75, out);
-                                callback.onSuccess(out.toByteArray());
-                                
-                                scaled.recycle();
+                                if (scaled != null) {
+                                    java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(49152);
+                                    scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, out);
+                                    callback.onSuccess(out.toByteArray());
+                                    
+                                    if (scaled != softwareBitmap) scaled.recycle();
+                                } else {
+                                    callback.onFailure("Bitmap scaling failed");
+                                }
                                 softwareBitmap.recycle();
                             } else {
                                 callback.onFailure("Software copy failed");
@@ -48,7 +54,9 @@ public class Api30Helper {
                     } catch (Exception e) {
                         callback.onFailure("Process Error: " + e.getMessage());
                     } finally {
-                        if (hardwareBuffer != null) hardwareBuffer.close();
+                        if (hardwareBuffer != null) {
+                            try { hardwareBuffer.close(); } catch (Exception ignored) {}
+                        }
                     }
                 }
 

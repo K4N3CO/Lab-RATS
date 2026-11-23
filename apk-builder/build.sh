@@ -28,40 +28,38 @@ CONFIG_FILE="$SCRIPT_DIR/build_config.txt"
 print_banner() {
     clear
     echo -e "${CYAN}"
-    echo " ┌───────────────────────────────────────────────────────────────────────┐"
-    echo " │                                  .-         .                         │"
-    echo " │                               ....-        :                          │"
-    echo " │                            -==--+:.+. ..  -..+:-+                     │"
-    echo " │                            ++---:+.-==+==#:.+---+#                    │"
-    echo " │                             :=---:+++++=++=**-:-:                     │"
-    echo " │                               --+++:-=+++++++-=                       │"
-    echo " │                  .-.         :--+==:++-:-**+-+-                       │"
-    echo " │                    -.     .==:--+:+++=++++++++#.                      │"
-    echo " │                    :-    =---=::-++.=:.=.-==+....                     │"
-    echo " │                   -+   .=-=++===-:.---=::-.-:==...-.==.               │"
-    echo " │                 .==    =--=:=-=++:+:--::-==--...=+-+=+-:              │"
-    echo " │               ..==.   ---++=:-++++++++===+++=+..:=-*-+:.              │"
-    echo " │                :==    -:-.+:-=++-+++++##++=---=++::=+.                │"
-    echo " │                .-=:  .---=++++-++++#####*++..::--. .                  │"
-    echo " │                 .--++.--:----=+---=-++#++==.       .                  │"
-    echo " │                   --------=--:=:-:-====+++-                           │"
-    echo " │                       .--++++--++:+++==:=+.                           │"
-    echo " │                        .:+++::::--:..:-+=                             │"
-    echo " │                       .--=+=-+-+    -:---*---                         │"
-    echo " │                                                                       │"
-    echo " │     ██╗      █████╗ ██████╗       ██████╗  █████╗ ████████╗██████╗    │"
-    echo " │     ██║     ██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝    │"
-    echo " │     ██║     ███████║██████╔╝█████╗██████╔╝███████║   ██║   ██████╗    │"
-    echo " │     ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║   ██║   ╚════█║    │"  
-    echo " │     ███████╗██║  ██║██████╔╝      ██║  ██║██║  ██║   ██║   ██████║    │"
-    echo " │     ╚══════╝╚═╝  ╚═╝╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝    │"                                                                                                          
-    echo " │                                                                       │"
-    echo " │     ----------> Android APK Builder | v1.6.0 Hardened <----------     │"
-    echo " │                                                                       │" 
-    echo " │   The one's who MIND don't matter. The one's who MATTER don't mind.   │"
-    echo " │                         DEVELOPED BY K4N3CO                           │"
-    echo " │                               © 2026                                  │"
-    echo " └───────────────────────────────────────────────────────────────────────┘"
+    cat << 'EOF'
+ ┌───────────────────────────────────────────────────────────────────────┐
+ │                      _                       __                       │
+ │                    /    \                 /      \                    │
+ │                   /      \              /          \                  │
+ │                  |       |Oo          o|            |                 │
+ │                  \    \  |OOOo......oOO|   /        |                 │
+ │                   \    \\OOOOOOOOOOOOOOO\//        /                  │
+ │                     \ _o\OOOOOOOOOOOOOOOO//. ___ /                    │
+ │                       OOOOOOOOOOOOOOOOOOOOOOOo.                       │
+ │                      OO'* `OOOOOOOOOO'*  `OOOOO                       │
+ │                      OO.   OOOOOOOOO'    .OOOOO                       │
+ │                      OOOooOOOOOOOOOooooOOOOOO'                        │
+ │                       "OOOOOOOOOOOOOOOOOOOO"                          │
+ │                --------`OOOOOOOOOOOOOOOO"---------                    │
+ │                          "OOOOOOOOOOO"_                               │
+ │                             (____)                                    │
+ │                                                                       │
+ │    ██╗      █████╗ ██████╗         ██████╗  █████╗ ████████╗██████╗   │
+ │    ██║     ██╔══██╗██╔══██╗        ██╔══██╗██╔══██╗╚══██╔══╝██╔═══╝   │
+ │    ██║     ███████║██████╔╝ █████╗ ██████╔╝███████║   ██║   ██████╗   │
+ │    ██║     ██╔══██║██╔══██╗ ╚════╝ ██╔══██╗██╔══██║   ██║   ╚════█║   │
+ │    ███████╗██║  ██║██████╔╝        ██║  ██║██║  ██║   ██║   ██████║   │
+ │    ╚══════╝╚═╝  ╚═╝╚═════╝         ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝   │
+ │                                                                       │
+ │     ----------> Android APK Builder | v1.6.0 Hardened <----------     │
+ │                                                                       │
+ │ The one's who MIND don't matter... The one's who MATTER don't mind... │
+ │                         DEVELOPED BY K4N3CO                           │
+ │                               © 2026                                  │
+ └───────────────────────────────────────────────────────────────────────┘
+EOF
     echo -e "${NC}"
     echo ""
 }
@@ -217,32 +215,29 @@ configure_app() {
         C2_PASS=${C2_PASS:-admin1337}
     fi
 
-    if grep -q "WEBHOOK_URL=" "$PROJECT_DIR/local.properties"; then
-        sed_i "s|WEBHOOK_URL=.*|WEBHOOK_URL=$WEB_URL|g" "$PROJECT_DIR/local.properties"
-    else
-        echo "WEBHOOK_URL=$WEB_URL" >> "$PROJECT_DIR/local.properties"
-    fi
+    # Helper to safely set or update key=value in local.properties
+    set_prop() {
+        local key="$1"
+        local val="$2"
+        local file="$PROJECT_DIR/local.properties"
+        touch "$file"
+        if grep -q "^${key}=" "$file"; then
+            local safe_val=$(printf '%s\n' "$val" | sed -e 's=[\&/|]=\\&=g')
+            sed_i "s|^${key}=.*|${key}=${safe_val}|g" "$file"
+        else
+            echo "${key}=${val}" >> "$file"
+        fi
+    }
 
-    if grep -q "C2_PASSWORD=" "$PROJECT_DIR/local.properties"; then
-        sed_i "s|C2_PASSWORD=.*|C2_PASSWORD=$C2_PASS|g" "$PROJECT_DIR/local.properties"
-    else
-        echo "C2_PASSWORD=$C2_PASS" >> "$PROJECT_DIR/local.properties"
-    fi
-
-    echo "C2_PASS=\"$C2_PASS\"" >> "$CONFIG_FILE"
-
-    if grep -q "DECOY_CHOICE=" "$PROJECT_DIR/local.properties"; then
-        sed_i "s|DECOY_CHOICE=.*|DECOY_CHOICE=$DECOY_CHOICE|g" "$PROJECT_DIR/local.properties"
-    else
-        echo "DECOY_CHOICE=$DECOY_CHOICE" >> "$PROJECT_DIR/local.properties"
-    fi
+    set_prop "WEBHOOK_URL" "$WEB_URL"
+    set_prop "C2_PASSWORD" "$C2_PASS"
+    set_prop "DECOY_CHOICE" "$DECOY_CHOICE"
+    set_prop "APP_ID" "$PKG_NAME"
 
     RAND_KEY=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
-    if grep -q "ENCRYPTION_KEY=" "$PROJECT_DIR/local.properties"; then
-        sed_i "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$RAND_KEY|g" "$PROJECT_DIR/local.properties"
-    else
-        echo "ENCRYPTION_KEY=$RAND_KEY" >> "$PROJECT_DIR/local.properties"
-    fi
+    set_prop "ENCRYPTION_KEY" "$RAND_KEY"
+
+    echo "C2_PASS=\"$C2_PASS\"" >> "$CONFIG_FILE"
 
     # Auto-detect Android SDK location if missing in local.properties
     if ! grep -q "sdk.dir=" "$PROJECT_DIR/local.properties" 2>/dev/null; then

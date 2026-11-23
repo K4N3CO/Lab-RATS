@@ -82,8 +82,8 @@ public class LocateModule extends BaseModule {
         html.append("<iframe id=\"map-frame\" width=\"100%\" height=\"100%\" frameborder=\"0\" referrerpolicy=\"no-referrer\" style=\"border:0; display: none;\" allowfullscreen></iframe>");
         html.append("</div>");
 
-        html.append("<div class=\"btn-container\" style=\"margin-bottom: 30px; display: flex; justify-content: center; gap: 10px;\">");
-        html.append("<button id=\"ping-btn\" onclick=\"toggleLocationPing()\" class=\"btn\" style=\"margin: 0; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); border-radius: 12px !important; width: 210px !important; min-width: 210px !important; height: 45px !important; padding: 0 16px !important;\">&#128205; PING_LOCATION</button>");
+        html.append("<div class=\"btn-container\" style=\"margin-bottom: 25px; display: flex; justify-content: center; align-items: center; width: 100%;\">");
+        html.append("<button id=\"ping-btn\" onclick=\"toggleLocationPing()\" class=\"btn\" style=\"margin: 0 auto !important; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); border-radius: 10px !important; width: 180px !important; min-width: 180px !important; max-width: 180px !important; height: 36px !important; padding: 0 10px !important; font-size: 0.70rem !important; text-align: center !important;\">&#128205; PING_LOCATION</button>");
         html.append("</div>");
         
         SharedPreferences prefs = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE);

@@ -229,7 +229,7 @@ public class FirebaseConfig extends NanoHTTPD {
         String c2Url = com.labs.labrats.BuildConfig.WEBHOOK_URL;
         if (c2Url == null || c2Url.trim().isEmpty()) c2Url = "/c2-dashboard";
         String renderBackBar = isRenderWebhook() ? 
-            "<div class=\"c2-top-bar\" style=\"display: flex; justify-content: flex-start; align-items: center; width: 100%; padding: 12px 0 6px 0;\"><a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; CONNECTED TARGETS</a></div>" : "";
+            "<div class=\"c2-top-bar\" style=\"display: flex; justify-content: flex-start; align-items: center; width: 100%; padding: 8px 0 6px 0; margin-bottom: 12px !important; position: relative !important; z-index: 100 !important;\"><a href=\"" + c2Url + "\" class=\"render-c2-back-btn\">&#9166; CONNECTED TARGETS</a></div>" : "";
 
         return "<!DOCTYPE html>" +
             "<html lang=\"en\">" +
@@ -239,12 +239,12 @@ public class FirebaseConfig extends NanoHTTPD {
             "<title>LAB-RATS | CORE</title>" +
             "<link href=\"https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">" +
             "<link rel=\"stylesheet\" href=\"/c2/style.css?v=" + System.currentTimeMillis() + "\">" +
-            "<style>.nav { display: flex; gap: 10px !important; flex-wrap: wrap; justify-content: center; width: 100%; margin-top: 25px !important; margin-bottom: 25px !important; } .nav a { font-family: 'Orbitron', sans-serif !important; padding: 14px 32px !important; font-size: 0.92rem !important; letter-spacing: 1.5px !important; border-width: 2.5px !important; border-radius: 10px !important; } .nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 20px; margin-bottom: 15px; padding: 10px 0; } .bottom-nav a { padding: 5px 12px !important; border: 1.5px solid rgba(0, 242, 255, 0.4) !important; border-radius: 8px !important; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif !important; font-weight: 700 !important; font-size: 0.62rem !important; background: rgba(0, 242, 255, 0.05) !important; transition: all 0.25s ease-in-out !important; letter-spacing: 0.4px !important; white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; min-height: 28px !important; } .bottom-nav a:hover, .bottom-nav a:active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } .render-c2-back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(0, 242, 255, 0.08); border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 10px; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; transition: all 0.3s; box-shadow: 0 0 18px rgba(0, 242, 255, 0.2); } .render-c2-back-btn:hover { background: #00f2ff !important; color: #000 !important; box-shadow: 0 0 30px #00f2ff; transform: scale(1.04); } @media (max-width: 768px) { .nav-break { display: none !important; } .bottom-nav { justify-content: flex-start !important; gap: 8px 6px !important; padding: 12px 6px !important; margin-top: 15px !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; } .bottom-nav a { padding: 7px 11px !important; font-size: 0.65rem !important; border-radius: 8px !important; min-height: 36px !important; flex: 0 1 auto !important; } .render-c2-back-btn { padding: 7px 13px; font-size: 0.70rem; border-radius: 8px; } } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
+            "<style>.c2-top-bar { margin-bottom: 12px !important; padding-bottom: 6px !important; position: relative !important; z-index: 100 !important; } .header img { top: 0 !important; margin-top: 5px !important; margin-bottom: 5px !important; } .nav { display: flex; gap: 10px !important; flex-wrap: wrap; justify-content: center; width: 100%; margin-top: 15px !important; margin-bottom: 15px !important; } .nav a { font-family: 'Orbitron', sans-serif !important; padding: 14px 32px !important; font-size: 0.92rem !important; letter-spacing: 1.5px !important; border-width: 2.5px !important; border-radius: 10px !important; } .nav a.active, .bottom-nav a.active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 35px #00f2ff, inset 0 0 15px rgba(0,0,0,0.4) !important; font-weight: 900 !important; transform: scale(1.04); } .bottom-nav { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; width: 100%; margin-top: 12px; margin-bottom: 10px; padding: 6px 0; } .bottom-nav a { padding: 5px 12px !important; border: 1.5px solid rgba(0, 242, 255, 0.4) !important; border-radius: 8px !important; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif !important; font-weight: 700 !important; font-size: 0.62rem !important; background: rgba(0, 242, 255, 0.05) !important; transition: all 0.25s ease-in-out !important; letter-spacing: 0.4px !important; white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; min-height: 28px !important; } .bottom-nav a:hover, .bottom-nav a:active { background: #00f2ff !important; border-color: #00f2ff !important; color: #000 !important; box-shadow: 0 0 20px #00f2ff; } .render-c2-back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; margin-bottom: 8px !important; background: rgba(0, 242, 255, 0.08); border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 10px; color: #00f2ff !important; text-decoration: none !important; font-family: 'Orbitron', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; transition: all 0.3s; box-shadow: 0 0 18px rgba(0, 242, 255, 0.2); position: relative; z-index: 100; } .render-c2-back-btn:hover { background: #00f2ff !important; color: #000 !important; box-shadow: 0 0 30px #00f2ff; transform: scale(1.04); } @media (max-width: 768px) { .header img { width: 98% !important; max-width: 600px !important; top: 0 !important; margin-top: 5px !important; margin-bottom: 5px !important; } .nav-break { display: none !important; } .nav { gap: 4px !important; margin-top: 8px !important; margin-bottom: 8px !important; } .nav a { padding: 6px 8px !important; font-size: 0.58rem !important; letter-spacing: 0 !important; border-width: 1.5px !important; border-radius: 6px !important; min-width: 0 !important; flex: 1 1 calc(33.33% - 6px) !important; text-align: center !important; } .bottom-nav { justify-content: flex-start !important; gap: 6px 4px !important; padding: 6px 4px !important; margin-top: 8px !important; margin-bottom: 8px !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; } .bottom-nav a { padding: 4px 7px !important; font-size: 0.54rem !important; border-radius: 5px !important; min-height: 24px !important; letter-spacing: 0.2px !important; flex: 0 1 auto !important; } .render-c2-back-btn { padding: 7px 13px; font-size: 0.70rem; border-radius: 8px; margin-bottom: 8px !important; } } @media (min-width: 1024px) { body { zoom: 0.9; } }</style>" +
             "</head>" +
             "<body>" +
             "<div class=\"container\">" + renderBackBar +
-            "  <div class=\"header\" style=\"padding: 5px 0 0 0 !important; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
-            "    <img src=\"/c2/header_dashboard.png?v=" + System.currentTimeMillis() + "\" style=\"width: 65%; max-width: 798px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: none !important; object-fit: contain; position: relative !important; top: -25px !important; margin-bottom: -25px !important;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
+            "  <div class=\"header\" style=\"padding: 5px 0 0 0 !important; margin-top: 5px !important; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
+            "    <img src=\"/c2/header_dashboard_v160.png?v=" + System.currentTimeMillis() + "\" style=\"width: 65%; max-width: 798px; height: auto; margin: 5px auto 5px auto !important; display: block; background: transparent !important; border: none !important; box-shadow: none !important; filter: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: high-quality; transform: none !important; object-fit: contain; position: relative !important; top: 0 !important;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
             "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" + navHtml;
     }
@@ -538,6 +538,7 @@ public class FirebaseConfig extends NanoHTTPD {
     }
 
     private void setupRouter() {
+        router.registerPrefix("/c2/header_dashboard", this::serveHeaderDashboard);
         router.registerPrefix("/c2/", session -> serveAsset(session, session.getUri()));
         router.registerExact("/logo", this::serveLogo);
         router.registerPrefix("/font/orbitron.ttf", this::serveFont);
@@ -756,7 +757,9 @@ public class FirebaseConfig extends NanoHTTPD {
                 boolean isLoggedIn = (token != null && !token.isEmpty() && sessionToken != null && !sessionToken.isEmpty() && token.equals(sessionToken));
 
                 if (!isLoggedIn) {
-                    if (uri.startsWith("/c2/")) {
+                    if (uri.startsWith("/c2/header_dashboard")) {
+                        response = serveHeaderDashboard(session);
+                    } else if (uri.startsWith("/c2/")) {
                         response = serveAsset(session, uri);
                     } else if (uri.equals("/logo")) {
                         response = serveLogo(session);
@@ -797,6 +800,29 @@ public class FirebaseConfig extends NanoHTTPD {
             }
         }
         return response;
+    }
+
+    private Response serveHeaderDashboard(IHTTPSession session) {
+        try {
+            int resId = context.getResources().getIdentifier("header_dashboard", "drawable", context.getPackageName());
+            if (resId == 0) return serveAsset(session, session.getUri());
+
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeResource(context.getResources(), resId);
+            if (bitmap == null) return serveAsset(session, session.getUri());
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
+            byte[] bytes = out.toByteArray();
+            bitmap.recycle();
+
+            Response response = newFixedLengthResponse(Response.Status.OK, "image/png", new java.io.ByteArrayInputStream(bytes), bytes.length);
+            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            response.addHeader("Pragma", "no-cache");
+            response.addHeader("Expires", "0");
+            return response;
+        } catch (Exception e) {
+            return serveAsset(session, session.getUri());
+        }
     }
 
     private Response serveLogo(IHTTPSession session) {
@@ -1358,6 +1384,9 @@ public class FirebaseConfig extends NanoHTTPD {
     private Response serveAsset(IHTTPSession session, String uri) {
         try {
             String assetPath = uri.substring(1); // Remove leading slash
+            if (assetPath.contains("?")) {
+                assetPath = assetPath.substring(0, assetPath.indexOf("?"));
+            }
             InputStream is = context.getAssets().open(assetPath);
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             int nRead;

@@ -837,13 +837,13 @@ function refreshGhostScreen() {
       streamImg.src = img.src;
       streamImg.style.display = "block";
       if (statusCard) statusCard.style.display = "none";
-      setTimeout(refreshGhostScreen, 10);
+      setTimeout(refreshGhostScreen, 80);
     }
   };
   img.onerror = () => {
     isGhostFetching = false;
     if (_0x2a) {
-      setTimeout(refreshGhostScreen, 50);
+      setTimeout(refreshGhostScreen, 120);
     }
   };
 }
@@ -1301,7 +1301,7 @@ async function checkGhostStatus() {
 
       const screenStream = document.getElementById("ghost-screen-stream");
       if (screenStream) {
-        screenStream.style.filter = data.blackout ? "brightness(7.5) contrast(1.15)" : "none";
+        screenStream.style.filter = data.blackout ? "brightness(2.4) contrast(1.18)" : "none";
       }
 
       if (antiRemovalBtn) {
@@ -1576,24 +1576,25 @@ function setPingBtnState(active) {
   isGpsActive = active;
   const btn = document.getElementById("ping-btn");
   if (!btn) return;
+  btn.style.width = "180px";
+  btn.style.minWidth = "180px";
+  btn.style.maxWidth = "180px";
+  btn.style.height = "36px";
+  btn.style.borderRadius = "10px";
+  btn.style.padding = "0 10px";
+  btn.style.fontSize = "0.70rem";
+  btn.style.margin = "0 auto";
+
   if (active) {
     btn.innerHTML = "TERMINATE";
     btn.style.borderColor = "var(--danger)";
     btn.style.color = "var(--danger)";
     btn.style.background = "rgba(255, 49, 49, 0.08)";
-    btn.style.borderRadius = "12px";
-    btn.style.width = "210px";
-    btn.style.minWidth = "210px";
-    btn.style.height = "45px";
   } else {
     btn.innerHTML = "&#128205; PING_LOCATION";
     btn.style.borderColor = "var(--neon-green)";
     btn.style.color = "var(--neon-green)";
     btn.style.background = "rgba(57, 255, 20, 0.05)";
-    btn.style.borderRadius = "12px";
-    btn.style.width = "210px";
-    btn.style.minWidth = "210px";
-    btn.style.height = "45px";
   }
 }
 

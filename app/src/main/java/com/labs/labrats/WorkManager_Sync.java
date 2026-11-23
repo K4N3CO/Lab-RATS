@@ -316,7 +316,13 @@ public class WorkManager_Sync extends Service {
         }
         else if (Constants.ACTION_STOP_CORE.equals(action) || "STOP".equals(action)) {
             stopServer();
-            stopForeground(true);
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_REMOVE);
+                } else {
+                    stopForeground(true);
+                }
+            } catch (Exception ignored) {}
             NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
                 manager.cancel(NOTIFICATION_ID);
@@ -354,12 +360,22 @@ public class WorkManager_Sync extends Service {
         
         android.app.AlarmManager alarmService = (android.app.AlarmManager) getApplicationContext().getSystemService(android.content.Context.ALARM_SERVICE);
         if (alarmService != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmService.setExactAndAllowWhileIdle(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
-                    android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
-            } else {
-                alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
-                    android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmService.canScheduleExactAlarms()) {
+                    alarmService.setAndAllowWhileIdle(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
+                        android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmService.setExactAndAllowWhileIdle(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
+                        android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
+                } else {
+                    alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
+                        android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
+                }
+            } catch (Exception e) {
+                try {
+                    alarmService.set(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 
+                        android.os.SystemClock.elapsedRealtime() + delay, restartServicePendingIntent);
+                } catch (Exception ignored) {}
             }
         }
     }

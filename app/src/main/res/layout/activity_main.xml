@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
+    android:layout_gravity="center|fill_vertical"
     android:background="@drawable/gradient_background"
     android:fitsSystemWindows="true"
     android:padding="5dp"
@@ -39,17 +39,15 @@
 
             <ImageView
                 android:id="@+id/ivHeaderBanner"
-                android:layout_width="367dp"
-                android:layout_height="197dp"
+                android:layout_width="376dp"
+                android:layout_height="286dp"
                 android:layout_gravity="center"
-                android:layout_marginTop="0dp"
-                android:layout_marginBottom="0dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="15dp"
                 android:adjustViewBounds="true"
-                android:paddingLeft="10dp"
-                android:paddingTop="10dp"
-                android:paddingRight="10dp"
-                android:scaleType="centerCrop"
-                app:srcCompat="@drawable/header_dashboard" />
+                android:scaleType="fitCenter"
+                android:src="@drawable/header"
+                app:srcCompat="@drawable/header" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"

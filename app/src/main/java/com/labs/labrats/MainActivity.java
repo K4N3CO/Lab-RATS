@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean isServerRunning = false;
     private long lastIpLookupTime = 0;
 
-    private ActivityResultLauncher<Intent> manageStorageLauncher;
     private ActivityResultLauncher<Intent> overlayPermissionLauncher;
 
     @Override
@@ -85,10 +84,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // --- MODERN ACTIVITY RESULT LAUNCHERS ---
-        manageStorageLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> updateUI()
-        );
         overlayPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> updateUI()
@@ -286,10 +281,6 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
             permissionsNeeded.add(Manifest.permission.READ_CALL_LOG);
         }
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.WRITE_CALL_LOG);
-        }
 
         // Phone call permission
         if (ContextCompat.checkSelfPermission(this,
@@ -334,13 +325,6 @@ public class MainActivity extends AppCompatActivity {
             permissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.READ_PHONE_NUMBERS);
-            }
-        }
-
         // Camera permission
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -353,26 +337,11 @@ public class MainActivity extends AppCompatActivity {
             permissionsNeeded.add(Manifest.permission.RECORD_AUDIO);
         }
 
-        // Accounts permission
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.GET_ACCOUNTS);
-        }
-
         // Answer phone calls (Android 8+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ANSWER_PHONE_CALLS) != PackageManager.PERMISSION_GRANTED) {
                 permissionsNeeded.add(Manifest.permission.ANSWER_PHONE_CALLS);
-            }
-        }
-
-        // Process outgoing calls permission (deprecated in API 29)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            @SuppressWarnings("deprecation")
-            String procCallsPerm = Manifest.permission.PROCESS_OUTGOING_CALLS;
-            if (ContextCompat.checkSelfPermission(this, procCallsPerm) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(procCallsPerm);
             }
         }
 
@@ -384,20 +353,6 @@ public class MainActivity extends AppCompatActivity {
         if (!permissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(this,
                     permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
-        }
-
-        // Request MANAGE_EXTERNAL_STORAGE for Android 11+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                try {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
-                    manageStorageLauncher.launch(intent);
-                } catch (Exception e) {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                    manageStorageLauncher.launch(intent);
-                }
-            }
         }
 
         // Request overlay permission

