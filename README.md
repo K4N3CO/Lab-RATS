@@ -214,11 +214,11 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 </details>
 
 <details>
-  <summary><b>🛰️ Live GPS Tracking & Intel Stream</b></summary>
+  <summary><b>🛰️ GPS Tracking & Intel Stream</b></summary>
   <br>
   <ul>
-    <li><strong>Live GPS Uplink:</strong> One-click uplink to open the <strong>device's exact real-time location</strong> using <strong>Google Maps</strong>.</li>
-    <li><strong>Live Notification Stream:</strong> Intercept every app notification <em>(WhatsApp, Telegram, RCS, System...etc)</em> in a <strong>live feed</strong>.</li>
+    <li><strong>GPS Uplink:</strong> One-click uplink to open the <strong>device's exact real-time location</strong> using <strong>Google Maps</strong>.</li>
+    <li><strong>Notification Stream:</strong> Intercept every app notification <em>(WhatsApp, Telegram, RCS, System...etc)</em> in a <strong>live feed</strong>.</li>
  </ul>
 </details>
 
