@@ -2,7 +2,7 @@
 <img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
   
 <p align="center">
-<img width="1423" height="518" alt="Screenshot 2026-11-16 at 4 59 17 PM" src="https://github.com/user-attachments/assets/126fc4b1-94b6-40bf-a8f4-e3d16ae17e33" />
+<img width="1421" height="437" alt="Screenshot 2026-11-23 at 7 16 39 AM" src="https://github.com/user-attachments/assets/7e5326a2-8c3b-470c-b06d-5309cc0c6c4e" />
 
 <p align="center">
   <img src="https://img.shields.io/badge/JDK-17/21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -565,8 +565,8 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from `Lab-RATS/apk-builder/output/`
 
 <details>
-  <summary><b>📸 View APK-Builder Menu</summary></b>
-  <img src="https://github.com/user-attachments/assets/8cb583e6-6c59-46cf-8f94-668f0a34b74e" alt="Full Web Page Screenshot" width="60%">
+  <summary><b>📸 View APK-Builder Tool</summary></b>
+  <img src="https://github.com/user-attachments/assets/3b16fac1-c679-46d0-9e9d-57335c897313" alt="Full Web Page Screenshot" width="60%">
 </details>
 
 ### 2. Deploy & Install onto Android Devices
