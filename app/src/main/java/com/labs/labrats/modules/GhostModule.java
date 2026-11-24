@@ -504,43 +504,51 @@ public class GhostModule extends BaseModule {
         html.append("<div id=\"ghost-screen-container\" class=\"phone-frame\" style=\"margin: 0 auto 20px auto; align-self: center; position: relative; width: 270px; height: 540px; background: #000; border: 2px solid rgba(0, 242, 255, 0.4); border-radius: 32px; padding: 0 !important; overflow: hidden; box-sizing: border-box; box-shadow: 0 0 12px rgba(0, 242, 255, 0.25);\">");
         html.append("<div style=\"position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 14px; background: #000; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; z-index: 5;\"></div>");
         html.append("<img id=\"ghost-screen-stream\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\" style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; display: none; user-select: none; -webkit-user-drag: none; touch-action: none; border-radius: 28px; z-index: 2;\" onmousedown=\"startGhostDrag(event)\" onmouseup=\"endGhostDrag(event)\" ontouchstart=\"startGhostDrag(event)\" ontouchend=\"endGhostDrag(event)\" />");
-        html.append("<div id=\"ghost-lock-overlay\" style=\"display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 10; align-items: center; justify-content: center; color: var(--neon-yellow); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; border-radius: 28px; text-shadow: 0 0 10px rgba(0,0,0,0.8);\">&#128274; PAGE SCROLL MODE</div>");
         html.append("<div id=\"ghost-screen-status\" style=\"position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 900; letter-spacing: 3px; text-shadow: 0 0 15px rgba(0,242,255,0.8), 0 0 30px rgba(0,242,255,0.4); text-transform: uppercase; z-index: 1; text-align: center;\">OLED_STANDBY</div>");
         html.append("</div>");
 
-        // Action Cluster (Refined & Minified Tactical Layout)
-        html.append("<div style=\"width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 10px; align-self: center;\">");
+        // Style override for responsive INITIATE_VIEW button width on mobile
+        html.append("<style>");
+        html.append("  .ghost-initiate-btn { width: 100%; max-width: 180px; margin: 0 auto; padding: 6px 10px; font-size: 0.68rem; font-weight: bold; border-radius: 6px; border-color: var(--neon-cyan); color: var(--neon-cyan); text-align: center; }");
+        html.append("  @media (max-width: 768px) { .ghost-initiate-btn { max-width: 280px !important; padding: 10px 16px !important; font-size: 0.78rem !important; } }");
+        html.append("</style>");
+
+        // Action Cluster (Ultra-Compact Tactical Layout)
+        html.append("<div style=\"width: 100%; max-width: 280px; display: flex; flex-direction: column; align-items: center; gap: 6px; align-self: center;\">");
         
-        // Dual Action Header Row
-        html.append("<div style=\"display: flex; gap: 8px; width: 100%;\">");
-        html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; border-color: var(--neon-cyan); color: var(--neon-cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\">INITIATE_VIEW</button>");
-        html.append("<button id=\"ghost-lock-btn\" onclick=\"toggleGhostControlLock()\" class=\"btn btn-small\" style=\"flex: 1; margin: 0; padding: 10px 6px; font-size: 0.7rem; font-weight: bold; border-radius: 8px; background: rgba(57, 255, 20, 0.08); border-color: var(--neon-green); color: var(--neon-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\" title=\"Tap to Toggle Page Scroll vs Direct Target Control\">&#128274; SCROLL LOCK</button>");
+        // Centered Initiate View Header Row
+        html.append("<div style=\"display: flex; justify-content: center; width: 100%;\">");
+        html.append("<button id=\"ghost-toggle-btn\" onclick=\"toggleGhostScreen()\" class=\"btn btn-small ghost-initiate-btn\">INITIATE_VIEW</button>");
         html.append("</div>");
 
         // Directional Navigation & System Action Pad
-        html.append("<div id=\"ghost-nav-bar\" style=\"width: 100%; display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.35); padding: 10px; border-radius: 10px; border: 1px solid rgba(0, 242, 255, 0.2); box-sizing: border-box;\">");
-        html.append("<div style=\"font-size: 0.6rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; font-weight: bold; margin-bottom: 2px;\">REMOTE NAVIGATION</div>");
+        html.append("<div id=\"ghost-nav-bar\" style=\"width: 100%; display: flex; flex-direction: column; gap: 4px; background: rgba(0,0,0,0.4); padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(0, 242, 255, 0.2); box-sizing: border-box;\">");
         
-        // Ultra-Compact D-Pad Grid (Cross Layout)
-        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto; gap: 3px; width: 100%; max-width: 220px; margin: 0 auto; align-items: center;\">");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('left')\" class=\"btn btn-small\" style=\"grid-column: 1; grid-row: 1 / span 2; align-self: center; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Left\">&#9664; LEFT</button>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('up')\" class=\"btn btn-small\" style=\"grid-column: 2; grid-row: 1; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Up\">&#9650; UP</button>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('down')\" class=\"btn btn-small\" style=\"grid-column: 2; grid-row: 2; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Scroll Down\">&#9660; DOWN</button>");
-        html.append("<button type=\"button\" onclick=\"ghostScroll('right')\" class=\"btn btn-small\" style=\"grid-column: 3; grid-row: 1 / span 2; align-self: center; width:100%; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:4px 0; font-size:0.65rem; margin:0;\" title=\"Swipe Right\">&#9654; RIGHT</button>");
+        // Compact 3x3 D-Pad Cross Layout
+        html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; width: 100%; max-width: 150px; margin: 0 auto; align-items: center;\">");
+        html.append("<div></div>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('up')\" class=\"btn btn-small\" style=\"display: inline-flex; align-items: center; justify-content: center; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:0; font-size:0.65rem; margin:0; line-height:1; min-width:0; height:24px; text-align:center;\" title=\"Scroll Up\">&#9650;</button>");
+        html.append("<div></div>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('left')\" class=\"btn btn-small\" style=\"display: inline-flex; align-items: center; justify-content: center; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:0; font-size:0.65rem; margin:0; line-height:1; min-width:0; height:24px; text-align:center;\" title=\"Swipe Left\">&#9664;</button>");
+        html.append("<div style=\"font-size:0.48rem; color:rgba(0,242,255,0.4); text-align:center; font-weight:bold; display:flex; align-items:center; justify-content:center;\">PAD</div>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('right')\" class=\"btn btn-small\" style=\"display: inline-flex; align-items: center; justify-content: center; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:0; font-size:0.65rem; margin:0; line-height:1; min-width:0; height:24px; text-align:center;\" title=\"Swipe Right\">&#9654;</button>");
+        html.append("<div></div>");
+        html.append("<button type=\"button\" onclick=\"ghostScroll('down')\" class=\"btn btn-small\" style=\"display: inline-flex; align-items: center; justify-content: center; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:0; font-size:0.65rem; margin:0; line-height:1; min-width:0; height:24px; text-align:center;\" title=\"Scroll Down\">&#9660;</button>");
+        html.append("<div></div>");
         html.append("</div>");
 
-        // Compact System Navigation Bar (Swapped: RECENT | HOME | BACK)
-        html.append("<div style=\"display: flex; gap: 4px; width: 100%; margin-top: 2px;\">");
-        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=recents')\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Recents\">&#9638; RECENT</button>");
-        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=home')\" class=\"btn btn-small\" style=\"flex:1; border-color:var(--neon-green); color:var(--neon-green); padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Home\">&#8962; HOME</button>");
-        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=back')\" class=\"btn btn-small\" style=\"flex:1; border-color:#ff9d00; color:#ff9d00; padding:6px 0; font-size:0.68rem; margin:0;\" title=\"System Back\">&#11013; BACK</button>");
+        // Micro System Navigation Bar (RECENTS | HOME | BACK)
+        html.append("<div style=\"display: flex; gap: 3px; width: 100%; margin-top: 2px;\">");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=recents')\" class=\"btn btn-small\" style=\"display: inline-flex; align-items: center; justify-content: center; flex:1; border-color:var(--neon-cyan); color:var(--neon-cyan); padding:0; font-size:0.6rem; margin:0; height:26px; line-height:1; min-width:0; text-align:center;\" title=\"System Recents\">&#9638; REC</button>");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=home')\" class=\"btn btn-small\" style=\"display: inline-flex; align-items: center; justify-content: center; flex:1; border-color:var(--neon-green); color:var(--neon-green); padding:0; font-size:0.6rem; margin:0; height:26px; line-height:1; min-width:0; text-align:center;\" title=\"System Home\">&#8962; HOME</button>");
+        html.append("<button type=\"button\" onclick=\"fetch('/ghost/interact?action=back')\" class=\"btn btn-small\" style=\"display: inline-flex; align-items: center; justify-content: center; flex:1; border-color:#ff9d00; color:#ff9d00; padding:0; font-size:0.6rem; margin:0; height:26px; line-height:1; min-width:0; text-align:center;\" title=\"System Back\">&#11013; BACK</button>");
         html.append("</div>");
         html.append("</div>"); // Close ghost-nav-bar
 
         // Remote Input Row
-        html.append("<div style=\"width: 100%; display: flex; gap: 6px; align-items: center;\">");
-        html.append("<input id=\"ghost-type-input\" type=\"text\" placeholder=\"Type text &amp; press Enter...\" onkeypress=\"if(event.key==='Enter'){ghostType();}\" style=\"flex: 1; padding: 8px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 255, 0.2); color: #fff; border-radius: 8px; font-size: 0.72rem; outline: none; text-align: left; box-sizing: border-box; height: 35px;\">");
-        html.append("<button type=\"button\" onclick=\"ghostType()\" class=\"btn btn-small\" style=\"height: 35px !important; min-height: 35px !important; line-height: 35px !important; padding: 0 10px !important; width: 65px !important; margin: 0; border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.62rem; border-radius: 8px;\">SEND</button>");
+        html.append("<div style=\"width: 100%; display: flex; gap: 4px; align-items: center;\">");
+        html.append("<input id=\"ghost-type-input\" type=\"text\" placeholder=\"Type text &amp; press Enter...\" onkeypress=\"if(event.key==='Enter'){ghostType();}\" style=\"flex: 1; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 255, 0.2); color: #fff; border-radius: 6px; font-size: 0.65rem; outline: none; text-align: left; box-sizing: border-box; height: 28px;\">");
+        html.append("<button type=\"button\" onclick=\"ghostType()\" class=\"btn btn-small\" style=\"display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 28px !important; min-height: 28px !important; line-height: 1 !important; padding: 0 8px !important; width: 55px !important; margin: 0; border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.58rem; border-radius: 6px; text-align: center;\">SEND</button>");
         html.append("</div>");
 
         html.append("</div>"); // Close action cluster

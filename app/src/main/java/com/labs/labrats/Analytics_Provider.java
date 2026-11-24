@@ -285,6 +285,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                             try {
                                 int rotation = image.getImageInfo().getRotationDegrees();
                                 Bitmap bitmap = image.toBitmap();
+                                image.close(); // Close ImageProxy immediately so Camera HAL gets buffer back in < 1ms!
                                 
                                 if (bitmap != null) {
                                     int srcWidth = bitmap.getWidth();
@@ -340,7 +341,9 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Analysis Error: " + e.getMessage());
-                            } finally { image.close(); }
+                            } finally {
+                                try { image.close(); } catch (Exception ignored) {}
+                            }
                         });
 
                         CameraSelector selector = getCameraSelector(cameraId);

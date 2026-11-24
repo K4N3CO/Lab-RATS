@@ -105,7 +105,7 @@ public class TerminalModule extends BaseModule {
 
         // --- SYSTEM ACTIVITY LOGS SECTION ---
         html.append("<div class=\"card\" style=\"border-left: 3px solid var(--neon-yellow);\">");
-        html.append("<h2 style=\"color: var(--neon-yellow); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">SYSTEM_ACTIVITY_LOGS <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_ACTIVITY_LOGS', 'Real-time telemetry stream of background events and captured device actions.')\">INFO</span></h2>");
+        html.append("<h2 style=\"color: var(--neon-yellow); text-align: left; margin-bottom: 25px; font-size: 1.15rem;\">ACTIVITY_LOGS <span class=\"info-trigger\" onclick=\"showInfo(event, 'ACTIVITY_LOGS', 'Real-time telemetry stream of background events and captured device actions.')\">INFO</span></h2>");
         html.append("<div id=\"log-terminal\" class=\"terminal-text\" style=\"height: 250px; overflow-y: auto; font-size: 0.7rem;\">");
         html.append("[LOADING_SYSTEM_LOGS...] Waiting for telemetry handshake...");
         html.append("</div>");
@@ -125,7 +125,7 @@ public class TerminalModule extends BaseModule {
         html.append("<div style=\"opacity: 0.5; margin-top: 5px;\">Type 'help' for command list</div>");
         html.append("</div>");
         html.append("<div style=\"border-top: 1px solid rgba(0, 242, 255, 0.1); padding: 10px; display: flex; align-items: center; background: rgba(0,0,0,0.5);\">");
-        html.append("<span id=\"terminal-prompt\" style=\"color: var(--terminal-green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 10px; white-space: nowrap;\">root@Android:").append(escapeHtml(currentShellPath)).append(promptSymbol).append("</span>");
+        html.append("<span id=\"terminal-prompt\" style=\"color: var(--terminal-green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 10px; white-space: nowrap;\">User@Android:").append(escapeHtml(currentShellPath)).append(promptSymbol).append("</span>");
         html.append("<input id=\"shell-cmd\" type=\"text\" autocapitalize=\"none\" autocorrect=\"off\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"enter command...\" style=\"background: transparent !important; border: none !important; border-color: transparent !important; outline: none !important; box-shadow: none !important; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex-grow: 1; padding: 5px 0;\">");
         html.append("</div>");
         html.append("</div>");

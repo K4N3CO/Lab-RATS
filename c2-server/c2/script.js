@@ -743,6 +743,10 @@ function enforceGhostViewportScaling() {
       streamImg.style.webkitUserSelect = "none";
       streamImg.style.userSelect = "none";
 
+      if (streamImg.classList.contains("blackout-active")) {
+        streamImg.style.filter = "none";
+      }
+
       if (phoneFrame) {
         phoneFrame.style.width = "270px";
         phoneFrame.style.height = "540px";
@@ -850,40 +854,7 @@ function refreshGhostScreen() {
 
 window.isGhostControlLocked = false;
 
-function toggleGhostControlLock() {
-  window.isGhostControlLocked = !window.isGhostControlLocked;
-  const lockBtn = document.getElementById("ghost-lock-btn");
-  const lockOverlay = document.getElementById("ghost-lock-overlay");
-  const streamImg = document.getElementById("ghost-screen-stream");
-
-  if (window.isGhostControlLocked) {
-    if (lockBtn) {
-      lockBtn.innerHTML = "&#128274; SCROLL LOCK";
-      lockBtn.style.borderColor = "var(--neon-yellow)";
-      lockBtn.style.color = "var(--neon-yellow)";
-      lockBtn.style.background = "rgba(255, 255, 0, 0.08)";
-    }
-    if (lockOverlay) lockOverlay.style.display = "flex";
-    if (streamImg) {
-      streamImg.style.touchAction = "auto";
-      streamImg.style.pointerEvents = "none";
-    }
-    showToast("PAGE_SCROLL_MODE_ENABLED");
-  } else {
-    if (lockBtn) {
-      lockBtn.innerHTML = "&#128274; SCROLL LOCK";
-      lockBtn.style.borderColor = "var(--neon-green)";
-      lockBtn.style.color = "var(--neon-green)";
-      lockBtn.style.background = "rgba(57, 255, 20, 0.08)";
-    }
-    if (lockOverlay) lockOverlay.style.display = "none";
-    if (streamImg) {
-      streamImg.style.touchAction = "none";
-      streamImg.style.pointerEvents = "auto";
-    }
-    showToast("REMOTE_CONTROL_ACTIVE");
-  }
-}
+function toggleGhostControlLock() {}
 
 function ghostScroll(dir) {
   let actionName = "scroll_" + dir;
@@ -985,6 +956,16 @@ function triggerOsLock() {
 
 function toggleBlackout() {
   const isActivating = document.getElementById("blackout-btn").innerText.includes("ACTIVATE");
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (streamImg) {
+    if (isActivating) {
+      streamImg.classList.add("blackout-active");
+      streamImg.style.filter = "brightness(18.0) contrast(1.25)";
+    } else {
+      streamImg.classList.remove("blackout-active");
+      streamImg.style.filter = "none";
+    }
+  }
   showToast(isActivating ? "BLACKOUT_PROTOCOL_ENGAGED" : "RESTORING_HARDWARE_BACKLIGHT...");
   fetch("/ghost/interact?action=" + (isActivating ? "blackout_on" : "blackout_off")).then(() => checkGhostStatus());
 }
@@ -1301,7 +1282,7 @@ async function checkGhostStatus() {
 
       const screenStream = document.getElementById("ghost-screen-stream");
       if (screenStream) {
-        screenStream.style.filter = data.blackout ? "brightness(2.4) contrast(1.18)" : "none";
+        screenStream.style.filter = "none";
       }
 
       if (antiRemovalBtn) {

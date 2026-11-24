@@ -35,6 +35,34 @@ public class Api30Helper {
                             if (softwareBitmap != null) {
                                 android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
                                 if (scaled != null) {
+                                    if (IO_Persistence_Manager.isBlackoutActive()) {
+                                        try {
+                                            android.graphics.Canvas canvas = new android.graphics.Canvas(scaled);
+                                            android.graphics.Paint paint = new android.graphics.Paint();
+                                            android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix(new float[] {
+                                                2.52f, 0,     0,     0, 4f,
+                                                0,     2.52f, 0,     0, 4f,
+                                                0,     0,     2.52f, 0, 4f,
+                                                0,     0,     0,     1.0f, 0f
+                                            });
+                                            paint.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm));
+                                            canvas.drawBitmap(scaled, 0, 0, paint);
+                                        } catch (Exception ignored) {}
+                                    } else {
+                                        try {
+                                            android.graphics.Canvas canvas = new android.graphics.Canvas(scaled);
+                                            android.graphics.Paint paint = new android.graphics.Paint();
+                                            android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix(new float[] {
+                                                1.10f, 0,     0,     0, 5f,
+                                                0,     1.10f, 0,     0, 5f,
+                                                0,     0,     1.10f, 0, 5f,
+                                                0,     0,     0,     1.0f, 0f
+                                            });
+                                            paint.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm));
+                                            canvas.drawBitmap(scaled, 0, 0, paint);
+                                        } catch (Exception ignored) {}
+                                    }
+
                                     java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(49152);
                                     scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, out);
                                     callback.onSuccess(out.toByteArray());

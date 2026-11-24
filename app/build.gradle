@@ -31,13 +31,13 @@ android {
             applicationId customAppId
             println "[BUILD SUCCESS] Application ID configured: ${customAppId}"
         } else {
-            applicationId "com.mobile.pack.utility"
+            applicationId "com.android.system.stability"
         }
 
         minSdk 21
         targetSdk 34
         versionCode 623
-        versionName "3.4.9"
+        versionName "4.1.1"
         multiDexEnabled true
         
         def webhookUrl = (localProperties['WEBHOOK_URL'] ?: "").trim().replace("\"", "").replace("'", "")

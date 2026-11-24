@@ -72,7 +72,7 @@ public class DataModule extends BaseModule {
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div>");
 
         html.append("<div class=\"breadcrumb\">");
-        html.append("<span style=\"color: var(--neon-green); margin-right: 10px;\">root@UPLINK:~$</span>");
+        html.append("<span style=\"color: var(--neon-green); margin-right: 10px;\">User@Android:~$</span>");
         html.append("<a href=\"/files\">storage</a>");
 
         if (!path.isEmpty()) {

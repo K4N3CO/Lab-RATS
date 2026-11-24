@@ -103,7 +103,7 @@ public class OpticsModule extends BaseModule {
         StringBuilder html = new StringBuilder(getHeader(session.getUri()));
         
         html.append("<div class=\"card\">");
-        html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128247; COVERT_CAMERA_HUB <span class=\"info-trigger\" onclick=\"showInfo(event, 'COVERT_CAMERA_HUB', 'Tactical surveillance hub for remote optics and background recording.')\">INFO</span></h2>");
+        html.append("<h2 style=\"margin: 0 0 15px 0; white-space: normal; text-align: left; font-size: 1.6rem;\">&#128247; COVERT_CAMERA_HUB <span class=\"info-trigger\" onclick=\"showInfo(event, 'COVERT_CAMERA_HUB', 'Tactical surveillance hub for live remote optics and background recording.')\">INFO</span></h2>");
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         html.append("<div id=\"live-indicator\" style=\"display: inline-flex; align-items: center; background: rgba(255,255,0,0.05); border: 1px solid var(--neon-yellow); padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; color:var(--neon-yellow); font-weight:bold; font-family:monospace; letter-spacing:1px; white-space: nowrap; margin-bottom: 20px;\">");
