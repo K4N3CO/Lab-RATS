@@ -191,7 +191,7 @@ public class TerminalModule extends BaseModule {
         html.append("</div>");
 
         html.append("<div class=\"btn-container\" style=\"display:flex; flex-direction:column; gap:10px; align-items: flex-start;\">");
-        html.append("<button onclick=\"toggleStealth()\" class=\"btn btn-small\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255, 157, 0, 0.05); border-radius:12px; padding: 10px 25px;\">INITIATE_STEALTH</button>");
+        html.append("<button onclick=\"toggleStealth()\" class=\"btn\" style=\"border-color: var(--neon-orange); color: var(--neon-orange); background: rgba(255, 157, 0, 0.05); border-radius: 12px; padding: 10px 20px; font-size: 0.75rem; width: auto !important; min-width: 180px; white-space: nowrap; text-align: center; margin: 0; display: inline-flex; align-items: center; justify-content: center; height: 45px;\">INITIATE_STEALTH</button>");
         html.append("</div>");
         html.append("</div>");
 
