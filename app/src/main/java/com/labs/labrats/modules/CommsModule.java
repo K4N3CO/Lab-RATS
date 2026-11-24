@@ -437,7 +437,7 @@ public class CommsModule extends BaseModule {
         html.append("<input type=\"text\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;\">");
         html.append("<textarea name=\"message\" placeholder=\"Message Content\" rows=\"3\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 12px; font-family: 'JetBrains Mono', monospace;\"></textarea>");
         html.append("<div style=\"text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center;\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"margin: 0 auto !important;\">ENCRYPT & SEND</button>");
+        html.append("<button type=\"submit\" class=\"btn\" style=\"width: 250px !important; margin: 0 auto !important;\">ENCRYPT & SEND</button>");
         html.append("</div></div></form>");
 
         // Worm Broadcast Box
@@ -545,7 +545,7 @@ public class CommsModule extends BaseModule {
         html.append("<input type=\"file\" name=\"media\" accept=\"image/*,video/*,audio/*\" style=\"color: #888; font-size: 0.8rem;\">");
         html.append("</div>");
         html.append("<div style=\"text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center;\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"margin: 0 auto !important;\">UPLOAD & DISPATCH</button>");
+        html.append("<button type=\"submit\" class=\"btn\" style=\"width: 250px !important; margin: 0 auto !important;\">UPLOAD & DISPATCH</button>");
         html.append("</div>");
         html.append("</div></form></div>");
         html.append("</div>"); // Close Card 1 (MMS Dispatcher)
