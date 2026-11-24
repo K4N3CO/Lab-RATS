@@ -40,9 +40,9 @@ public class Api30Helper {
                                             android.graphics.Canvas canvas = new android.graphics.Canvas(scaled);
                                             android.graphics.Paint paint = new android.graphics.Paint();
                                             android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix(new float[] {
-                                                2.94f, 0,     0,     0, 5f,
-                                                0,     2.94f, 0,     0, 5f,
-                                                0,     0,     2.94f, 0, 5f,
+                                                4.60f, 0,     0,     0, 6f,
+                                                0,     4.60f, 0,     0, 6f,
+                                                0,     0,     4.60f, 0, 6f,
                                                 0,     0,     0,     1.0f, 0f
                                             });
                                             paint.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm));
