@@ -26,9 +26,9 @@
 
 Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, lightweight Android Remote Administration Framework** packed with **real-time telemetry** and **covert control capabilities**. The framework **automates the generation of custom, signed `.apk` payloads** for seamless deployment onto **any Android devices**, paired with a **responsive, web-based C2 dashboard**. Engineered for **resilience in modern mobile security environments**, **Lab-RATS** delivers a **robust feature suite** operating reliably across both **legacy** and **current Android OS releases**.
 <details>
-  <summary><b>📸 View Comparative Breakdown (Google Gemini)</summary></b>
+  <summary><b>📸 View Comparative Breakdown</summary></b>
   <br>
-  <img width="430" height="510" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
+  <img width="420" height="500" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
 </details>
 
 ---
@@ -50,10 +50,12 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 
 <details>
 <summary><b>The IPv6 Advantage: Eliminating CGNAT & Port Forwarding</b></summary>
-<br>
 
-* **The Traditional IPv4 Problem:** On standard IPv4 mobile networks (3G/4G/5G), cellular carriers place devices behind **Carrier-Grade NAT (CGNAT)**. This shares a single public IP address among thousands of mobile devices, making incoming connections impossible without port forwarding, reverse proxies, or tools like Ngrok.
-* **The IPv6 Solution:** IPv6 assigns a unique **Global Unicast Address (GUA)** directly to the phone on 5G/LTE and Wi-Fi networks. Because every IPv6 address is globally unique and addressable across the internet, the C2 operator can connect directly to the target phone using its IPv6 address in any web browser (`http://[2001:db8::1]:9191`).
+#### The Traditional IPv4 Problem:
+* On standard IPv4 mobile networks (3G/4G/5G), cellular carriers place devices behind **Carrier-Grade NAT (CGNAT)**. This shares a single public IP address among thousands of mobile devices, making incoming connections impossible without port forwarding, reverse proxies, or tools like Ngrok.
+
+#### The IPv6 Solution:
+* IPv6 assigns a unique **Global Unicast Address (GUA)** directly to the phone on 5G/LTE and Wi-Fi networks. Because every IPv6 address is globally unique and addressable across the internet, the C2 operator can connect directly to the target phone using its IPv6 address in any web browser (`http://[2001:db8::1]:9191`).
 
 </details>
 
@@ -67,6 +69,11 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 
 </details>
 
+<details>
+  <summary><b>📸 Click to View IPv6 Exploit Vector</summary></b>
+  <img src="https://github.com/user-attachments/assets/7097e0e0-1190-4774-b758-ca58b5e8760f" alt="Full Web Page Screenshot" width="65%">
+</details>
+    
 > [!NOTE]
 > **Lab-RATS also supports IPv4 connections** by **hosting on Render.com** *(Free Tier Supported)*. See **"Command & Control Option 2"** below for the **setup guide**.
 
@@ -83,7 +90,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>🔐 Remote C2 Security & Secure Handshake</b></summary>
   <br>
   <ul>
-    <li><strong>C2 Security:</strong> The <strong>C2 Dashboard</strong> is <strong>protected with a secure login</strong> which can be changed during build setup <strong>or directly from the Terminal Tab</strong>. The <strong>Default Password should be changed immediately</strong> for <strong>enhanced security</strong>.</li>
+    <li><strong>C2 Security:</strong> The <strong>C2 Dashboard</strong> is <strong>protected with a secure login</strong> which can be changed during build setup <strong>or directly from the C2's Terminal Tab</strong>. The <strong>Default Password should be changed immediately</strong> for <strong>enhanced security</strong>.</li>
     <li><strong>Secure Handshake:</strong> Uses a <strong>masked credential handshake</strong>. Passwords are <strong>reversed and Base64 encoded</strong> <em>(<code>0x_</code> prefixed)</em> on the <strong>client-side before transmission</strong>, rendering them <strong>invisible to browser Network/Payload inspectors</strong>.</li>
  </ul>
 </details>
@@ -92,9 +99,9 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>📦 Automated APK Generation, Identity Control & Density Scaling</b></summary>
   <br>
   <ul>
-    <li><strong>Instant Build:</strong> <strong>Instantly build</strong> <code>signed.apk</code> for <strong>production</strong> and <strong>testing</strong>.</li>
-    <li><strong>Full Customization:</strong> <strong>Fully</strong> customize <strong>App Name</strong>, <strong>Package ID</strong>, and <strong>Minimum SDK</strong>.</li>
-    <li><strong>Density Scaling:</strong> <strong>Resize logos automatically</strong> for <strong>all Android screen densities</strong>.</li>
+    <li><strong>Instant Build:</strong> Instantly build custom <code>signed.apk</code> for <strong>production</strong> and <strong>testing</strong>.</li>
+    <li><strong>Full Customization:</strong> Fully customize <strong>App Name</strong>, <strong>Package ID</strong>, and <strong>Minimum SDK</strong>.</li>
+    <li><strong>Density Scaling:</strong> Resizes logos automatically for <strong>all Android screen densities</strong>.</li>
  </ul>
 </details>
 
@@ -102,7 +109,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>📱 PC/Mobile Responsive</b></summary>
   <br>
   <ul>
-    <li><strong>Adaptive Interface:</strong> The <strong>remote web interface</strong> is <strong>fully optimized</strong> for <strong>both PC</strong> and <strong>smartphone browsers</strong>, featuring a <strong>touch-friendly layout, adaptive navigation tabs</strong>, and <strong>scalable UI elements</strong> for <strong>monitoring from any device</strong>.</li>
+    <li><strong>Adaptive Dashbaord:</strong> The Remote Web Dashboard is fully optimized for <strong>both PC</strong> and <strong>smartphone browsers</strong>, featuring a touch-friendly layout, adaptive navigation tabs, and scalable UI elements   for <strong>monitoring from any device</strong>.</li>
  </ul>
 </details>
 
@@ -117,20 +124,20 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <br>
  <strong>Execute an instant remote swap of the Lab-RATS app identity and icon using realistic, operational clones from the "Masquerade Library"</strong>:
   <ul><br>
-    <li><strong>👀 Play Protect (Default):</strong> Used for initial install it <strong>simulates a system update</strong> and <strong>auto-grants all permissions</strong> <em>(other than Accessibility services)</em> during the process, achieving <strong>highly successful installs</strong>.</li>
+    <li><strong>👀 Play Protect (Default):</strong> Used for initial install it <strong>simulates a system update with masked auto permission granting</strong> to achieve <strong>highly successful installs</strong>.</li>
     <li><strong>🧮 Calculator:</strong> Performs actual math with a <strong>tactical logic engine</strong>.</li>
-    <li><strong>🌦️ Weather App:</strong> Displays <strong>real-time localized forecasts</strong> via Open-Meteo API.</li>
-    <li><strong>🛡️ Software Update:</strong> Simulates a legitimate system update screen to <strong>build target trust</strong>.</li>
-    <li><strong>🧠 Smart Tutor:</strong> Simple overlay to seem innocuous and <strong>blend into samsung stock apps</strong></li>
+    <li><strong>🌦️ Weather App:</strong> Displays <strong>real-time localized forecasts</strong> via <strong>Open-Meteo API</strong>.</li>
+    <li><strong>🛡️ Software Updated:</strong> Simulates a legitimate One UI 'system has been updated' screen to <strong>build target trust</strong>.</li>
+    <li><strong>🧠 Smart Tutor:</strong> Single screen overlay that looks innocuous and easily <strong>blends into the stock samsung app lists.</strong></li>
     <li><strong>🐭 Lab-Rats & System Stability Services:</strong> Completely unmasked and <strong>directly opens</strong> the C2 server interface on device.</li>
  </ul>
 </details>
 
 <details>
-  <summary><b>💉 APK Payload Delivery Vectors</b></summary>
+  <summary><b>💉 APK Delivery Vectors</b></summary>
   <br>
   <ul>
-    <li><strong>Weaponization Engine:</strong> The <strong>Weaponization Engine</strong> has been <strong>overhauled to support multiple high-success delivery methods</strong> <em>(Stealth PDF, Zero-Click MP4, Meeting Invite and Many More)</em>, <strong>ensuring reliable access</strong> across <strong>all modern mobile environments</strong>.</li>
+    <li><strong>Weaponization Engine:</strong> The <strong>Weaponization Engine</strong> has been overhauled to support multiple high-success delivery methods <em>(Stealth PDF, Zero-Click MP4, Meeting Invite and Many More)</em>, ensuring reliable access across <strong>all modern mobile environments</strong>.</li>
  </ul>
 </details>
 
@@ -139,7 +146,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <br>
   <ul>
     <li><strong>AV/AVE Bypasses:</strong> Undetectable by <strong>Samsung Knox</strong>, <strong>McAfee</strong> and <strong>Google Play Protect</strong>.</li>
-    <li><strong>Deep Stealth HTML Shield:</strong> The C2 dashboard utilizes <strong>Shadow DOM Cloaking</strong> and <strong>Base64 Payload Wrapping</strong>. Browser "Inspect Element" is zeroed-out, and the tactical structure is <strong>ghosted from analysts</strong>.</li>
+    <li><strong>Deep Stealth HTML Shield:</strong> The C2 dashboard utilizes <strong>Shadow DOM Cloaking</strong> and <strong>Base64 Payload Wrapping</strong>. Browser "Inspect Elements" is zeroed-out, and the tactical structure is <strong>ghosted from analysts</strong>.</li>
     <li><strong>Web Hardening:</strong> Assets <em>(JS/CSS)</em> are <strong>minified and obfuscated</strong>; featuring anti-debugging loops and interaction locks <em>(Right-Click, F12)</em> to <strong>prevent unauthorized analysis</strong>.</li>
     <li><strong>Dynamic Code Obfuscation:</strong> Build-time randomization of logic flow and class names via <strong>ProGuard/R8 integration</strong>.</li>
     <li><strong>Encrypted Local Telemetry:</strong> Internal system logs are encrypted at build-time, rendering them <strong>unreadable to standard mobile forensic tools</strong>.</li>
@@ -150,9 +157,9 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>☎️ Emergency Recovery & Self Healing</b></summary>
   <br>
   <ul>
-    <li><strong>Dialer Unlock:</strong> Type <code>*#1337#</code> on the <strong>phone's keypad</strong> to <strong>unmask the Lab-RATS server interface back into view</strong>.</li>
-    <li><strong>Hidden Backdoor:</strong> If the <strong>device is in stealth mode</strong>, <strong>rapidly tap the middle of the decoy screen 10 times</strong> to <strong>unlock the C2 server interface</strong>. <em>(Reverts to stealth mode again once app is closed)</em></li>
-    <li><strong>Self-Healing Engine:</strong> Automatically detects and repairs damaged service bindings or r<strong>evoked permissions in the background</strong>.</li>
+    <li><strong>Dialer Unlock:</strong> Type <code>*#1337#</code> on the <strong>Target Phone's Dialpad</strong> to unmask the Lab-RATS server interface back into view.</li>
+    <li><strong>Hidden Backdoor:</strong> If the device is in stealth mode, rapidly tap the middle of the decoy screen 10 times to <strong>unlock the C2 server interface</strong>. <em>(Reverts to stealth mode again once app is closed)</em></li>
+    <li><strong>Self-Healing Engine:</strong> Automatically detects and repairs damaged <strong>service bindings or revoked permissions in the background</strong>.</li>
     <li><strong>Anti-Removal:</strong> On by default in the <strong>Ghost Tab</strong>, it prevents the user from <strong>uninstalling</strong> or <strong>force-stopping the app</strong> via Settings.</li>
  </ul>
 </details>
@@ -162,7 +169,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <br>
   <ul>
     <li><strong>Web UI Restart:</strong> One-click "RESTART_SERVER" button on the Terminal tab to <strong>refresh background services</strong>.</li>
-    <li><strong>SMS Backdoor Trigger:</strong> Send an <strong>SMS/Text containing <code>!RESTART_C2</code></strong> to the device's number to force the server back online even if it was <strong>manually closed or killed by the OS</strong>.</li>
+    <li><strong>SMS Backdoor Trigger:</strong> Send an <strong>SMS/Text containing <code>!RESTART_C2</code></strong> to the target device's number to force the server back online even if it was <strong>manually closed or killed by the OS</strong>.</li>
  </ul>
 </details>
 
@@ -170,7 +177,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>👻 Task-List Ghosting & Dynamic OTA Camouflage</b></summary>
   <br>
   <ul>
-    <li><strong>Recent Apps Ghosting:</strong> The app is hard-coded to be <strong>invisible in the Android "Recent Apps" list</strong>.</li>
+    <li><strong>Recent Apps Ghosting:</strong> The app is hard-coded to be <strong>invisible in the Android "Recent Apps" list and "1 Active App" notification</strong>.</li>
     <li><strong>Dynamic OTA Camouflage:</strong> Generates random version names and codes that <strong>mimic legitimate system OTA updates</strong>.</li>
  </ul>
 </details>
@@ -186,10 +193,29 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <br>
   <ul>
     <li><strong>Ghost Control / Live Feed:</strong> Cast & Control the live screen remotely with <strong>NO "Consent Prompt" required</strong>.</li>
-    <li><strong>Blackout Mode:</strong> A high-stealth mode designed to physically mask the target's device display while maintaining a <strong>NON-masked live remote feed</strong>. <em>(Pair with Ghost Control for maximum stealth)</em></li>
-    <li><strong>Ghost_Toast Overlays:</strong> Remotely deploy tactical, persistent pop-up overlays with fully customizable text <em>(color, size, and screen positioning)</em>. Features multiple animation styles <em>(pop, static, and side-scroll)</em> alongside a <strong>high-intensity "Burnt_Toast" mode</strong> that <strong>floods the screen with randomized pop-ups</strong> to overwhelm the device.</li>
+    <li><strong>Blackout Mode:</strong> A high-stealth mode designed to mask the target's device display while maintaining a <strong>NON-masked live remote feed</strong>. <em>(Pair with Ghost Control for maximum stealth)</em></li>
+    <li><strong>Ghost_Toast Overlays:</strong> Remotely deploy tactical, persistent pop-ups with fully customizable text <em>(color, size, and screen positioning)</em>. Features multiple animation styles <em>(pop, static, and side-scroll)</em> alongside a <strong>high-intensity "Burnt_Toast" mode</strong> that <strong>floods the screen with randomized pop-ups</strong> to overwhelm the device.</li>
     <li><strong>Remote System Denial Lock:</strong> Deploy a persistent, full-screen security overlay to <strong>lock physical interaction</strong> and <strong>render the device inoperable until hard-reset/restarted</strong> or <strong>unlocked remotely from the C2 dashboard</strong>.</li>
     <li><strong>Live Keylogging & Sensitive Extraction:</strong> Intercept keystrokes and system text in real-time. Features <strong>Sensitive Info Highlighting</strong> <em>(Passcodes, OTPs, Emails glow Red)</em> and <strong>Deep Extraction</strong> for <strong>browser login info</strong>.</li>
+ </ul>
+</details>
+
+<details>
+<summary><b>⚡ Lockscreen Bypass Engine & Credential Sniffer</b></summary>
+<br>
+
+- **Multi-OEM Sniffing**: Auto Captures 4–6 digit PINs entered by user on **Samsung, Pixel, Xiaomi**, and **Motorola** lockscreens.
+- **Lock Bypass Trigger**: Once captured, if `BYPASS_LOCKSCREEN` *(green when PIN captured)* is clicked from the C2's Ghost Tab, the system **auto wakes screen and enters the captured PIN**.
+
+</details>
+
+<details>
+  <summary><b>📸 Tactical Surveillance Hub (Ultra-Stability)</b></summary>
+  <br>
+  <ul>
+    <li><strong>Covert Video Recording:</strong> Stealthily record video without any <strong>user-facing activity</strong>.</li>
+    <li><strong>Covert Photo Capture:</strong> Covert image capture integrated into the <strong>live stream</strong>.</li>
+    <li><strong>Nightmode V2:</strong> Aggressive electronic brightening for <strong>low-light environments</strong>.</li>
  </ul>
 </details>
 
@@ -200,7 +226,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
     <li><strong>NFC Proximity Vector:</strong> Generate <strong>binary NDEF payloads for physical tags</strong>.</li>
     <li><strong>QR Visual Vector:</strong> Dedicated <strong>high-density QR code generator</strong> for independent URL delivery.</li>
     <li><strong>Smishing Library:</strong> Pre-configured <strong>tactical phishing templates</strong>.</li>
-    <li><strong>Shadow Overlay Injection:</strong> Remotely <strong>inject functional, pixel-perfect credential-harvesting overlays</strong> to the device.</li>
+    <li><strong>Shadow Overlay Injection:</strong> Remotely inject functional, <strong>credential-harvesting overlays</strong> to the device.</li>
  </ul>
 </details>
 
@@ -209,7 +235,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <br>
   <ul>
     <li><strong>Anti-Removal Shield:</strong> High-speed, event-driven protection shield that <strong>Blocks Attempts</strong> to <strong>Uninstall</strong> or <strong>Force Stop</strong> the <strong>app</strong>.</li>
-    <li><strong>Suicide (Self-Destruct):</strong> Remote-triggered persistent loop that <strong>wipes all local configuration</strong> and <strong>initiates a hard uninstallation of the C2 Core</strong>.</li>
+    <li><strong>Suicide (Self-Destruct):</strong> Remote-triggered persistent loop that <strong>wipes all local configurations</strong> and <strong>initiates a hard uninstallation of the C2 Core</strong>.</li>
  </ul>
 </details>
 
@@ -218,17 +244,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <br>
   <ul>
     <li><strong>GPS Uplink:</strong> One-click uplink to open the <strong>device's exact real-time location</strong> using <strong>Google Maps</strong>.</li>
-    <li><strong>Notification Stream:</strong> Intercept every app notification <em>(WhatsApp, Telegram, RCS, System...etc)</em> in a <strong>live feed</strong>.</li>
- </ul>
-</details>
-
-<details>
-  <summary><b>📸 Tactical Surveillance Hub (Ultra-Stability)</b></summary>
-  <br>
-  <ul>
-    <li><strong>Covert Video Recording:</strong> Stealthily record video without any <strong>user-facing activity</strong>.</li>
-    <li><strong>Covert Photo Capture:</strong> Covert image capture integrated into the <strong>live stream</strong>.</li>
-    <li><strong>Nightmode V2:</strong> Aggressive electronic brightening for <strong>low-light environments</strong>.</li>
+    <li><strong>Notification Stream:</strong> Intercepts every app notification <em>(WhatsApp, Telegram, RCS, System...etc)</em> in a <strong>live feed</strong>.</li>
  </ul>
 </details>
 
@@ -255,9 +271,9 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <br>
   <strong>The Terminal Tab's Built-in Shell has been overhauled for professional workflows:</strong>
   <ul><br>
-    <li><strong>Command History:</strong> Navigate <strong>previous commands instantly</strong> using <strong>Up/Down arrows</strong>.</li>
+    <li><strong>Command History:</strong> Navigate previous commands instantly using <strong>Up/Down arrows</strong>.</li>
     <li><strong>Modernized Interface:</strong> Updated to <code>User@Android</code> prompt with <strong>an updated <code>help</code> menu</strong>.</li>
-    <li><strong>Hardened I/O:</strong> Multi-stage retry logic and <strong>unique execution tracking</strong> for <strong>zero-latency command output</strong>.</li>
+    <li><strong>Hardened I/O:</strong> Multi-stage retry logic and unique execution tracking for <strong>zero-latency command output</strong>.</li>
  </ul>
 </details>
 
@@ -265,15 +281,9 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>📊 Telemetry & Reporting</b></summary>
   <br>
   <ul>
-    <li><strong>C2 Auto-Reporting:</strong> Discrete reporting of <strong>Date & Time, Device ID, Connection Type <em>(WiFi/Cellular)</em>, IP, Port, C2 Dashboard Link, Battery % and more</strong> to a <strong>centralized Google Sheet or Render C2</strong>.</li>
+    <li><strong>C2 Auto-Reporting:</strong> Discrete reporting of <strong>Date & Time, Device ID, Connection Type <em>(WiFi/Cellular)</em>, IP, Port, C2 Dashboard Link, Battery % and more</strong> to a centralized Google Sheet or Render C2</strong>.</li>
  </ul>
 </details>
-
----
-
-<p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Native+Integration" alt="Typing Banner"/>
-</p>
 
 <details>
   <summary><b>🛠️ Termux Bridge Integration</b></summary>
@@ -307,14 +317,10 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>🛠️ 1. Workstation & Build Requirements (To Build APKs)</b></summary>
   <br>
   <ul>
-    <li><strong>Java Development Kit (JDK):</strong><br>
-  JDK <strong>17 or JDK 21</strong> <em>(JDK 21 recommended)</em>. Ensure <code>JAVA_HOME</code> is set in <strong>your environment paths</strong>.</li>
-    <li><strong>Android SDK:</strong><br>
-  Android <strong>SDK 34</strong> <em>(API Level 34)</em> or <strong>higher</strong>. Build-Tools version <code>34.0.0</code> or <strong>higher</strong> <em>(includes <code>aapt2</code>, <code>zipalign</code>, and <code>apksigner</code>)</em>.</li>
-    <li><strong>Python 3.x:</strong><br>
-  Required for <strong>Option 7: Smali Surgery & APK Binder</strong> <em>(<code>binder.py</code>)</em>.</li>
-    <li><strong>Gradle:</strong><br>
-  Handled <strong>automatically</strong> via the included <code>./gradlew</code> <em>(Gradle 8.10+)</em>.</li>
+    <li><strong>Java Development Kit (JDK):</strong> JDK <strong>17 or JDK 21</strong>. Ensure <code>JAVA_HOME</code> is set in <strong>your environment paths</strong>.</li>
+    <li><strong>Android Software Development Kit (SDK):</strong> Android <strong>SDK 34</strong> or <strong>higher</strong>. Build-Tools version <code>34.0.0</code> or <strong>higher</strong> <em>(includes <code>aapt2</code>, <code>zipalign</code>, and <code>apksigner</code>)</em>.</li>
+    <li><strong>Python 3.x:</strong> Required for <strong>Option 7: Smali Surgery & APK Binder</strong> <em>(<code>binder.py</code>)</em>.</li>
+    <li><strong>Gradle:</strong> Handled <strong>automatically</strong> via the included <code>./gradlew</code> <em>(Gradle 8.10+)</em>.</li>
   </ul>
 </details>
 
@@ -322,12 +328,9 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>☁️ 2. C2 Server Hosting Requirements (For Option 2: Render.com/Railway)</b></summary>
   <br>
   <ul>
-    <li><strong>Node.js:</strong><br>
-  <strong>v18.0.0</strong> or <strong>higher</strong>.</li>
-    <li><strong>npm:</strong><br>
-  <strong>v9.0.0</strong> or <strong>higher</strong>.</li>
-    <li><strong>Render / Linux Hosting:</strong><br>
-  <strong>512 MB RAM</strong> minimum <em>(Render Free Tier supported)</em>.</li>
+    <li><strong>Node.js:</strong> <strong>v18.0.0</strong> or <strong>higher</strong>.</li>
+    <li><strong>npm:</strong> <strong>v9.0.0</strong> or <strong>higher</strong>.</li>
+    <li><strong>Render / Linux Hosting:</strong> <strong>512 MB RAM</strong> minimum <em>(Render Free Tier supported)</em>.</li>
   </ul>
 </details>
 
@@ -335,12 +338,9 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>📱 3. Android Device Compatibility</b></summary>
   <br>
   <ul>
-    <li><strong>Minimum OS:</strong><br>
- Android <strong>5.0</strong> <em>(Lollipop/API 21)</em> or <strong>higher</strong>.</li>
-    <li><strong>Target OS:</strong><br>
-  Android <strong>14 - 17</strong> <em>(API 34 - 37)</em> <strong>fully supported</strong>.</li>
-    <li><strong>Supported Devices:</strong><br>
-  Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG, and generic Android devices/emulators.</li>
+    <li><strong>Minimum OS:</strong> Android <strong>5.0</strong> <em>(Lollipop/API 21)</em> or <strong>higher</strong>.</li>
+    <li><strong>Target OS:</strong> Android <strong>14 - 17</strong> <em>(API 34 - 37)</em> <strong>fully supported</strong>.</li>
+    <li><strong>Supported Devices:</strong> Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG, and generic Android devices/emulators.</li>
   </ul>
 </details>
 
@@ -348,12 +348,9 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <summary><b>💻 4. Operating System Compatibility</b></summary>
   <br>
   <ul>
-    <li><strong>🐧 Linux:</strong><br>
-  Kali Linux, Ubuntu, Debian, Arch <em>(Full support for build scripts & C2 server)</em>.</li>
-    <li><strong>🍎 macOS:</strong><br>
-  macOS Monterey / Ventura / Sonoma / Sequoia <em>(Intel & Apple Silicon M1/M2/M3/M4)</em>.</li>
-    <li><strong>🪟 Windows:</strong><br>
-  Windows 10 / 11 via PowerShell, Command Prompt, or WSL2.</li>
+    <li><strong>🐧 Linux:</strong> Kali Linux, Ubuntu, Debian, Arch <em>(Full support for build scripts & C2 server)</em>.</li>
+    <li><strong>🍎 macOS:</strong> macOS Monterey / Ventura / Sonoma / Sequoia <em>(Intel & Apple Silicon M1/M2/M3/M4)</em>.</li>
+    <li><strong>🪟 Windows:</strong> Windows 10 / 11 via PowerShell, Command Prompt, or WSL2.</li>
   </ul>
 </details>
 
@@ -373,8 +370,8 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 ### ☝🏻 Option 1: Direct IPv6 (Google Sheet) 
 **Best for Basic IP tracking** & **logging**. **NO server maintenance required!**.
 
-1. **Create a New** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
-2. Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:**
+1. Create a **New** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
+2. Navigate to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:**
 
 ```javascript
 function doGet(e) { return handleRequest(e); }
@@ -428,7 +425,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 3. Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(E-Mail)* → **Who has Access: Anyone**.
 
 > [!IMPORTANT]
-> 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ0dYdi...`)* and **prepare to paste it into the APK-Builder when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
+> 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ...`)* and **prepare to enter it into the APK-Builder when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
 
 <details>
   <summary><b>📸 View Google Sheet Reporting Example</summary></b>
