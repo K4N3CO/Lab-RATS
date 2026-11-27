@@ -2,7 +2,7 @@
 <img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind...-cyan?style=for-the-badge&logo=maserati&logoColor=black">
   
 <p align="center">
-<img width="1409" height="516" alt="Screenshot 2026-11-27 at 1 17 52 AM" src="https://github.com/user-attachments/assets/26b8c794-8426-483c-846c-a28326f91e7e" />
+<img width="1415" height="514" alt="Screenshot 2026-11-27 at 1 22 17 AM" src="https://github.com/user-attachments/assets/54c3573d-09ac-481e-a0d2-7ec870f56a7c" />
 
 <p align="center">
   <img src="https://img.shields.io/badge/JDK-17/21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -24,7 +24,7 @@
 
 > Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S.)*
 
-Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, lightweight Android Remote Administration Framework** packed with **real-time telemetry** and **covert control capabilities**. The framework **automates the generation of custom, signed `.apk` payloads** for seamless deployment onto **any Android devices**, paired with a **responsive, web-based C2 dashboard**. Engineered for **resilience in modern mobile security environments**, **Lab-RATS** delivers a **robust feature suite** operating reliably across both **legacy** and **current Android OS releases**.
+Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, lightweight Android Remote Administration Framework** packed with **real-time telemetry** and **covert control capabilities**. The framework automates the generation of custom, signed `.apk` payloads for seamless deployment onto any Android devices, paired with a **responsive, web-based C2 dashboard**. Engineered for resilience in modern mobile security environments, **Lab-RATS** delivers a **robust feature suite** operating reliably across both **legacy** and **current Android OS releases**.
 <details>
   <summary><b>📸 View Comparative Breakdown</summary></b>
   <br>
@@ -40,10 +40,8 @@ alt="Typing Banner"
 </p>
 
 ## 🌐 How Direct IPv6 Mode Works in Lab-RATS
-<details>
-<summary><b>What is Direct IPv6 Mode?</b></summary>
-<br>
 
+### What is Direct IPv6 Mode?
 In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web server**. An embedded HTTP server (`NanoHTTPD`) runs inside the **background Android service** and listens directly on port `9191`.
 
 </details>
@@ -201,7 +199,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 </details>
 
 <details>
-<summary><b>⚡ Lockscreen Bypass Engine & Credential Sniffer</b></summary>
+<summary><b>⚡ NEW! Lockscreen Bypass Engine & Credential Sniffer</b></summary>
 <br>
 
 - **Multi-OEM Sniffing**: Auto Captures 4–6 digit PINs entered by user on **Samsung, Pixel, Xiaomi**, and **Motorola** lockscreens.
@@ -311,7 +309,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
 </p>
 
-> To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
+### To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
 
 <details>
   <summary><b>🛠️ 1. Workstation & Build Requirements (To Build APKs)</b></summary>
@@ -360,7 +358,8 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
-> **Lab-RATS** supports **TWO primary methods** to **Receive Data, Connect Remotely & Track your Devices**.
+> **Lab-RATS** supports **TWO** primary methods to **Receive Data, Connect Remotely & Track your Devices**.
+
 <details>
   <summary><b>📸 View Direct IPv6 (Google Sheet) vs. Render Cloud Relay (Node.js) Chart</summary></b>
   <br>
@@ -368,10 +367,10 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 </details>
 
 ### ☝🏻 Option 1: Direct IPv6 (Google Sheet) 
-**Best for Basic IP tracking** & **logging**. **NO server maintenance required!**.
+> **Best for Basic IP tracking** & **logging**. **NO server maintenance required!**.
 
 1. Create a **New** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
-2. Navigate to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:**
+2. Navigate to **Extensions** → **Apps Script** → **Paste in the Hybrid Snippet below:**
 
 ```javascript
 function doGet(e) { return handleRequest(e); }
@@ -429,7 +428,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 <details>
   <summary><b>📸 View Google Sheet Reporting Example</summary></b>
-  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="90%">
+  <img src="https://github.com/user-attachments/assets/ad174175-eed8-46b4-bd8d-8c72895cf88a" alt="Full Web Page Screenshot" width="70%">
 </details>
 
 ---
@@ -471,7 +470,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 <details>
   <summary><b>📸 View Render C2 Screenshot</summary></b>
   <br>
-  <img width="767" height="400" alt="Screenshot 2026-11-14 at 3 00 47 PM" src="https://github.com/user-attachments/assets/02cd24bc-ed70-421a-98ab-b8769b9dce52" />
+  <img width="710" height="370" alt="Screenshot 2026-11-14 at 3 00 47 PM" src="https://github.com/user-attachments/assets/02cd24bc-ed70-421a-98ab-b8769b9dce52" />
 </details>
 
 ---
@@ -512,6 +511,8 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   <summary><b>📸 View APK-Builder Tool</summary></b>
   <img src="https://github.com/user-attachments/assets/3b16fac1-c679-46d0-9e9d-57335c897313" alt="Full Web Page Screenshot" width="40%">
 </details>
+
+---
 
 ### 2. Deploy & Install onto Android Devices
 > **Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
