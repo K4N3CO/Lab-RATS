@@ -42,4 +42,16 @@ public class Api24Helper {
             return false;
         }
     }
+
+    public static boolean dispatchPatternGesture(AccessibilityService service, Path path, int duration) {
+        try {
+            GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(path, 0, Math.max(duration, 200));
+            GestureDescription.Builder builder = new GestureDescription.Builder();
+            builder.addStroke(stroke);
+            return service.dispatchGesture(builder.build(), null, null);
+        } catch (Exception e) {
+            Log.e("Api24Helper", "Pattern Gesture Error: " + e.getMessage());
+            return false;
+        }
+    }
 }

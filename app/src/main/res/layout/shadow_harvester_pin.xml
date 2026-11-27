@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlay_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_pin_lock_gradient"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingStart="12dp"
+    android:paddingTop="48dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="36dp">
+
+    <!-- Top Lock Header -->
+    <TextView
+        android:id="@+id/tv_lock_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="🔒"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp" />
+
+    <!-- Space before PIN prompt -->
+    <Space
+        android:layout_width="390dp"
+        android:layout_height="272dp"
+        android:layout_weight="1" />
+
+    <!-- Header Prompt Container -->
+    <LinearLayout
+        android:id="@+id/prompt_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter PIN"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Your PIN contains at least 4 digits."
+            android:textColor="#CCCCCC"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+
+    <!-- PIN Input Text Display -->
+    <EditText
+        android:id="@+id/et_pin"
+        android:layout_width="220dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="24dp"
+        android:background="#00000000"
+        android:gravity="center"
+        android:hint=""
+        android:inputType="numberPassword"
+        android:maxLength="6"
+        android:textColor="#FFFFFF"
+        android:textSize="28sp" />
+
+    <!-- Circular Keypad Grid -->
+    <GridLayout
+        android:id="@+id/keypad_grid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="34dp"
+        android:alignmentMode="alignBounds"
+        android:baselineAligned="false"
+        android:columnCount="3"
+        android:rowCount="4">
+
+        <!-- Button 1 -->
+        <LinearLayout
+            android:id="@+id/btn_key_1"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="33dp"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="monospace"
+                android:text="1"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp" />
+
+        </LinearLayout>
+
+        <!-- Button 2 -->
+        <LinearLayout
+            android:id="@+id/btn_key_2"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="2">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:fontFamily="monospace"
+                android:text="2"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ABC"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button 3 -->
+        <LinearLayout
+            android:id="@+id/btn_key_3"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="3">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="31dp"
+                android:fontFamily="monospace"
+                android:text="3"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="normal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEF"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button 4 -->
+        <LinearLayout
+            android:id="@+id/btn_key_4"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="4">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:fontFamily="monospace"
+                android:text="4"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="normal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GHI"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button 5 -->
+        <LinearLayout
+            android:id="@+id/btn_key_5"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="5">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="29dp"
+                android:fontFamily="sans-serif"
+                android:text="5"
+                android:textColor="#FFFFFF"
+                android:textSize="27sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="16dp"
+                android:text="JKL"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button 6 -->
+        <LinearLayout
+            android:id="@+id/btn_key_6"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="6">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:fontFamily="serif-monospace"
+                android:text="6"
+                android:textColor="#FFFFFF"
+                android:textSize="29sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MNO"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button 7 -->
+        <LinearLayout
+            android:id="@+id/btn_key_7"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="7">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="31dp"
+                android:text="7"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="normal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PQRS"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button 8 -->
+        <LinearLayout
+            android:id="@+id/btn_key_8"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="8">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:fontFamily="casual"
+                android:text="8"
+                android:textColor="#FFFFFF"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TUV"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button 9 -->
+        <LinearLayout
+            android:id="@+id/btn_key_9"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="9">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:fontFamily="serif-monospace"
+                android:text="9"
+                android:textColor="#FFFFFF"
+                android:textSize="31sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WXYZ"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Button Delete -->
+        <LinearLayout
+            android:id="@+id/btn_key_del"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="#00000000"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⌫"
+                android:textColor="#FFFFFF"
+                android:textSize="26sp" />
+
+        </LinearLayout>
+
+        <!-- Button 0 -->
+        <LinearLayout
+            android:id="@+id/btn_key_0"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_pin_circle_key"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:tag="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="normal" />
+
+        </LinearLayout>
+
+        <!-- Button OK -->
+        <LinearLayout
+            android:id="@+id/btn_login"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="12dp"
+            android:background="#00000000"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OK"
+                android:textColor="#FFFFFF"
+                android:textSize="26sp" />
+
+        </LinearLayout>
+
+    </GridLayout>
+
+    <!-- Emergency Call Button -->
+    <Button
+        android:id="@+id/btn_emergency"
+        android:layout_width="190dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_pin_emergency_pill"
+        android:text="Emergency call"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp" />
+
+</LinearLayout>

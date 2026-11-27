@@ -153,9 +153,11 @@ public class FirebaseConfig extends NanoHTTPD {
 
                 org.json.JSONArray array = new org.json.JSONArray(logsJson);
                 synchronized (systemLogs) {
-                    systemLogs.clear();
                     for (int i = 0; i < array.length(); i++) {
-                        systemLogs.add(array.getString(i));
+                        String logEntry = array.getString(i);
+                        if (!systemLogs.contains(logEntry)) {
+                            systemLogs.add(logEntry);
+                        }
                     }
                 }
                 logsLoaded = true;
@@ -816,7 +818,7 @@ public class FirebaseConfig extends NanoHTTPD {
             bitmap.recycle();
 
             Response response = newFixedLengthResponse(Response.Status.OK, "image/png", new java.io.ByteArrayInputStream(bytes), bytes.length);
-            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
             response.addHeader("Pragma", "no-cache");
             response.addHeader("Expires", "0");
             return response;

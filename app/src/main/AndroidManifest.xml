@@ -106,6 +106,8 @@
             android:theme="@style/Theme.LabRATS.Permissions"
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
             android:taskAffinity=""
             android:exported="true" />
 

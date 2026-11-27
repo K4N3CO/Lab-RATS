@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlay_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_pattern_lock_gradient"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingTop="60dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="48dp">
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="318dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="Draw unlock pattern"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="normal" />
+
+    <!-- Pattern Touch & Grid Frame -->
+    <FrameLayout
+        android:id="@+id/pattern_container"
+        android:layout_width="320dp"
+        android:layout_height="320dp"
+        android:layout_gravity="center_horizontal">
+
+        <GridLayout
+            android:id="@+id/pattern_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:columnCount="3"
+            android:rowCount="3">
+
+            <View
+                android:id="@+id/dot_0"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_1"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_2"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_3"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_4"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_5"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_6"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_7"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+            <View
+                android:id="@+id/dot_8"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pattern_dot" />
+
+        </GridLayout>
+
+    </FrameLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Emergency Call Button -->
+    <Button
+        android:id="@+id/btn_emergency"
+        android:layout_width="160dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_pattern_emergency_pill"
+        android:text="EMERGENCY CALL"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+</LinearLayout>

