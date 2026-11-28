@@ -313,7 +313,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
 </p>
 
-### To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
+To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
 
 <details>
   <summary><b>🛠️ 1. Workstation & Build Requirements (To Build APKs)</b></summary>
