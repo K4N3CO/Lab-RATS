@@ -24,7 +24,7 @@
   </p>
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=42&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=40&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
  />
 </p>
 
@@ -34,7 +34,7 @@ Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, li
 <details>
   <summary><b>📸 View Comparative Breakdown</summary></b>
   <br>
-  <img width="420" height="500" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/3dd73ef0-8f95-4be3-8cca-e5d55048fab3" />
+<img width="350" height="384" alt="Screenshot 2026-11-28 at 5 17 31 AM" src="https://github.com/user-attachments/assets/31a0c53e-53c1-4dd1-b5a3-b3efaf9b9971" />
 </details>
 
 ---
@@ -362,19 +362,22 @@ To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
-> **⚠️ Prerequisite**: Before building the APK, you must configure an active Webhook URL to receive device communications.<br>
-### Step One:
+> **⚠️ Prerequisite**:
+> 
+> Before building the APK, you must configure an active Webhook URL to receive device communications.<br>
+
+## STEP 1.
 **Lab-RATS** supports **TWO** primary methods to **Receive Data, Connect Remotely & Track your Devices**.<br>
-**Select & configure** your preferred option from this section then proceed to Get Started section below.
+**Select & Configure** your preferred option from this section then proceed to Step 2 below.
 
 <details>
   <summary><b>📸 View Direct IPv6 (Google Sheet) vs. Render Cloud Relay (Node.js) Chart</summary></b>
   <br>
-  <img width="730" height="370" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/a95fdd22-1226-45ab-ae61-b099a7d0311b" />
+  <img width="730" height="320" alt="Screenshot 2026-11-16 at 5 24 11 PM" src="https://github.com/user-attachments/assets/a95fdd22-1226-45ab-ae61-b099a7d0311b" />
 </details>
 
 ### ☝🏻 Option 1: Direct IPv6 (Google Sheet) 
-> **Best for Basic IP tracking** & **logging**. **NO server maintenance required!**.
+Best for **Basic IP tracking** & **logging**. **NO server maintenance required**.
 
 1. Create a **New** <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
 2. Navigate to **Extensions** → **Apps Script** → **Paste in the Hybrid Snippet below:**
@@ -431,7 +434,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 3. Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(E-Mail)* → **Who has Access: Anyone**.
 
 > [!IMPORTANT]
-> 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ...`)* and **prepare to enter it into the APK-Builder when prompted** for the **C2 Webhook URL** *(Get Started Section Below)*.
+> 4. **Copy the Google Webhook URL provided** *(e.g., `https://script.google.com/macros/s/AKfycbwXQSVQ...`)* and prepare to enter it into the APK-Builder when prompted for the **C2 Webhook URL** *(Get Started Section Below)*.
 
 <details>
   <summary><b>📸 View Google Sheet Reporting Example</summary></b>
@@ -441,7 +444,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ---
 
 ### ✌🏻 Option 2: Render Cloud Relay (Tactical Node.js Backend)
-> **Best for newer devices running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.<br>
+Best for newer devices **running Android 16/17, Professional Fleet Management** & **Automatic File Exfiltration**.<br>
 
 **1. Fork the Lab-RATS repository**.
 <br>**2. Create a New Web Service for Free** on <a href="https://render.com" target="_blank">Render.com</a> and **connect your forked Lab-RATS repo**.
@@ -456,14 +459,10 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   <summary><b>🌐 Advantages of Option 2</b></summary>
   <br>
   <ul>
-    <li><strong>Dual-Stack IP Binding:</strong><br>
-  <strong>Full support for both IPv4 and IPv6 connections</strong>, <strong>enabling seamless C2 telemetry</strong> and <strong>reverse WebSocket tunneling</strong> across <strong>cellular carrier NAT64</strong> and <strong>dual-stack Wi-Fi networks worldwide</strong>.</li>
-    <li><strong>Exfiltration Vault:</strong><br>
-  <strong>Audio/Video recordings</strong> are <strong>automatically uploaded</strong> and <strong>stored on your server</strong>.</li>
-    <li><strong>Live Fleet List:</strong><br>
-  A <strong>professional dashboard</strong> to <strong>manage all devices in one place</strong>, with <strong>editable device name</strong> for <strong>easy device recognition</strong> and <strong>NEW 'Quick Action' pull-down menu</strong> to <strong>deploy some features without directly connecting</strong>.</li>
-    <li><strong>Dynamic Sync:</strong><br>
-  <strong>Heartbeat reporting</strong> ensures your <strong>P2P links are always up-to-date</strong>.</li>
+    <li><strong>Dual-Stack IP Binding:</strong> Full support for both IPv4 and IPv6 connections, enabling <strong>seamless C2 telemetry</strong> and <strong>reverse WebSocket tunneling</strong> across cellular <strong>carrier NAT64</strong> & <strong>dual-stack Wi-Fi networks worldwide</strong>.</li>
+    <li><strong>Exfiltration Vault:</strong> Audio/Video recordings are automatically uploaded and <strong>stored on your server</strong>.</li>
+    <li><strong>Live Fleet List:</strong> A professional dashboard to manage all devices in one place, with <strong>editable device name</strong> for easy recognition and 'Quick Action' pull-down menu to <strong>deploy some features without directly connecting</strong>.</li>
+    <li><strong>Dynamic Sync:</strong> Heartbeat reporting ensures your <strong>P2P links are always up-to-date</strong>.</li>
   </ul>
 </details>
 
@@ -487,10 +486,13 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
  />
 </p>
 
-> **⚠️ Prerequisite**: Before building the APK, you must configure an active Webhook URL to receive device communications.<br>
-**First Step**: Select & configure your preferred option from the section above to proceed.
+> **⚠️ Prerequisite**:
+> 
+> Before building the APK, you must configure an active Webhook URL to receive device communications.<br>
+**Step 1.**: Select & configure your preferred option from the section above to proceed.
 
-### Step 2. Build the APK (on PC)
+## STEP 2.
+### Build the APK (on PC)
 
   #### Download the Repository:
   ```
@@ -524,22 +526,19 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 ---
 
-### Step 3. Deploy & Install onto Android Devices
-> **Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
+## STEP 3.
+### Deploy & Install onto Android Devices
+**Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 <details>
   <summary><b>📑 Strategic Weaponization (The Wrapper)</b></summary>
   <br>
   <strong>Standard <code>.apk</code> files are often blocked by email filters and browser security. Use the Infection Chain Wizard <em>(Option 6)</em> in the <code>apk-builder</code> tool to wrap your link inside a high-compatibility carrier file:</strong>
   <ul><br>
-    <li><strong>📑 Stealth PDF:</strong><br>
-  Send to <strong>targets via Email or Drive</strong>. Utilizes <strong>URI Actions</strong> instead of <strong>JavaScript</strong> to trigger an <strong>automatic browser-based download, bypassing standard PDF security filters</strong>.</li>
-    <li><strong>🎬 Zero-Click MP4:</strong><br>
-  <strong>Send as a video file</strong>. Exploits mobile <strong>Media Heap Overflows</strong> during <strong>gallery indexing or thumbnail generation</strong> to <strong>force-register the C2 link in the background</strong>.</li>
-    <li><strong>🔳 QR Code / 📡 NFC:</strong><br>
-  <strong>Best for physical placement</strong> or <strong>"Tap-to-Infect" proximity delivery</strong>. Generates a <strong>high-density QR</strong> or <strong>NDEF record</strong> pointing to the <strong>hardened delivery URL</strong>.</li>
-    <li><strong>And Many More:</strong><br>
-  The <strong>Wizard</strong> also supports <strong>ADB Strategic Bridge, Stego Image Tails, PWA Manifests</strong>, and <strong>Office Document macros</strong>.</li>
+    <li><strong>📑 Stealth PDF:</strong> Send to <strong>targets via Email or Drive</strong>. Utilizes URI Actions instead of JavaScript to trigger an automatic browser-based download, <strong>bypassing standard PDF security filters</strong>.</li>
+    <li><strong>🎬 Zero-Click MP4:</strong> Send as a video file. Exploits mobile Media Heap Overflows during gallery indexing or thumbnail generation to <strong>force-register the C2 link in the background</strong>.</li>
+    <li><strong>🔳 QR Code / 📡 NFC:</strong> Best for physical placement or "Tap-to-Infect" proximity delivery. Generates a <strong>high-density QR</strong> or <strong>NDEF record</strong> pointing to the hardened delivery URL</strong>.</li>
+    <li><strong>And Many More:</strong> The <strong>Wizard</strong> also supports <strong>ADB Strategic Bridge, Stego Image Tails, PWA Manifests</strong>, and <strong>Office Document macros</strong>.</li>
   </ul>
 </details>
 
@@ -547,10 +546,8 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
   <summary><b>🌐 Hosting Strategies</b></summary>
   <br>
   <ul>
-    <li><strong>Anonymous Cloud:</strong><br>
-  <strong>Option 6</strong> uses <code>Catbox.moe</code> <strong>by default</strong>. It is <strong>anonymous, fast</strong>, and <strong>generates a direct link</strong>. Features <strong>fallback hosting on <code>Litterbox</code> or <code>Tmpfiles</code> if <code>Catbox.moe</code> fails</strong>.</li>
-    <li><strong>P2P Direct:</strong><br>
-  Host the <strong>APK directly from your PC using a public tunnel</strong>, or from <strong>another infected device</strong> using the <code>/download/</code> endpoint.</li>
+    <li><strong>Anonymous Cloud:</strong> <strong>Option 6</strong> uses <code>Catbox.moe</code> by default. It is <strong>anonymous, fast</strong>, and <strong>generates a direct link</strong>. Features fallback hosting on <code>Litterbox</code> or <code>Tmpfiles</code> if <code>Catbox.moe</code> fails.</li>
+    <li><strong>P2P Direct:</strong> Host the APK directly from your PC using a public tunnel, or from <strong>another infected device</strong> using the <code>/download/</code> endpoint.</li>
   </ul>
 </details>
 
